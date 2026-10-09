@@ -63,3 +63,5 @@ export { parametersWith, type PerRegime } from "./params.ts";
 export { type Candidate, type Held, type SeriesState } from "./series.ts";
 export { type Fit } from "./model.ts";
 export { ORIGINS, OUTCOMES, PHASES, SIGNALS, type SignalName } from "./log.ts";
+export { MU_KM3_PER_S2, impulseOf, speedAt, type Impulse, type MeasuredStep, type Orbit } from "./impulse.ts";
+export { MANOEUVRE_CLASSES, atypicalReasons, classify, featuresOf, isDisposalLike, isRaised, pruneHistory, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass, type StepRecord } from "./manoeuvre.ts";

@@ -1,5 +1,6 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
+import type { StepRecord } from "./manoeuvre.ts";
 import { dragRateKmPerDay, fitWindow, median, robustScale, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import type { Regime } from "./truth.ts";
@@ -57,6 +58,10 @@ export interface Candidate {
   /** The object's own scatter of the semi-major axis when the candidate opened, in kilometres, and the drag term of its window. */
   sigmaOwn: number;
   bstar: number;
+  /** The orbit at the bracket's first edge, from the pre fits: the semi-major axis and perigee radius in kilometres and the inclination in degrees, for the impulse the step implies. */
+  aKm: number;
+  rpKm: number;
+  incDeg: number;
   /** The first post set's jump, in kilometres, its normalised size, and its prediction sigma. */
   delta1: number;
   z1: number;
@@ -122,6 +127,10 @@ export interface SeriesState {
   lastRaisedAt: number;
   /** When the last candidate closed, whatever its end. */
   closedAt: number;
+  /** The epoch of the object's first set, in milliseconds since 1970: its age is read from here. */
+  firstEpoch: number;
+  /** The object's accepted steps over the history's reach, oldest first, whatever verdict each got: what a new step is classed by. */
+  steps: StepRecord[];
 }
 
 export function newState(number: number): SeriesState {
@@ -150,6 +159,8 @@ export function newState(number: number): SeriesState {
     stepsRaised: 0,
     lastRaisedAt: Number.NEGATIVE_INFINITY,
     closedAt: Number.NEGATIVE_INFINITY,
+    firstEpoch: Number.POSITIVE_INFINITY,
+    steps: [],
   };
 }
 
@@ -314,6 +325,7 @@ export function screenSet(state: SeriesState, set: ElementSet, params: DetectorP
 /** Appends a screened set as the ring's newest, with the residual its prediction left (NaN where there was none), evicting the oldest past the ring's size. */
 export function pushSet(state: SeriesState, set: ElementSet, residual: number, params: DetectorParameters): void {
   const aKm = semiMajorAxisOf(set);
+  if (set.epochMs < state.firstEpoch) state.firstEpoch = set.epochMs;
   spliceAt(state, state.epochs.length, set, aKm, residual);
   const evicted = state.epochs.length > params.ringSize;
   if (evicted) evictOldest(state);

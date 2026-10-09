@@ -14,8 +14,8 @@ import { REGIMES, type Regime } from "./truth.ts";
 /** Where in a candidate's life the row was written: its opening on the first post set, a later post set, or its close. */
 export const PHASES = { open: 0, post: 1, close: 2 } as const;
 
-/** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, or closed unraised after the last gap. */
-export const OUTCOMES = { open: 0, suspected: 1, reverted: 2, lapsed: 3, faded: 4 } as const;
+/** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, closed unraised after the last gap, or a persistent step the object's own history explains, closed as a manoeuvre. */
+export const OUTCOMES = { open: 0, suspected: 1, reverted: 2, lapsed: 3, faded: 4, manoeuvre: 5 } as const;
 
 /** The origin of a candidate: a single set's jump, or the CUSUM's slow drift. */
 export const ORIGINS = { step: 0, cusum: 1 } as const;
@@ -85,6 +85,26 @@ export const SIGNALS = {
   preSets: "count",
   /** The object's class as the catalogue says it, by its index in `BODY_CLASSES`. */
   bodyClass: "index",
+  /** The impulse the step implies: the tangential, normal and least radial components in metres a second, where on the orbit the apsides place a tangential one (0 perigee to 1 apogee), and the chi-squared of the eccentricity change beyond a single tangential impulse's reach. */
+  deltaVMps: "m/s",
+  deltaVNormalMps: "m/s",
+  deltaVRadialMps: "m/s",
+  apsisLocation: "ratio",
+  impulseConsistency: "chi2",
+  /** The object's history at the step: days from its first set; accepted steps in the year and the two years before; days from the last; the coefficient of variation of the intervals; the step over the median past step; the share of past steps with its sign; the share of sign changes between consecutive steps; the share of past steps with a dominant normal component; whether the step is disposal-shaped; and the class by its index in `MANOEUVRE_CLASSES`. */
+  ageDays: "days",
+  n365: "count",
+  n730: "count",
+  daysSinceStep: "days",
+  regularity: "ratio",
+  typicality: "ratio",
+  sameSignShare: "ratio",
+  alternation: "ratio",
+  normalShare: "ratio",
+  disposalLike: "flag",
+  manoeuvreClass: "index",
+  /** How many of the atypical tests the step passed, by which the step on a manoeuvring object is still raised. */
+  atypical: "count",
 } as const;
 
 export type SignalName = keyof typeof SIGNALS;

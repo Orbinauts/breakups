@@ -1,13 +1,21 @@
 name: KPI
 
-# The scorecard, recomputed over the Archive: one job per year in the
-# committed aggregate, each downloading its year of the release and the
-# year before it to warm the detector up, replaying it and scoring it; then
-# one job folding the years into the aggregate, writing the table to the
-# run's summary, keeping one comment on a pull request up to date with the
-# diff against the committed `kpi/latest.json`, and on main failing when a
-# fresh aggregate differs from the committed one: the committed score is
-# the record, and the proof is that this workflow can make it again.
+# The scorecard, recomputed over the Archive: one job replaying the years
+# of the committed aggregate in order, each downloading its year of the
+# release, replaying it from the states the previous year ended with and
+# scoring it, then folding the years into the aggregate, writing the table
+# to the run's summary, keeping one comment on a pull request up to date
+# with the diff against the committed `kpi/latest.json`, and on main
+# failing when a fresh aggregate differs from the committed one: the
+# committed score is the record, and the proof is that this workflow can
+# make it again.
+#
+# The years run in order in one job, not in a matrix, because the
+# detector's verdict depends on each object's record of steps over two
+# years: a year replayed cold would score every object's first step of
+# the year as new. Each year's Archive is deleted once the next year is
+# scored, so the runner's disk holds two years at a time. The per-year
+# files are kept as artifacts of the run, not in git.
 #
 # Where the release is unreachable (an outage, a fork with no release) the
 # scorecard is skipped with a notice rather than failed: the score cannot
@@ -44,11 +52,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The years in the committed aggregate: what the matrix below replays.
+      # The years in the committed aggregate: what the replay below scores, in order.
       - id: list
         run: |
           set -euo pipefail
-          years=$(node -p 'JSON.stringify(require("./kpi/latest.json").years)')
+          years=$(node -p 'require("./kpi/latest.json").years.join(" ")')
           echo "years=$years" >> "$GITHUB_OUTPUT"
           echo "years: $years"
       - id: reach
@@ -61,37 +69,9 @@ jobs:
             echo "reachable=false" >> "$GITHUB_OUTPUT"
           fi
 
-  year:
-    name: score ${{ matrix.year }}
+  replay:
+    name: replay the years in order
     needs: years
-    if: needs.years.outputs.reachable == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      # One year failing says nothing about the others: every year finishes.
-      fail-fast: false
-      matrix:
-        year: ${{ fromJSON(needs.years.outputs.years) }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-      - run: npm install --no-audit --no-fund
-      # The year and the one before it, into the Archive's home beside the repository, each hash verified.
-      - run: npm run archive:download -- ${{ matrix.year }} --warmup
-      - run: npm run kpi:year -- ${{ matrix.year }}
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: kpi-${{ matrix.year }}
-          path: kpi/years/${{ matrix.year }}.json.gz
-          if-no-files-found: error
-          retention-days: 14
-
-  aggregate:
-    name: aggregate
-    needs: [years, year]
     if: needs.years.outputs.reachable == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -106,18 +86,31 @@ jobs:
         with:
           node-version: 24
       - run: npm install --no-audit --no-fund
-      # The fresh year files replace the committed ones, so the diff below is fresh against committed.
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      # Each year downloaded into the Archive's home beside the repository, its hash verified, replayed from the states the year before left, and deleted once the next is done.
+      - name: Replay each year from the states the one before ended with
+        env:
+          YEARS: ${{ needs.years.outputs.years }}
+        run: |
+          set -euo pipefail
+          previous=""
+          for year in $YEARS; do
+            npm run archive:download -- "$year"
+            npm run kpi:year -- "$year"
+            if [ -n "$previous" ]; then rm -rf "../breakups-archive/$previous"; fi
+            previous="$year"
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          pattern: kpi-*
-          path: kpi/years
-          merge-multiple: true
+          name: kpi-years
+          path: kpi/years/*.json.gz
+          if-no-files-found: error
+          retention-days: 14
       - run: npm run kpi -- --aggregate
       - name: Write the table to the summary and the diff to a file
         run: |
           set -euo pipefail
           cat kpi/latest.md >> "$GITHUB_STEP_SUMMARY"
-          git --no-pager diff --stat -- kpi/latest.json kpi/years > "$RUNNER_TEMP/diff-stat.txt" || true
+          git --no-pager diff --stat -- kpi/latest.json > "$RUNNER_TEMP/diff-stat.txt" || true
           git --no-pager diff -- kpi/latest.json > "$RUNNER_TEMP/diff.txt" || true
           if [ -s "$RUNNER_TEMP/diff.txt" ]; then
             echo "the fresh aggregate differs from the committed kpi/latest.json:"

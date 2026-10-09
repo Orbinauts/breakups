@@ -96,7 +96,9 @@ export interface YearFile {
   timeBasis: TimeBasis;
   runs: number;
   sets: number;
+  /** The warm-up run from the previous year's last weeks, or null where the states were carried from the previous year's replay, which `carried` says. */
   warmup: { year: number; runs: number; sets: number } | null;
+  carried: boolean;
   bodyYears: number;
   replaySeconds: number;
   score: YearScore;

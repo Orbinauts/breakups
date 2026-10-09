@@ -7,9 +7,10 @@ import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type Verdict } f
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
 import { cellsOf, percentile, readmeTables, renderLatest, splitYears, type Latest } from "../scripts/kpi/kpi.ts";
-import { brackets, lineOf, noticesOf } from "../scripts/kpi/match.ts";
+import { brackets, lineOf, marginDaysOf, noticesOf } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
-import { readTruth, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
+import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
+import { readStates, writeStates } from "../scripts/kpi/states.ts";
 
 /**
  * The scorecard on a synthetic year, with no Archive: the fixture's few
@@ -130,6 +131,7 @@ describe("the scorecard on the synthetic year", () => {
     expect(file.sets).toBe(sets.rows.length);
     expect(file.timeBasis).toBe("epoch");
     expect(file.warmup).toBeNull();
+    expect(file.carried).toBe(false);
     // The first of January to the last of March, one run every four hours, bins with no set included.
     expect(file.runs).toBeGreaterThanOrEqual((at(3, 31) - at(1, 1)) / (4 * HOUR));
     expect(file.runs).toBeLessThan((at(3, 31) - at(1, 1)) / (4 * HOUR) + 3);
@@ -292,6 +294,39 @@ describe("the matching rule's pieces", () => {
     expect(brackets(step, at(2, 1), at(2, 9))).toBe(true);
     expect(brackets(step, at(2, 1), at(2, 8, 23, 59))).toBe(false);
     expect(brackets(null, at(2, 10), at(2, 11))).toBe(false);
+  });
+
+  test("the margin is a day in low and medium orbits and five days in highly elliptical and geosynchronous ones", () => {
+    expect(marginDaysOf("LEO")).toBe(1);
+    expect(marginDaysOf("MEO")).toBe(1);
+    expect(marginDaysOf("HEO")).toBe(5);
+    expect(marginDaysOf("GEO")).toBe(5);
+    expect(marginDaysOf("unknown")).toBe(1);
+    // A step four days before a stated instant matches in a highly elliptical orbit and not in a low one.
+    const step = { beforeEpoch: at(2, 6), afterEpoch: at(2, 7), deltaKm: -3, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 1, z: null };
+    expect(brackets(step, at(2, 11), at(2, 11), marginDaysOf("HEO"))).toBe(true);
+    expect(brackets(step, at(2, 11), at(2, 11), marginDaysOf("LEO"))).toBe(false);
+  });
+
+  test("a year replayed from carried states skips the warm-up and says so, and the states carry an object's record across the boundary", () => {
+    writeYear(join(work, "carried"), yearOf(sets.rows, bodies));
+    const first = replayAndScore(join(work, "carried"), YEAR, truth, { detector: stub, detectorName: "jump" });
+    const again = replayAndScore(join(work, "carried"), YEAR, truth, { detector: stub, detectorName: "jump", carried: carriedOf(first.result) });
+    expect(again.file.carried).toBe(true);
+    expect(again.file.warmup).toBeNull();
+    expect(again.result.states).toBe(first.result.states);
+    // The states file round-trips the numbers JSON cannot carry.
+    const path = join(work, "states", "2013.json.gz");
+    const states = new Map<number, unknown>([[1, { never: Number.NEGATIVE_INFINITY, unmeasured: Number.NaN, steps: [{ epochMs: 1, deltaKm: 0.5 }], regime: "LEO", nested: new Map([["a", Number.POSITIVE_INFINITY]]) }]]);
+    writeStates(path, { format: 1, year: YEAR, states, launches: new Map() });
+    const read = readStates(path);
+    expect(read.year).toBe(YEAR);
+    const state = read.states.get(1) as { never: number; unmeasured: number; steps: unknown[]; regime: string; nested: Map<string, number> };
+    expect(state.never).toBe(Number.NEGATIVE_INFINITY);
+    expect(Number.isNaN(state.unmeasured)).toBe(true);
+    expect(state.steps).toEqual([{ epochMs: 1, deltaKm: 0.5 }]);
+    expect(state.regime).toBe("LEO");
+    expect(state.nested.get("a")).toBe(Number.POSITIVE_INFINITY);
   });
 
   test("the lines by kind and confidence", () => {

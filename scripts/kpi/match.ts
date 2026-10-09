@@ -44,8 +44,20 @@ import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.t
 /** How many sets the parent must have in the days before the window to be judged on public elements. */
 export const MIN_PARENT_SETS = 5;
 export const PARENT_SETS_DAYS = 60;
-/** How far a step bracket and a truth window may miss each other and still match, in days: the slop between epochs and instants. */
-export const MATCH_MARGIN_DAYS = 1;
+/**
+ * How far a step bracket and a truth window may miss each other and still
+ * match, in days, per regime: the slop between epochs and instants. A day
+ * in low and medium orbits, where sets come hours apart and an authority's
+ * instant is measured. Five days in highly elliptical and geosynchronous
+ * orbits, where sets are days apart, the catalogue's fit settles on the
+ * new orbit over several of them, and the stated instant is itself
+ * inferred: the ullage motors and Beidou G2 of the first phase showed the
+ * catalogue's step two to four days before the stated time. An event of
+ * unknown regime takes the day.
+ */
+export const MATCH_MARGIN_DAYS: Record<Regime, number> = { LEO: 1, MEO: 1, HEO: 5, GEO: 5, unknown: 1 };
+
+export const marginDaysOf = (regime: Regime): number => MATCH_MARGIN_DAYS[regime];
 
 export const LINES = ["breakups A-B", "breakups C", "breakups D", "anomalous A-B", "anomalous C-D"] as const;
 export type Line = (typeof LINES)[number];
@@ -145,7 +157,7 @@ const lowerOf = (breakup: Breakup): number => Date.parse(breakup.event.from ?? b
 const upperOf = (breakup: Breakup): number => Date.parse(breakup.event.to);
 
 /** Whether a step bracket and a window, each widened by the margin, overlap. */
-export function brackets(step: Step | null, from: number, to: number, marginDays = MATCH_MARGIN_DAYS): boolean {
+export function brackets(step: Step | null, from: number, to: number, marginDays = MATCH_MARGIN_DAYS.LEO): boolean {
   if (step === null) return false;
   const margin = marginDays * DAY_MS;
   return step.beforeEpoch <= to + margin && step.afterEpoch >= from - margin;
@@ -158,6 +170,8 @@ interface Row {
   breakup: Breakup;
   from: number;
   to: number;
+  /** The row's margin, in milliseconds, by its regime. */
+  margin: number;
   launch: string | null;
   /** The bodies under the launch catalogued after the event: its fragments, by number. */
   fragments: Set<number>;
@@ -167,15 +181,16 @@ interface Row {
 function rowOf(breakup: Breakup, index: SetIndex): Row {
   const from = lowerOf(breakup);
   const to = upperOf(breakup);
+  const margin = marginDaysOf(breakup.orbit.regime) * DAY_MS;
   const parent = breakup.parent.catalogueNumber;
   const launch = launchOf(breakup.parent.designator) ?? (parent === null ? null : launchOf(index.bodies.find((b) => b.number === parent)?.designator ?? null));
   const fragments = new Set<number>();
   if (launch !== null) {
-    // The mark is taken a day before the window, the same slop the fragment search allows, so a piece published hours before a stated instant is still new.
-    const mark = Math.max(index.highWaterMark(from - MATCH_MARGIN_DAYS * DAY_MS), parent ?? 0);
+    // The mark is taken the margin before the window, the same slop the fragment search allows, so a piece published hours before a stated instant is still new.
+    const mark = Math.max(index.highWaterMark(from - margin), parent ?? 0);
     for (const body of index.bodies) if (body.number > mark && body.number < ANALYST_FLOOR && launchOf(body.designator) === launch) fragments.add(body.number);
   }
-  return { breakup, from, to, launch, fragments, scored: null };
+  return { breakup, from, to, margin, launch, fragments, scored: null };
 }
 
 const hours = (ms: number): number => ms / 3_600_000;
@@ -186,7 +201,6 @@ const hours = (ms: number): number => ms / 3_600_000;
  * and after lend their exempt windows and fragments across the boundary.
  */
 export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[], index: SetIndex, timeBasis: TimeBasis, notices: Notice[] = noticesOf(breakups)): YearScore {
-  const margin = MATCH_MARGIN_DAYS * DAY_MS;
   const rows = breakups.filter((b) => Math.abs(yearOf(b) - year) <= 1).map((b) => rowOf(b, index));
   const events: ScoredEvent[] = [];
   for (const row of rows) {
@@ -197,7 +211,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     let catalogueAt: number | null = null;
     let catalogueBody: number | null = null;
     for (const number of row.fragments) {
-      const first = index.firstPublicationFrom(number, row.from - margin);
+      const first = index.firstPublicationFrom(number, row.from - row.margin);
       if (first !== null && (catalogueAt === null || first < catalogueAt)) [catalogueAt, catalogueBody] = [first, number];
     }
     const noticeAt = notices.filter((n) => n.at >= row.from && ((n.number !== null && n.number === parent) || (n.number === null && n.launch !== null && n.launch === row.launch))).map((n) => n.at).sort((a, b) => a - b)[0] ?? null;
@@ -245,7 +259,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, note });
     };
     // A counted alert on the parent of a target, on its step: a detection, late, a duplicate, or exempt for an undetectable one.
-    const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && brackets(verdict.step, row.from, row.to)).sort((a, b) => a.from - b.from);
+    const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && brackets(verdict.step, row.from, row.to, row.margin / DAY_MS)).sort((a, b) => a.from - b.from);
     const target = onParent.find((row) => row.scored !== null);
     if (target?.scored !== undefined && target.scored !== null) {
       const scored = target.scored;
@@ -273,13 +287,13 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       continue;
     }
     // An alert on a non-scoreable row's parent in its window: exempt.
-    const exemptRow = onParent[0] ?? rows.find((row) => row.breakup.parent.catalogueNumber === null && verdict.raisedAt >= row.from - margin && verdict.raisedAt <= row.to + margin && (row.breakup.kind === "unnamed" || (row.launch !== null && row.launch === verdict.launch)));
+    const exemptRow = onParent[0] ?? rows.find((row) => row.breakup.parent.catalogueNumber === null && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + row.margin && (row.breakup.kind === "unnamed" || (row.launch !== null && row.launch === verdict.launch)));
     if (exemptRow !== undefined) {
       land("exempt", exemptRow.breakup.id, `inside the window of ${exemptRow.breakup.kind === "unnamed" ? "a report naming no object" : exemptRow.breakup.exemptReason ?? exemptRow.breakup.kind}`);
       continue;
     }
     // An alert on a fragment of a reported event, after it: a duplicate of that event, or exempt where the event is.
-    const ofFragment = rows.find((row) => row.fragments.has(number) && verdict.raisedAt >= row.from - margin);
+    const ofFragment = rows.find((row) => row.fragments.has(number) && verdict.raisedAt >= row.from - row.margin);
     if (ofFragment !== undefined) {
       land(ofFragment.breakup.scoreable ? "duplicate" : "exempt", ofFragment.breakup.id, "an alert on a fragment of a reported event");
       continue;

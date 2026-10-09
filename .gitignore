@@ -10,3 +10,7 @@ package-lock.json
 .env
 # Where the KPI runner works; its results are committed under kpi/.
 kpi/work/
+# The per-year scorecard files: tens of megabytes a run, carried by the KPI
+# workflow as artifacts and made again by `npm run kpi -- --all`; only the
+# aggregate `kpi/latest.{json,md}` is committed.
+kpi/years/

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { OUTCOMES } from "./log.ts";
+import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { DAY, HOUR, feed, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 
@@ -11,9 +12,12 @@ import { DAY, HOUR, feed, noise, one, setOf, type SyntheticSet } from "./synthet
  * after it is suspected on the right bracket, before its third day; a
  * day-old stage with no record of its own is still caught, by the prior;
  * and a geosynchronous object with a set every two days is caught across
- * its sparse sets. The numbers are modest: kilometres of semi-major axis
- * for low orbits near 7,200 km, noise of a few metres, as the catalogue's
- * own fits scatter.
+ * its sparse sets. Then the object's record: a station-keeper's steps, a
+ * young payload's raising campaign and a disposal lowering are
+ * manoeuvres, a quiet rocket body's one step is unique, and a working
+ * payload's step far larger than its own is atypical. The numbers are
+ * modest: kilometres of semi-major axis for low orbits near 7,200 km,
+ * noise of a few metres, as the catalogue's own fits scatter.
  */
 
 const T0 = Date.UTC(2020, 3, 1);
@@ -136,6 +140,117 @@ describe("the detector on synthetic series", () => {
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.map((v) => v.state)).toEqual(["watch", "dismissed"]);
     expect(fed.log.at(-1)!.signals.outcome).toBe(OUTCOMES.lapsed);
+  });
+
+  test("a quiet old rocket body with one large step is suspected as a unique step, with the impulse it implies", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const stepAt = 90;
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.4;
+    const fed = feed(one(series.map((s) => setOf(1, s, "rocket body"))));
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("unique"));
+    expect(raised[0]!.evidence.n730).toBe(0);
+    expect(raised[0]!.evidence.deltaVMps).toBeCloseTo(0.207, 1);
+    expect(raised[0]!.reasons.join(" ")).toContain("classed unique");
+    expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toEqual([]);
+    // The step joined the object's record.
+    expect((fed.states.get(1) as { steps: unknown[] }).steps).toHaveLength(1);
+  });
+
+  test("a geostationary station-keeper with fortnightly alternating east-west steps and a yearly north-south step: its steps are manoeuvres once its record holds a few", () => {
+    const gauss = noise(21);
+    const series: SyntheticSet[] = [];
+    let level = 42164.2;
+    let inclination = 0.05;
+    for (let i = 0; i < 400; i++) {
+      const day = i * 2;
+      // Sixty quiet days so the object's scatter is measured; then every fourteen days the longitude drift is reversed with a step of two kilometres, alternating in sign; on day 300 the inclination is pulled back by a twentieth of a degree, which moves the axis by nothing.
+      if (day >= 70 && (day - 70) % 14 === 0) level += ((day - 70) / 14) % 2 === 0 ? 2 : -2;
+      if (day === 300) inclination += 0.05;
+      series.push({ epochMs: T0 + day * DAY, aKm: level + 0.02 * gauss(), eccentricity: 0.0002, inclinationDeg: inclination, raanDeg: (i * 137) % 360, bstar: 0 });
+    }
+    const fed = feed(one(series.map((s) => setOf(1, s))));
+    const persistent = fed.verdicts.filter((v) => v.state === "suspected" || v.state === "manoeuvre");
+    expect(persistent.length).toBeGreaterThan(40);
+    // The first step, on a young payload with no record, starts a campaign; the second is occasional; from the third on the record of both signs explains every one, and none is suspected.
+    expect(suspected(fed)).toEqual([]);
+    expect(persistent[0]!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("campaign"));
+    const settled = persistent.filter((v) => v.step!.afterEpoch >= T0 + 140 * DAY);
+    expect(settled.length).toBeGreaterThan(35);
+    expect(settled.every((v) => v.state === "manoeuvre")).toBe(true);
+    const late = settled.at(-1)!;
+    expect(late.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("station-keeping"));
+    expect(late.evidence.n365).toBeGreaterThanOrEqual(24);
+    expect(late.evidence.sameSignShare).toBeCloseTo(0.5, 1);
+    expect(late.reasons.join(" ")).toContain("a manoeuvre, not a breakup");
+  });
+
+  test("a low-orbit raising campaign on a young payload: the first raise starts a campaign, the next ones continue it, none is suspected", () => {
+    const gauss = noise(31);
+    const series: SyntheticSet[] = [];
+    let level = 6900;
+    for (let i = 0; i < 240; i++) {
+      const t = i * 6 * HOUR;
+      if (i > 0 && i % 20 === 0) level += 5;
+      series.push({ epochMs: T0 + t, aKm: level + 0.005 * gauss(), bstar: 1e-4 });
+    }
+    const fed = feed(one(series.map((s) => setOf(1, s, "payload"))));
+    const manoeuvres = fed.verdicts.filter((v) => v.state === "manoeuvre");
+    expect(suspected(fed)).toEqual([]);
+    expect(manoeuvres.length).toBeGreaterThanOrEqual(10);
+    expect(manoeuvres[0]!.evidence.n730).toBe(0);
+    expect(manoeuvres[0]!.evidence.ageDays).toBeLessThan(params.newObjectDays);
+    expect(manoeuvres[0]!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("campaign"));
+    expect(manoeuvres.at(-1)!.evidence.sameSignShare).toBe(1);
+    // The same raises on a young rocket body are unique steps: a stage does not climb.
+    const stage = feed(one(series.map((s) => setOf(2, s, "rocket body"))));
+    expect(suspected(stage).length).toBeGreaterThan(0);
+    expect(suspected(stage)[0]!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("unique"));
+  });
+
+  test("a disposal lowering, the perigee dropped thirty kilometres with the apogee kept, is a manoeuvre whatever the record", () => {
+    const gauss = noise(41);
+    const series: SyntheticSet[] = [];
+    for (let i = 0; i < 400; i++) {
+      const t = i * 8 * HOUR;
+      const dropped = i >= 360;
+      // After the burn at apogee the perigee is thirty kilometres lower: the axis fifteen lower and the eccentricity up by the same fifteen over the axis.
+      series.push({ epochMs: T0 + t, aKm: (dropped ? 7185 : 7200) + 0.004 * gauss(), eccentricity: dropped ? 0.001 + 15 / 7185 : 0.001, bstar: 1e-4 });
+    }
+    const fed = feed(one(series.map((s) => setOf(1, s, "payload"))));
+    expect(suspected(fed)).toEqual([]);
+    const manoeuvre = fed.verdicts.find((v) => v.state === "manoeuvre");
+    expect(manoeuvre).toBeDefined();
+    expect(manoeuvre!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("disposal"));
+    expect(manoeuvre!.evidence.disposalLike).toBeUndefined();
+    expect(manoeuvre!.step!.deltaPerigeeKm).toBeLessThan(-25);
+    expect(manoeuvre!.evidence.ageDays).toBeGreaterThan(params.newObjectDays);
+  });
+
+  test("a working payload with a step far larger than its own, and a drag term that jumped, is suspected as atypical", () => {
+    const gauss = noise(51);
+    const series: SyntheticSet[] = [];
+    let level = 7000;
+    for (let i = 0; i < 1000; i++) {
+      const t = i * 8 * HOUR;
+      // A drag make-up raise of 400 m every thirty days, then on day 310 a jump of thirteen kilometres with the drag term tenfold.
+      if (i > 0 && i % 90 === 0 && i < 930) level += 0.4;
+      const huge = i >= 930;
+      if (i === 930) level += 13;
+      series.push({ epochMs: T0 + t, aKm: level + 0.004 * gauss(), bstar: huge ? 1e-3 : 1e-4 });
+    }
+    const fed = feed(one(series.map((s) => setOf(1, s, "payload"))));
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.step!.deltaKm).toBeCloseTo(13, 0);
+    expect(raised[0]!.evidence.n730).toBeGreaterThanOrEqual(8);
+    expect(raised[0]!.evidence.typicality).toBeGreaterThan(params.typicalityMax);
+    expect(raised[0]!.evidence.bstarRatio).toBeCloseTo(10, 0);
+    expect(raised[0]!.evidence.atypical).toBeGreaterThanOrEqual(1);
+    expect(raised[0]!.reasons.join(" ")).toContain("times the median of the object's past steps");
+    // Its own raises before it were manoeuvres, bar the first few on an empty record.
+    expect(fed.verdicts.filter((v) => v.state === "manoeuvre").length).toBeGreaterThanOrEqual(7);
   });
 
   test("a storm hold asks for three post sets, and says so", () => {

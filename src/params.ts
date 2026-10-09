@@ -84,6 +84,31 @@ export interface DetectorParameters {
   foreignRaanDeg: number;
   /** A first derivative of the mean motion below this, in revolutions a day squared as the format prints it (half the derivative), is junk: an orbit cannot rise that fast. Physical. */
   junkMeanMotionDot: number;
+  /** How far back the object's own history of accepted steps reaches, in days, and the most steps it keeps. Policy: two years, long enough for a yearly north-south step to recur; sixty-four steps hold two years of fortnightly east-west steps with room. */
+  historyDays: number;
+  historyMaxSteps: number;
+  /** An object younger than this, in days from its first set, has a history that is unknown rather than empty: a payload's first raise in that time is the start of a campaign, not a unique step. Policy: ninety days, which covers the start of an orbit-raising campaign from the insertion orbit. */
+  newObjectDays: number;
+  /** The fewest accepted steps in the year before a step for the record to be read as station-keeping, and the bounds that call it regular (the coefficient of variation of the intervals at most this) or alternating (the share of sign changes between consecutive steps at least this, as east-west station-keeping alternates). Policy: four steps, 0.75, a half. */
+  stationKeepingMinSteps: number;
+  regularityMax: number;
+  alternationMin: number;
+  /** The share of the past steps with the step's sign from which the record is a campaign of one direction. Policy: four in five. */
+  monotoneShareMin: number;
+  /** The shape of an end-of-life move: in low orbit a perigee lowered by at least this many kilometres with the apogee kept, or a raise of at least this many; at geosynchronous altitude a raise of at least this many, the graveyard's height above the ring. Policy, from the sizes operators use. */
+  disposalPerigeeDropKm: number;
+  disposalRaiseLeoKm: number;
+  disposalRaiseGeoKm: number;
+  /** The step's size over the median of the object's past steps from which it is atypical and raised on a manoeuvring object. Fitted on the training split by sweeping the log. */
+  typicalityMax: number;
+  /** The fewest past steps for a step opposite in direction to every one of them to be atypical: with one past step the test reads an alternating pattern's second step as its opposite. Fitted on the training split. */
+  oppositeMinSteps: number;
+  /** The chi-squared of the eccentricity change beyond a single tangential impulse's reach from which the step is raised whatever the record: a thruster burns along the velocity or across it, an explosion in any direction. Fitted on the training split. */
+  consistencyMin: number;
+  /** The factor by which the drag term may change across a step before the change is read as evidence of a breakup (the area over the mass changed) on a manoeuvring object; its inverse bounds a fall. Fitted on the training split; set beyond reach where the sweep found it only costs false alarms. */
+  bstarRatioMax: number;
+  /** The inclination step below which no normal component is read, in degrees: the format prints four decimals, and the fits scatter by tens of them. Physical. */
+  inclinationStepMinDeg: number;
 }
 
 export const DETECTOR_PARAMETERS: DetectorParameters = {
@@ -123,6 +148,21 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   foreignDeltaIncDeg: 0.5,
   foreignRaanDeg: 5,
   junkMeanMotionDot: -1e-4,
+  historyDays: 730,
+  historyMaxSteps: 64,
+  newObjectDays: 90,
+  stationKeepingMinSteps: 4,
+  regularityMax: 0.75,
+  alternationMin: 0.5,
+  monotoneShareMin: 0.8,
+  disposalPerigeeDropKm: 20,
+  disposalRaiseLeoKm: 50,
+  disposalRaiseGeoKm: 200,
+  typicalityMax: 10,
+  oppositeMinSteps: 2,
+  consistencyMin: 100,
+  bstarRatioMax: 1e6,
+  inclinationStepMinDeg: 0.01,
 };
 
 /** The parameters with a caller's overrides laid over the defaults, one level deep so a per-regime table can be overridden whole. */

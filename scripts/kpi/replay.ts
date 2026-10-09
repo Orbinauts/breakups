@@ -30,12 +30,16 @@ import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
  * published in, as it did. Bins with no set still run, so a detector that
  * lets candidates lapse by time sees the time pass.
  *
- * The states are carried across the year's runs and, where the previous
- * year is in the Archive, warmed up from its last weeks first: those runs
- * are replayed and their verdicts dropped, so the detector meets January
- * with every object's recent history rather than cold. The warm-up is the
- * same whether the years are replayed one at a time or all in a row, so a
- * year's result does not depend on how it was run.
+ * The states are carried across the year's runs and, from one year into
+ * the next, across the years: the detector's verdict depends on the
+ * object's own record over two years, so the years are replayed in order
+ * and a year starts from the states the previous year's replay ended
+ * with (`carried`). A year replayed with no carried states, the first
+ * year or one run alone, is warmed up from the previous year's last
+ * weeks where the Archive has it: those runs are replayed and their
+ * verdicts dropped, so the detector meets January with every object's
+ * recent sets rather than cold, though with no record of its steps. The
+ * result says which of the two it was.
  *
  * Memory: a year's columns are read whole (typed arrays, a few hundred
  * megabytes for the largest), and the light rows the detector reads are
@@ -206,6 +210,13 @@ export function spaceFor(space: Map<string, SpaceWeatherDay>, now: number, count
 
 export type Detector = (input: DetectorInput) => DetectorOutput;
 
+/** What one year's replay hands the next: the states at its end, and its sets as the matcher reads them across the boundary. */
+export interface Carried {
+  states: Map<number, ObjectState>;
+  launches: Map<string, LaunchState>;
+  previous: YearSlice | null;
+}
+
 export interface ReplayOptions {
   /** The detector to run; the library's by default. */
   detector?: Detector;
@@ -214,6 +225,8 @@ export interface ReplayOptions {
   notices?: Notice[];
   runHours?: number;
   warmupDays?: number;
+  /** The states the previous year's replay ended with; given, no warm-up is run. */
+  carried?: Carried;
   /** Called after each run, for progress. */
   onRun?: (run: Run, year: number, runs: number) => void;
 }
@@ -238,7 +251,9 @@ export interface ReplayResult {
   timeBasis: TimeBasis;
   runs: number;
   sets: number;
+  /** The warm-up run, or null where the states were carried from the previous year's replay. */
   warmup: { year: number; runs: number; sets: number } | null;
+  carried: boolean;
   verdicts: Verdict[];
   log: LogRow[];
   states: Map<number, ObjectState>;
@@ -247,10 +262,12 @@ export interface ReplayResult {
   bodyYears: number;
   seconds: number;
   index: SetIndex;
+  /** The year's sets as the matcher reads them, for the next year to carry. */
+  slice: YearSlice;
 }
 
 /** A compact copy of what the matcher needs of a year: by object, the epochs in the body's own order and their publication bounds. */
-interface YearSlice {
+export interface YearSlice {
   year: number;
   bodies: ArchivedBody[];
   byNumber: Map<number, ArchivedBody>;
@@ -261,6 +278,16 @@ interface YearSlice {
 function sliceOf(loaded: LoadedYear): YearSlice {
   const published = loaded.columns.created ?? loaded.columns.epoch;
   return { year: loaded.year, bodies: loaded.bodies, byNumber: loaded.byNumber, epoch: loaded.columns.epoch, published };
+}
+
+/** The slice of a year alone, read from the two columns it needs rather than the fourteen a replay reads. */
+export function loadSlice(archive: string, year: number): YearSlice {
+  const dir = yearDir(archive, year);
+  const manifest = readManifest(archive, year);
+  const bodies = readBodies(archive, year);
+  const epoch = readColumn(dir, "epoch", manifest.sets) as Float64Array;
+  const published = manifest.columns.includes("created") ? (readColumn(dir, "created", manifest.sets) as Float64Array) : epoch;
+  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published };
 }
 
 function indexOf(current: YearSlice, previous: YearSlice | null): SetIndex {
@@ -345,10 +372,11 @@ export function replayYear(archive: string, year: number, options: ReplayOptions
   const runHours = options.runHours ?? RUN_HOURS;
   const warmupDays = options.warmupDays ?? WARMUP_DAYS;
   const notices = options.notices ?? [];
-  let states = new Map<number, ObjectState>();
-  let launches = new Map<string, LaunchState>();
+  const carried = options.carried;
+  let states = carried?.states ?? new Map<number, ObjectState>();
+  let launches = carried?.launches ?? new Map<string, LaunchState>();
   let warmup: ReplayResult["warmup"] = null;
-  let previous: YearSlice | null = null;
+  let previous: YearSlice | null = carried?.previous ?? null;
   const feed = (loaded: LoadedYear, from: number, collect: Verdict[] | null, log: LogRow[] | null): { runs: number; sets: number } => {
     const space = spaceByDay(archive, loaded.year);
     const previousSpace = spaceByDay(archive, loaded.year - 1);
@@ -367,7 +395,7 @@ export function replayYear(archive: string, year: number, options: ReplayOptions
     }
     return { runs, sets };
   };
-  if (existsSync(join(yearDir(archive, year - 1), "manifest.json"))) {
+  if (carried === undefined && existsSync(join(yearDir(archive, year - 1), "manifest.json"))) {
     const loaded = loadYear(archive, year - 1);
     const fed = feed(loaded, Date.UTC(year, 0, 1) - warmupDays * DAY_MS, null, null);
     warmup = { year: year - 1, ...fed };
@@ -377,6 +405,7 @@ export function replayYear(archive: string, year: number, options: ReplayOptions
   const verdicts: Verdict[] = [];
   const log: LogRow[] = [];
   const fed = feed(loaded, Number.NEGATIVE_INFINITY, verdicts, log);
+  const slice = sliceOf(loaded);
   return {
     year,
     manifest: loaded.manifest,
@@ -384,12 +413,14 @@ export function replayYear(archive: string, year: number, options: ReplayOptions
     runs: fed.runs,
     sets: fed.sets,
     warmup,
+    carried: carried !== undefined,
     verdicts,
     log,
     states,
     launches,
     bodyYears: bodyYearsOf(loaded),
     seconds: (performance.now() - started) / 1000,
-    index: indexOf(sliceOf(loaded), previous),
+    index: indexOf(slice, previous),
+    slice,
   };
 }

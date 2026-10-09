@@ -64,25 +64,55 @@ open:
   events by the same two groups. A parent has public elements when it has
   at least five sets in the sixty days before the window.
 - A step brackets an event when the bracket and the truth's window, each
-  widened by a day, overlap: a window a month wide can hold a step of a
-  day, and an epoch is not an instant.
+  widened by a margin, overlap: a window a month wide can hold a step of
+  a day, and an epoch is not an instant. The margin is per regime: a day
+  in low and medium orbits, where sets come hours apart and an
+  authority's instant is measured; five days in highly elliptical and
+  geosynchronous orbits, where sets are days apart, the catalogue's fit
+  settles on the new orbit over several of them, and the stated instant
+  is itself inferred. The first phase of the detector raised the right
+  object for the ullage motors of the Cosmos navigation launches and for
+  Beidou G2, but the catalogue's step sat two to four days before the
+  time NASA states (once thirty-three hours after), so the one-day
+  margin scored every one of them as a miss and the whole highly
+  elliptical line read nought. The owner may prefer the strict margin,
+  or a look at those stated times; the margin is the scorecard's and
+  changes no verdict.
 - The catalogue's time is the first published set of the first body under
   the parent's launch numbered above the highest designated number a day
   before the window, read from the event's own year. A year stripped from
   a bundle has no publication times: its order is the bundle's, which is
   the catalogue's, and its clock is the latest epoch seen so far, a lower
   bound, leaping at most a day on any one set; the result says so.
-- The states are warmed up from the previous year's last sixty days, the
-  same whether a year is replayed alone or every year in a row, so a
-  year's score never depends on how it was run.
+- The years are replayed in order and the states carried from each into
+  the next, since from the second phase the detector's verdict depends
+  on the object's own record of steps over two years: a year replayed
+  cold would raise every object's first step of the year as unique.
+  `npm run kpi -- --all` replays the sequence and leaves each year's end
+  states as a working file under `kpi/work/states/`; a year replayed
+  alone starts from the file its predecessor's replay left, which gives
+  the same result as the sequence, and where there is none from the
+  previous year's last sixty days, in which case its file says so and
+  its score is a check, not the record. The KPI workflow replays the
+  years in order in one job for the same reason.
 - The false-alarm rate divides by false alarms plus detections on every
   line, and a second alert on the same object whose bracket overlaps an
   earlier alert's is the same step raised again, a duplicate, since the
   unit the owner counts is the step.
-- A year's file is written gzipped. The first phase of the detector
-  raises every persistent step on every object, a working payload's
-  manoeuvres included, so a year holds tens of thousands of verdicts and
-  log rows: tens of megabytes as plain text, a few compressed, and the
-  files are committed with the aggregate. The log keeps one row per
-  candidate, written when it closes, with the step's trajectory over the
-  first post sets, which is what the offline sweeps re-threshold.
+- A year's file is written gzipped and is not committed. The detector
+  raises every persistent step on every object as a verdict, a working
+  payload's manoeuvres included (as `manoeuvre`, which the scorecard
+  counts as nothing), so a year holds tens of thousands of verdicts and
+  log rows: tens of megabytes as plain text, a few compressed, and
+  eighty megabytes a run over the years, which the first phase committed
+  once and which from the second phase stays out of git (`kpi/years/` is
+  ignored): the KPI workflow carries the year files as artifacts of the
+  run, and `npm run kpi -- --all` makes them again. Only the aggregate,
+  `kpi/latest.json` and `kpi/latest.md`, is committed. The log keeps one
+  row per candidate, written when it closes, with the step's trajectory
+  over the first post sets, the impulse it implies and the object's
+  history at it, which is what the offline sweeps re-threshold.
+- A verdict of `manoeuvre` is terminal and counted as nothing: not an
+  alert, not a false alarm. A reported breakup whose parent's step was
+  read as a manoeuvre is a miss, which is what the detection rate must
+  show.
