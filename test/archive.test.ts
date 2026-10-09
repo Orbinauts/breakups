@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { readElements } from "@orbinauts/engine";
-import { archiveHome, builtYears, readManifest, readYear, setAt } from "../scripts/archive/archive.ts";
+import { archiveHome, builtYears, readManifest, readYear, setAt, type ArchiveYear } from "../scripts/archive/archive.ts";
 
 /**
  * A built year of the Archive, where one is present on this machine: its
@@ -22,8 +22,9 @@ const archive = (() => {
 const years = archive !== null && existsSync(archive) ? builtYears(archive) : [];
 
 describe.skipIf(years.length === 0)("a built year of the Archive", { timeout: 60_000 }, () => {
-  const year = years[Math.floor(years.length / 2)]!;
-  const { manifest, bodies, columns } = readYear(archive!, year);
+  // The suite's body runs at collection even when skipped, so the year is read only where one exists.
+  const year = years[Math.floor(years.length / 2)] ?? 0;
+  const { manifest, bodies, columns } = year === 0 ? ({ manifest: { format: 1, columns: [], sets: 0, bodies: 0, withoutSatcat: 0 }, bodies: [], columns: {} } as unknown as ArchiveYear) : readYear(archive!, year);
 
   test(`${year}'s columns hold the manifest's sets, ordered by object then rank`, () => {
     expect(manifest.format).toBe(1);

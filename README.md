@@ -11,7 +11,7 @@ The library is not written yet. What this repository holds today is the ground i
 - Ground truth: every reported breakup and anomalous event, with each source's statement verbatim, the resolved time, orbit, cause and piece count, which source each came from, and every disagreement between sources.
 - Next: the Archive of element histories the detector is backtested over, the scorecard that computes the KPIs, and the detector itself.
 
-[Changelog](CHANGELOG.md) · [Design records](docs/decisions/) · [How the truth was built](docs/truth.md)
+[Changelog](CHANGELOG.md) · [Design record](docs/decisions/0001-a-standalone-truth-driven-package.md) · [How the truth was built](docs/truth.md)
 
 ## Install
 
