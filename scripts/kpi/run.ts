@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup } from "../../src/index.ts";
 import { archiveHome, builtYears } from "../archive/archive.ts";
 import { jumpDetector } from "./jump.ts";
@@ -12,7 +13,7 @@ import { replayYear, type Detector, type ReplayOptions } from "./replay.ts";
 /**
  * The scorecard's command: `npm run kpi:year -- --year 2013` replays one
  * year of the Archive through the detector, matches it against the truth
- * and writes `kpi/years/2013.json`; `npm run kpi -- --aggregate` folds
+ * and writes `kpi/years/2013.json.gz`; `npm run kpi -- --aggregate` folds
  * every year file into `kpi/latest.json` and `kpi/latest.md`; `npm run
  * kpi -- --all` does both over every built year. `--detector jump` runs
  * the trivial step detector instead of the library's, for timing and for
@@ -62,19 +63,32 @@ export function scoreYear(archive: string, year: number, truth: Truth, options: 
 
 export const yearsDir = (dir: string): string => join(dir, "years");
 
+/**
+ * A year's file is written gzipped: with every persistent step suspected
+ * before the manoeuvre classing, a year holds tens of thousands of
+ * verdicts and log rows, tens of megabytes as plain text and a few
+ * compressed, and the files are committed.
+ */
+export const yearFileName = (year: number): string => `${year}.json.gz`;
+
 export function writeYearFile(dir: string, file: YearFile): string {
   mkdirSync(yearsDir(dir), { recursive: true });
-  const path = join(yearsDir(dir), `${file.year}.json`);
-  writeFileSync(path, `${JSON.stringify(file)}\n`);
+  const path = join(yearsDir(dir), yearFileName(file.year));
+  writeFileSync(path, gzipSync(`${JSON.stringify(file)}\n`, { level: 9 }));
   return path;
+}
+
+export function readYearFile(path: string): YearFile {
+  const bytes = readFileSync(path);
+  return JSON.parse((path.endsWith(".gz") ? gunzipSync(bytes) : bytes).toString("utf8")) as YearFile;
 }
 
 export function readYearFiles(dir: string): YearFile[] {
   if (!existsSync(yearsDir(dir))) return [];
   return readdirSync(yearsDir(dir))
-    .filter((name) => /^\d{4}\.json$/.test(name))
+    .filter((name) => /^\d{4}\.json\.gz$/.test(name))
     .sort()
-    .map((name) => JSON.parse(readFileSync(join(yearsDir(dir), name), "utf8")) as YearFile);
+    .map((name) => readYearFile(join(yearsDir(dir), name)));
 }
 
 /** The aggregate over the year files in a directory, written beside them as `latest.json` and `latest.md`. */

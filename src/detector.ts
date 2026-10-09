@@ -1,4 +1,5 @@
 import type { ElementSet } from "./elements.ts";
+import type { DetectorParameters } from "./params.ts";
 
 /**
  * The detector's one entry point and the shapes it speaks in. A caller runs
@@ -6,13 +7,9 @@ import type { ElementSet } from "./elements.ts";
  * hands back the states it returned last time, and reads what it raised.
  * The scorecard runs it the same way over twenty years of the Archive, in
  * runs of four hours, and scores the verdicts against the ground truth; so
- * these shapes are the contract between the two, fixed here before the
- * detector exists, and the detector is written to fill them.
- *
- * What is here today raises nothing: it carries the states through and
- * returns no verdict, so the scorecard shows zeros and says so. Every type
- * below is already what the scorecard reads, so the detector phase fills
- * them without changing the scorecard.
+ * these shapes are the contract between the two, fixed here, and the
+ * detector (`run.ts`) is written to fill them. Every threshold it decides
+ * by is in `params.ts`.
  */
 
 /**
@@ -182,25 +179,6 @@ export interface DetectorOutput {
   log: LogRow[];
 }
 
-/**
- * Every threshold the detector decides by, in one object, each a number
- * with its provenance in the comment beside it. The scorecard writes the
- * ones it ran with into its aggregate, so a score is never read without
- * the thresholds that produced it. Empty until the detector is written.
- */
-export interface DetectorParameters {}
-
-export const DETECTOR_PARAMETERS: DetectorParameters = {};
-
-/** What the scorecard names the detector it ran: the placeholder, until the detector is written. */
-export const DETECTOR_NAME = "placeholder";
-
-/**
- * One run of the detector over the sets published since the last: the
- * states carried through, the verdicts raised. The placeholder carries the
- * states through untouched and raises nothing, so a caller's wiring and
- * the scorecard's replay can be built and timed before the detector is.
- */
-export function runDetector(input: DetectorInput): DetectorOutput {
-  return { states: input.states, launches: input.launches, verdicts: [], log: [] };
-}
+export type { DetectorParameters } from "./params.ts";
+export { DETECTOR_PARAMETERS } from "./params.ts";
+export { DETECTOR_NAME, runDetector } from "./run.ts";

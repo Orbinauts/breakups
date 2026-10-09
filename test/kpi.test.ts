@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
-import { readBreakups, type DetectorInput, type Verdict } from "../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type Verdict } from "../src/index.ts";
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
 import { cellsOf, percentile, readmeTables, renderLatest, splitYears, type Latest } from "../scripts/kpi/kpi.ts";
@@ -134,7 +134,8 @@ describe("the scorecard on the synthetic year", () => {
     expect(file.runs).toBeGreaterThanOrEqual((at(3, 31) - at(1, 1)) / (4 * HOUR));
     expect(file.runs).toBeLessThan((at(3, 31) - at(1, 1)) / (4 * HOUR) + 3);
     expect(file.bodyYears).toBeGreaterThan(1);
-    expect(file.detector).toEqual({ name: "jump", parameters: {} });
+    // The parameters recorded are the library's, which the trivial detector ignores: the file says what the library would have run with.
+    expect(file.detector).toEqual({ name: "jump", parameters: DETECTOR_PARAMETERS });
   });
 
   test("lists the three scoreable events and not the aerodynamic row", () => {

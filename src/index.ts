@@ -59,3 +59,7 @@ export {
   type VerdictKind,
   type VerdictState,
 } from "./detector.ts";
+export { parametersWith, type PerRegime } from "./params.ts";
+export { type Candidate, type Held, type SeriesState } from "./series.ts";
+export { type Fit } from "./model.ts";
+export { ORIGINS, OUTCOMES, PHASES, SIGNALS, type SignalName } from "./log.ts";

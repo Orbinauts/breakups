@@ -6,11 +6,12 @@ The detector behind [Orbinauts](https://orbinauts.com), the live satellite map.
 
 A satellite, a rocket body or a piece of debris that breaks up in orbit leaves two traces in public data: its own orbit jumps, by metres to kilometres, in the element sets the catalogue publishes for it; and days to weeks later new objects appear under its launch. This library reads the first trace to raise an alert before the second is published, and uses the second to confirm it. Every alert carries the numbers it was judged by.
 
-The detector is not written yet. What this repository holds today is the ground it will be measured on: the **ground truth**, one row per breakup an authority reported since 1961, built from its sources by a script and checked by the tests; the **Archive** of every object's element sets since 2005, published as release assets; the **scorecard** that replays a detector over the Archive and scores it against the truth; and the types the detector will speak in, with a placeholder that raises nothing.
+What this repository holds: the **ground truth**, one row per breakup an authority reported since 1961, built from its sources by a script and checked by the tests; the **Archive** of every object's element sets since 2005, published as release assets; the **scorecard** that replays the detector over the Archive and scores it against the truth; and the **detector**, in its first phase: the parent's own step, measured against the object's own noise and the day's drag, on every object in every orbit.
 
 - Ground truth: every reported breakup and anomalous event, with each source's statement verbatim, the resolved time, orbit, cause and piece count, which source each came from, and every disagreement between sources.
+- Detector: each object's sets are kept in a ring and modelled by a robust local polynomial; a set that leaves the model by more than the object's own scatter and the band's live scale opens a candidate, and the candidate is suspected when the step persists across the next sets and is not a drift drag could produce. Every verdict carries the numbers it was judged by.
 - Scorecard: the detector replayed over twenty-one years in the catalogue's publication order and scored on held-out years, with the table below read from its committed result.
-- Next: the detector itself.
+- Next: classing manoeuvres by the object's own history, and confirming steps by the fragments the catalogue goes on to publish.
 
 [Changelog](CHANGELOG.md) · [Design record](docs/decisions/0001-a-standalone-truth-driven-package.md) · [How the truth was built](docs/truth.md)
 
@@ -54,30 +55,31 @@ by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 
 The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. A target is a reported event whose parent had at least five public element sets in the sixty days before it; one with fewer is undetectable from public elements and listed apart. A detection is an alert on the parent's own orbit, raised before the first fragment's element set was published and before any notice; the same alert after that is late; an alert matching no reported event is a false alarm. The headline line is breakups reported to the day or better, scored on the odd years, held out from the even years the thresholds are fitted on; the other lines are shown so nothing is mixed into it. The targets are nine in ten detected and fewer than one false alarm in ten. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the rule.
 
-**The detector is not written yet.** The table below is the scorecard run over the placeholder, which raises nothing, so every count is zero: it shows the targets the detector will be measured against, and that the scorecard runs end to end.
+**This is the first phase of the detector**, the parent-step channel alone. It classes no manoeuvres yet, so every persistent step on a working payload (a station-keeping burn, an orbit raise, a collision-avoidance move) is raised as suspected and scored as a false alarm; the false-alarm rate below is dominated by them, and the next phase takes them by the object's own step history. The detection rate is the number to read: of the reported breakups whose parent had public elements, how many the parent's own step caught before the fragments were catalogued. The thresholds were fitted on the even years; the odd years below were not looked at while choosing them. [docs/detector/d1-fitting.md](docs/detector/d1-fitting.md) records the sweeps.
 
 | Validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the target is 90%) | 32 | 6 | 0 | 0 | 32 | 0% |
-| Breakups, confidence C | 8 | 9 | 0 | 0 | 8 | 0% |
+| Breakups, confidence A and B (the target is 90%) | 32 | 6 | 12 | 2 | 18 | 38% |
+| Breakups, confidence C | 8 | 9 | 3 | 0 | 5 | 38% |
 | Breakups, confidence D | 8 | 1 | 0 | 0 | 8 | 0% |
-| Anomalous events, confidence A and B | 9 | 1 | 0 | 0 | 9 | 0% |
-| Anomalous events, confidence C and D | 4 | 0 | 0 | 0 | 4 | 0% |
+| Anomalous events, confidence A and B | 9 | 1 | 2 | 1 | 6 | 22% |
+| Anomalous events, confidence C and D | 4 | 0 | 3 | 0 | 1 | 75% |
 
 | Alerts, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 0 |
-| Duplicates | 0 |
-| Exempt | 0 |
-| False alarms | 0 |
-| False-alarm rate (the target is under 10%) | – |
-| False alarms per 10,000 body-years | 0.0 |
-| Lead over the catalogue, hours: median (10th percentile) | – |
-| Latency from the event, hours: median (90th percentile) | – |
-| Confirmed share of the detections | – |
+| Alerts (object verdicts, suspected or confirmed) | 74605 |
+| Duplicates | 85 |
+| Exempt | 8 |
+| False alarms | 74489 |
+| False-alarm rate (the target is under 10%) | 100% |
+| False alarms per 10,000 body-years | 4014.3 |
+| Lead over the catalogue, hours: median (10th percentile) | 516.3 (207.1) |
+| Latency from the event, hours: median (90th percentile) | 129.5 (274.2) |
+| Confirmed share of the detections | 0% |
 | Days to confirmation, median | – |
-| Timing error, minutes, median | – |
+| Timing error, minutes, median | 1029.1 |
 | Cloud verdicts, for review | 0 |
+
 ## Ground truth
 
 A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.

@@ -79,3 +79,10 @@ open:
   line, and a second alert on the same object whose bracket overlaps an
   earlier alert's is the same step raised again, a duplicate, since the
   unit the owner counts is the step.
+- A year's file is written gzipped. The first phase of the detector
+  raises every persistent step on every object, a working payload's
+  manoeuvres included, so a year holds tens of thousands of verdicts and
+  log rows: tens of megabytes as plain text, a few compressed, and the
+  files are committed with the aggregate. The log keeps one row per
+  candidate, written when it closes, with the step's trajectory over the
+  first post sets, which is what the offline sweeps re-threshold.
