@@ -1,0 +1,25 @@
+{
+  "about": "The snapshots the truth is built from, as fetched by scripts/truth/fetch-sources.ts, with the hash of each original so a new edition is a visible change.",
+  "snapshots": {
+    "hoosf-16e": {
+      "url": "https://orbitaldebris.jsc.nasa.gov/library/HOOSF_16e.pdf",
+      "fetchedOn": "2026-10-09",
+      "originalSha256": "3c82039474625f321a1ed12556adbb8ea62ce149e1f052b8a41e81ba5914a61b",
+      "originalBytes": 5534195,
+      "snapshot": "sources/hoosf-16e.txt",
+      "madeWith": "pdftotext -layout, poppler 26.07.0",
+      "snapshotSha256": "1331b658f4a1531fb13e4579724f6e599ae6a007f3d59ceb7516ee1d0aa460d6",
+      "licence": "US Government work (NASA technical publication NASA/TP-20220019160)"
+    },
+    "gcat": {
+      "url": "https://planet4589.org/space/debris/debriscat/index.html",
+      "fetchedOn": "2026-10-09",
+      "originalSha256": "4920c18e78a96e86f8c43a4b00c70cd6c9adcbf2522222f80a5fcd4224fc9469",
+      "originalBytes": 281371,
+      "snapshot": "sources/gcat-debriscat.html",
+      "madeWith": "fetched as served",
+      "snapshotSha256": "4920c18e78a96e86f8c43a4b00c70cd6c9adcbf2522222f80a5fcd4224fc9469",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    }
+  }
+}

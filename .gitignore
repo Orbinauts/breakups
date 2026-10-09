@@ -1,0 +1,12 @@
+node_modules/
+# What `npm run build` and `npm run docs` write.
+dist/
+reference/
+*.tgz
+# No lockfile: the package is installed by its ranges, as a consumer's
+# project installs it, so CI tests what a consumer gets.
+package-lock.json
+# Credentials for the Archive's pulls, read from the environment only.
+.env
+# Where the KPI runner works; its results are committed under kpi/.
+kpi/work/

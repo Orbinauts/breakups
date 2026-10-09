@@ -1,0 +1,27 @@
+{
+  "about": "Events checked by hand against their primary sources, as the earlier research record read them: the built truth must carry each one as listed. A change here is a change of reading, not of parsing.",
+  "events": [
+    { "id": "25730:2007-01-11", "name": "FENGYUN 1C", "kind": "breakup", "at": "2007-01-11T22:26Z", "cause": "collision-deliberate", "regime": "LEO" },
+    { "id": "24946:2009-02-10", "name": "IRIDIUM 33", "kind": "breakup", "at": "2009-02-10T16:56Z", "cause": "collision-accidental", "regime": "LEO" },
+    { "id": "22675:2009-02-10", "name": "COSMOS 2251", "kind": "breakup", "at": "2009-02-10T16:56Z", "cause": "collision-accidental", "regime": "LEO" },
+    { "id": "23533:2015-02-03", "name": "DMSP 5D-2 F13 (USA 109)", "kind": "breakup", "at": "2015-02-03T17:40Z", "cause": "battery", "regime": "LEO" },
+    { "id": "26536:2015-11-25", "name": "NOAA 16", "kind": "breakup", "at": "2015-11-25T09:50Z", "regime": "LEO" },
+    { "id": "41337:2016-03-26", "name": "ASTRO H (HITOMI)", "kind": "breakup", "at": "2016-03-26T01:42Z", "cause": "propulsion", "regime": "LEO" },
+    { "id": "39634:2016-08-23", "name": "SENTINEL 1A", "kind": "breakup", "at": "2016-08-23T17:07Z", "cause": "collision-accidental", "regime": "LEO" },
+    { "id": "34779:2016-06-29", "name": "BEIDOU G2", "kind": "breakup", "from": "2016-06-29T00:00Z", "to": "2016-06-30T00:00Z", "regime": "GEO" },
+    { "id": "43947:2019-03-27", "name": "MICROSAT-R", "kind": "breakup", "at": "2019-03-27T05:40Z", "cause": "collision-deliberate", "regime": "LEO" },
+    { "id": "39497:2019-12-23", "name": "COSMOS 2491", "kind": "breakup", "at": "2019-12-23T13:02Z", "regime": "LEO" },
+    { "id": "44421:2020-01-09", "name": "COSMOS 2535", "kind": "breakup", "at": "2020-01-09T22:00Z", "regime": "LEO" },
+    { "id": "27453:2021-03-10", "name": "NOAA 17", "kind": "breakup", "at": "2021-03-10T07:11Z", "regime": "LEO" },
+    { "id": "44547:2021-03-18", "name": "YUNHAI 1-02", "kind": "breakup", "at": "2021-03-18T07:41Z", "regime": "LEO" },
+    { "id": "13552:2021-11-15", "name": "COSMOS 1408", "kind": "breakup", "at": "2021-11-15T02:48Z", "cause": "collision-deliberate", "regime": "LEO" },
+    { "id": "54236:2022-11-12", "name": "CZ-6A R/B (Yunhai 3)", "kind": "breakup", "from": "2022-11-12T05:24Z", "to": "2022-11-12T05:29Z", "regime": "LEO" },
+    { "id": "39765:2023-01-04", "name": "Cosmos 2499 (second event)", "kind": "breakup", "at": "2023-01-04T03:57Z", "regime": "LEO" },
+    { "id": "39186:2024-06-26", "name": "Resurs-P1", "kind": "breakup", "at": "2024-06-26T16:32Z", "regime": "LEO" },
+    { "id": "41748:2024-10-19", "name": "Intelsat 33e", "kind": "breakup", "at": "2024-10-19T04:30Z", "regime": "GEO" },
+    { "id": "69537:2026-06-09", "name": "ZhuQue-2E upper stage", "kind": "breakup", "at": "2026-06-09T08:47Z", "regime": "LEO" },
+    { "id": "19460:2026-09-13", "name": "USA 32", "kind": "breakup", "at": "2026-09-13T21:13Z", "confidence": "A", "regime": "LEO" },
+    { "id": "12456:2026-10-05", "name": "Meteor 2-7 (second event)", "kind": "breakup", "at": "2026-10-05T09:45Z", "confidence": "C", "regime": "LEO" },
+    { "id": "68196:2026-09-04", "name": "Yaogan-50 02", "kind": "breakup", "to": "2026-09-04T00:00Z", "confidence": "D" }
+  ]
+}

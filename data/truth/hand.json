@@ -1,0 +1,269 @@
+{
+  "about": "Statements typed by hand from sources with no machine-readable form: NASA's Orbital Debris Quarterly News after the 16th edition's cut-off, the U.S. Space Forces-Space notice on Space-Track's login page, ESA's Space Environment Report, named analysts and news reports for 2025 to 2026, and the catalogue itself where fragments were published with no report. Each statement cites where it was read. Never written by a program.",
+  "statements": [
+    {
+      "source": "odqn", "ref": "ODQN 26(3), September 2022, p. 2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 43674, "designator": "2018-084D", "name": "H-IIA PES fairing cover (GOSAT 2)" },
+      "event": { "stated": "3 July 2022, 03:52 ± 0:09 GMT", "at": "2022-07-03T03:52Z", "from": "2022-07-03T03:43Z", "to": "2022-07-03T04:01Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 615, "perigeeKm": 579, "inclinationDeg": 98 },
+      "cause": null, "causeStated": "unknown; a collision with an unknown, small or untracked object is called a logical explanation",
+      "piecesCatalogued": 52, "piecesStatedOn": "2022-07",
+      "preEventElements": null,
+      "note": "Identified by the 18th Space Defense Squadron. 52 pieces by late July 2022."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(1), March 2023, pp. 1-2; ODQN 28(4), October 2024, p. 2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 54236, "designator": "2022-151B", "name": "CZ-6A R/B (Yunhai 3)" },
+      "event": { "stated": "12 November 2022, around 05:24 to 05:29 GMT", "at": null, "from": "2022-11-12T05:24Z", "to": "2022-11-12T05:29Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 847, "perigeeKm": 813, "inclinationDeg": 98.8 },
+      "cause": "propulsion", "causeStated": "accidental explosion (the ODQN's top-ten table); passivation or insulation suspected",
+      "piecesCatalogued": 793, "piecesStatedOn": "2024-10",
+      "preEventElements": null,
+      "note": "533 pieces by January 2023, 793 by October 2024. The stage was launched the day before."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(1), March 2023, p. 2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 38345, "designator": "2012-025F", "name": "H-IIA lower fairing panel (GCOM-W1)" },
+      "event": { "stated": "17 November 2022, 23:36 ± 0:15 GMT", "at": "2022-11-17T23:36Z", "from": "2022-11-17T23:21Z", "to": "2022-11-17T23:51Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 633, "perigeeKm": 609, "inclinationDeg": 98.2 },
+      "cause": "unknown", "causeStated": "unknown",
+      "piecesCatalogued": 30, "piecesStatedOn": "2023-03",
+      "preEventElements": null,
+      "note": null
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(2), June 2023, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 39765, "designator": "2014-028E", "name": "Cosmos 2499 (second event)" },
+      "event": { "stated": "4 January 2023, 03:57 GMT", "at": "2023-01-04T03:57Z", "from": "2023-01-04T03:57Z", "to": "2023-01-04T03:57Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 1537, "perigeeKm": 1163, "inclinationDeg": 82.45 },
+      "cause": "unknown", "causeStated": "unknown",
+      "piecesCatalogued": 20, "piecesStatedOn": "2023-06",
+      "preEventElements": null,
+      "note": "The second breakup of this object; the first was 23 October 2021. Pieces 55717 to 55736."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(2), June 2023, p. 2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 55565, "designator": "2023-019D", "name": "SSLV SS3 third stage" },
+      "event": { "stated": "10 February 2023, between 09:00 and 21:35 GMT", "at": null, "from": "2023-02-10T09:00Z", "to": "2023-02-10T21:35Z", "precision": "hour" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 442, "perigeeKm": 357, "inclinationDeg": 37.2 },
+      "cause": "unknown", "causeStated": "unknown",
+      "piecesCatalogued": 5, "piecesStatedOn": "2023-03-24",
+      "preEventElements": null,
+      "note": "All five pieces reentered by 24 March 2023."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(2), June 2023, p. 2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 25984, "designator": "1999-065E", "name": "Orbcomm FM 36" },
+      "event": { "stated": "11 March 2023", "at": null, "from": "2023-03-11T00:00Z", "to": "2023-03-12T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 793, "perigeeKm": 776, "inclinationDeg": 45 },
+      "cause": "unknown", "causeStated": "unknown",
+      "piecesCatalogued": 0, "piecesStatedOn": "2023-04-25",
+      "preEventElements": null,
+      "note": "No piece catalogued by 25 April 2023; GCAT later counts 9."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 27(4), October 2023, pp. 1-2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 21299, "designator": "1991-033A", "name": "Cosmos 2143" },
+      "event": { "stated": "29 June 2023, 06:49 GMT", "at": "2023-06-29T06:49Z", "from": "2023-06-29T06:49Z", "to": "2023-06-29T06:49Z", "precision": "minute" },
+      "orbit": { "altitudeKm": 1400, "apogeeKm": 1416, "perigeeKm": 1398, "inclinationDeg": null },
+      "cause": "unknown", "causeStated": "unknown; a battery cannot be excluded",
+      "piecesCatalogued": 6, "piecesStatedOn": "2023-10",
+      "preEventElements": null,
+      "note": null
+    },
+    {
+      "source": "odqn", "ref": "ODQN 28(4), October 2024, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 39186, "designator": "2013-030A", "name": "Resurs-P1" },
+      "event": { "stated": "26 June 2024, 16:32 GMT", "at": "2024-06-26T16:32Z", "from": "2024-06-26T16:32Z", "to": "2024-06-26T16:32Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 388, "perigeeKm": 353, "inclinationDeg": 97 },
+      "cause": "unknown", "causeStated": "unknown",
+      "piecesCatalogued": 18, "piecesStatedOn": "2024-10",
+      "preEventElements": null,
+      "note": "17 of the 18 pieces had reentered by October 2024. ESA asserts 100 objects, 19 catalogued."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 28(4), October 2024, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 18123, "designator": "1987-053A", "name": "DMSP 5D-2 F8" },
+      "event": { "stated": "19 July 2024, 20:41 GMT", "at": "2024-07-19T20:41Z", "from": "2024-07-19T20:41Z", "to": "2024-07-19T20:41Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 837, "perigeeKm": 818, "inclinationDeg": 98.7 },
+      "cause": "unknown", "causeStated": "unknown; one of a family of battery-related breakups",
+      "piecesCatalogued": 4, "piecesStatedOn": "2024-10",
+      "preEventElements": null,
+      "note": null
+    },
+    {
+      "source": "odqn", "ref": "ODQN 28(4), October 2024, pp. 1-2",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 60397, "designator": "2024-140U", "name": "CZ-6A R/B (Qianfan)" },
+      "event": { "stated": "6 August 2024, 17:15 GMT", "at": "2024-08-06T17:15Z", "from": "2024-08-06T17:15Z", "to": "2024-08-06T17:15Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 857, "perigeeKm": 797, "inclinationDeg": 89 },
+      "cause": "unknown", "causeStated": "unknown (ODQN); propulsion (ESA); residual propellant (GCAT)",
+      "piecesCatalogued": 283, "piecesStatedOn": "2024-09-15",
+      "preEventElements": null,
+      "note": "ESA counts 663 catalogued and 700 asserted objects."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 29(1), February 2025, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 43227, "designator": "2018-022B", "name": "Atlas V Centaur (GOES-17)" },
+      "event": { "stated": "6 September 2024", "at": null, "from": "2024-09-06T00:00Z", "to": "2024-09-07T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 34949, "perigeeKm": 7622, "inclinationDeg": 9.3 },
+      "cause": null, "causeStated": "likely related to passivation (ODQN); propulsion (ESA)",
+      "piecesCatalogued": 0, "piecesStatedOn": "2025-01",
+      "preEventElements": null,
+      "note": "Announced by U.S. Space Forces-Space on its website. None catalogued by January 2025; ESA asserts 843."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 29(1), February 2025, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 41748, "designator": "2016-053B", "name": "Intelsat 33e" },
+      "event": { "stated": "19 October 2024, approximately 04:30 GMT", "at": "2024-10-19T04:30Z", "from": "2024-10-19T04:20Z", "to": "2024-10-19T04:40Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 35797, "perigeeKm": 35773, "inclinationDeg": null },
+      "cause": "unknown", "causeStated": "unknown (ODQN); propulsion (ESA)",
+      "piecesCatalogued": 18, "piecesStatedOn": "2025-01",
+      "preEventElements": null,
+      "note": "Operational at the time. ESA asserts 1,104 objects."
+    },
+    {
+      "source": "odqn", "ref": "ODQN 30(3), September 2026, p. 1",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 69537, "designator": "2026-128C", "name": "ZhuQue-2E upper stage" },
+      "event": { "stated": "9 June 2026, 08:47 GMT", "at": "2026-06-09T08:47Z", "from": "2026-06-09T08:47Z", "to": "2026-06-09T08:47Z", "precision": "minute" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 416, "perigeeKm": 327, "inclinationDeg": 54.53 },
+      "cause": "unknown", "causeStated": "unknown; appeared to occur shortly after the deployment of its payload",
+      "piecesCatalogued": 7, "piecesStatedOn": "2026-07-16",
+      "preEventElements": null,
+      "note": "Four of the seven pieces had reentered by 16 July 2026."
+    },
+    {
+      "source": "s4s-notice", "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-09-17",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 19460, "designator": "1988-078A", "name": "USA 32" },
+      "event": { "stated": "13 Sep 2026 (JDay 256) at approximately 2113 UTC", "at": "2026-09-13T21:13Z", "from": "2026-09-13T21:03Z", "to": "2026-09-13T21:23Z", "precision": "minute" },
+      "orbit": { "altitudeKm": 775, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": 84.98 },
+      "cause": "unknown", "causeStated": "not stated",
+      "piecesCatalogued": null, "piecesStatedOn": null,
+      "preEventElements": null,
+      "note": "\"S4S confirms the fragmentation of USA 32 (#19460) in LEO ... All tracked debris are being incorporated into routine conjunction assessment screenings.\" The altitude and inclination are the parent's orbit, not the notice's."
+    },
+    {
+      "source": "analyst", "ref": "Jim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/) and by LeoLabs' public notification of 2026-10-07",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 12456, "designator": "1981-043A", "name": "Meteor 2-7 (second event)" },
+      "event": { "stated": "5 October 2026, about 09:45 UTC, plus or minus 10 minutes", "at": "2026-10-05T09:45Z", "from": "2026-10-05T09:35Z", "to": "2026-10-05T09:55Z", "precision": "minute" },
+      "orbit": { "altitudeKm": 855, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "unknown", "causeStated": "unconfirmed; an internal pressure or battery failure, or an unrecorded collision",
+      "piecesCatalogued": null, "piecesStatedOn": null,
+      "preEventElements": null,
+      "note": "LeoLabs reported a debris-generating event with an estimated tens of fragments. The first event of this object was in 2004 (GCAT entry 269)."
+    },
+    {
+      "source": "news", "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 66629, "designator": "2025-271N", "name": "Starlink-35956" },
+      "event": { "stated": "17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")", "at": null, "from": "2025-12-17T00:00Z", "to": "2025-12-18T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": 418, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": 53.12 },
+      "cause": null, "causeStated": "likely an internal energetic source rather than a collision (SpaceX, LeoLabs)",
+      "piecesCatalogued": null, "piecesStatedOn": null,
+      "preEventElements": null,
+      "note": "SpaceX reported an anomaly at 418 km with loss of communications and a propulsion tank venting; LeoLabs detected tens of objects. The satellite reentered on 2026-01-17."
+    },
+    {
+      "source": "news", "ref": "LeoLabs' detection posted 2026-03-30; EarthSky (https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/); Gizmodo (https://gizmodo.com/spacex-starlink-satellite-malfunctions-breaks-apart-in-orbit-2000740250)",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 64157, "designator": "2025-112M", "name": "Starlink-34343" },
+      "event": { "stated": "29 March 2026 (LeoLabs: \"fragment creation event ... on 29 March 2026\")", "at": null, "from": "2026-03-29T00:00Z", "to": "2026-03-30T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": 560, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": 97.6 },
+      "cause": null, "causeStated": "probably an internal energetic source rather than a collision (SpaceX)",
+      "piecesCatalogued": null, "piecesStatedOn": null,
+      "preEventElements": null,
+      "note": "LeoLabs detected tens of objects. The catalogue lists pieces under 2025-112 named STARLINK-34343 DEB."
+    },
+    {
+      "source": "news", "ref": "LeoLabs on X, 2026-08-28; Space.com (https://www.space.com/china-megaconstellation-launch-space-junk); KeepTrack space brief 2026-09-05 (https://keeptrack.space/space-brief/space-brief-2026-09-05)",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 100472, "designator": "2026-195H", "name": "CZ-6C R/B" },
+      "event": { "stated": "less than two days after the launch of 24/25 August 2026 (LeoLabs)", "at": null, "from": "2026-08-25T00:00Z", "to": "2026-08-27T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 477, "perigeeKm": 397, "inclinationDeg": 97.54 },
+      "cause": null, "causeStated": "not stated",
+      "piecesCatalogued": null, "piecesStatedOn": null,
+      "preEventElements": null,
+      "note": "LeoLabs estimated tens to hundreds of fragments; none catalogued by early September 2026. The orbit is the catalogue's for the stage, 397 by 477 km."
+    },
+    {
+      "source": "catalogue", "ref": "the public catalogue: 43 objects under launch 2026-051 first listed on 2026-09-04, the oldest with elements of 3 September 2026",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 68196, "designator": "2026-051A", "name": "Yaogan-50 02" },
+      "event": { "stated": "unknown; pieces catalogued 4 September 2026", "at": null, "from": null, "to": "2026-09-04T00:00Z", "precision": "none" },
+      "orbit": { "altitudeKm": null, "apogeeKm": 953, "perigeeKm": 952, "inclinationDeg": 141.99 },
+      "cause": null, "causeStated": "not stated",
+      "piecesCatalogued": 43, "piecesStatedOn": "2026-09-04",
+      "preEventElements": null,
+      "note": "No report by any authority as of 2026-10-09. The parent is a working payload in a retrograde orbit; the orbit given is the catalogue's."
+    },
+    {
+      "source": "esa-ser", "ref": "ESA Space Environment Report 2025 (GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025), Table 3.7, row 2024-04-02",
+      "kind": "unnamed",
+      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed)" },
+      "event": { "stated": "2024-04-02", "at": null, "from": "2024-04-02T00:00Z", "to": "2024-04-03T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "propulsion", "causeStated": "Propulsion",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "preEventElements": null,
+      "note": "ESA names no object; 60 asserted objects, 0 catalogued."
+    },
+    {
+      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-04-08",
+      "kind": "unnamed",
+      "parent": { "catalogueNumber": null, "designator": null, "name": "payload, 2,382 kg, LMO (unnamed)" },
+      "event": { "stated": "2024-04-08", "at": null, "from": "2024-04-08T00:00Z", "to": "2024-04-09T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "propulsion", "causeStated": "Propulsion",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "preEventElements": null,
+      "note": "ESA names no object; 92 asserted objects, 0 catalogued."
+    },
+    {
+      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-05-27",
+      "kind": "unnamed",
+      "parent": { "catalogueNumber": null, "designator": null, "name": "payload, 2,500 kg, GEO (unnamed)" },
+      "event": { "stated": "2024-05-27", "at": null, "from": "2024-05-27T00:00Z", "to": "2024-05-28T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "unknown", "causeStated": "Unknown",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "preEventElements": null,
+      "note": "ESA names no object; 1 asserted object, 0 catalogued."
+    },
+    {
+      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-07-05",
+      "kind": "unnamed",
+      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed; secondary reports name a CZ-6A upper stage, 2024-126C, of 4 July 2024)" },
+      "event": { "stated": "2024-07-05", "at": null, "from": "2024-07-05T00:00Z", "to": "2024-07-06T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "propulsion", "causeStated": "Propulsion",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "preEventElements": null,
+      "note": "ESA names no object; 44 asserted objects, 0 catalogued. No authority names the object; the 2024-126C attribution rests on secondary reports only."
+    },
+    {
+      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-12-01",
+      "kind": "unnamed",
+      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed)" },
+      "event": { "stated": "2024-12-01", "at": null, "from": "2024-12-01T00:00Z", "to": "2024-12-02T00:00Z", "precision": "day" },
+      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
+      "cause": "unknown", "causeStated": "Unknown",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "preEventElements": null,
+      "note": "ESA names no object; 100 asserted objects, 0 catalogued."
+    }
+  ]
+}

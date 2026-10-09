@@ -1,0 +1,67 @@
+{
+  "name": "@orbinauts/breakups",
+  "version": "0.1.0",
+  "description": "On-orbit breakup detection from public orbital-element histories, in TypeScript, scored against every reported fragmentation since 2005",
+  "keywords": [
+    "satellite",
+    "fragmentation",
+    "breakup",
+    "space-debris",
+    "tle",
+    "omm",
+    "orbit",
+    "anomaly-detection",
+    "typescript"
+  ],
+  "homepage": "https://orbinauts.com",
+  "bugs": "https://github.com/Orbinauts/breakups/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Orbinauts/breakups.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./breakups.json": "./data/breakups.json"
+  },
+  "files": [
+    "dist",
+    "data/breakups.json"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "test": "vitest run",
+    "docs": "typedoc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json --noEmit",
+    "truth": "node --experimental-strip-types scripts/truth/build-truth.ts",
+    "truth:fetch": "node --experimental-strip-types scripts/truth/fetch-sources.ts",
+    "archive:strip": "node --experimental-strip-types scripts/archive/strip.ts",
+    "archive:satcat": "node --experimental-strip-types scripts/archive/satcat.ts",
+    "archive:space": "node --experimental-strip-types scripts/archive/space-weather.ts",
+    "archive:upload": "node --experimental-strip-types scripts/archive/release.ts upload",
+    "archive:download": "node --experimental-strip-types scripts/archive/release.ts download",
+    "archive:pull": "node --env-file-if-exists=.env --experimental-strip-types scripts/archive/pull.ts",
+    "truth:catalogue": "node --experimental-strip-types scripts/truth/parse-catalogue.ts"
+  },
+  "dependencies": {
+    "@orbinauts/engine": "^0.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typedoc": "^0.28.20",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "about": "A reviewer's decisions over the generated truth, applied by name after the sources are merged: which statements of different parents describe one event, which source's instant stands where the automatic order would pick another, and notes a reader should see. Edit this file, never data/breakups.json.",
+  "overrides": [
+    {
+      "name": "ullage-motor-2009-070-december-2019",
+      "merge": [
+        {
+          "catalogueNumber": 36116
+        },
+        {
+          "catalogueNumber": 36115
+        }
+      ],
+      "between": [
+        "2019-12-19",
+        "2019-12-26"
+      ],
+      "note": "NASA puts the December 2019 breakup on 2009-070F (36116), GCAT on 2009-070E (36115): one event, the parent as NASA names it."
+    },
+    {
+      "name": "h-iia-2018-084-february-2019",
+      "merge": [
+        {
+          "catalogueNumber": 43675
+        },
+        {
+          "catalogueNumber": 43682
+        }
+      ],
+      "between": [
+        "2019-02-01",
+        "2019-09-02"
+      ],
+      "note": "NASA splits the 6 to 7 February 2019 H-IIA cloud over the PES upper cap (43675) and the second stage (43682, 'prior to Sept. 2019'); GCAT puts it on the second stage at 06:00. Merged as one event under the upper cap, which NASA dates."
+    },
+    {
+      "name": "meteor-2-7-2004",
+      "merge": [
+        {
+          "catalogueNumber": 12456
+        }
+      ],
+      "between": [
+        "2004-03-01",
+        "2004-09-01"
+      ],
+      "note": "NASA lists Meteor 2-7's 2004 anomalous event in March 2004 and GCAT dates the cloud 'Jul?' 2004: one event, NASA's month standing."
+    },
+    {
+      "name": "briz-km-2015-2016",
+      "merge": [
+        {
+          "catalogueNumber": 40556
+        }
+      ],
+      "between": [
+        "2015-04-29",
+        "2016-09-01"
+      ],
+      "note": "NASA lists the Briz-KM anomalous event on 29 April 2015 and GCAT dates the same cloud 'Jul?' 2016: one event, NASA's day standing."
+    },
+    {
+      "name": "cosmos-2535-2019-2020",
+      "merge": [
+        {
+          "catalogueNumber": 44421
+        }
+      ],
+      "between": [
+        "2019-08-01",
+        "2020-01-10"
+      ],
+      "note": "NASA dates the Cosmos 2535 breakup 9 January 2020 at 22:00 GMT and GCAT '2019 Aug 3?': one event, NASA's instant standing, the five-month disagreement kept as a conflict."
+    },
+    {
+      "name": "iss-releases",
+      "exemptLaunch": "1998-067",
+      "exempt": "objects released from the station on purpose, not a breakup",
+      "note": "The catalogue lists what the station jettisons (tanks, tools, covers) as debris; a burst of them is a release, not a breakup."
+    }
+  ]
+}
