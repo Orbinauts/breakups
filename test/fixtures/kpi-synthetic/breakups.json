@@ -1,0 +1,296 @@
+{
+ "format": 1,
+ "sources": {
+  "hoosf-16e": {
+   "citation": "A synthetic source for the scorecard's tests",
+   "licence": "none",
+   "version": "synthetic"
+  }
+ },
+ "breakups": [
+  {
+   "id": "40001:2013-02-10",
+   "parent": {
+    "catalogueNumber": 40001,
+    "designator": "2010-001A",
+    "name": "ALPHA",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "2010-01-05"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "2013-02-10 05:30 GMT",
+    "at": "2013-02-10T05:30Z",
+    "from": "2013-02-10T05:30Z",
+    "to": "2013-02-10T05:30Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": 700,
+    "apogeeKm": 705,
+    "perigeeKm": 695,
+    "inclinationDeg": 98.1,
+    "regime": "LEO"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 2,
+   "confidence": "A",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": "hoosf-16e",
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "a synthetic spread",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 40001,
+      "designator": "2010-001A",
+      "name": "ALPHA"
+     },
+     "event": {
+      "stated": "2013-02-10 05:30 GMT",
+      "at": "2013-02-10T05:30Z",
+      "from": "2013-02-10T05:30Z",
+      "to": "2013-02-10T05:30Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 700,
+      "apogeeKm": 705,
+      "perigeeKm": 695,
+      "inclinationDeg": 98.1
+     },
+     "cause": "unknown",
+     "causeStated": "Unknown",
+     "piecesCatalogued": 2,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": []
+  },
+  {
+   "id": "40002:2013-03-05",
+   "parent": {
+    "catalogueNumber": 40002,
+    "designator": "2010-002A",
+    "name": "BETA",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "2010-01-20"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "2013-03-05",
+    "at": null,
+    "from": "2013-03-05T00:00Z",
+    "to": "2013-03-06T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": 700,
+    "apogeeKm": 705,
+    "perigeeKm": 695,
+    "inclinationDeg": 98.1,
+    "regime": "LEO"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 2,
+   "confidence": "B",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": "hoosf-16e",
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "a synthetic spread",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 40002,
+      "designator": "2010-002A",
+      "name": "BETA"
+     },
+     "event": {
+      "stated": "2013-03-05",
+      "at": null,
+      "from": "2013-03-05T00:00Z",
+      "to": "2013-03-06T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": 700,
+      "apogeeKm": 705,
+      "perigeeKm": 695,
+      "inclinationDeg": 98.1
+     },
+     "cause": "unknown",
+     "causeStated": "Unknown",
+     "piecesCatalogued": 2,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": []
+  },
+  {
+   "id": "40004:2013-01-25",
+   "parent": {
+    "catalogueNumber": 40004,
+    "designator": "2010-004A",
+    "name": "DELTA",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "2010-02-11"
+   },
+   "kind": "aerodynamic",
+   "event": {
+    "stated": "2013-01-25",
+    "at": null,
+    "from": "2013-01-25T00:00Z",
+    "to": "2013-01-26T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": 700,
+    "apogeeKm": 705,
+    "perigeeKm": 695,
+    "inclinationDeg": 98.1,
+    "regime": "LEO"
+   },
+   "cause": "aerodynamic",
+   "piecesCatalogued": 0,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "an aerodynamic breakup at reentry",
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": "hoosf-16e",
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "a synthetic spread",
+     "kind": "aerodynamic",
+     "parent": {
+      "catalogueNumber": 40004,
+      "designator": "2010-004A",
+      "name": "DELTA"
+     },
+     "event": {
+      "stated": "2013-01-25",
+      "at": null,
+      "from": "2013-01-25T00:00Z",
+      "to": "2013-01-26T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": 700,
+      "apogeeKm": 705,
+      "perigeeKm": 695,
+      "inclinationDeg": 98.1
+     },
+     "cause": "aerodynamic",
+     "causeStated": "Unknown",
+     "piecesCatalogued": 0,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": []
+  },
+  {
+   "id": "40005:2013-03-20",
+   "parent": {
+    "catalogueNumber": 40005,
+    "designator": "2010-005A",
+    "name": "EPSILON",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "2010-03-01"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "2013-03-20 03:00 GMT",
+    "at": "2013-03-20T03:00Z",
+    "from": "2013-03-20T03:00Z",
+    "to": "2013-03-20T03:00Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": 700,
+    "apogeeKm": 705,
+    "perigeeKm": 695,
+    "inclinationDeg": 98.1,
+    "regime": "LEO"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 2,
+   "confidence": "A",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": "hoosf-16e",
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "a synthetic spread",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 40005,
+      "designator": "2010-005A",
+      "name": "EPSILON"
+     },
+     "event": {
+      "stated": "2013-03-20 03:00 GMT",
+      "at": "2013-03-20T03:00Z",
+      "from": "2013-03-20T03:00Z",
+      "to": "2013-03-20T03:00Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 700,
+      "apogeeKm": 705,
+      "perigeeKm": 695,
+      "inclinationDeg": 98.1
+     },
+     "cause": "unknown",
+     "causeStated": "Unknown",
+     "piecesCatalogued": 2,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": []
+  }
+ ]
+}

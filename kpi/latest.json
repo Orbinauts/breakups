@@ -1,0 +1,1121 @@
+{
+  "format": 1,
+  "package": {
+    "name": "@orbinauts/breakups",
+    "version": "0.1.0"
+  },
+  "truthSha256": "39adb42981417b688d4c67f2f73a7b20af9789fdffeadbf4f04fbfcd5618e68f",
+  "detector": {
+    "name": "placeholder",
+    "parameters": {}
+  },
+  "archive": {
+    "2005": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:00:53.432Z",
+      "sets": 15589068,
+      "bodies": 15890,
+      "timeBasis": "epoch"
+    },
+    "2006": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:01:17.173Z",
+      "sets": 4011286,
+      "bodies": 9522,
+      "timeBasis": "epoch"
+    },
+    "2007": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:01:33.170Z",
+      "sets": 4529494,
+      "bodies": 11852,
+      "timeBasis": "epoch"
+    },
+    "2008": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:01:49.625Z",
+      "sets": 4526794,
+      "bodies": 12820,
+      "timeBasis": "epoch"
+    },
+    "2009": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:02:08.946Z",
+      "sets": 5598810,
+      "bodies": 14576,
+      "timeBasis": "epoch"
+    },
+    "2010": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:02:28.183Z",
+      "sets": 5271610,
+      "bodies": 15317,
+      "timeBasis": "epoch"
+    },
+    "2011": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:02:47.726Z",
+      "sets": 5517712,
+      "bodies": 15650,
+      "timeBasis": "epoch"
+    },
+    "2012": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:03:06.655Z",
+      "sets": 5193623,
+      "bodies": 15957,
+      "timeBasis": "epoch"
+    },
+    "2013": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:03:19.279Z",
+      "sets": 2962309,
+      "bodies": 15889,
+      "timeBasis": "epoch"
+    },
+    "2014": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:03:30.685Z",
+      "sets": 3180242,
+      "bodies": 16735,
+      "timeBasis": "epoch"
+    },
+    "2015": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:03:45.460Z",
+      "sets": 4521946,
+      "bodies": 16944,
+      "timeBasis": "epoch"
+    },
+    "2016": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:04:06.322Z",
+      "sets": 6607130,
+      "bodies": 16906,
+      "timeBasis": "epoch"
+    },
+    "2017": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:04:31.096Z",
+      "sets": 7672880,
+      "bodies": 17495,
+      "timeBasis": "epoch"
+    },
+    "2018": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:05:00.150Z",
+      "sets": 8821288,
+      "bodies": 18911,
+      "timeBasis": "epoch"
+    },
+    "2019": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:14:52.648Z",
+      "sets": 7883651,
+      "bodies": 20191,
+      "timeBasis": "epoch"
+    },
+    "2020": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:15:30.920Z",
+      "sets": 11638909,
+      "bodies": 22223,
+      "timeBasis": "epoch"
+    },
+    "2021": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:06:58.771Z",
+      "sets": 15170011,
+      "bodies": 24729,
+      "timeBasis": "epoch"
+    },
+    "2022": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:08:00.415Z",
+      "sets": 17172918,
+      "bodies": 28756,
+      "timeBasis": "epoch"
+    },
+    "2023": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:08:59.344Z",
+      "sets": 15736901,
+      "bodies": 28299,
+      "timeBasis": "epoch"
+    },
+    "2024": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:10:08.762Z",
+      "sets": 19677820,
+      "bodies": 29685,
+      "timeBasis": "epoch"
+    },
+    "2025": {
+      "source": "bundle",
+      "builtAt": "2026-10-09T19:11:25.072Z",
+      "sets": 20779595,
+      "bodies": 31711,
+      "timeBasis": "epoch"
+    },
+    "2026": {
+      "source": "history",
+      "builtAt": "2026-10-09T19:25:20.805Z",
+      "sets": 22545566,
+      "bodies": 34229,
+      "timeBasis": "created"
+    }
+  },
+  "years": [
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "splits": {
+    "validation": {
+      "years": [
+        2005,
+        2007,
+        2009,
+        2011,
+        2013,
+        2015,
+        2017,
+        2019,
+        2021,
+        2023,
+        2025
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 32,
+          "undetectable": 6,
+          "detected": 0,
+          "late": 0,
+          "missed": 32,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 8,
+          "undetectable": 9,
+          "detected": 0,
+          "late": 0,
+          "missed": 8,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 8,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 8,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 9,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 9,
+          "detectionRate": 0
+        },
+        "anomalous C-D": {
+          "targets": 4,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 4,
+          "detectionRate": 0
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 185557.5221240725,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 35,
+          "undetectable": 10,
+          "detected": 0,
+          "late": 0,
+          "missed": 35,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 3,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "GEO": {
+          "targets": 3,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 13,
+          "undetectable": 5,
+          "detected": 0,
+          "late": 0,
+          "missed": 13,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 7,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 7,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 48,
+          "undetectable": 16,
+          "detected": 0,
+          "late": 0,
+          "missed": 48,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 13,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 13,
+          "detectionRate": 0
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    },
+    "train": {
+      "years": [
+        2006,
+        2008,
+        2010,
+        2012,
+        2014,
+        2016,
+        2018,
+        2020,
+        2022,
+        2024,
+        2026
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 43,
+          "undetectable": 7,
+          "detected": 0,
+          "late": 0,
+          "missed": 43,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 10,
+          "undetectable": 5,
+          "detected": 0,
+          "late": 0,
+          "missed": 10,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 15,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 15,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 5,
+          "undetectable": 2,
+          "detected": 0,
+          "late": 0,
+          "missed": 5,
+          "detectionRate": 0
+        },
+        "anomalous C-D": {
+          "targets": 6,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 6,
+          "detectionRate": 0
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 190898.26758990643,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 42,
+          "undetectable": 13,
+          "detected": 0,
+          "late": 0,
+          "missed": 42,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 4,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 4,
+          "detectionRate": 0
+        },
+        "GEO": {
+          "targets": 3,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 17,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 17,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 13,
+          "undetectable": 2,
+          "detected": 0,
+          "late": 0,
+          "missed": 13,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 68,
+          "undetectable": 15,
+          "detected": 0,
+          "late": 0,
+          "missed": 68,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 11,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 11,
+          "detectionRate": 0
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    },
+    "all": {
+      "years": [
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 75,
+          "undetectable": 13,
+          "detected": 0,
+          "late": 0,
+          "missed": 75,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 18,
+          "undetectable": 14,
+          "detected": 0,
+          "late": 0,
+          "missed": 18,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 23,
+          "undetectable": 4,
+          "detected": 0,
+          "late": 0,
+          "missed": 23,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 14,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 14,
+          "detectionRate": 0
+        },
+        "anomalous C-D": {
+          "targets": 10,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 10,
+          "detectionRate": 0
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 376455.78971397894,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 77,
+          "undetectable": 23,
+          "detected": 0,
+          "late": 0,
+          "missed": 77,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 7,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 7,
+          "detectionRate": 0
+        },
+        "GEO": {
+          "targets": 6,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 6,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 30,
+          "undetectable": 8,
+          "detected": 0,
+          "late": 0,
+          "missed": 30,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 20,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 20,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 116,
+          "undetectable": 31,
+          "detected": 0,
+          "late": 0,
+          "missed": 116,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 24,
+          "undetectable": 4,
+          "detected": 0,
+          "late": 0,
+          "missed": 24,
+          "detectionRate": 0
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    },
+    "recent": {
+      "years": [
+        2024,
+        2025,
+        2026
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 4,
+          "undetectable": 2,
+          "detected": 0,
+          "late": 0,
+          "missed": 4,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 3,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 5,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 5,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "anomalous C-D": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 77551.85267166856,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 8,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 8,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "GEO": {
+          "targets": 1,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 1,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 1,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 1,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 2,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 2,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 12,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 12,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    },
+    "chronologicalTrain": {
+      "years": [
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 44,
+          "undetectable": 7,
+          "detected": 0,
+          "late": 0,
+          "missed": 44,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 10,
+          "undetectable": 12,
+          "detected": 0,
+          "late": 0,
+          "missed": 10,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 16,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 16,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 12,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 12,
+          "detectionRate": 0
+        },
+        "anomalous C-D": {
+          "targets": 9,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 9,
+          "detectionRate": 0
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 174084.31202902232,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 45,
+          "undetectable": 13,
+          "detected": 0,
+          "late": 0,
+          "missed": 45,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 5,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 5,
+          "detectionRate": 0
+        },
+        "GEO": {
+          "targets": 3,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 22,
+          "undetectable": 6,
+          "detected": 0,
+          "late": 0,
+          "missed": 22,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 16,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 16,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 70,
+          "undetectable": 19,
+          "detected": 0,
+          "late": 0,
+          "missed": 70,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 21,
+          "undetectable": 1,
+          "detected": 0,
+          "late": 0,
+          "missed": 21,
+          "detectionRate": 0
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    },
+    "chronologicalValidation": {
+      "years": [
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "lines": {
+        "breakups A-B": {
+          "targets": 31,
+          "undetectable": 6,
+          "detected": 0,
+          "late": 0,
+          "missed": 31,
+          "detectionRate": 0
+        },
+        "breakups C": {
+          "targets": 8,
+          "undetectable": 2,
+          "detected": 0,
+          "late": 0,
+          "missed": 8,
+          "detectionRate": 0
+        },
+        "breakups D": {
+          "targets": 7,
+          "undetectable": 4,
+          "detected": 0,
+          "late": 0,
+          "missed": 7,
+          "detectionRate": 0
+        },
+        "anomalous A-B": {
+          "targets": 2,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 2,
+          "detectionRate": 0
+        },
+        "anomalous C-D": {
+          "targets": 1,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 1,
+          "detectionRate": 0
+        }
+      },
+      "alerts": 0,
+      "duplicates": 0,
+      "exempt": 0,
+      "falseAlarms": 0,
+      "review": 0,
+      "falseAlarmRate": null,
+      "bodyYears": 202371.4776849566,
+      "falseAlarmsPer10kBodyYears": 0,
+      "leadHours": null,
+      "latencyHours": null,
+      "confirmedShare": null,
+      "daysToConfirmation": null,
+      "timingErrorMinutes": null,
+      "byRegime": {
+        "LEO": {
+          "targets": 32,
+          "undetectable": 10,
+          "detected": 0,
+          "late": 0,
+          "missed": 32,
+          "detectionRate": 0
+        },
+        "MEO": {
+          "targets": 2,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 2,
+          "detectionRate": 0
+        },
+        "GEO": {
+          "targets": 3,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "HEO": {
+          "targets": 8,
+          "undetectable": 2,
+          "detected": 0,
+          "late": 0,
+          "missed": 8,
+          "detectionRate": 0
+        },
+        "unknown": {
+          "targets": 4,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 4,
+          "detectionRate": 0
+        }
+      },
+      "byKind": {
+        "breakup": {
+          "targets": 46,
+          "undetectable": 12,
+          "detected": 0,
+          "late": 0,
+          "missed": 46,
+          "detectionRate": 0
+        },
+        "anomalous": {
+          "targets": 3,
+          "undetectable": 3,
+          "detected": 0,
+          "late": 0,
+          "missed": 3,
+          "detectionRate": 0
+        },
+        "aerodynamic": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "release": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        },
+        "unnamed": {
+          "targets": 0,
+          "undetectable": 0,
+          "detected": 0,
+          "late": 0,
+          "missed": 0,
+          "detectionRate": null
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,17 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import * as library from "../src/index.ts";
-import { yearOf } from "../src/index.ts";
+import { DETECTOR_NAME, yearOf } from "../src/index.ts";
+import { readmeTables, type Latest } from "../scripts/kpi/kpi.ts";
 
 /**
- * The README against the file. Its ground-truth table states counts the
- * built truth must give, and its quick start prints what the library
- * answers; both are read here, so the README cannot drift from either.
+ * The README against the files. Its ground-truth table states counts the
+ * built truth must give, its scorecard tables state the cells of the
+ * committed aggregate, and its quick start prints what the library
+ * answers; all three are read here, so the README cannot drift from any.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,6 +62,41 @@ describe("the README's ground-truth table", () => {
 
   test.each(rows.map((row) => [row[0]!, Number(row[1])] as const))("%s: %i", (label, stated) => {
     expect(stated).toBe(counts[label]);
+  });
+});
+
+describe("the README's scorecard table", () => {
+  const latest = JSON.parse(readFileSync(resolve(ROOT, "kpi/latest.json"), "utf8")) as Latest;
+  const text = section("How well it does");
+  const tables = text
+    .split("\n\n")
+    .filter((block) => block.startsWith("|"))
+    .map((block) => block.trim());
+  const expected = readmeTables(latest);
+
+  test("carries the two tables of the aggregate, every cell equal", () => {
+    expect(tables).toHaveLength(expected.length);
+    for (const [i, table] of expected.entries()) {
+      const rows = (markdown: string) => markdown.split("\n").map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+      expect(rows(tables[i]!)).toEqual(rows(table));
+    }
+  });
+
+  test("names the detector the aggregate was run with, and says so while it is the placeholder", () => {
+    expect(latest.detector.name).toBe(DETECTOR_NAME);
+    expect(latest.package.name).toBe(PACKAGE_NAME);
+    if (latest.detector.name === "placeholder") {
+      expect(text).toContain("The detector is not written yet.");
+      const cells = latest.splits.validation;
+      expect(cells.alerts + cells.falseAlarms + cells.duplicates + cells.exempt).toBe(0);
+      for (const line of Object.values(cells.lines)) expect(line.detected + line.late).toBe(0);
+    } else {
+      expect(text).not.toContain("not written yet");
+    }
+  });
+
+  test("is computed from the truth the package ships", () => {
+    expect(latest.truthSha256).toBe(createHash("sha256").update(readFileSync(resolve(ROOT, "data/breakups.json"))).digest("hex"));
   });
 });
 

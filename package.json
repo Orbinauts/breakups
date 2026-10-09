@@ -53,7 +53,9 @@
     "archive:upload": "node --experimental-strip-types scripts/archive/release.ts upload",
     "archive:download": "node --experimental-strip-types scripts/archive/release.ts download",
     "archive:pull": "node --env-file-if-exists=.env --experimental-strip-types scripts/archive/pull.ts",
-    "truth:catalogue": "node --experimental-strip-types scripts/truth/parse-catalogue.ts"
+    "truth:catalogue": "node --experimental-strip-types scripts/truth/parse-catalogue.ts",
+    "kpi": "node --experimental-strip-types scripts/kpi/run.ts",
+    "kpi:year": "node --experimental-strip-types scripts/kpi/run.ts --year"
   },
   "dependencies": {
     "@orbinauts/engine": "^0.1.2"

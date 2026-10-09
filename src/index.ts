@@ -37,3 +37,25 @@ export {
   type StatedTime,
   type Statement,
 } from "./truth.ts";
+export { GEOSYNCHRONOUS_MAX_ECCENTRICITY, apsidesOf, fromElements, publishedNoEarlierThan, regimeOf, semiMajorAxisOf, type ElementSet, type SetContext } from "./elements.ts";
+export {
+  ALERT_STATES,
+  DETECTOR_NAME,
+  DETECTOR_PARAMETERS,
+  VERDICT_KINDS,
+  VERDICT_STATES,
+  runDetector,
+  type DetectorInput,
+  type DetectorOutput,
+  type DetectorParameters,
+  type EventEstimate,
+  type LaunchState,
+  type LogRow,
+  type Notice,
+  type ObjectState,
+  type SpaceWeatherDay,
+  type Step,
+  type Verdict,
+  type VerdictKind,
+  type VerdictState,
+} from "./detector.ts";

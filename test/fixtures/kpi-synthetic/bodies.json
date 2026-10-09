@@ -1,0 +1,65 @@
+[
+ {
+  "number": 40001,
+  "designator": "2010-001A",
+  "name": "ALPHA",
+  "bodyClass": "payload",
+  "launch": "2010-01-05"
+ },
+ {
+  "number": 40002,
+  "designator": "2010-002A",
+  "name": "BETA",
+  "bodyClass": "payload",
+  "launch": "2010-01-20"
+ },
+ {
+  "number": 40003,
+  "designator": "2010-003A",
+  "name": "GAMMA R/B",
+  "bodyClass": "rocket body",
+  "launch": "2010-02-02"
+ },
+ {
+  "number": 40004,
+  "designator": "2010-004A",
+  "name": "DELTA",
+  "bodyClass": "payload",
+  "launch": "2010-02-11"
+ },
+ {
+  "number": 40005,
+  "designator": "2010-005A",
+  "name": "EPSILON",
+  "bodyClass": "payload",
+  "launch": "2010-03-01"
+ },
+ {
+  "number": 40006,
+  "designator": "2010-006A",
+  "name": "ZETA",
+  "bodyClass": "payload",
+  "launch": "2010-03-09"
+ },
+ {
+  "number": 40101,
+  "designator": "2010-001C",
+  "name": "ALPHA DEB",
+  "bodyClass": "debris",
+  "launch": "2010-01-05"
+ },
+ {
+  "number": 40102,
+  "designator": "2010-001D",
+  "name": "ALPHA DEB",
+  "bodyClass": "debris",
+  "launch": "2010-01-05"
+ },
+ {
+  "number": 40201,
+  "designator": "2010-002B",
+  "name": "BETA DEB",
+  "bodyClass": "debris",
+  "launch": "2010-01-20"
+ }
+]

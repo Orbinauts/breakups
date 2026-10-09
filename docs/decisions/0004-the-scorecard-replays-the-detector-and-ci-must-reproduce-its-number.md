@@ -52,3 +52,30 @@ describe them rather than predict.
   Archive for each event, so "before the fragments" is measured, not
   assumed.
 - A detector change lands with the regenerated score, or CI refuses it.
+
+## As built
+
+The scorecard as written keeps the rule above and fixes what it left
+open:
+
+- The targets are scored on five lines, never mixed: breakups reported to
+  the day or better (confidence A and B), the headline; breakups reported
+  to a month (C); breakups known only from their pieces (D); and anomalous
+  events by the same two groups. A parent has public elements when it has
+  at least five sets in the sixty days before the window.
+- A step brackets an event when the bracket and the truth's window, each
+  widened by a day, overlap: a window a month wide can hold a step of a
+  day, and an epoch is not an instant.
+- The catalogue's time is the first published set of the first body under
+  the parent's launch numbered above the highest designated number a day
+  before the window, read from the event's own year. A year stripped from
+  a bundle has no publication times: its order is the bundle's, which is
+  the catalogue's, and its clock is the latest epoch seen so far, a lower
+  bound, leaping at most a day on any one set; the result says so.
+- The states are warmed up from the previous year's last sixty days, the
+  same whether a year is replayed alone or every year in a row, so a
+  year's score never depends on how it was run.
+- The false-alarm rate divides by false alarms plus detections on every
+  line, and a second alert on the same object whose bracket overlaps an
+  earlier alert's is the same step raised again, a duplicate, since the
+  unit the owner counts is the step.
