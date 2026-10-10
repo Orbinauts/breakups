@@ -5,7 +5,7 @@ import { brackets, marginDaysOf } from "./match.ts";
 import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";
 import { alertKey, alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
-import { detailLines, rulesOf, sweepLines, type AttributionRules } from "./attributions.ts";
+import { RULES_OFF, detailLines, originDetail, originGrid, originSeparation, rulesOf, sweepLines, type AttributionRules } from "./attributions.ts";
 import { catalogueOf } from "./run.ts";
 import { archiveHome } from "../archive/archive.ts";
 
@@ -603,7 +603,7 @@ function confirmationLine(label: string, rows: SweptConfirmation[], rules: Param
   return `| ${label} | ${kept.length} | ${count("detection") + count("late")} | ${count("near")} | ${count("false-alarm")} | ${count("other")} |`;
 }
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean; attributions: boolean; set: Partial<AttributionRules> } {
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean; attributions: boolean; origin: boolean; twins: boolean; relax: boolean; set: Partial<AttributionRules> } {
   let years: number[] | null = null;
   let show = false;
   let clouds = false;
@@ -611,6 +611,9 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
   let confirmations = false;
   let separation = false;
   let attributions = false;
+  let origin = false;
+  let twins = false;
+  let relax = false;
   const set: Partial<AttributionRules> = {};
   const grid: Partial<Record<keyof Gates, number[]>> = {};
   const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
@@ -623,6 +626,10 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg === "--confirmations") confirmations = true;
     else if (arg === "--separation") separation = true;
     else if (arg === "--attributions") attributions = true;
+    else if (arg === "--origin") [attributions, origin] = [true, true];
+    else if (arg === "--twins") twins = true;
+    else if (arg === "--relax") relax = true;
+    else if (arg === "--detail" || arg === "--twins-grid") continue;
     else if (arg === "--set") {
       const [name, value] = args[++i]!.split("=");
       (set as Record<string, unknown>)[name!] = JSON.parse(value!) as unknown;
@@ -631,7 +638,7 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
     else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--separation] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, set };
+  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set };
 }
 
 const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "against-drag", "nonoperational", "occasional-raised"];
@@ -693,7 +700,7 @@ function separationTable(files: YearFile[]): string[] {
 }
 
 function main(): void {
-  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, set } = parseArgs(process.argv.slice(2));
+  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set } = parseArgs(process.argv.slice(2));
   const all = readYearFiles(process.env.KPI_DIR === undefined ? KPI_DIR : resolve(process.env.KPI_DIR));
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
@@ -703,6 +710,51 @@ function main(): void {
     const catalogue = catalogueOf(archiveHome(), truth);
     const base = { ...rulesOf(DETECTOR_PARAMETERS), ...set };
     const split = years !== null && years.every((y) => y % 2 === 1) ? "validation" : "train";
+    if (origin) {
+      // The common-origin sweep of the tenth phase: the rule's axes with the ninth phase's rules as they are, then each of those relaxed, every point scored with the twins read both ways; the points under one false confirmation in ten, the most confirmations first, and the frontier.
+      const off = (name: keyof AttributionRules): AttributionRules[keyof AttributionRules] => RULES_OFF[name];
+      // With --twins-grid, the twins' two switches against the origin's override and launch margin.
+      const twinsGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = { attributionTwins: [false, true], attributionTwinsUnresolved: [false, true], originOverrideHours: [1e9, 1], originLaunchMarginDays: [-1e9, 0] };
+      const axes: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = process.argv.includes("--twins-grid") ? twinsGrid : {
+        originOverrideHours: [1e9, 1, 6, 24],
+        originLaunchMarginDays: [-1e9, 0, 30],
+        originStepHoursMax: [1e9, 48],
+        originHoursBase: [1e9, 24],
+        originHoursPerDay: [0, 1],
+        originShareMin: [0.75],
+        originMinPieces: [3],
+        // With --relax, each of the ninth phase's rules the test might replace is tried off too.
+        ...(relax ? { cloudMemoryDays: [base.cloudMemoryDays, off("cloudMemoryDays")], attributionBatchLaunchesMax: [base.attributionBatchLaunchesMax, off("attributionBatchLaunchesMax")], confirmBackgroundMax: [base.confirmBackgroundMax, off("confirmBackgroundMax")], youngLaunchDays: [base.youngLaunchDays, off("youngLaunchDays")], attributionMinPieces: [base.attributionMinPieces, 1], singlePieceNeedsQuietLaunch: [base.singlePieceNeedsQuietLaunch, false] } : {}),
+      };
+      // With --detail, the grid is skipped and only the readings and the detail at the base are printed.
+      const points = process.argv.includes("--detail") ? [] : originGrid(all, truth, catalogue, base, axes, split);
+      const rate = (x: number | null): string => (x === null ? "–" : `${Math.round(x * 100)}%`);
+      const row = (p: (typeof points)[number]): string => `| ${p.label} | ${p.score.targets} | ${p.score.detected} | ${rate(p.score.recall)} | ${p.score.falseAlarms} | ${rate(p.score.falseAlarmRate)} | ${p.twins.detected} | ${p.twins.falseAlarms} | ${rate(p.twins.falseAlarmRate)} |`;
+      console.log(`the ${split} years; ${points.length} points; the base: ${Object.entries(base).map(([k, x]) => `${k} ${JSON.stringify(x)}`).join(", ")}`);
+      const header = ["| rules | targets | confirmed | recall | false | false-alarm rate | twins at the launch: confirmed | false | rate |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"].join("\n");
+      const pick = (p: (typeof points)[number]) => (twins ? p.twins : p.score);
+      console.log(`\n### Under one false confirmation in ten${twins ? ", twins at the launch" : ""}, the most confirmations first\n\n${header}`);
+      for (const p of points.filter((p) => (pick(p).falseAlarmRate ?? 1) < 0.1).sort((a, b) => pick(b).detected - pick(a).detected || pick(a).falseAlarms - pick(b).falseAlarms).slice(0, 25)) console.log(row(p));
+      console.log(`\n### The frontier: the most confirmations at each count of false ones\n\n${header}`);
+      const best = new Map<number, (typeof points)[number]>();
+      for (const p of points) {
+        const known = best.get(pick(p).falseAlarms);
+        if (known === undefined || pick(p).detected > pick(known).detected) best.set(pick(p).falseAlarms, p);
+      }
+      let most = -1;
+      for (const [, p] of [...best].sort((a, b) => a[0] - b[0])) if (pick(p).detected > most) [most] = [pick(p).detected, console.log(row(p))];
+      console.log(`\n### The test alone, the ninth phase's rules as they are\n\n${header}`);
+      for (const p of points.filter((p) => p.rules.cloudMemoryDays === base.cloudMemoryDays && p.rules.attributionBatchLaunchesMax === base.attributionBatchLaunchesMax && p.rules.confirmBackgroundMax === base.confirmBackgroundMax && p.rules.youngLaunchDays === base.youngLaunchDays && p.rules.attributionMinPieces === base.attributionMinPieces && p.rules.originOverrideHours >= 1e8 && p.rules.singlePieceNeedsQuietLaunch === base.singlePieceNeedsQuietLaunch)) console.log(row(p));
+      console.log(`\n### Every point\n\n${header}`);
+      for (const p of points) console.log(row(p));
+      if (show) {
+        console.log("\n### The readings of the confirmations the base raises\n");
+        for (const line of originSeparation(all, truth, catalogue, base, split)) console.log(line);
+        console.log("\n### The misses and the false confirmations at the base\n");
+        for (const line of originDetail(all, truth, catalogue, base, split, twins)) console.log(line);
+      }
+      return;
+    }
     const grid: [string, Partial<AttributionRules>][] = [
       ...[0, 0.5, 2, 5].map((x): [string, Partial<AttributionRules>] => [`the pieces move at least ${x} m/s (confirmDeltaVMinMps)`, { confirmDeltaVMinMps: x }]),
       ...[0, 30, 180].map((x): [string, Partial<AttributionRules>] => [`a debris parent first seen under ${x} days confirms nothing (freshPieceDays)`, { freshPieceDays: x }]),

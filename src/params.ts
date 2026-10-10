@@ -195,6 +195,60 @@ export interface DetectorParameters {
   /** The same for the centre of the pieces' semi-major axes: the body named is the one they centre on, and it is told from the others where the nearest other body's offset from that centre is at least this factor times its own, its own floored at `attributionCentreFloorKm` (a cloud's centre is known to a kilometre or two, the spread of its first sets). Fitted on the training split; the floor is policy. */
   attributionCentreRatio: number;
   attributionCentreFloorKm: number;
+  /**
+   * Whether an attribution whose pieces cannot be told from two bodies of
+   * the launch or more (a body of the same plane whose offset from the
+   * pieces' centre and whose miss when propagated back are both within the
+   * ratios above of the named body's) is raised naming the launch and every
+   * such body as its candidates, rather than refused: twin ullage motors, a
+   * stage and its payload in the days after launch, a fairing and its
+   * siblings leave pieces nothing public assigns to one of them. The body
+   * the verdict names first is the one the centre, or a persistent step it
+   * alone made, picks. The scorecard reads such a verdict at the launch's
+   * level only behind its own switch (`matchTwinsAtLaunch`), the owner's
+   * call. Policy: the owner's decision of the tenth phase.
+   */
+  attributionTwins: boolean;
+  /** Whether twins nothing tells apart (none of them made a persistent step in the window) are raised naming them all, or refused as the ninth phase refused them, the cloud left for review; where a step picks one, the verdict names it first and the others beside it either way. Fitted on the training split (`d10-confirmed.md`). */
+  attributionTwinsUnresolved: boolean;
+  /**
+   * The common-origin test (`passesOrigin` in `event-time.ts`): every piece
+   * of a cloud judged, propagated back with its first set against the
+   * parent's last set before the cloud, crosses the parent closest at one
+   * instant; a breakup's pieces at nearly one instant, an old cloud's late
+   * pieces at instants months apart or not at all. A cloud of at least
+   * `originMinPieces` pieces passes where `originShareMin` of them crossed
+   * within `originHoursBase` plus `originHoursPerDay` times the pieces' age
+   * of their median crossing. A base beyond reach turns the test off.
+   * Fitted on the training split (`d10-confirmed.md`).
+   */
+  originHoursBase: number;
+  originHoursPerDay: number;
+  originShareMin: number;
+  originMinPieces: number;
+  /** The same share of the pieces must have crossed within this share of their own lap about the parent of the median (the chance level of unrelated phases is a quarter); a value beyond reach turns the bound off. Fitted on the training split (`d10-confirmed.md`). */
+  originPhaseMax: number;
+  /**
+   * The common origin as an override: where at least
+   * `originOverrideMinPieces` pieces cross the parent and three quarters
+   * of them within `originOverrideHours` of their median, the pieces were
+   * made at one instant, so the rules that read a launch's history as an
+   * old cloud (its remembered cloud, its backlog, a cataloguing batch the
+   * run lists it in) do not refuse them: those rules guard against old
+   * pieces, and these are not old. A young launch's rule stands: its own
+   * objects leave it at one instant too, its separations. A value beyond reach turns
+   * the override off. Fitted on the training split (`d10-confirmed.md`).
+   */
+  originOverrideHours: number;
+  originOverrideMinPieces: number;
+  /** The fewest days after the launch was first seen the pieces' median crossing may lie: pieces whose common origin is the launch itself (or before it, where the propagation back fails) are its own objects catalogued late, a deployment's debris, not a breakup. Minus a value beyond reach turns the rule off. Fitted on the training split (`d10-confirmed.md`). */
+  originLaunchMarginDays: number;
+  /** On the confirmation of an alert on the parent's step, the most hours the pieces' median crossing may lie from the step's instant: a breakup's pieces cross the parent at its step, pieces crossing it elsewhere are not the step's. A value beyond reach turns the rule off. Fitted on the training split (`d10-confirmed.md`). */
+  originStepHoursMax: number;
+  /** Whether the pieces' median crossing is the confirmed event's instant where its sigma is under the convergence's: the pieces' own closest approaches agree more finely than their common miss does when a cloud's first sets are weeks old. Policy. */
+  originEventTime: boolean;
+  /** The launches of the crewed stations, by designator: what a station sheds (tools, covers, tanks, bags) is released on purpose and catalogued as debris under its launch, so its pieces confirm nothing and attribute nothing. Policy, from the satellite catalogue's names: the stations in orbit since the Archive's first year, the bodies it names ISS, TIANGONG and CSS, each by the launch of its own designator (the International Space Station's Zarya, Unity, Zvezda, Destiny, Poisk and Nauka; Tiangong-1 and -2; the Chinese station's Tianhe, Wentian and Mengtian). */
+  stationLaunches: string[];
   /** Whether a burst in an analyst range (no designator, numbers reused) may confirm an open alert where the plane test names that alert's parent alone among the open alerts and the pieces converge on it. Fitted on the training split. */
   analystAttributes: boolean;
   /** The tolerance by which a step's post-step level may miss a range the object held in the last year and still be a return to a held altitude (orbit maintenance): the larger of this many times the object's own scatter and this many kilometres; a negative floor turns the test off. Fitted on the training split by sweeping the log. */
@@ -325,7 +379,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   attributionEnabled: true,
   attributionDebrisParentsMax: 30,
   attributionBatchLaunchesMax: 2,
-  attributionMinPieces: 2,
+  attributionMinPieces: 3,
   attributionYoungLaunch: false,
   attributionStepBreaksTies: true,
   attributionUnnamedGraceDays: 180,
@@ -338,6 +392,19 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   attributionCentreRatio: 3,
   attributionCentreFloorKm: 2,
   analystAttributes: false,
+  attributionTwins: true,
+  attributionTwinsUnresolved: false,
+  originHoursBase: 1e9,
+  originHoursPerDay: 0,
+  originShareMin: 0.5,
+  originMinPieces: 2,
+  originPhaseMax: 1e9,
+  originOverrideHours: 1,
+  originOverrideMinPieces: 3,
+  originLaunchMarginDays: 0,
+  originStepHoursMax: 1e9,
+  originEventTime: true,
+  stationLaunches: ["1998-067", "1998-069", "2000-037", "2001-006", "2009-060", "2021-066", "2011-053", "2016-057", "2021-035", "2022-085", "2022-143"],
   maintenanceToleranceSigmas: 3,
   maintenanceToleranceKm: 1,
   maintenanceMonths: 12,
@@ -469,7 +536,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   attributionEnabled: { kind: "policy", source: "the seventh decision record: the target is on Confirmed alerts, attributed from fresh in-plane pieces with or without a step" },
   attributionDebrisParentsMax: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
   attributionBatchLaunchesMax: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
-  attributionMinPieces: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionMinPieces: { kind: "fitted", source: "d10-confirmed.md, the sweep of the second iteration's values on the training split: three pieces cost no headline confirmation and remove three false ones" },
   attributionUnnamedGraceDays: { kind: "fitted", source: "d9-confirmed.md, the replays of the Confirmed channel on the training split" },
   attributionStepBreaksTies: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
   attributionYoungLaunch: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
@@ -482,6 +549,19 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   attributionCentreRatio: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
   attributionCentreFloorKm: { kind: "policy", source: "a cloud's centre is known to a kilometre or two, the spread of its first sets" },
   analystAttributes: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionTwins: { kind: "policy", source: "the owner's decision for the tenth phase: twins named at the launch, scored apart behind the scorecard's switch" },
+  attributionTwinsUnresolved: { kind: "fitted", source: "d10-confirmed.md, the twins on the training split" },
+  originHoursBase: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originHoursPerDay: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originShareMin: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originMinPieces: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originPhaseMax: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originOverrideHours: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originOverrideMinPieces: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originLaunchMarginDays: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originStepHoursMax: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
+  originEventTime: { kind: "policy", source: "the median crossing times the event where it is the finer estimate" },
+  stationLaunches: { kind: "policy", source: "the tenth phase's methodology: a crewed station's releases are on purpose, as the truth exempts its bursts; the stations the satellite catalogue names" },
   maintenanceToleranceSigmas: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat from 0 to 10" },
   maintenanceToleranceKm: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: the knee at a kilometre" },
   maintenanceMonths: { kind: "policy", source: "a year of held altitudes, the envelope's reach" },

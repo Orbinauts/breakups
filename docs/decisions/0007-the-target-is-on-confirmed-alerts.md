@@ -115,3 +115,62 @@ others.
 - The fitting of the channel's thresholds is recorded in
   `docs/detector/d9-confirmed.md`, every iteration's training numbers
   with it.
+
+## As built in the tenth phase
+
+The ninth phase's held-out reading carried two faults of method rather
+than of the detector, and the coordinator decided both before the tenth
+phase fitted anything:
+
+- **2005 is the warm-up year.** The Archive starts in 2005, and in its
+  first year the detector meets every object and every launch new: no
+  record of steps, no background of new bodies, no cloud remembered.
+  Twelve of the ninth phase's thirty-one held-out false confirmations
+  were in 2005. In use the detector would have that history, so the
+  replay runs 2005 and every line and split scores from 2006
+  (`SCORED_FROM_YEAR` in `scripts/kpi/kpi.ts`); the per-event dissection
+  still lists 2005's events, marked as the warm-up's, and leaves them out
+  of its totals.
+- **A crewed station's launch is exempt from confirmation and from false
+  confirmations.** What a station sheds (tools, covers, tanks, bags) is
+  released on purpose and catalogued as debris under its launch, and the
+  truth already exempts the station's bursts as releases. The detector
+  confirms and attributes nothing under a station's launch
+  (`stationLaunches` in `src/params.ts`, a refusal of its own on the
+  attribution row), and the scorecard lands any confirmed verdict under
+  one as exempt (`STATION_LAUNCHES` in `scripts/kpi/match.ts`, read from
+  the detector's default list so a trial replay cannot change the
+  scoring). The list is the stations in orbit since 2005 the satellite
+  catalogue names: the International Space Station by the launches of its
+  own designators (Zarya 1998-067, Unity 1998-069, Zvezda 2000-037,
+  Destiny 2001-006, Poisk 2009-060, Nauka 2021-066), Tiangong-1
+  (2011-053), Tiangong-2 (2016-057) and the Chinese station's Tianhe
+  (2021-035), Wentian (2022-085) and Mengtian (2022-143). Mir and the
+  Salyuts reentered before 2005.
+
+And the owner called a third: **twins at the launch's level, reported
+separately.** Where the pieces cannot tell two bodies of one launch
+apart (a body of the same plane whose offset from the pieces' centre and
+whose miss when propagated back are both within the attribution's ratios
+of the named body's), the detector names the launch and every such body
+as the verdict's candidates (`attributionTwins`, `Verdict.candidates`),
+the body a persistent step picks first. Twins nothing tells apart are
+still refused and left for review (`attributionTwinsUnresolved`, off as
+fitted): on the training years, raising them named the launch of a
+reported event twice in nineteen verdicts. The scorecard
+reads such a verdict two ways (`matchTwinsAtLaunch` in
+`scripts/kpi/match.ts`): off, it is matched on the body it names first,
+as any verdict; on, it is a detection where a reported event's parent is
+among the candidates, and a false confirmation where none has one. The
+headline is read off; the reading on is the second row of the README's
+first table, so the owner chooses.
+
+The tenth phase also built the common-origin test the coordinator
+proposed (`docs/detector/d10-confirmed.md`): each piece's crossing of
+the parent, propagated back, and how closely the pieces share an instant.
+As a gate it costs half the training confirmations at every bound tried,
+so it is off; it is used as an override (pieces made at one instant are
+not an old cloud's, so the launch's remembered cloud, backlog and
+cataloguing batch do not refuse them), as a launch margin (pieces whose
+common instant is the launch itself are its own objects catalogued late)
+and for the event's instant.

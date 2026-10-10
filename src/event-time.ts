@@ -251,6 +251,146 @@ export interface PiecesEventTime {
   /** The coarse grid's step, in seconds, and how many points were propagated on it. */
   gridSeconds: number;
   points: number;
+  /** Each piece's own crossing of the parent nearest the instant the pieces' angles agree on best, in the order the pieces were given, and the common-origin test's reading of them (`originOf`). */
+  pieceCrossings: PieceCrossing[];
+  origin: PiecesOrigin;
+}
+
+/**
+ * One piece's crossing of the parent, for the common-origin test: of the
+ * instants its angle from the parent about the parent's orbit normal
+ * passes through zero (once a lap, the lap being the synodic period of
+ * the two mean motions), the one nearest the instant at which the pieces'
+ * angles agree best. A breakup's pieces were all at the parent at the
+ * event, so their crossings there coincide but for what the propagation
+ * back loses, hours where the first sets are weeks old; the late pieces
+ * of an old cloud cross the parent at unrelated phases, so the nearest
+ * crossing of each lies anywhere within half its lap of any instant. The
+ * deviation is read in hours and as a share of the piece's lap, the
+ * latter's chance level being a quarter. The distance from the parent at
+ * the crossing is kept, never as a gate: a change of the axis alone
+ * leaves a piece that far from the parent radially at every lap.
+ */
+export interface PieceCrossing {
+  number: number;
+  /** The instant, in milliseconds since 1970, and the distance there, in kilometres; null and NaN where the piece does not cross the parent in the window or cannot be propagated over it. */
+  at: number | null;
+  missKm: number;
+  /** The piece's first set's epoch, in milliseconds since 1970: its age at the crossing is the span the propagation back covered. */
+  firstEpochMs: number;
+  /** The piece's lap about the parent, the synodic period of their mean motions, in milliseconds; infinite where they are equal. */
+  lapMs: number;
+}
+
+/**
+ * The common-origin test's reading of the pieces' closest approaches: a
+ * real breakup's pieces cross the parent at nearly one instant, spread by
+ * what the propagation back loses over the pieces' age; late pieces of an
+ * old cloud cross it at instants spread over months, or not at all in the
+ * window. The deviations are every piece's distance in hours from the
+ * median crossing, a piece that did not cross counted as infinitely far,
+ * so a quantile of them is the half-width within which that share of the
+ * pieces tried crossed.
+ */
+export interface PiecesOrigin {
+  /** The pieces tried and those that crossed the parent in the window. */
+  tried: number;
+  timed: number;
+  /** The median of the crossings, in milliseconds since 1970; NaN with none. */
+  medianAt: number;
+  /** The half-width around the median within which half the pieces tried crossed, and three quarters, in hours (the median and the upper-quartile absolute deviation); NaN with fewer than two crossings, infinite where too few crossed. */
+  dev50Hours: number;
+  dev75Hours: number;
+  /** The same half-widths as a share of each piece's lap (the chance level a quarter, the most a half; a piece that did not cross counts as infinitely far); NaN with fewer than two crossings. */
+  phase50: number;
+  phase75: number;
+  /** The robust spread of the crossings, 1.4826 times their median absolute deviation, in hours; NaN with fewer than two. */
+  spreadHours: number;
+  /** The sigma of the median crossing as an estimate of the event, in minutes: the robust spread times the median's efficiency factor over the root of the crossings' count; NaN with fewer than two. */
+  sigmaMinutes: number;
+  /** The median of the pieces' ages at the median crossing (their first sets' epochs less it), in days, and of their distances from the parent at their own closest approach, in kilometres; NaN with none. */
+  ageDays: number;
+  missKm: number;
+}
+
+/** The factor that turns the median absolute deviation into a Gaussian sigma: 1/Φ⁻¹(3/4). Physical. */
+export const MAD_TO_SIGMA = 1.4826;
+/** The standard error of a median of n Gaussian draws is this factor times the sigma over the root of n: the square root of π/2. Physical. */
+export const MEDIAN_EFFICIENCY = Math.sqrt(Math.PI / 2);
+
+/** The value at a share of the sorted values, by the nearest rank: the least value that share of them lie at or under. */
+function quantileOf(sorted: readonly number[], share: number): number {
+  if (sorted.length === 0) return Number.NaN;
+  return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(share * sorted.length) - 1))]!;
+}
+
+/** The common-origin test's reading of the pieces' closest approaches (`PiecesOrigin`). */
+export function originOf(crossings: readonly PieceCrossing[]): PiecesOrigin {
+  const timed = crossings.filter((c): c is PieceCrossing & { at: number } => c.at !== null);
+  const ats = timed.map((c) => c.at).sort((a, b) => a - b);
+  const medianAt = ats.length === 0 ? Number.NaN : ats.length % 2 === 1 ? ats[(ats.length - 1) / 2]! : (ats[ats.length / 2 - 1]! + ats[ats.length / 2]!) / 2;
+  const deviations = crossings.map((c) => (c.at === null ? Number.POSITIVE_INFINITY : Math.abs(c.at - medianAt) / 3_600_000)).sort((a, b) => a - b);
+  const timedDeviations = timed.map((c) => Math.abs(c.at - medianAt) / 3_600_000).sort((a, b) => a - b);
+  const phases = crossings.map((c) => (c.at === null ? Number.POSITIVE_INFINITY : Number.isFinite(c.lapMs) ? Math.abs(c.at - medianAt) / c.lapMs : 0)).sort((a, b) => a - b);
+  const few = timed.length < 2;
+  const spreadHours = few ? Number.NaN : MAD_TO_SIGMA * quantileOf(timedDeviations, 0.5);
+  const middle = (values: number[]): number => {
+    if (values.length === 0) return Number.NaN;
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]! : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2;
+  };
+  return {
+    tried: crossings.length,
+    timed: timed.length,
+    medianAt,
+    dev50Hours: few ? Number.NaN : quantileOf(deviations, 0.5),
+    dev75Hours: few ? Number.NaN : quantileOf(deviations, 0.75),
+    phase50: few ? Number.NaN : quantileOf(phases, 0.5),
+    phase75: few ? Number.NaN : quantileOf(phases, 0.75),
+    spreadHours,
+    sigmaMinutes: few ? Number.NaN : (MEDIAN_EFFICIENCY * spreadHours * 60) / Math.sqrt(timed.length),
+    ageDays: middle(timed.map((c) => (c.firstEpochMs - c.at) / 86_400_000)),
+    missKm: middle(timed.map((c) => c.missKm)),
+  };
+}
+
+/**
+ * The half-width, in hours, within which the parameter's share of the
+ * pieces must cross the parent around their median for a common origin:
+ * a base for the timing of a fresh set, and an allowance per day of the
+ * pieces' age at the crossing, since SGP4 run backwards loses the
+ * along-track position, and with it the crossing, as the drag it
+ * mispredicts accumulates.
+ */
+export function originBoundHours(origin: Pick<PiecesOrigin, "ageDays">, params: Pick<DetectorParameters, "originHoursBase" | "originHoursPerDay">): number {
+  return params.originHoursBase + params.originHoursPerDay * Math.max(0, Number.isFinite(origin.ageDays) ? origin.ageDays : 0);
+}
+
+/** The deviation the common-origin test reads at the parameter's share: the half-width within which that share of the pieces tried crossed. */
+export function originDeviationHours(origin: Pick<PiecesOrigin, "dev50Hours" | "dev75Hours">, share: number): number {
+  return share <= 0.5 ? origin.dev50Hours : origin.dev75Hours;
+}
+
+/** Whether the pieces share an origin closely enough to override the rules that read a launch's history as an old cloud: at least the parameter's count crossing the parent, three quarters of those tried within the parameter's hours of their median. */
+export function overridesHistory(origin: PiecesOrigin, params: Pick<DetectorParameters, "originOverrideHours" | "originOverrideMinPieces">): boolean {
+  return params.originOverrideHours < 1e8 && origin.timed >= params.originOverrideMinPieces && origin.dev75Hours <= params.originOverrideHours;
+}
+
+/** Whether the common-origin test is on: a bound in hours or in laps within reach. */
+export const originTested = (params: Pick<DetectorParameters, "originHoursBase" | "originPhaseMax">): boolean => params.originHoursBase < 1e8 || params.originPhaseMax < 1e8;
+
+/**
+ * Whether the pieces pass the common-origin test: with at least the
+ * parameter's count of them crossing the parent, the share asked crossed
+ * within the bound of their median, in hours and as a share of each
+ * piece's lap. With fewer the test says nothing and passes, so a single
+ * piece is judged by the other rules alone.
+ */
+export function passesOrigin(origin: PiecesOrigin, params: Pick<DetectorParameters, "originHoursBase" | "originHoursPerDay" | "originShareMin" | "originMinPieces" | "originPhaseMax">): boolean {
+  if (!originTested(params) || origin.tried < params.originMinPieces) return true;
+  const deviation = originDeviationHours(origin, params.originShareMin);
+  const phase = params.originShareMin <= 0.5 ? origin.phase50 : origin.phase75;
+  return deviation <= originBoundHours(origin, params) && phase <= params.originPhaseMax;
 }
 
 /** The farthest from the Earth's centre a propagated position may lie and still be one, in kilometres: beyond the Moon's distance a propagation has failed without saying so, as SGP4 does for a decayed or wildly fitted set. Physical. */
@@ -399,6 +539,17 @@ export function eventFromPieces(parentSet: ElementSet, pieceSets: readonly Eleme
   // Where the pieces do not agree (their propagations back drift apart, as a low cloud's first sets weeks old do), their scatter about the instant is its sigma, not the miss over the speed.
   const sigmaMinutes = Math.max(params.eventGridSeconds / 60 / 2, Math.max(best.miss, params.eventSigmaPositionKm) / Math.max(speedKmPerMinute, 1e-6), Number.isFinite(spreadMinutes) ? spreadMinutes : 0);
   const sigmaMs = sigmaMinutes * 60_000;
+  // Each piece's crossing nearest the instant the angles agree on best (the coarse search's first candidate; a single piece's best crossing), with its distance from the parent there; a piece with none, or that cannot be propagated over the window, is tried and not timed.
+  const anchor = timed.length >= 2 ? candidates[0]! : best.at;
+  const pieceCrossings: PieceCrossing[] = pieceSets.map((set) => ({ number: set.number, at: null, missKm: Number.NaN, firstEpochMs: set.epochMs, lapMs: Math.abs(set.meanMotion - parentSet.meanMotion) === 0 ? Number.POSITIVE_INFINITY : DAY_MS / Math.abs(set.meanMotion - parentSet.meanMotion) }));
+  pieces.forEach((piece, i) => {
+    const roots = crossings[i]!;
+    if (roots.length === 0) return;
+    const at = roots.reduce((n, r) => (Math.abs(r - anchor) < Math.abs(n - anchor) ? r : n), roots[0]!);
+    const slot = pieceCrossings[pieceSets.indexOf(piece.set)]!;
+    slot.at = at;
+    slot.missKm = missAt(parent, [piece.elements], at);
+  });
   return {
     at: best.at,
     from: best.at - 2 * sigmaMs,
@@ -410,6 +561,8 @@ export function eventFromPieces(parentSet: ElementSet, pieceSets: readonly Eleme
     crossings: timed.length >= 2 ? 1 : order.filter((i) => refined[i]!.miss <= 2 * best.miss).length,
     gridSeconds: gridMs / 1000,
     points: times.length,
+    pieceCrossings,
+    origin: originOf(pieceCrossings),
   };
 }
 

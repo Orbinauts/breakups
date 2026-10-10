@@ -27,11 +27,16 @@ export const PHASES = { open: 0, post: 1, close: 2, alert: 3, cloud: 4, attribut
  * an analyst range's burst the parameters do not let attribute; pieces
  * the timing could not propagate; and a run in which the catalogue listed
  * new bodies under many old launches at once, a cataloguing campaign
- * rather than a breakup.
+ * rather than a breakup; pieces whose closest approaches to the parent,
+ * propagated back, do not share an instant (the common-origin test); and a
+ * crewed station's launch, whose pieces are released on purpose.
  */
-export const REFUSALS = { velocity: 1, freshPiece: 2, parentInCloud: 4, piecesInCloud: 8, nearerThanCloud: 16, singlePiece: 32, youngLaunch: 64, background: 128, ambiguous: 256, miss: 512, minPieces: 1024, analyst: 2048, untimed: 4096, batch: 8192 } as const;
+export const REFUSALS = { velocity: 1, freshPiece: 2, parentInCloud: 4, piecesInCloud: 8, nearerThanCloud: 16, singlePiece: 32, youngLaunch: 64, background: 128, ambiguous: 256, miss: 512, minPieces: 1024, analyst: 2048, untimed: 4096, batch: 8192, origin: 16384, station: 32768 } as const;
 
 /** The path an attribution row was written on: the confirmation of an open alert on the parent's step, an attribution to a body with no open alert, an analyst range's burst against the open alerts, or an attribution to a debris-classed body of a launch with few of them, for pieces in the plane of no other body. */
+/** The refusals a common origin overrides (`originOverrideHours`): the rules that read a launch's history as an old cloud. Not the young launch: a launch's own objects leave it at one instant too, its separations. */
+export const HISTORY_REFUSALS = REFUSALS.parentInCloud | REFUSALS.piecesInCloud | REFUSALS.nearerThanCloud | REFUSALS.background | REFUSALS.batch;
+
 export const ATTRIBUTION_PATHS = { alert: 0, cloud: 1, analyst: 2, debris: 3 } as const;
 
 /** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, closed unraised after the last gap, or a persistent step the object's own history explains, closed as a manoeuvre; and how an alert ended: confirmed by pieces or a notice, expired with nothing under the launch, or dismissed because every piece was old. */
@@ -257,6 +262,25 @@ export const SIGNALS = {
   /** On an attribution row: how far the pieces' median semi-major axis lies from the named body's, and from the nearest of the other bodies whose plane they share, in kilometres. */
   attributionCentreKm: "km",
   attributionRivalCentreKm: "km",
+  /** On an attribution row whose pieces cannot be told from other bodies of the launch (the tenth phase's twins): how many such bodies, and the first three of them by catalogue number, kept whole. */
+  attributionTwins: "count",
+  candidate1: "number",
+  candidate2: "number",
+  candidate3: "number",
+  /** The common-origin test on the pieces judged (`originOf` in `event-time.ts`): the pieces tried and those that crossed the parent in the window, their median crossing, the half-widths around it within which half and three quarters of the pieces tried crossed and the robust spread, in hours, the same half-widths as a share of each piece's lap, the median crossing's sigma in minutes, the pieces' median age at it in days and their median distance from the parent at their own closest approach in kilometres. */
+  originTried: "count",
+  originTimed: "count",
+  originMedianAt: "ms",
+  originDev50Hours: "h",
+  originDev75Hours: "h",
+  originPhase50: "ratio",
+  originPhase75: "ratio",
+  originSpreadHours: "h",
+  originSigmaMinutes: "min",
+  originAgeDays: "days",
+  originMissKm: "km",
+  /** On the confirmation of an alert on the parent's step: the pieces' median closest approach less the step's instant, in hours. */
+  originStepHours: "h",
 } as const;
 
 export type SignalName = keyof typeof SIGNALS;
@@ -278,7 +302,7 @@ export function logRow(at: number, number: number, signals: Partial<Record<Signa
   const rounded: Record<string, number> = {};
   for (const [name, value] of Object.entries(signals)) {
     if (value === undefined) continue;
-    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") ? Math.round(value) : round5(value);
+    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") || name.startsWith("candidate") ? Math.round(value) : round5(value);
   }
   return { at, number, signals: rounded };
 }

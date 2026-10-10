@@ -37,6 +37,16 @@ export type SplitName = (typeof SPLITS)[number];
 
 /** The last year of the chronological training split. */
 export const CHRONOLOGICAL_SPLIT_YEAR = 2017;
+/**
+ * The first year any split scores. The Archive starts in 2005 and the
+ * detector meets every object and launch new in its first year, with no
+ * record of steps, no background of new bodies and no cloud remembered;
+ * in use it would have that history, so 2005 is the warm-up year: the
+ * replay runs it, and every line and split scores from 2006. The tenth
+ * phase's methodology, from the ninth's held-out reading (twelve of its
+ * thirty-one false confirmations in 2005).
+ */
+export const SCORED_FROM_YEAR = 2006;
 /** How many of the latest years the recent split holds. */
 export const RECENT_YEARS = 3;
 
@@ -224,15 +234,21 @@ export interface ConfirmedLineCells {
   /** The false alarms by the parent's class, and how many were attributed with no step. */
   falseByClass: Record<BodyClass, number>;
   falseAttributed: number;
+  /** The verdicts naming the launch and its candidate bodies (twins the pieces cannot tell apart). */
+  twins: number;
 }
 
 /** The first confirmation of each event over every year file, by the event's id: the Confirmed line's detection of it. */
 export type FirstConfirmations = Map<string, { year: number; landing: ConfirmedLanding }>;
 
-export function firstConfirmationsOf(files: Pick<YearFile, "year" | "score">[]): FirstConfirmations {
+/** A landing as the Confirmed line reads it: with the twins matched at the launch's level where the switch is on and the verdict named candidates, else as landed on the body it names. */
+export const readingOf = (landing: ConfirmedLanding, twins: boolean): ConfirmedLanding => (twins && landing.twin !== undefined ? { ...landing, ...landing.twin } : landing);
+
+export function firstConfirmationsOf(files: Pick<YearFile, "year" | "score">[], twins = false): FirstConfirmations {
   const first: FirstConfirmations = new Map();
   for (const file of files) {
-    for (const landing of file.score.confirmations ?? []) {
+    for (const landed of file.score.confirmations ?? []) {
+      const landing = readingOf(landed, twins);
       if (landing.outcome !== "detection" || landing.event === null) continue;
       const known = first.get(landing.event);
       if (known === undefined || landing.raisedAt < known.landing.raisedAt) first.set(landing.event, { year: file.year, landing });
@@ -247,9 +263,9 @@ const emptyConfirmedLine = (): ConfirmedLine => ({ targets: 0, noFragments: 0, n
 export const isConfirmedTarget = (event: Pick<ScoredEvent, "fragments">): boolean => event.fragments !== undefined && event.fragments.parentOrbit && event.fragments.inPlane > 0;
 
 /** The Confirmed line over a set of scored years, the first confirmations read over every year (an event's may be in the next year's file). */
-export function confirmedCellsOf(years: Pick<YearFile, "year" | "score">[], first: FirstConfirmations = firstConfirmationsOf(years)): ConfirmedLineCells {
+export function confirmedCellsOf(years: Pick<YearFile, "year" | "score">[], first: FirstConfirmations = firstConfirmationsOf(years), twins = false): ConfirmedLineCells {
   const lines = Object.fromEntries(LINES.map((line) => [line, emptyConfirmedLine()])) as Record<Line, ConfirmedLine>;
-  const c: ConfirmedLineCells = { lines, verdicts: 0, attributed: 0, detections: 0, duplicates: 0, exempt: 0, falseAlarms: 0, detectedAllLines: 0, detectedNoFragments: 0, falseAlarmRate: null, falseAlarmInterval: null, lead: null, withStatement: 0, beforeStatement: 0, statementDays: 0, statementMonths: 0, lag: null, timing: null, falseByClass: Object.fromEntries(BODY_CLASSES.map((k) => [k, 0])) as Record<BodyClass, number>, falseAttributed: 0 };
+  const c: ConfirmedLineCells = { lines, verdicts: 0, attributed: 0, detections: 0, duplicates: 0, exempt: 0, falseAlarms: 0, detectedAllLines: 0, detectedNoFragments: 0, falseAlarmRate: null, falseAlarmInterval: null, lead: null, withStatement: 0, beforeStatement: 0, statementDays: 0, statementMonths: 0, lag: null, timing: null, falseByClass: Object.fromEntries(BODY_CLASSES.map((k) => [k, 0])) as Record<BodyClass, number>, falseAttributed: 0, twins: 0 };
   const leads: number[] = [];
   const lags: number[] = [];
   const timings: number[] = [];
@@ -283,9 +299,11 @@ export function confirmedCellsOf(years: Pick<YearFile, "year" | "score">[], firs
       if (event.fragments!.firstAt !== null) lags.push((at - event.fragments!.firstAt) / DAY_MS);
       if (event.at !== null && confirmation.landing.eventAt !== null) timings.push(Math.abs(confirmation.landing.eventAt - event.at) / 60_000);
     }
-    for (const landing of score.confirmations ?? []) {
+    for (const landed of score.confirmations ?? []) {
+      const landing = readingOf(landed, twins);
       c.verdicts++;
       if (landing.attributed) c.attributed++;
+      if (landing.candidates !== undefined) c.twins++;
       if (landing.outcome === "detection") {
         const firstOne = landing.event === null ? undefined : first.get(landing.event);
         if (firstOne !== undefined && firstOne.year === year && firstOne.landing.verdict === landing.verdict) c.detections++;
@@ -315,8 +333,9 @@ export function confirmedCellsOf(years: Pick<YearFile, "year" | "score">[], firs
 
 export interface Cells {
   years: number[];
-  /** The Confirmed line, the target since the seventh decision record. */
+  /** The Confirmed line, the target since the seventh decision record: the headline, a verdict naming twins matched on the body it names first; and the same with the twins matched at the launch's level (`matchTwinsAtLaunch`), the owner's call. */
   confirmedLine: ConfirmedLineCells;
+  confirmedLineTwins: ConfirmedLineCells;
   lines: Record<Line, LineCells>;
   alerts: number;
   duplicates: number;
@@ -483,11 +502,11 @@ export function scopedCellsOf(years: Pick<YearFile, "score">[], rows: AlertRows,
 }
 
 /** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers and the scoped line's tier. */
-export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope, first: FirstConfirmations = firstConfirmationsOf(years)): Cells {
+export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope, first: FirstConfirmations = firstConfirmationsOf(years), firstTwins: FirstConfirmations = firstConfirmationsOf(years, true)): Cells {
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), confirmedLine: confirmedCellsOf(years, first), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), confirmedLine: confirmedCellsOf(years, first), confirmedLineTwins: confirmedCellsOf(years, firstTwins, true), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
@@ -580,7 +599,7 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
 
 /** Which years each split holds, of the years scored. */
 export function splitYears(years: number[], split: SplitName): number[] {
-  const sorted = [...years].sort((a, b) => a - b);
+  const sorted = [...years].filter((y) => y >= SCORED_FROM_YEAR).sort((a, b) => a - b);
   switch (split) {
     case "validation":
       return sorted.filter((y) => y % 2 === 1);
@@ -604,7 +623,8 @@ export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "tru
   const scope = meta.detector.parameters.scope ?? DETECTOR_PARAMETERS.scope;
   // An event's first confirmation may be in the next year's file, whatever split that year is in.
   const first = firstConfirmationsOf(files);
-  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope, first)])) as Record<SplitName, Cells>;
+  const firstTwins = firstConfirmationsOf(files, true);
+  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope, first, firstTwins)])) as Record<SplitName, Cells>;
   const archive = Object.fromEntries(files.sort((a, b) => a.year - b.year).map((f) => [String(f.year), { ...f.archive, timeBasis: f.timeBasis }]));
   return { format: 1, ...meta, archive, years, splits };
 }
@@ -695,11 +715,15 @@ export const CONFIRMED_HEADLINE_SPLITS: readonly SplitName[] = ["validation", "t
 export function confirmedHeadlineTable(latest: Pick<Latest, "splits">, title = "Confirmed: the target, breakups A and B"): string {
   return table(
     [title, "Targets (fragments catalogued)", "No fragments catalogued", "Confirmed", "Missed", "Recall (95% interval)", "False confirmations", "False-alarm rate (95% interval)", "Lead over the first agency statement, days: median (10th percentile)", "Confirmed before it", "Lag after the first fragment, days: median (90th percentile)", "Timing error, minutes: median (90th percentile)"],
-    CONFIRMED_HEADLINE_SPLITS.map((split) => {
-      const c = latest.splits[split].confirmedLine;
-      const line = c.lines["breakups A-B"];
-      return [`${SPLIT_TITLES[split]} (${yearsOf(latest.splits[split])})`, line.targets, line.noFragments + line.noParentOrbit, line.detected, line.missed, intervalCell(line.rate, line.interval), c.falseAlarms, intervalCell(c.falseAlarmRate, c.falseAlarmInterval), spreadCell(c.lead), fraction(c.beforeStatement, c.withStatement), spreadCell(c.lag), spreadCell(c.timing)];
-    }),
+    CONFIRMED_HEADLINE_SPLITS.flatMap((split) =>
+      ([false, true] as const).map((twins) => {
+        const cells = latest.splits[split];
+        // A file aggregated before the twins were read has the headline alone; its twin row repeats it.
+        const c = twins ? (cells.confirmedLineTwins ?? cells.confirmedLine) : cells.confirmedLine;
+        const line = c.lines["breakups A-B"];
+        return [twins ? `${SPLIT_TITLES[split]}, twins matched at the launch` : `${SPLIT_TITLES[split]} (${yearsOf(cells)})`, line.targets, line.noFragments + line.noParentOrbit, line.detected, line.missed, intervalCell(line.rate, line.interval), c.falseAlarms, intervalCell(c.falseAlarmRate, c.falseAlarmInterval), spreadCell(c.lead), fraction(c.beforeStatement, c.withStatement), spreadCell(c.lag), spreadCell(c.timing)];
+      }),
+    ),
   );
 }
 
@@ -727,6 +751,7 @@ export function confirmedVerdictsTable(cells: Cells, title: string): string {
       ["Exempt (inside an exempt window)", c.exempt],
       ["False confirmations (matching no reported event)", c.falseAlarms],
       ["Of those, attributed with no step", c.falseAttributed],
+      ["Verdicts naming the launch and its candidate bodies (twins), matched on the body named first", c.twins],
       ["Of those, on a payload / a rocket body / debris / an unknown body", BODY_CLASSES.map((k) => c.falseByClass[k]).join(" / ")],
       ["Events confirmed on every line (the precision's numerator)", c.detectedAllLines],
       ["Of which with no fragment the scorecard reads in the plane", c.detectedNoFragments],
@@ -791,7 +816,7 @@ export function renderLatest(latest: Latest): string {
     "",
     `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the Confirmed headline and the validation split's tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
     "",
-    "**The Confirmed line is the target** (the owner's decision of 2026-10-10, `docs/decisions/0007-the-target-is-on-confirmed-alerts.md`). A detection is a confirmed verdict by pieces on a reported event's parent, raised within 180 days after the event's window, with or without a step seen first on the parent: the confirmation of an alert on the parent's step, or the attribution of fresh pieces in the parent's plane to it. The targets are the scoreable events whose launch gained at least one fresh piece in the parent's plane within 180 days in the Archive (a body under the launch numbered above the catalogue's mark at the event, classed as a fragment is, first published after it, its plane within the detector's bound of the parent's last set before the event); events with no such piece, or no orbit of the parent before the event to test a plane against, are listed apart and out of the denominator. The first confirmation of an event counts, across the years; later ones are duplicates; a confirmed verdict matching no reported event is a false alarm, and the false-alarm rate is over the detections on every line, each rate with its Wilson 95% interval. A confirmation by a notice alone is not the Confirmed line's. The lead is the days from the confirmation to the first statement by an agency (NASA's quarterly news, dated to the first day of its issue's month, the earliest it can have been public; a U.S. Space Forces-Space notice, to the day it was seen; ESA's report), positive where the confirmation came first; the lag is the days from the first fresh piece's publication to the confirmation; the timing error is the detector's instant of the event against the truth's, where both state one.",
+    "**The Confirmed line is the target** (the owner's decision of 2026-10-10, `docs/decisions/0007-the-target-is-on-confirmed-alerts.md`). A detection is a confirmed verdict by pieces on a reported event's parent, raised within 180 days after the event's window, with or without a step seen first on the parent: the confirmation of an alert on the parent's step, or the attribution of fresh pieces in the parent's plane to it. The targets are the scoreable events whose launch gained at least one fresh piece in the parent's plane within 180 days in the Archive (a body under the launch numbered above the catalogue's mark at the event, classed as a fragment is, first published after it, its plane within the detector's bound of the parent's last set before the event); events with no such piece, or no orbit of the parent before the event to test a plane against, are listed apart and out of the denominator. The first confirmation of an event counts, across the years; later ones are duplicates; a confirmed verdict matching no reported event is a false alarm, and the false-alarm rate is over the detections on every line, each rate with its Wilson 95% interval. A confirmation by a notice alone is not the Confirmed line's, and a confirmed verdict under a crewed station's launch is exempt: what a station sheds is released on purpose. Every split scores from " + SCORED_FROM_YEAR + ": " + (SCORED_FROM_YEAR - 1) + ", the Archive's first year, is the detector's warm-up, replayed and scored on no split. A verdict naming a launch and its candidate bodies (twins the pieces cannot tell apart) is matched on the body it names first in the headline rows; the rows marked as the twins matched at the launch read it as a detection where a reported event's parent is among its candidates. The lead is the days from the confirmation to the first statement by an agency (NASA's quarterly news, dated to the first day of its issue's month, the earliest it can have been public; a U.S. Space Forces-Space notice, to the day it was seen; ESA's report), positive where the confirmation came first; the lag is the days from the first fresh piece's publication to the confirmation; the timing error is the detector's instant of the event against the truth's, where both state one.",
     "",
     confirmedHeadlineTable(latest),
     "",

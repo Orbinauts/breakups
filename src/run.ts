@@ -2,11 +2,11 @@ import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step, Verdict } from "./detector.ts";
 import { OPS_STATUSES, operationalAt, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
-import { eventFromPieces, eventTimeOf, type PiecesEventTime } from "./event-time.ts";
-import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
+import { eventFromPieces, eventTimeOf, originTested, overridesHistory, passesOrigin, type PiecesEventTime } from "./event-time.ts";
+import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeDistance, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
 import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, judgeStep, noteDamage, openAlert, persistent, trackAlert, type ConfirmationReading, type OpenAlert, type StepJudgement } from "./fusion.ts";
 import { impulseOf, type Impulse } from "./impulse.ts";
-import { ATTRIBUTION_PATHS, ORIGINS, OUTCOMES, PHASES, REFUSALS, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
+import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, ORIGINS, OUTCOMES, PHASES, REFUSALS, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
 import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenance.ts";
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { median, predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
@@ -73,7 +73,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "confirmed-v7";
+export const DETECTOR_NAME = "confirmed-v8";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -909,14 +909,45 @@ function timePieces(context: RunContext, parent: number, pieces: readonly PieceR
   return null;
 }
 
-/** The least miss of the other bodies the pieces lie in the plane of, timed against the same pieces, the nearest planes first; infinite with none timed. */
-function rivalMiss(context: RunContext, rivals: readonly number[], pieces: readonly PieceReading[]): number {
-  let least = Number.POSITIVE_INFINITY;
+/** The miss of each other body the pieces lie in the plane of, timed against the same pieces, the nearest planes first, as many as the parameter allows; a body not timed is left out. */
+function rivalMisses(context: RunContext, rivals: readonly number[], pieces: readonly PieceReading[]): Map<number, number> {
+  const misses = new Map<number, number>();
   for (const rival of rivals.slice(0, Math.max(0, context.params.attributionMaxCandidates - 1))) {
     const timed = timePieces(context, rival, pieces);
-    if (timed !== null && timed.missKm < least) least = timed.missKm;
+    if (timed !== null) misses.set(rival, timed.missKm);
   }
-  return least;
+  return misses;
+}
+
+/** How long after a launch was first seen its debris-classed bodies are its own launch-era objects (covers, fairings, tanks, adapters) rather than a later cloud's, in days. Policy: a season, the time the catalogue takes to list a launch's own objects. */
+export const LAUNCH_ERA_DAYS = 90;
+
+/**
+ * The debris-classed bodies a launch left at its start (first seen within
+ * the launch era, before the window, with no open alert), where it left
+ * few of them, whose plane any of the pieces lies within the bound of,
+ * each with the orbit it is tested at (its ring's last set), recorded in
+ * `orbits`; none where the launch left more than the parameter's count.
+ * A later cloud's pieces are not candidates: they are what is being judged.
+ */
+function debrisSharing(context: RunContext, launch: LaunchRecord, pieces: readonly PieceReading[], eventMs: number, alerted: ReadonlySet<number>, orbits: Map<number, PlaneOrbit>): number[] {
+  const { params, now } = context;
+  const windowStart = now - params.burstWindowDays * DAY_MS;
+  const debris = launch.bodies.filter((b) => isFragmentClass(b.bodyClass) && b.firstSeenAt <= windowStart && b.firstSeenAt <= launch.firstSeenAt + LAUNCH_ERA_DAYS * DAY_MS && !alerted.has(b.number) && !pieces.some((p) => p.number === b.number));
+  if (debris.length === 0 || debris.length > params.attributionDebrisParentsMax) return [];
+  const sharing: number[] = [];
+  for (const body of debris) {
+    const orbit = parentOrbit(context, body.number, planeOrbitOf(body));
+    if (!pieces.some((piece) => planeDistance(orbit, planeOrbitOf(launch.bodies.find((b) => b.number === piece.number)!), eventMs, params).distance <= params.planeDistanceMax)) continue;
+    orbits.set(body.number, orbit);
+    sharing.push(body.number);
+  }
+  return sharing;
+}
+
+/** Whether the pieces' common instant is the remembered cloud's own event (within a day, or the override's hours if longer): a later batch of that cloud shares its origin, and is that cloud's, not a new one. */
+function sameInstant(at: number, eventMs: number, params: DetectorParameters): boolean {
+  return Number.isFinite(eventMs) && Math.abs(at - eventMs) <= Math.max(DAY_MS, params.originOverrideHours * HOUR_MS);
 }
 
 /** Whether the body made a persistent step, whatever verdict it got, with its first post set between the two instants. */
@@ -929,7 +960,29 @@ const iso16 = (ms: number): string => new Date(ms).toISOString().slice(0, 16).re
 
 /** The words for a back-propagated timing. */
 function timingReason(timed: PiecesEventTime, parent: number): string {
-  return `propagated back, ${timed.pieces} piece${timed.pieces === 1 ? "" : "s"} converge on ${parent} at ${iso16(timed.at)}, sigma ${timed.sigmaMinutes.toFixed(0)} min, missing it by ${timed.missKm.toFixed(1)} km${timed.crossings > 1 ? `; ${timed.crossings} laps' crossings lie within twice that miss` : ""}`;
+  const o = timed.origin;
+  const origin = o.timed >= 2 ? `; each piece's closest approach to ${parent}: ${o.timed} of ${o.tried} cross it in the window, their median at ${iso16(o.medianAt)}, half of them within ${o.dev50Hours.toFixed(1)} h of it and three quarters within ${o.dev75Hours.toFixed(1)} h (robust spread ${o.spreadHours.toFixed(1)} h), the pieces ${o.ageDays.toFixed(1)} days old at it` : `; ${o.timed} of ${o.tried} pieces cross ${parent} in the window`;
+  return `propagated back, ${timed.pieces} piece${timed.pieces === 1 ? "" : "s"} converge on ${parent} at ${iso16(timed.at)}, sigma ${timed.sigmaMinutes.toFixed(0)} min, missing it by ${timed.missKm.toFixed(1)} km${timed.crossings > 1 ? `; ${timed.crossings} laps' crossings lie within twice that miss` : ""}${origin}`;
+}
+
+/** The common-origin test's readings for a row: the pieces tried and timed, the median crossing, the deviations, the spread, the sigma, the age and the miss; the pieces tried alone where the timing gave nothing. */
+function originSignals(timed: PiecesEventTime | null, tried: number): Partial<Record<SignalName, number>> {
+  if (timed === null) return { originTried: tried, originTimed: 0 };
+  const o = timed.origin;
+  return { originTried: o.tried, originTimed: o.timed, originMedianAt: o.medianAt, originDev50Hours: o.dev50Hours, originDev75Hours: o.dev75Hours, originPhase50: o.phase50, originPhase75: o.phase75, originSpreadHours: o.spreadHours, originSigmaMinutes: o.sigmaMinutes, originAgeDays: o.ageDays, originMissKm: o.missKm };
+}
+
+/** Whether the common-origin test is on: a base within reach. */
+const originOn = (params: DetectorParameters): boolean => originTested(params);
+
+/** The event the pieces give: the convergence's instant, or the median of the pieces' own closest approaches where the parameter asks and its sigma is the finer. */
+function piecesEvent(timed: PiecesEventTime, params: DetectorParameters): { at: number; from: number; to: number; sigmaMinutes: number; byOrigin: boolean } {
+  const o = timed.origin;
+  if (params.originEventTime && Number.isFinite(o.sigmaMinutes) && o.sigmaMinutes < timed.sigmaMinutes) {
+    const sigmaMs = Math.max(o.sigmaMinutes, params.eventGridSeconds / 60 / 2) * 60_000;
+    return { at: o.medianAt, from: o.medianAt - 2 * sigmaMs, to: o.medianAt + 2 * sigmaMs, sigmaMinutes: sigmaMs / 60_000, byOrigin: true };
+  }
+  return { at: timed.at, from: timed.from, to: timed.to, sigmaMinutes: timed.sigmaMinutes, byOrigin: false };
 }
 
 /** The attribution row's signals. */
@@ -996,9 +1049,10 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
   for (const [nearest, judged] of [...groups].sort((a, b) => b[1].length - a[1].length || a[0] - b[0])) {
     // The body named is, of the bodies whose plane the pieces share, the one their semi-major axes centre on: a cloud's periods straddle its parent's, and a body of the same plane at another altitude is off their centre by the difference.
     const axisOf = (piece: PieceReading): number => launch.bodies.find((b) => b.number === piece.number)!.aKm;
+    const debrisOrbits = new Map<number, PlaneOrbit>();
     const centreOf = (n: number): number => {
-      const c = parents.find((p) => p.number === n);
-      return c === undefined ? Number.POSITIVE_INFINITY : Math.abs(median(judged.map((piece) => axisOf(piece) - c.orbit.aKm)));
+      const orbit = parents.find((p) => p.number === n)?.orbit ?? debrisOrbits.get(n);
+      return orbit === undefined ? Number.POSITIVE_INFINITY : Math.abs(median(judged.map((piece) => axisOf(piece) - orbit.aKm)));
     };
     const sharing = [nearest, ...new Set(judged.flatMap((p) => p.within))].filter((n, i, all) => all.indexOf(n) === i && !alerted.has(n) && parents.some((p) => p.number === n));
     const number = sharing.reduce((best, n) => (centreOf(n) < centreOf(best) ? n : best), nearest);
@@ -1022,22 +1076,37 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
       refused |= REFUSALS.batch;
       reasons.push(`the run brought new bodies to ${launchesInRun} launches older than a year: the catalogue listing a batch of old objects`);
     }
+    if (params.stationLaunches.includes(launch.key)) {
+      refused |= REFUSALS.station;
+      reasons.push(`launch ${launch.key} is a crewed station's: what it sheds is released on purpose`);
+    }
     const judgement = judgePieces(subject, launch, verdict, judged, memory, context, memory.at);
     refused |= judgement.refused;
     reasons.push(...judgement.reasons);
-    const kept = judgement.pieces;
+    let kept = judgement.pieces;
+    // Pieces made at one instant are not an old cloud's: where they share an origin closely enough, the rules that read the launch's history as one do not refuse them.
+    let overridden: PiecesEventTime | null = null;
+    if (refused !== 0 && (refused & ~HISTORY_REFUSALS) === 0 && params.originOverrideHours < 1e8) {
+      const strict = timePieces(context, number, judged);
+      if (strict !== null && overridesHistory(strict.origin, params) && !sameInstant(strict.origin.medianAt, memory.eventMs, params)) {
+        reasons.push(`but ${strict.origin.timed} of the ${strict.origin.tried} pieces cross ${number} within ${strict.origin.dev75Hours.toFixed(1)} h of one instant, three quarters of them: made at once, not an old cloud's, so the launch's history does not refuse them`);
+        [refused, kept, overridden] = [0, judged, strict];
+      }
+    }
     if (kept.length < params.attributionMinPieces && judgement.refused === 0) {
       refused |= REFUSALS.minPieces;
       reasons.push(`${kept.length} piece${kept.length === 1 ? "" : "s"} kept, under the ${params.attributionMinPieces} an attribution needs`);
     }
     const rivals = sharing.filter((n) => n !== number);
     const rivalCentre = rivals.reduce((least, n) => Math.min(least, centreOf(n)), Number.POSITIVE_INFINITY);
-    const centred = rivalCentre >= params.attributionCentreRatio * Math.max(centre, params.attributionCentreFloorKm);
+    const centreBound = params.attributionCentreRatio * Math.max(centre, params.attributionCentreFloorKm);
     let timed: PiecesEventTime | null = null;
     let rival = Number.NaN;
     let stepped = 0;
+    let twins: number[] = [];
+    // The pieces are timed, and the common-origin test read, where the other rules refused nothing: a refused group costs no propagation.
+    if (refused === 0) timed = overridden ?? timePieces(context, number, kept);
     if (refused === 0) {
-      timed = timePieces(context, number, kept);
       if (timed === null) {
         refused |= REFUSALS.untimed;
         reasons.push(`the pieces could not be propagated back against the parent`);
@@ -1046,29 +1115,52 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
           refused |= REFUSALS.miss;
           reasons.push(`propagated back, the pieces miss the parent by ${timed.missKm.toFixed(0)} km at best, beyond ${params.attributionMissKmMax}: not its pieces`);
         }
-        if (rivals.length > 0) {
-          rival = rivalMiss(context, rivals, kept);
+        const sinceLaunchDays = verdict.launchAgeDays - timed.origin.ageDays;
+        if (timed.origin.timed >= 2 && sinceLaunchDays < params.originLaunchMarginDays) {
+          refused |= REFUSALS.origin;
+          reasons.push(`the pieces cross ${number} ${sinceLaunchDays.toFixed(0)} days after the launch was first seen, under ${params.originLaunchMarginDays}: the launch's own objects catalogued late, not a breakup`);
+        }
+        if (!passesOrigin(timed.origin, params)) {
+          refused |= REFUSALS.origin;
+          reasons.push(`the pieces' own closest approaches to ${number} do not share an instant: half of them cross it within ${timed.origin.dev50Hours.toFixed(1)} h of their median, three quarters within ${timed.origin.dev75Hours.toFixed(1)} h, ${timed.origin.timed} of ${timed.origin.tried} in the window, at ${timed.origin.ageDays.toFixed(1)} days' age: the late pieces of an old cloud, not a breakup`);
+        }
+        // With the twins on, a launch with few debris-classed bodies offers its older ones as twins too: a fairing cover and its siblings, a tank beside its stage, share the pieces' plane and orbit as a payload's stage does.
+        const debrisTwins = path === ATTRIBUTION_PATHS.cloud && params.attributionTwins ? debrisSharing(context, launch, kept, verdict.eventMs, alerted, debrisOrbits) : [];
+        if (rivals.length + debrisTwins.length > 0) {
+          const misses = rivalMisses(context, [...rivals, ...debrisTwins], kept);
+          rival = Math.min(Number.POSITIVE_INFINITY, ...misses.values());
           // A body that made a persistent step in the search window, where none of the others did, is the parent the pieces cannot otherwise name.
           const to = timed.at + 2 * timed.sigmaMinutes * 60_000;
           stepped = (steppedWithin(context, number, to - params.attributionSearchDays * DAY_MS, Math.max(to, now)) ? 1 : 0) | (rivals.some((r) => steppedWithin(context, r, to - params.attributionSearchDays * DAY_MS, Math.max(to, now))) ? 2 : 0);
-          const converged = rival >= params.attributionAmbiguityRatio * timed.missKm;
-          if (!converged && centred) reasons.push(`the pieces' semi-major axes centre ${centre.toFixed(1)} km from ${number}'s and ${rivalCentre.toFixed(1)} km at best from the other bodies' in their plane: it is named`);
-          else if (!converged && params.attributionStepBreaksTies && stepped === 1) reasons.push(`the pieces converge on ${number} and on another body of the launch alike, and ${number} alone made a persistent step in the window: it is named`);
-          else if (!converged) {
-            refused |= REFUSALS.ambiguous;
-            reasons.push(`the pieces lie in the plane of ${rivals.length} other bod${rivals.length === 1 ? "y" : "ies"} of the launch too, and converge on one of them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${rival.toFixed(1)} km against ${timed.missKm.toFixed(1)}): the parent cannot be named, the cloud stays for review`);
-          }
+          // A twin: another body the pieces are not told from, neither by the centre of their axes nor by their convergence; a body not timed is told from it as before.
+          twins = [...rivals, ...debrisTwins].filter((r) => centreOf(r) < centreBound && misses.has(r) && misses.get(r)! < params.attributionAmbiguityRatio * timed!.missKm);
+          if (twins.length > 0) {
+            const stepNames = params.attributionStepBreaksTies && stepped === 1;
+            if (params.attributionTwins && (stepNames || params.attributionTwinsUnresolved)) reasons.push(`the pieces cannot be told from ${twins.length} other bod${twins.length === 1 ? "y" : "ies"} of the launch (${twins.join(", ")}): their axes centre ${centre.toFixed(1)} km from ${number}'s and ${twins.map((r) => centreOf(r).toFixed(1)).join(", ")} km from theirs, and they converge on them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${twins.map((r) => misses.get(r)!.toFixed(1)).join(", ")} km against ${timed.missKm.toFixed(1)}): the launch is named with its candidates, ${number} first${stepNames ? `, which alone made a persistent step in the window` : ", on the centre"}`);
+            else if (stepNames) reasons.push(`the pieces converge on ${number} and on another body of the launch alike, and ${number} alone made a persistent step in the window: it is named`);
+            else {
+              refused |= REFUSALS.ambiguous;
+              reasons.push(`the pieces lie in the plane of ${rivals.length} other bod${rivals.length === 1 ? "y" : "ies"} of the launch too, and converge on one of them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${rival.toFixed(1)} km against ${timed.missKm.toFixed(1)}): the parent cannot be named, the cloud stays for review`);
+            }
+            if (!params.attributionTwins || (refused & REFUSALS.ambiguous) !== 0) twins = [];
+          } else if (rival < params.attributionAmbiguityRatio * timed.missKm) reasons.push(`the pieces' semi-major axes centre ${centre.toFixed(1)} km from ${number}'s and ${rivalCentre.toFixed(1)} km at best from the other bodies' in their plane: it is named`);
         }
       }
     }
     const ok = refused === 0 && timed !== null;
-    context.log.push(logRow(now, number, { ...attributionSignals(launch, verdict, path, own.bodyClass, judged, judgement, rivals.length, timed, rival, refused, ok), launchesInRun, attributionStepped: stepped, attributionCentreKm: centre, attributionRivalCentreKm: rivalCentre }));
+    const twinSignals: Partial<Record<SignalName, number>> = { attributionTwins: twins.length, candidate1: twins[0], candidate2: twins[1], candidate3: twins[2] };
+    context.log.push(logRow(now, number, { ...attributionSignals(launch, verdict, path, own.bodyClass, judged, judgement, rivals.length, timed, rival, refused, ok), ...originSignals(timed, Math.min(kept.length, params.attributionMaxPieces)), ...twinSignals, launchesInRun, attributionStepped: stepped, attributionCentreKm: centre, attributionRivalCentreKm: rivalCentre }));
     if (!ok) continue;
     raised++;
     named.add(number);
     const evidence: Record<string, number> = { attributed: 1, piecesInPlane: kept.length, piecesJudged: judged.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(judgement.reading.deltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, planeDistanceMedian: round5(median(kept.map((p) => p.distance))), parentAgeDays: round5(judgement.reading.parentAgeDays), cloudPieces: judgement.reading.cloudPieces, daysSinceCloud: round5(judgement.reading.daysSinceCloud), parentCloudDistance: round5(judgement.reading.parentCloudDistance), launchAgeDays: round5(verdict.launchAgeDays), missKm: round5(timed!.missKm), sigmaMinutes: round5(timed!.sigmaMinutes), crossings: timed!.crossings, rivals: rivals.length, bodyClass: BODY_CLASSES.indexOf(own.bodyClass) };
     if (Number.isFinite(timed!.spreadMinutes)) evidence.spreadMinutes = round5(timed!.spreadMinutes);
     if (Number.isFinite(rival)) evidence.rivalMissKm = round5(rival);
+    const event = piecesEvent(timed!, params);
+    const o = timed!.origin;
+    for (const [name, value] of [["originTried", o.tried], ["originTimed", o.timed], ["originDev50Hours", o.dev50Hours], ["originDev75Hours", o.dev75Hours], ["originSpreadHours", o.spreadHours], ["originAgeDays", o.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round5(value);
+    if (event.byOrigin) [evidence.sigmaMinutes, evidence.eventByOrigin] = [round5(event.sigmaMinutes), 1];
+    if (twins.length > 0) evidence.twins = twins.length;
     const words = [
       `${kept.length} fresh piece${kept.length === 1 ? "" : "s"} under launch ${launch.key} (${kept.map((p) => p.number).join(", ")}), numbered above the catalogue's mark and first published after the cloud's first set, in the plane of ${number} (distance ${kept.map((p) => p.distance.toFixed(1)).join(", ")} to the nearest plane of the launch's bodies), their semi-major axes centred ${centre.toFixed(1)} km from its, moving ${judgement.reading.deltaVMps.toFixed(1)} m/s from it: a breakup of ${number}, attributed from the pieces with no step seen on it`,
       timingReason(timed!, number),
@@ -1076,8 +1168,9 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
       ...reasons,
       ...verdict.reasons,
     ];
-    context.verdicts.push({ kind: "object", state: "confirmed", number, launch: launch.key, raisedAt: now, step: null, event: { at: timed!.at, from: timed!.from, to: timed!.to }, evidence, reasons: words, bodies: kept.map((p) => p.number) });
-    noteCloud(launch, now, timed!.at, true);
+    context.verdicts.push({ kind: "object", state: "confirmed", number, launch: launch.key, raisedAt: now, step: null, event: { at: event.at, from: event.from, to: event.to }, evidence, reasons: words, bodies: kept.map((p) => p.number), ...(twins.length > 0 ? { candidates: [number, ...twins] } : {}) });
+    noteCloud(launch, now, event.at, true);
+    for (const twin of twins) named.add(twin);
     launch.lastCloudAt = now;
   }
   return raised;
@@ -1143,29 +1236,53 @@ function judgeLaunches(context: RunContext): void {
         // The launch must be old enough for its new bodies not to be its own, and quiet enough in the year before for them not to be an old cloud's backlog.
         if (verdict.launchAgeDays < params.youngLaunchDays) refused |= REFUSALS.youngLaunch;
         if (verdict.rate > params.confirmBackgroundMax) refused |= REFUSALS.background;
+        // A crewed station's pieces are released on purpose: they confirm nothing, its reboosts least of all.
+        if (params.stationLaunches.includes(key)) refused |= REFUSALS.station;
       }
       // On an analyst range, the pieces that lie within the plane bound of another open alert's parent too: the plane test does not name this one alone.
       const shared = analyst ? confirming.filter((piece) => piece.within.length > 1).length : 0;
-      if (refused !== 0) {
+      const overridable = (bits: number): boolean => !analyst && bits !== 0 && (bits & ~HISTORY_REFUSALS) === 0 && params.originOverrideHours < 1e8;
+      if (refused !== 0 && !overridable(refused)) {
         context.log.push(logRow(now, state.number, attributionSignals(launch, verdict, path, alert.bodyClass, confirming, null, shared, null, Number.NaN, refused, false)));
         continue;
       }
       const judged = judgePieces({ number: state.number, orbit: alert.orbit, bodyClass: alert.bodyClass, atMs: alert.candidate.afterEpoch, eventMs: alert.candidate.tStep }, launch, verdict, confirming, memory, context);
       alert.confirmation = judged.reading;
       refused |= judged.refused;
-      if (analyst && refused === 0) {
-        timed = timePieces(context, state.number, judged.pieces);
-        if (timed === null) refused |= REFUSALS.untimed;
-        else if (timed.missKm > params.attributionMissKmMax) refused |= REFUSALS.miss;
+      let pieces = judged.pieces;
+      // Pieces made at one instant are not an old cloud's: where they share an origin closely enough, the rules that read the launch's history as one do not refuse them.
+      if (overridable(refused)) {
+        const strict = timePieces(context, state.number, confirming);
+        if (strict !== null && overridesHistory(strict.origin, params) && !sameInstant(strict.origin.medianAt, memory.eventMs, params)) {
+          extra.push(`${strict.origin.timed} of the ${strict.origin.tried} pieces cross ${state.number} within ${strict.origin.dev75Hours.toFixed(1)} h of one instant, three quarters of them: made at once, not an old cloud's, so the launch's history does not refuse them`);
+          [refused, pieces, timed] = [0, confirming, strict];
+        }
+      }
+      if (refused === 0 && pieces.length > 0) {
+        // The pieces timed back against the parent, for the common-origin test and the record: an analyst range's must also converge on it.
+        timed = timed ?? timePieces(context, state.number, pieces);
+        if (analyst && timed === null) refused |= REFUSALS.untimed;
+        else if (analyst && timed!.missKm > params.attributionMissKmMax) refused |= REFUSALS.miss;
+        if (originOn(params) && Math.min(pieces.length, params.attributionMaxPieces) >= params.originMinPieces && (timed === null || !passesOrigin(timed.origin, params))) {
+          refused |= REFUSALS.origin;
+          extra.push(`the pieces' crossings of ${state.number} do not share an instant: the late pieces of an old cloud, not this step's`);
+        }
+        if (timed !== null && timed.origin.timed >= 2 && (verdict.launchAgeDays - timed.origin.ageDays < params.originLaunchMarginDays || Math.abs(timed.origin.medianAt - alert.candidate.tStep) / HOUR_MS > params.originStepHoursMax)) {
+          refused |= REFUSALS.origin;
+          extra.push(`the pieces cross ${state.number} ${((timed.origin.medianAt - alert.candidate.tStep) / HOUR_MS).toFixed(0)} h from its step, ${(verdict.launchAgeDays - timed.origin.ageDays).toFixed(0)} days after the launch was first seen: not the step's pieces`);
+        }
         if (timed !== null) extra.push(timingReason(timed, state.number));
       }
-      context.log.push(logRow(now, state.number, attributionSignals(launch, verdict, path, alert.bodyClass, confirming, judged, shared, timed, Number.NaN, refused, refused === 0 && judged.pieces.length > 0)));
-      if (refused !== 0 || judged.pieces.length === 0) continue;
+      const stepSignals: Partial<Record<SignalName, number>> = timed === null || !Number.isFinite(timed.origin.medianAt) ? {} : { originStepHours: (timed.origin.medianAt - alert.candidate.tStep) / HOUR_MS };
+      context.log.push(logRow(now, state.number, { ...attributionSignals(launch, verdict, path, alert.bodyClass, confirming, judged, shared, timed, Number.NaN, refused, refused === 0 && pieces.length > 0), ...(refused === 0 || timed !== null ? originSignals(timed, Math.min(pieces.length, params.attributionMaxPieces)) : {}), ...stepSignals }));
+      if (refused !== 0 || pieces.length === 0) continue;
       decision = CLOUD_DECISIONS.confirmed;
       confirmedHere = true;
-      const pieces = judged.pieces;
       const evidence: Record<string, number> = { piecesInPlane: pieces.length, piecesJudged: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(judged.reading.deltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, parentAgeDays: round5(judged.reading.parentAgeDays), cloudPieces: judged.reading.cloudPieces, daysSinceCloud: round5(judged.reading.daysSinceCloud), parentCloudDistance: round5(judged.reading.parentCloudDistance) };
-      if (timed !== null) [evidence.missKm, evidence.sigmaMinutes] = [round5(timed.missKm), round5(timed.sigmaMinutes)];
+      // An analyst range's confirmation is timed by its pieces; an alert's event stays its step's, the pieces' timing kept beside it.
+      if (timed !== null && analyst) [evidence.missKm, evidence.sigmaMinutes] = [round5(timed.missKm), round5(timed.sigmaMinutes)];
+      else if (timed !== null) [evidence.piecesMissKm, evidence.piecesSigmaMinutes] = [round5(timed.missKm), round5(timed.sigmaMinutes)];
+      if (timed !== null) for (const [name, value] of [["originTried", timed.origin.tried], ["originTimed", timed.origin.timed], ["originDev50Hours", timed.origin.dev50Hours], ["originDev75Hours", timed.origin.dev75Hours], ["originAgeDays", timed.origin.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round5(value);
       const reasons = [`${pieces.length} new bod${pieces.length === 1 ? "y" : "ies"} under ${analyst ? `the analyst range ${key}` : `launch ${key}`} (${pieces.map((p) => p.number).join(", ")}) numbered above the catalogue's mark at the step, first published after it, in the parent's plane (distance ${pieces.map((p) => p.distance.toFixed(1)).join(", ")}), moving ${judged.reading.deltaVMps.toFixed(1)} m/s from it`, ...extra, ...judged.reasons, ...verdict.reasons];
       confirmAlert(state, alert, context, reasons, evidence, pieces.map((p) => p.number));
     }

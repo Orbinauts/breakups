@@ -167,7 +167,23 @@ export interface ConfirmedLanding {
   sigmaMinutes: number | null;
   /** The parent's class as the verdict's evidence gives it. */
   bodyClass: BodyClass;
+  /** For a verdict naming the launch and its candidate bodies (the twins the pieces cannot tell apart): the candidates, and the landing with the twins matched at the launch's level (`matchTwinsAtLaunch`): a detection where the parent of a reported event is among them. Absent on any other verdict, whose landing is the same either way. */
+  candidates?: number[];
+  twin?: { outcome: ConfirmedLanding["outcome"]; event: string | null; note: string };
 }
+
+/**
+ * Whether the Confirmed line matches a verdict naming a launch and its
+ * candidate bodies at the launch's level: a detection where the parent of
+ * a reported event is among the candidates, a false confirmation where no
+ * candidate has one. Off, such a verdict is matched on the body it names
+ * first, as any other. The owner's call: the headline is read off, the
+ * reading on is reported beside it.
+ */
+export type MatchTwinsAtLaunch = boolean;
+
+/** The crewed stations' launches, whose confirmed verdicts are exempt on the Confirmed line: what a station sheds is released on purpose, as the truth exempts the station's bursts. The scorecard's methodology, read from the detector's default list so a trial replay that changes the detector's cannot change the scoring. */
+export const STATION_LAUNCHES: readonly string[] = DETECTOR_PARAMETERS.stationLaunches;
 
 /** One counted verdict of the year, with where it landed. */
 export interface ScoredAlert {
@@ -333,11 +349,30 @@ export function subjectAt(parent: number, at: number, regime: Regime, index: Set
  * is scoreable and exempt where it is not; inside the window of a row
  * naming no catalogued object (an unnamed report, or one naming the launch
  * alone, as an analyst-parented row does); on a fragment of a reported
- * event after it; or a false alarm.
+ * event after it; or a false alarm. A verdict under a crewed station's
+ * launch is exempt, whatever it names. A verdict naming candidates (twins)
+ * is landed on the body it names first, and carries beside it the landing
+ * at the launch's level (`twin`): a detection of the reported event on any
+ * candidate within the window, the one nearest the verdict's instant.
  */
-export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence">, i: number, rows: readonly Row[]): ConfirmedLanding {
+export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence" | "candidates">, i: number, rows: readonly Row[], stations: readonly string[] = STATION_LAUNCHES): ConfirmedLanding {
+  const landing = landOnBody(verdict, i, rows, stations);
+  const candidates = verdict.candidates;
+  if (candidates === undefined || candidates.length < 2 || landing.outcome === "exempt" && landing.note.startsWith("a crewed station")) return landing;
+  // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant where it gave one (twins may each break up within the half year), else the latest.
+  const after = FRAGMENTS_DAYS * DAY_MS;
+  const onCandidates = rows.filter((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber !== null && candidates.includes(row.breakup.parent.catalogueNumber) && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after);
+  const at = verdict.event?.at;
+  const nearest = onCandidates.sort((a, b) => (at === undefined ? b.from - a.from : Math.abs(a.from - at) - Math.abs(b.from - at) || b.from - a.from))[0];
+  const twin = nearest === undefined ? { outcome: landing.outcome, event: landing.event, note: landing.note } : { outcome: "detection" as const, event: nearest.breakup.id, note: `a confirmed verdict naming the launch with ${nearest.breakup.parent.catalogueNumber}, a reported event's parent, among its candidates` };
+  return { ...landing, candidates: [...candidates], twin };
+}
+
+/** Where a confirmed verdict lands on the body it names. */
+function landOnBody(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence">, i: number, rows: readonly Row[], stations: readonly string[]): ConfirmedLanding {
   const number = verdict.number!;
   const base = { verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, attributed: verdict.step === null, eventAt: verdict.event?.at ?? null, sigmaMinutes: verdict.evidence.sigmaMinutes ?? null, bodyClass: BODY_CLASSES[verdict.evidence.bodyClass ?? -1] ?? "unknown" };
+  if (verdict.launch !== null && stations.includes(verdict.launch)) return { ...base, outcome: "exempt", event: null, note: "a crewed station's launch: what it sheds is released on purpose" };
   const after = FRAGMENTS_DAYS * DAY_MS;
   const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after).sort((a, b) => b.from - a.from);
   const scoreable = onParent.find((row) => row.breakup.scoreable);

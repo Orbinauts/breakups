@@ -1,7 +1,7 @@
 import { propagate } from "@orbinauts/engine";
 import { describe, expect, test } from "vitest";
 import type { ElementSet } from "./elements.ts";
-import { cartesianOf, elementsOf, eventFromPieces, eventTimeOf } from "./event-time.ts";
+import { cartesianOf, elementsOf, eventFromPieces, eventTimeOf, originBoundHours, originOf, originTested, overridesHistory, passesOrigin } from "./event-time.ts";
 import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
@@ -172,5 +172,71 @@ describe("the event's time from the pieces", () => {
     expect(eventFromPieces(parent, pieces, firstSets, firstSets, params)).toBeNull();
     expect(eventFromPieces({ ...parent, eccentricity: 1.5 }, pieces, firstSets - 20 * DAY, firstSets, params)).toBeNull();
     expect(eventFromPieces(parent, [], firstSets - 20 * DAY, firstSets, params)).toBeNull();
+  });
+});
+
+describe("the common-origin test", () => {
+  // A quiet parent near 7,000 km; a breakup at noon on the fifth day whose pieces' first sets come three days later; and the late pieces of an old cloud, each from a breakup of the same parent years before the window, catalogued now.
+  const parent = setOf(1, { epochMs: T0 + 6 * DAY, aKm: 7000, eccentricity: 0.001, inclinationDeg: 74 });
+  const event = T0 + 4.5 * DAY;
+  const firstSets = T0 + 7.5 * DAY;
+  const fresh = [-6, -3, -1, 1.5, 4, 6.5].map((d, i) => pieceOf(parent, event, d, firstSets, 50001 + i, "2010-001C"));
+  const oldCloud = [-40, -25, -15, 15, 30, 45].map((d, i) => pieceOf(parent, T0 - (400 + 170 * i) * DAY, d, firstSets, 60001 + i, "2010-001D"));
+  const window = (sets: typeof fresh) => eventFromPieces(parent, sets, firstSets - 20 * DAY, firstSets, params)!;
+  const rule = { originHoursBase: 6, originHoursPerDay: 1, originShareMin: 0.75, originMinPieces: 2, originPhaseMax: 0.1 };
+
+  test("a breakup's pieces each cross the parent at the event: every one timed, within an hour of it, the median at it", () => {
+    const { origin, pieceCrossings } = window(fresh);
+    expect(pieceCrossings).toHaveLength(6);
+    expect(origin.tried).toBe(6);
+    expect(origin.timed).toBe(6);
+    for (const c of pieceCrossings) {
+      expect(Math.abs(c.at! - event)).toBeLessThan(60 * 60_000);
+      expect(c.missKm).toBeLessThan(10);
+    }
+    expect(Math.abs(origin.medianAt - event)).toBeLessThan(30 * 60_000);
+    expect(origin.dev50Hours).toBeLessThan(1);
+    expect(origin.dev75Hours).toBeLessThan(1);
+    expect(origin.phase75).toBeLessThan(0.001);
+    expect(origin.ageDays).toBeCloseTo(3, 0);
+    expect(passesOrigin(origin, rule)).toBe(true);
+  });
+
+  test("an old cloud's late pieces cross the parent at unrelated phases, days apart, and fail the test", () => {
+    const { origin } = window(oldCloud);
+    expect(origin.tried).toBe(6);
+    expect(origin.timed).toBeGreaterThanOrEqual(4);
+    expect(origin.dev75Hours).toBeGreaterThan(24);
+    expect(origin.dev75Hours).toBeGreaterThan(originBoundHours(origin, rule));
+    expect(origin.phase75).toBeGreaterThan(rule.originPhaseMax);
+    expect(passesOrigin(origin, rule)).toBe(false);
+  });
+
+  test("a breakup's pieces override the rules that read the launch's history as an old cloud; an old cloud's do not; the gate is off as fitted", () => {
+    expect(overridesHistory(window(fresh).origin, params)).toBe(true);
+    expect(overridesHistory(window(oldCloud).origin, params)).toBe(false);
+    expect(originTested(params)).toBe(false);
+    expect(passesOrigin(window(oldCloud).origin, params)).toBe(true);
+    // Two pieces are too few to override, however tight.
+    expect(overridesHistory(window(fresh.slice(0, 2)).origin, params)).toBe(false);
+  });
+
+  test("the reading of given crossings: a piece that does not cross counts as infinitely far, fewer than two say nothing of the spread, and the rule passes what it cannot judge", () => {
+    const at = (hours: number | null, n: number) => ({ number: n, at: hours === null ? null : T0 + hours * HOUR, missKm: 5, firstEpochMs: T0 + 72 * HOUR, lapMs: 8 * HOUR });
+    const four = originOf([at(0, 1), at(2, 2), at(-1, 3), at(null, 4)]);
+    expect(four.tried).toBe(4);
+    expect(four.timed).toBe(3);
+    expect(four.medianAt).toBe(T0);
+    expect(four.dev50Hours).toBe(1);
+    expect(four.dev75Hours).toBe(2);
+    expect(four.phase50).toBe(1 / 8);
+    expect(four.phase75).toBe(2 / 8);
+    expect(four.ageDays).toBeCloseTo(3, 5);
+    const lonely = originOf([at(0, 1), at(null, 2)]);
+    expect(Number.isNaN(lonely.dev50Hours)).toBe(true);
+    expect(passesOrigin(lonely, rule)).toBe(false);
+    expect(passesOrigin(originOf([at(5, 1)]), rule)).toBe(true);
+    // The bound grows with the pieces' age: older first sets are propagated back further.
+    expect(originBoundHours({ ageDays: 30 }, rule)).toBe(36);
   });
 });

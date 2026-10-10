@@ -53,100 +53,103 @@ by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 
 ## How well it does
 
-The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. **The target is on Confirmed alerts** ([docs/decisions/0007](docs/decisions/0007-the-target-is-on-confirmed-alerts.md), the owner's decision of 2026-10-10): a breakup the detector attributes to a parent from fresh fragments in the parent's plane, with or without a step seen first on the parent. A target is a reported breakup whose launch gained at least one fresh piece in the parent's plane within 180 days in the Archive; events with no such piece are listed apart and out of the denominator. A detection is the first confirmed verdict by pieces on the event's parent within 180 days after it; a confirmed verdict matching no reported event is a false alarm, and the false-alarm rate is over the confirmed events on every line. The lead is the days from the confirmation to the first statement by an agency the truth dates (NASA's quarterly news issue, dated to the first day of its month, or a U.S. Space Forces-Space notice), the lag the days after the first fresh piece's publication, the timing error the detector's instant of the event against the truth's. The targets are nine in ten confirmed and fewer than one false confirmation in ten, on the breakups reported to the day or better; the thresholds are fitted on the even years and the odd years are held out. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the scorecard's rules. The per-year files under `kpi/years/` (every verdict and every logged candidate, tens of megabytes a run) are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and are not committed; the aggregate is.
+The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. **The target is on Confirmed alerts** ([docs/decisions/0007](docs/decisions/0007-the-target-is-on-confirmed-alerts.md), the owner's decision of 2026-10-10): a breakup the detector attributes to a parent from fresh fragments in the parent's plane, with or without a step seen first on the parent. A target is a reported breakup whose launch gained at least one fresh piece in the parent's plane within 180 days in the Archive; events with no such piece are listed apart and out of the denominator. A detection is the first confirmed verdict by pieces on the event's parent within 180 days after it; a confirmed verdict matching no reported event is a false alarm, and the false-alarm rate is over the confirmed events on every line. The lead is the days from the confirmation to the first statement by an agency the truth dates (NASA's quarterly news issue, dated to the first day of its month, or a U.S. Space Forces-Space notice), the lag the days after the first fresh piece's publication, the timing error the detector's instant of the event against the truth's. The targets are nine in ten confirmed and fewer than one false confirmation in ten, on the breakups reported to the day or better; the thresholds are fitted on the even years and the odd years are held out; every split scores from 2006, the Archive's first year being the detector's warm-up, and a crewed station's launch is exempt. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the scorecard's rules. The per-year files under `kpi/years/` (every verdict and every logged candidate, tens of megabytes a run) are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and are not committed; the aggregate is.
 
-**This is the ninth phase of the detector, and the target is not reached.** The Confirmed channel attributes fresh pieces to the body of their launch whose plane they share and on whose orbit their periods centre, times the event by the pieces' convergence on it, and keeps the fifth phase's rules against old clouds still being catalogued ([docs/detector/d9-confirmed.md](docs/detector/d9-confirmed.md)). On the training years it confirms 22 of 35 headline targets (63%) at a false-alarm rate of 35%; on the held-out years 18 of 25 (72%, 52% to 86%) at 55% (42% to 68%), twelve of whose 31 false confirmations fall in 2005, the detector's first year, before it had a year of any launch's background to read. Every held-out confirmation with an agency's statement came before it, a median of six weeks, and a median of three hours after the catalogue published the first fresh piece. What limits it: launches where two bodies share the pieces' plane and orbit (an ullage motor and its twin, a payload and its stage, a fairing and its siblings), single pieces where one means nothing, the backlog and the young launch where a breakup's own cloud looks like an old one, and false confirmations from single pieces and cataloguing batches the rules do not catch. [docs/detector/events.md](docs/detector/events.md) lists every reported event with its Confirmed outcome and cause.
+**This is the tenth phase of the detector, and the target is not reached.** The Confirmed channel attributes fresh pieces to the body of their launch whose plane they share and on whose orbit their periods centre, times the event by the pieces' crossings of it, and keeps the fifth phase's rules against old clouds still being catalogued; the tenth phase scores from 2006 (2005, the Archive's first year, is the detector's warm-up), exempts the crewed stations' launches, names twins a step picks with their candidates (the second row of each split reads them at the launch), and reads the pieces' common origin: pieces made at one instant override the rules that read a launch's history as an old cloud, and pieces whose instant is the launch itself are its own objects ([docs/detector/d10-confirmed.md](docs/detector/d10-confirmed.md)). On the training years it confirms 22 of 35 headline targets (63%) at a false-alarm rate of 22%; on the held-out years 17 of 23 (74%, 54% to 87%) at 38% (23% to 55%). Every held-out confirmation with an agency's statement came before it, a median of six weeks, and a median of three hours after the catalogue published the first fresh piece. The common-origin test does not separate true clouds from false ones well enough to be a gate (the pieces' first sets are weeks old and SGP4 run back spreads their crossings by tens of hours), and what is left on both sides is single pieces and small batches: a stage's pieces named on its payload, a first piece of a breakup, a few pieces under an old launch. [docs/detector/events.md](docs/detector/events.md) lists every reported event with its Confirmed outcome and cause.
 
 | Confirmed: the target, breakups A and B | Targets (fragments catalogued) | No fragments catalogued | Confirmed | Missed | Recall (95% interval) | False confirmations | False-alarm rate (95% interval) | Lead over the first agency statement, days: median (10th percentile) | Confirmed before it | Lag after the first fragment, days: median (90th percentile) | Timing error, minutes: median (90th percentile) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Validation: the odd years (2005 to 2025, 11 years) | 25 | 13 | 18 | 7 | 72% (52% to 86%) | 31 | 55% (42% to 68%) | 41.7 (9.2) | 18 of 18 | 0.1 (4.5) | 114.4 (21342.4) |
-| Training: the even years (2006 to 2026, 11 years) | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 18 | 35% (24% to 49%) | 35.7 (-32.2) | 14 of 21 | 0.1 (4.1) | 1248.6 (119134.1) |
-| Fitted on the years to 2017 (2005 to 2017, 13 years) | 31 | 20 | 25 | 6 | 81% (64% to 91%) | 37 | 52% (41% to 63%) | 37.2 (-15.2) | 19 of 24 | 0.1 (0.1) | 1204.7 (119134.1) |
-| Validated on the years from 2018 (2018 to 2026, 9 years) | 29 | 8 | 15 | 14 | 52% (34% to 69%) | 12 | 33% (20% to 50%) | 40.2 (-24.5) | 13 of 15 | 0.1 (39.3) | 59.2 (40265.4) |
+| Validation: the odd years (2007 to 2025, 10 years) | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 12 | 38% (23% to 55%) | 41.7 (9.8) | 17 of 17 | 0.1 (4.0) | 40.6 (21342.4) |
+| Validation: the odd years, twins matched at the launch | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 12 | 38% (23% to 55%) | 41.7 (9.8) | 17 of 17 | 0.1 (4.0) | 40.6 (21342.4) |
+| Training: the even years (2006 to 2026, 11 years) | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 9 | 22% (12% to 37%) | 35.7 (-32.2) | 14 of 21 | 0.1 (5.9) | 1125.9 (173291.7) |
+| Training: the even years, twins matched at the launch | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 9 | 22% (12% to 37%) | 35.7 (-24.5) | 14 of 21 | 0.1 (5.9) | 1125.9 (173291.7) |
+| Fitted on the years to 2017 (2006 to 2017, 12 years) | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 14 | 33% (20% to 47%) | 37.2 (-15.2) | 17 of 22 | 0.1 (0.1) | 583.0 (118847.1) |
+| Fitted on the years to 2017, twins matched at the launch | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 14 | 33% (20% to 47%) | 37.2 (-12.3) | 17 of 22 | 0.1 (0.1) | 583.0 (89663.5) |
+| Validated on the years from 2018 (2018 to 2026, 9 years) | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 7 | 23% (12% to 41%) | 40.2 (-24.5) | 14 of 16 | 0.1 (17.2) | 72.8 (40265.4) |
+| Validated on the years from 2018, twins matched at the launch | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 7 | 23% (12% to 41%) | 40.2 (-24.5) | 14 of 16 | 0.1 (17.2) | 72.8 (40265.4) |
 
-| Confirmed, every line, validation: the odd years (2005 to 2025, 11 years) | Targets (fragments catalogued) | No fragments catalogued | No parent orbit before the event | Confirmed | Missed | Recall (95% interval) |
+| Confirmed, every line, validation: the odd years (2007 to 2025, 10 years) | Targets (fragments catalogued) | No fragments catalogued | No parent orbit before the event | Confirmed | Missed | Recall (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the target is 90%) | 25 | 9 | 4 | 18 | 7 | 72% (52% to 86%) |
-| Breakups, confidence C | 5 | 5 | 7 | 3 | 2 | 60% (23% to 88%) |
+| Breakups, confidence A and B (the target is 90%) | 23 | 7 | 4 | 17 | 6 | 74% (54% to 87%) |
+| Breakups, confidence C | 5 | 3 | 7 | 2 | 3 | 40% (12% to 77%) |
 | Breakups, confidence D | 5 | 3 | 1 | 0 | 5 | 0% (0% to 43%) |
-| Anomalous events, confidence A and B | 6 | 4 | 0 | 2 | 4 | 33% (10% to 70%) |
+| Anomalous events, confidence A and B | 5 | 4 | 0 | 0 | 5 | 0% (0% to 43%) |
 | Anomalous events, confidence C and D | 2 | 2 | 0 | 1 | 1 | 50% (9% to 91%) |
 
-| Confirmed verdicts, validation: the odd years (2005 to 2025, 11 years) | Count |
+| Confirmed verdicts, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
-| Confirmed verdicts by pieces | 60 |
-| Of which attributed from the pieces with no step seen on the parent | 43 |
-| Detections (the first confirmation of a reported event) | 26 |
-| Duplicates (a later confirmation of an event, or one on its fragment) | 1 |
+| Confirmed verdicts by pieces | 36 |
+| Of which attributed from the pieces with no step seen on the parent | 21 |
+| Detections (the first confirmation of a reported event) | 19 |
+| Duplicates (a later confirmation of an event, or one on its fragment) | 3 |
 | Exempt (inside an exempt window) | 2 |
-| False confirmations (matching no reported event) | 31 |
-| Of those, attributed with no step | 23 |
-| Of those, on a payload / a rocket body / debris / an unknown body | 25 / 6 / 0 / 0 |
-| Events confirmed on every line (the precision's numerator) | 25 |
-| Of which with no fragment the scorecard reads in the plane | 1 |
-| False-alarm rate (the target is under 10%) | 55% (42% to 68%) |
-| Headline confirmations with an agency's statement dated | 18 |
-| Of which the statement dated to the day / to the month | 0 / 18 |
-| Of which confirmed before the statement | 18 |
-| Lead over the first agency statement, days: median (10th percentile) | 41.7 (9.2) |
-| Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.5) |
-| Timing error against the truth's instant, minutes: median (90th percentile) | 114.4 (21342.4) |
+| False confirmations (matching no reported event) | 12 |
+| Of those, attributed with no step | 8 |
+| Verdicts naming the launch and its candidate bodies (twins), matched on the body named first | 1 |
+| Of those, on a payload / a rocket body / debris / an unknown body | 9 / 3 / 0 / 0 |
+| Events confirmed on every line (the precision's numerator) | 20 |
+| Of which with no fragment the scorecard reads in the plane | 0 |
+| False-alarm rate (the target is under 10%) | 38% (23% to 55%) |
+| Headline confirmations with an agency's statement dated | 17 |
+| Of which the statement dated to the day / to the month | 0 / 17 |
+| Of which confirmed before the statement | 17 |
+| Lead over the first agency statement, days: median (10th percentile) | 41.7 (9.8) |
+| Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.0) |
+| Timing error against the truth's instant, minutes: median (90th percentile) | 40.6 (21342.4) |
 
-The parent-step lines follow as secondary measurements, as the scorecard measured them before the seventh decision record: an alert on the parent's own orbit raised before the first fragment's element set was published and before any notice, on events whose parent had at least five public element sets in the sixty days before (fewer is undetectable, listed apart). The whole catalogue's line detects about a third of the headline breakups at a false-alarm rate above 99%; the scoped line ([docs/detector/d7-scope.md](docs/detector/d7-scope.md)) is the point nearest the old target on the parent's data, a fifty-fold cut in false alarms for about one in eight of the headline breakups in its scope. The tier table reads every alert's later sets, so the trade between waiting and false alarms is shown with the numbers in hand; the last table is the step alerts the fragments or a notice confirmed ([docs/detector/d5-fitting.md](docs/detector/d5-fitting.md)).
-
-| Parent step: validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
+| Parent step: validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the headline line) | 32 | 6 | 11 | 2 | 19 | 34% |
-| Breakups, confidence C | 8 | 9 | 1 | 0 | 7 | 13% |
+| Breakups, confidence A and B (the headline line) | 28 | 6 | 10 | 2 | 16 | 36% |
+| Breakups, confidence C | 6 | 9 | 1 | 0 | 5 | 17% |
 | Breakups, confidence D | 8 | 1 | 0 | 0 | 8 | 0% |
-| Anomalous events, confidence A and B | 9 | 1 | 0 | 2 | 7 | 0% |
+| Anomalous events, confidence A and B | 8 | 1 | 0 | 1 | 7 | 0% |
 | Anomalous events, confidence C and D | 4 | 0 | 1 | 0 | 3 | 25% |
 
-| Breakups A and B, scoped, validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| The whole catalogue | 32 | 6 | 11 | 2 | 19 | 34% (20% to 52%) | 3158 | 100% (99% to 100%) | 0 |
-| Scoped | 24 | 0 | 3 | 0 | 21 | 13% (4% to 31%) | 56 | 95% (86% to 98%) | 14 of 38 |
+| The whole catalogue | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2503 | 100% (99% to 100%) | 0 |
+| Scoped | 21 | 0 | 3 | 0 | 18 | 14% (5% to 35%) | 52 | 95% (85% to 98%) | 13 of 34 |
 
-| Alerts, validation: the odd years (2005 to 2025, 11 years) | Count |
+| Alerts, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 3299 |
+| Alerts (object verdicts, suspected or confirmed) | 2640 |
 | Duplicates | 111 |
-| Exempt | 13 |
-| False alarms | 3158 |
+| Exempt | 11 |
+| False alarms | 2503 |
 | False-alarm rate | 100% |
-| False alarms per 10,000 body-years | 170.2 |
+| False alarms per 10,000 body-years | 141.4 |
 | Lead over the catalogue, hours: median (10th percentile) | 479.0 (23.2) |
 | Latency from the event, hours: median (90th percentile) | 129.5 (1153.4) |
-| Confirmed share of the detections | 38% |
+| Confirmed share of the detections | 42% |
 | Days to confirmation, median | 4.0 |
 | Timing error, minutes, median | 34.6 |
-| Cloud verdicts, for review (a burst with no parent step) | 86 |
+| Cloud verdicts, for review (a burst with no parent step) | 71 |
 
-| Precision per persistence tier, validation: the odd years (2005 to 2025, 11 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
+| Precision per persistence tier, validation: the odd years (2007 to 2025, 10 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 post sets over 18 h, or 3 (as raised) | 3175 | 13 | 3158 | 0% | 100% | 479.0 (23.2) |
-| 3 post sets | 2681 | 13 | 2664 | 0% | 100% | 479.0 (23.2) |
-| 5 post sets | 2045 | 11 | 2030 | 1% | 85% | 576.1 (94.0) |
-| 1 day of post sets | 2304 | 11 | 2289 | 0% | 85% | 576.1 (94.0) |
-| 3 days of post sets | 1838 | 11 | 1823 | 1% | 85% | 564.1 (54.0) |
-| 5 days of post sets | 1600 | 9 | 1585 | 1% | 69% | 557.0 (156.0) |
-| 7 days of post sets | 1436 | 8 | 1424 | 1% | 62% | 529.0 (88.0) |
+| 2 post sets over 18 h, or 3 (as raised) | 2518 | 12 | 2503 | 0% | 100% | 479.0 (23.2) |
+| 3 post sets | 2468 | 12 | 2453 | 0% | 100% | 479.0 (23.2) |
+| 5 post sets | 1860 | 10 | 1847 | 1% | 83% | 576.1 (94.0) |
+| 1 day of post sets | 2112 | 10 | 2099 | 0% | 83% | 576.1 (94.0) |
+| 3 days of post sets | 1675 | 10 | 1662 | 1% | 83% | 564.1 (54.0) |
+| 5 days of post sets | 1453 | 8 | 1440 | 1% | 67% | 817.3 (156.0) |
+| 7 days of post sets | 1310 | 7 | 1300 | 1% | 58% | 404.1 (88.0) |
 
-| The step alerts confirmed, validation: the odd years (2005 to 2025, 11 years) | Count |
+| The step alerts confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
-| Events the catalogue reported (new bodies under the launch within 90 days) | 36 |
-| Of which alerted on the parent (detected or late) | 14 |
-| Of which confirmed | 5 |
-| Confirmed share of the reported events | 14% |
+| Events the catalogue reported (new bodies under the launch within 90 days) | 33 |
+| Of which alerted on the parent (detected or late) | 12 |
+| Of which confirmed | 6 |
+| Confirmed share of the reported events | 18% |
 | Days from the event to the confirmation, median (90th percentile) | 21.9 (49.1) |
 | Days from the alert to the confirmation, median (90th percentile) | 4.0 (24.2) |
-| Confirmed alerts (by the fragments or a notice) | 17 |
-| Of which on a reported event's step (a detection or a late alert) | 5 |
-| Of which inside an exempt window or a duplicate | 0 |
-| Of which matching no reported event's step | 12 |
+| Confirmed alerts (by the fragments or a notice) | 15 |
+| Of which on a reported event's step (a detection or a late alert) | 6 |
+| Of which inside an exempt window or a duplicate | 1 |
+| Of which matching no reported event's step | 8 |
 | Of those, on the parent of a reported event within the month before (the right object, the step late) | 4 |
-| Precision of the confirmed alerts, on the step | 29% |
-| Precision of the confirmed alerts, on the object | 53% |
+| Precision of the confirmed alerts, on the step | 40% |
+| Precision of the confirmed alerts, on the object | 67% |
 | Targets with an agency's statement dated in the truth (the notices) | 0 |
 | Of which confirmed before that statement | 0 |
 

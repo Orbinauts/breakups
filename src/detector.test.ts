@@ -35,6 +35,8 @@ function decaying(a0: number, rate: number, sigma: number, days: number, stepHou
 }
 
 const suspected = (fed: ReturnType<typeof feed>) => fed.verdicts.filter((v) => v.state === "suspected");
+/** The pieces these tests build lie in the parent's plane but are not placed where the parent was at an instant, so their crossings of it say nothing: the common-origin rules (the launch margin, the override) are off here, and tested on pieces kicked from a parent in `event-time.test.ts` and below. */
+const PLANE_ONLY = { originLaunchMarginDays: -1e9, originOverrideHours: 1e9 };
 
 describe("the detector on synthetic series", () => {
   test("a pure drag decay with its own noise raises nothing and logs no candidate", () => {
@@ -383,14 +385,49 @@ describe("the fusion with the fragments", () => {
     expect(confirmed[0]!.bodies).toEqual([]);
   });
 
-  test("a burst of pieces in the plane of two bodies of the launch that it cannot tell apart is listed as a cloud for review, never named", () => {
+  // A payload and its twin in the same orbit, the launch's two bodies, and a burst of pieces in both planes that converge on both alike.
+  const twinScene = () => {
     const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload"));
-    // A twin of the payload in the same orbit, the launch's second body: the pieces lie in both planes and converge on both alike.
     const twin = quiet.map((s) => ({ ...s, number: 7, designator: "2010-002B" }));
     const at = quiet[110]!.epochMs;
     const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50011 + i, { epochMs: at + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
     const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, twin[from + i]!]));
-    const fed = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)]);
+    return { quiet, at, cloudPieces, both };
+  };
+
+  test("a burst of pieces in the plane of two bodies of the launch that it cannot tell apart names the launch and both bodies as its candidates, where unresolved twins are raised", () => {
+    const { quiet, cloudPieces, both } = twinScene();
+    const fed = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)], { parameters: { ...PLANE_ONLY, attributionTwinsUnresolved: true } });
+    expect(suspected(fed)).toEqual([]);
+    const confirmed = fed.verdicts.filter((v) => v.state === "confirmed");
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.launch).toBe("2010-002");
+    expect([...confirmed[0]!.candidates!].sort()).toEqual([2, 7]);
+    expect(confirmed[0]!.candidates![0]).toBe(confirmed[0]!.number);
+    expect(confirmed[0]!.evidence.twins).toBe(1);
+    expect(confirmed[0]!.reasons.join(" ")).toContain("the launch is named with its candidates");
+    const row = fed.log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
+    expect(row.signals.attributionTwins).toBe(1);
+    expect(row.signals.candidate1).toBe(confirmed[0]!.candidates![1]);
+    expect(row.signals.attributionRaised).toBe(1);
+  });
+
+  test("pieces under a crewed station's launch confirm and attribute nothing: what a station sheds is released on purpose", () => {
+    const { quiet, cloudPieces, both } = twinScene();
+    const fed = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)], { parameters: { stationLaunches: ["2010-002"] } });
+    expect(fed.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
+    const row = fed.log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
+    expect(row.signals.attributionRefused! & REFUSALS.station).not.toBe(0);
+    expect(row.signals.attributionRaised).toBe(0);
+  });
+
+  test("as fitted (unresolved twins refused) and with the twins off, the same burst is listed as a cloud for review, never named", () => {
+    const { quiet, at, cloudPieces, both } = twinScene();
+    const fitted = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)], { parameters: PLANE_ONLY });
+    expect(fitted.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
+    expect(fitted.log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!.signals.attributionRefused! & REFUSALS.ambiguous).toBe(REFUSALS.ambiguous);
+    const parameters = { ...PLANE_ONLY, attributionTwins: false };
+    const fed = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)], { parameters });
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
     const clouds = fed.verdicts.filter((v) => v.kind === "cloud");
@@ -409,7 +446,7 @@ describe("the fusion with the fragments", () => {
     expect(row.signals.attributionRefused! & (REFUSALS.ambiguous | REFUSALS.untimed)).not.toBe(0);
     // Listed once: the same cloud's later pieces do not list it again within the repeat window.
     const more = Array.from({ length: 3 }, (_, i) => ({ ...setOf(50021 + i, { epochMs: at + 2 * DAY, aKm: 7201, raanDeg: 102 }, "debris"), designator: "2010-002J" }));
-    const again = feed([...both(0, 115), cloudPieces, ...both(115, 125), more, ...both(125, quiet.length)]);
+    const again = feed([...both(0, 115), cloudPieces, ...both(115, 125), more, ...both(125, quiet.length)], { parameters });
     expect(again.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
   });
 
@@ -456,7 +493,7 @@ describe("the fusion with the fragments", () => {
     const parent = series.map((s) => setOf(3, s, "payload"));
     const stepEpoch = series[160]!.epochMs;
     const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50031 + i, { epochMs: stepEpoch + HOUR, aKm: 6905 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-003${"CDEFGH"[i]}` }));
-    const fed = feed([...one(parent.slice(0, 170)), cloudPieces, ...one(parent.slice(170))]);
+    const fed = feed([...one(parent.slice(0, 170)), cloudPieces, ...one(parent.slice(170))], { parameters: PLANE_ONLY });
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toHaveLength(1);
     const confirmed = fed.verdicts.filter((v) => v.state === "confirmed");
@@ -502,7 +539,7 @@ describe("the confirmation rules", () => {
   test("a fresh cloud on a quiet launch confirms, and the verdict carries the rules' reading", () => {
     const parent = parentSeries(48, 105);
     const stepEpoch = parent[105]!.epochMs;
-    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0)]));
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0)]), { parameters: PLANE_ONLY });
     const confirmed = confirmedOn(fed, 1);
     expect(confirmed).toHaveLength(1);
     expect(confirmed[0]!.bodies).toHaveLength(6);
@@ -522,7 +559,7 @@ describe("the confirmation rules", () => {
     const parent = parentSeries(80, 180);
     const stepEpoch = parent[180]!.epochMs;
     const cloudEpoch = parent[96]!.epochMs + HOUR;
-    const same = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 0), debris(50011, 6, stepEpoch + 5 * DAY, 0)]), { until: stepEpoch + 33 * DAY });
+    const same = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 0), debris(50011, 6, stepEpoch + 5 * DAY, 0)]), { until: stepEpoch + 33 * DAY, parameters: PLANE_ONLY });
     // The first cloud, in parent 1's plane with no step on it, is attributed to it from the pieces; the second batch confirms nothing more.
     expect(suspected(same)).toHaveLength(1);
     expect(confirmedOn(same, 1).map((v) => v.step)).toEqual([null]);
@@ -537,7 +574,7 @@ describe("the confirmation rules", () => {
     expect(same.verdicts.filter((v) => v.state === "expired" && v.number === 1)).toHaveLength(1);
     // The same launch with a second body sixty degrees of node away whose plane the earlier cloud shares: parent 1's new pieces lie out of that cloud's plane and confirm it.
     const other = decaying(7200, 0.02, 0.004, 80, 8, 5).map((s) => ({ ...withNode(setOf(2, s, "payload")), designator: "2010-001B" })).map((s) => ({ ...s, raanDeg: s.raanDeg + 60 }));
-    const apart = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 60), debris(50011, 6, stepEpoch + 5 * DAY, 0)], other), { until: stepEpoch + 33 * DAY });
+    const apart = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 60), debris(50011, 6, stepEpoch + 5 * DAY, 0)], other), { until: stepEpoch + 33 * DAY, parameters: PLANE_ONLY });
     expect(apart.verdicts.filter((v) => v.state === "confirmed" && v.step === null).map((v) => v.number)).toEqual([2]);
     const confirmed = confirmedOn(apart, 1);
     expect(confirmed).toHaveLength(1);

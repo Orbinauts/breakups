@@ -6,7 +6,7 @@
   },
   "truthSha256": "e550d297b4e375648edc2da0106f6bf5a9b019673ed1a1b2a096db941898437a",
   "detector": {
-    "name": "confirmed-v7",
+    "name": "confirmed-v8",
     "parameters": {
       "ringSize": 32,
       "windowSets": {
@@ -128,7 +128,7 @@
       "attributionEnabled": true,
       "attributionDebrisParentsMax": 30,
       "attributionBatchLaunchesMax": 2,
-      "attributionMinPieces": 2,
+      "attributionMinPieces": 3,
       "attributionYoungLaunch": false,
       "attributionStepBreaksTies": true,
       "attributionUnnamedGraceDays": 180,
@@ -141,6 +141,31 @@
       "attributionCentreRatio": 3,
       "attributionCentreFloorKm": 2,
       "analystAttributes": false,
+      "attributionTwins": true,
+      "attributionTwinsUnresolved": false,
+      "originHoursBase": 1000000000,
+      "originHoursPerDay": 0,
+      "originShareMin": 0.5,
+      "originMinPieces": 2,
+      "originPhaseMax": 1000000000,
+      "originOverrideHours": 1,
+      "originOverrideMinPieces": 3,
+      "originLaunchMarginDays": 0,
+      "originStepHoursMax": 1000000000,
+      "originEventTime": true,
+      "stationLaunches": [
+        "1998-067",
+        "1998-069",
+        "2000-037",
+        "2001-006",
+        "2009-060",
+        "2021-066",
+        "2011-053",
+        "2016-057",
+        "2021-035",
+        "2022-085",
+        "2022-143"
+      ],
       "maintenanceToleranceSigmas": 3,
       "maintenanceToleranceKm": 1,
       "maintenanceMonths": 12,
@@ -372,7 +397,6 @@
   "splits": {
     "validation": {
       "years": [
-        2005,
         2007,
         2009,
         2011,
@@ -387,27 +411,27 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 25,
-            "noFragments": 9,
+            "targets": 23,
+            "noFragments": 7,
             "noParentOrbit": 4,
-            "detected": 18,
-            "missed": 7,
-            "rate": 0.72,
+            "detected": 17,
+            "missed": 6,
+            "rate": 0.7391304347826086,
             "interval": [
-              0.5242302810344169,
-              0.8571632616261843
+              0.5352960945624944,
+              0.8745155411075104
             ]
           },
           "breakups C": {
             "targets": 5,
-            "noFragments": 5,
+            "noFragments": 3,
             "noParentOrbit": 7,
-            "detected": 3,
-            "missed": 2,
-            "rate": 0.6,
+            "detected": 2,
+            "missed": 3,
+            "rate": 0.4,
             "interval": [
-              0.23071993220883708,
-              0.8823817688407467
+              0.1176182311592533,
+              0.769280067791163
             ]
           },
           "breakups D": {
@@ -423,15 +447,15 @@
             ]
           },
           "anomalous A-B": {
-            "targets": 6,
+            "targets": 5,
             "noFragments": 4,
             "noParentOrbit": 0,
-            "detected": 2,
-            "missed": 4,
-            "rate": 0.3333333333333333,
+            "detected": 0,
+            "missed": 5,
+            "rate": 0,
             "interval": [
-              0.09676933255921683,
-              0.7000116786584712
+              0,
+              0.43449149475208104
             ]
           },
           "anomalous C-D": {
@@ -447,62 +471,167 @@
             ]
           }
         },
-        "verdicts": 60,
-        "attributed": 43,
-        "detections": 26,
-        "duplicates": 1,
+        "verdicts": 36,
+        "attributed": 21,
+        "detections": 19,
+        "duplicates": 3,
         "exempt": 2,
-        "falseAlarms": 31,
-        "detectedAllLines": 25,
-        "detectedNoFragments": 1,
-        "falseAlarmRate": 0.5535714285714286,
+        "falseAlarms": 12,
+        "detectedAllLines": 20,
+        "detectedNoFragments": 0,
+        "falseAlarmRate": 0.375,
         "falseAlarmInterval": [
-          0.4241298613178388,
-          0.676134837487006
+          0.22933668465959212,
+          0.5474589941047487
         ],
         "lead": {
           "median": 41.666666666666664,
-          "tail": 9.166666666666666,
-          "count": 18
-        },
-        "withStatement": 18,
-        "beforeStatement": 18,
-        "statementDays": 0,
-        "statementMonths": 18,
-        "lag": {
-          "median": 0.09564134333292643,
-          "tail": 4.540570743334735,
-          "count": 18
-        },
-        "timing": {
-          "median": 114.39496103515626,
-          "tail": 21342.35314239909,
+          "tail": 9.833333333333334,
           "count": 17
         },
+        "withStatement": 17,
+        "beforeStatement": 17,
+        "statementDays": 0,
+        "statementMonths": 17,
+        "lag": {
+          "median": 0.11165842333193178,
+          "tail": 3.9842038100009494,
+          "count": 17
+        },
+        "timing": {
+          "median": 40.64137532958984,
+          "tail": 21342.35314239909,
+          "count": 16
+        },
         "falseByClass": {
-          "payload": 25,
-          "rocket body": 6,
+          "payload": 9,
+          "rocket body": 3,
           "debris": 0,
           "unknown": 0
         },
-        "falseAttributed": 23
+        "falseAttributed": 8,
+        "twins": 1
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 23,
+            "noFragments": 7,
+            "noParentOrbit": 4,
+            "detected": 17,
+            "missed": 6,
+            "rate": 0.7391304347826086,
+            "interval": [
+              0.5352960945624944,
+              0.8745155411075104
+            ]
+          },
+          "breakups C": {
+            "targets": 5,
+            "noFragments": 3,
+            "noParentOrbit": 7,
+            "detected": 2,
+            "missed": 3,
+            "rate": 0.4,
+            "interval": [
+              0.1176182311592533,
+              0.769280067791163
+            ]
+          },
+          "breakups D": {
+            "targets": 5,
+            "noFragments": 3,
+            "noParentOrbit": 1,
+            "detected": 0,
+            "missed": 5,
+            "rate": 0,
+            "interval": [
+              0,
+              0.43449149475208104
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 5,
+            "noFragments": 4,
+            "noParentOrbit": 0,
+            "detected": 0,
+            "missed": 5,
+            "rate": 0,
+            "interval": [
+              0,
+              0.43449149475208104
+            ]
+          },
+          "anomalous C-D": {
+            "targets": 2,
+            "noFragments": 2,
+            "noParentOrbit": 0,
+            "detected": 1,
+            "missed": 1,
+            "rate": 0.5,
+            "interval": [
+              0.09452865480086614,
+              0.9054713451991339
+            ]
+          }
+        },
+        "verdicts": 36,
+        "attributed": 21,
+        "detections": 19,
+        "duplicates": 3,
+        "exempt": 2,
+        "falseAlarms": 12,
+        "detectedAllLines": 20,
+        "detectedNoFragments": 0,
+        "falseAlarmRate": 0.375,
+        "falseAlarmInterval": [
+          0.22933668465959212,
+          0.5474589941047487
+        ],
+        "lead": {
+          "median": 41.666666666666664,
+          "tail": 9.833333333333334,
+          "count": 17
+        },
+        "withStatement": 17,
+        "beforeStatement": 17,
+        "statementDays": 0,
+        "statementMonths": 17,
+        "lag": {
+          "median": 0.11165842333193178,
+          "tail": 3.9842038100009494,
+          "count": 17
+        },
+        "timing": {
+          "median": 40.64137532958984,
+          "tail": 21342.35314239909,
+          "count": 16
+        },
+        "falseByClass": {
+          "payload": 9,
+          "rocket body": 3,
+          "debris": 0,
+          "unknown": 0
+        },
+        "falseAttributed": 8,
+        "twins": 1
       },
       "lines": {
         "breakups A-B": {
-          "targets": 32,
+          "targets": 28,
           "undetectable": 6,
-          "detected": 11,
+          "detected": 10,
           "late": 2,
-          "missed": 19,
-          "detectionRate": 0.34375
+          "missed": 16,
+          "detectionRate": 0.35714285714285715
         },
         "breakups C": {
-          "targets": 8,
+          "targets": 6,
           "undetectable": 9,
           "detected": 1,
           "late": 0,
-          "missed": 7,
-          "detectionRate": 0.125
+          "missed": 5,
+          "detectionRate": 0.16666666666666666
         },
         "breakups D": {
           "targets": 8,
@@ -513,10 +642,10 @@
           "detectionRate": 0
         },
         "anomalous A-B": {
-          "targets": 9,
+          "targets": 8,
           "undetectable": 1,
           "detected": 0,
-          "late": 2,
+          "late": 1,
           "missed": 7,
           "detectionRate": 0
         },
@@ -529,162 +658,162 @@
           "detectionRate": 0.25
         }
       },
-      "alerts": 3299,
+      "alerts": 2640,
       "duplicates": 111,
-      "exempt": 13,
-      "falseAlarms": 3158,
-      "review": 86,
+      "exempt": 11,
+      "falseAlarms": 2503,
+      "review": 71,
       "tiers": [
         {
           "tier": "2",
-          "raised": 3175,
-          "detections": 13,
-          "falseAlarms": 3158,
-          "precision": 0.004099653106275623,
+          "raised": 2518,
+          "detections": 12,
+          "falseAlarms": 2503,
+          "precision": 0.004771371769383698,
           "detectionShare": 1,
           "leadHours": {
             "median": 479.0000000800239,
             "tail": 23.15933480000814,
-            "count": 10
+            "count": 9
           }
         },
         {
           "tier": "3",
-          "raised": 2681,
-          "detections": 13,
-          "falseAlarms": 2664,
-          "precision": 0.004856182293612252,
+          "raised": 2468,
+          "detections": 12,
+          "falseAlarms": 2453,
+          "precision": 0.00486815415821501,
           "detectionShare": 1,
           "leadHours": {
             "median": 479.0000000800239,
             "tail": 23.15933480000814,
-            "count": 10
+            "count": 9
           }
         },
         {
           "tier": "5",
-          "raised": 2045,
-          "detections": 11,
-          "falseAlarms": 2030,
-          "precision": 0.005389514943655071,
-          "detectionShare": 0.8461538461538461,
+          "raised": 1860,
+          "detections": 10,
+          "falseAlarms": 1847,
+          "precision": 0.005385029617662897,
+          "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 576.1433076799859,
             "tail": 94,
-            "count": 8
+            "count": 7
           }
         },
         {
           "tier": "D1",
-          "raised": 2304,
-          "detections": 11,
-          "falseAlarms": 2289,
-          "precision": 0.004782608695652174,
-          "detectionShare": 0.8461538461538461,
+          "raised": 2112,
+          "detections": 10,
+          "falseAlarms": 2099,
+          "precision": 0.00474158368895211,
+          "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 576.1433076799859,
             "tail": 94,
-            "count": 8
+            "count": 7
           }
         },
         {
           "tier": "D3",
-          "raised": 1838,
-          "detections": 11,
-          "falseAlarms": 1823,
-          "precision": 0.0059978189749182115,
-          "detectionShare": 0.8461538461538461,
+          "raised": 1675,
+          "detections": 10,
+          "falseAlarms": 1662,
+          "precision": 0.005980861244019139,
+          "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 564.1433076799859,
             "tail": 54,
-            "count": 8
+            "count": 7
           }
         },
         {
           "tier": "D5",
-          "raised": 1600,
-          "detections": 9,
-          "falseAlarms": 1585,
-          "precision": 0.0056461731493099125,
-          "detectionShare": 0.6923076923076923,
+          "raised": 1453,
+          "detections": 8,
+          "falseAlarms": 1440,
+          "precision": 0.0055248618784530384,
+          "detectionShare": 0.6666666666666666,
           "leadHours": {
-            "median": 557.0000000800238,
+            "median": 817.3201978400336,
             "tail": 156.00000008002388,
-            "count": 6
+            "count": 5
           }
         },
         {
           "tier": "D7",
-          "raised": 1436,
-          "detections": 8,
-          "falseAlarms": 1424,
-          "precision": 0.00558659217877095,
-          "detectionShare": 0.6153846153846154,
+          "raised": 1310,
+          "detections": 7,
+          "falseAlarms": 1300,
+          "precision": 0.005355776587605203,
+          "detectionShare": 0.5833333333333334,
           "leadHours": {
-            "median": 529.0000000800238,
+            "median": 404.14330767998587,
             "tail": 88.00000008002387,
-            "count": 5
+            "count": 4
           }
         }
       ],
       "confirmed": {
-        "confirmations": 17,
-        "ofTrue": 5,
-        "ofExempt": 0,
-        "ofFalseAlarms": 12,
+        "confirmations": 15,
+        "ofTrue": 6,
+        "ofExempt": 1,
+        "ofFalseAlarms": 8,
         "ofNearEvent": 4,
-        "daysToConfirmation": 0,
-        "precision": 0.29411764705882354,
-        "precisionByParent": 0.5294117647058824,
-        "reported": 36,
-        "reportedAlerted": 14,
-        "reportedConfirmed": 5,
-        "confirmedRate": 0.1388888888888889,
+        "daysToConfirmation": 0.8333333333333334,
+        "precision": 0.4,
+        "precisionByParent": 0.6666666666666666,
+        "reported": 33,
+        "reportedAlerted": 12,
+        "reportedConfirmed": 6,
+        "confirmedRate": 0.18181818181818182,
         "daysFromEvent": {
           "median": 21.92361111111111,
           "tail": 49.05763888888889,
-          "count": 5
+          "count": 6
         },
         "daysFromAlert": {
           "median": 4,
           "tail": 24.166666666666668,
-          "count": 5
+          "count": 6
         },
         "withStatement": 0,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9959003468937244,
-      "bodyYears": 185557.5221240725,
-      "falseAlarmsPer10kBodyYears": 170.1898130482909,
+      "falseAlarmRate": 0.9952286282306163,
+      "bodyYears": 176972.39877530694,
+      "falseAlarmsPer10kBodyYears": 141.43448454795117,
       "leadHours": {
         "median": 479.0000000800239,
         "tail": 23.15933480000814,
-        "count": 10
+        "count": 9
       },
       "latencyHours": {
         "median": 129.5,
         "tail": 1153.3833333333334,
-        "count": 13
+        "count": 12
       },
-      "confirmedShare": 0.38461538461538464,
+      "confirmedShare": 0.4166666666666667,
       "daysToConfirmation": 4,
       "timingErrorMinutes": 34.64925600179036,
       "byRegime": {
         "LEO": {
-          "targets": 35,
+          "targets": 30,
           "undetectable": 10,
-          "detected": 10,
-          "late": 4,
-          "missed": 21,
-          "detectionRate": 0.2857142857142857
+          "detected": 9,
+          "late": 3,
+          "missed": 18,
+          "detectionRate": 0.3
         },
         "MEO": {
-          "targets": 3,
+          "targets": 2,
           "undetectable": 1,
           "detected": 1,
           "late": 0,
-          "missed": 2,
-          "detectionRate": 0.3333333333333333
+          "missed": 1,
+          "detectionRate": 0.5
         },
         "GEO": {
           "targets": 3,
@@ -695,12 +824,12 @@
           "detectionRate": 0.3333333333333333
         },
         "HEO": {
-          "targets": 13,
+          "targets": 12,
           "undetectable": 5,
           "detected": 1,
           "late": 0,
-          "missed": 12,
-          "detectionRate": 0.07692307692307693
+          "missed": 11,
+          "detectionRate": 0.08333333333333333
         },
         "unknown": {
           "targets": 7,
@@ -713,20 +842,20 @@
       },
       "byKind": {
         "breakup": {
-          "targets": 48,
+          "targets": 42,
           "undetectable": 16,
-          "detected": 12,
+          "detected": 11,
           "late": 2,
-          "missed": 34,
-          "detectionRate": 0.25
+          "missed": 29,
+          "detectionRate": 0.2619047619047619
         },
         "anomalous": {
-          "targets": 13,
+          "targets": 12,
           "undetectable": 1,
           "detected": 1,
-          "late": 2,
+          "late": 1,
           "missed": 10,
-          "detectionRate": 0.07692307692307693
+          "detectionRate": 0.08333333333333333
         },
         "aerodynamic": {
           "targets": 0,
@@ -754,24 +883,24 @@
         }
       },
       "scoped": {
-        "targets": 24,
+        "targets": 21,
         "undetectable": 0,
         "detected": 3,
         "late": 0,
-        "missed": 21,
-        "excluded": 14,
-        "headlineEvents": 38,
+        "missed": 18,
+        "excluded": 13,
+        "headlineEvents": 34,
         "detectedAllLines": 3,
-        "falseAlarms": 56,
-        "detectionRate": 0.125,
+        "falseAlarms": 52,
+        "detectionRate": 0.14285714285714285,
         "detectionInterval": [
-          0.04344255039315584,
-          0.3100428814785757
+          0.04980921798213492,
+          0.346364941492295
         ],
-        "falseAlarmRate": 0.9491525423728814,
+        "falseAlarmRate": 0.9454545454545454,
         "falseAlarmInterval": [
-          0.8608327667771333,
-          0.9825575988405467
+          0.8514670569551007,
+          0.9812771240324999
         ]
       }
     },
@@ -819,12 +948,12 @@
             "targets": 9,
             "noFragments": 6,
             "noParentOrbit": 3,
-            "detected": 1,
-            "missed": 8,
-            "rate": 0.1111111111111111,
+            "detected": 0,
+            "missed": 9,
+            "rate": 0,
             "interval": [
-              0.019890371327130535,
-              0.4350062147680601
+              0,
+              0.2991527535509594
             ]
           },
           "anomalous A-B": {
@@ -852,18 +981,18 @@
             ]
           }
         },
-        "verdicts": 60,
-        "attributed": 33,
+        "verdicts": 51,
+        "attributed": 25,
         "detections": 33,
-        "duplicates": 1,
-        "exempt": 8,
-        "falseAlarms": 18,
-        "detectedAllLines": 33,
+        "duplicates": 6,
+        "exempt": 3,
+        "falseAlarms": 9,
+        "detectedAllLines": 32,
         "detectedNoFragments": 2,
-        "falseAlarmRate": 0.35294117647058826,
+        "falseAlarmRate": 0.21951219512195122,
         "falseAlarmInterval": [
-          0.2363430538125979,
-          0.49014195027189267
+          0.12003040155386335,
+          0.3670530209823528
         ],
         "lead": {
           "median": 35.666666666666664,
@@ -875,30 +1004,135 @@
         "statementDays": 0,
         "statementMonths": 21,
         "lag": {
-          "median": 0.12499999666567202,
-          "tail": 4.062692740000972,
+          "median": 0.125,
+          "tail": 5.9482127533326326,
           "count": 22
         },
         "timing": {
-          "median": 1248.5715655558267,
-          "tail": 119134.13386593017,
+          "median": 1125.9178208374024,
+          "tail": 173291.7103192342,
           "count": 20
         },
         "falseByClass": {
-          "payload": 13,
-          "rocket body": 4,
+          "payload": 7,
+          "rocket body": 1,
           "debris": 1,
           "unknown": 0
         },
-        "falseAttributed": 11
+        "falseAttributed": 5,
+        "twins": 3
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 35,
+            "noFragments": 9,
+            "noParentOrbit": 6,
+            "detected": 22,
+            "missed": 13,
+            "rate": 0.6285714285714286,
+            "interval": [
+              0.46336640488021064,
+              0.7683439263110894
+            ]
+          },
+          "breakups C": {
+            "targets": 6,
+            "noFragments": 4,
+            "noParentOrbit": 5,
+            "detected": 3,
+            "missed": 3,
+            "rate": 0.5,
+            "interval": [
+              0.18761280689940868,
+              0.8123871931005913
+            ]
+          },
+          "breakups D": {
+            "targets": 9,
+            "noFragments": 6,
+            "noParentOrbit": 3,
+            "detected": 0,
+            "missed": 9,
+            "rate": 0,
+            "interval": [
+              0,
+              0.2991527535509594
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 4,
+            "noFragments": 1,
+            "noParentOrbit": 2,
+            "detected": 2,
+            "missed": 2,
+            "rate": 0.5,
+            "interval": [
+              0.15003570882017148,
+              0.8499642911798285
+            ]
+          },
+          "anomalous C-D": {
+            "targets": 6,
+            "noFragments": 0,
+            "noParentOrbit": 1,
+            "detected": 3,
+            "missed": 3,
+            "rate": 0.5,
+            "interval": [
+              0.18761280689940868,
+              0.8123871931005913
+            ]
+          }
+        },
+        "verdicts": 51,
+        "attributed": 25,
+        "detections": 33,
+        "duplicates": 6,
+        "exempt": 3,
+        "falseAlarms": 9,
+        "detectedAllLines": 32,
+        "detectedNoFragments": 2,
+        "falseAlarmRate": 0.21951219512195122,
+        "falseAlarmInterval": [
+          0.12003040155386335,
+          0.3670530209823528
+        ],
+        "lead": {
+          "median": 35.666666666666664,
+          "tail": -24.5,
+          "count": 21
+        },
+        "withStatement": 21,
+        "beforeStatement": 14,
+        "statementDays": 0,
+        "statementMonths": 21,
+        "lag": {
+          "median": 0.125,
+          "tail": 5.9482127533326326,
+          "count": 22
+        },
+        "timing": {
+          "median": 1125.9178208374024,
+          "tail": 173291.7103192342,
+          "count": 20
+        },
+        "falseByClass": {
+          "payload": 7,
+          "rocket body": 1,
+          "debris": 1,
+          "unknown": 0
+        },
+        "falseAttributed": 5,
+        "twins": 3
       },
       "lines": {
         "breakups A-B": {
           "targets": 43,
           "undetectable": 7,
           "detected": 18,
-          "late": 4,
-          "missed": 21,
+          "late": 5,
+          "missed": 20,
           "detectionRate": 0.4186046511627907
         },
         "breakups C": {
@@ -934,18 +1168,18 @@
           "detectionRate": 0
         }
       },
-      "alerts": 3163,
-      "duplicates": 134,
+      "alerts": 3162,
+      "duplicates": 137,
       "exempt": 32,
-      "falseAlarms": 2967,
-      "review": 78,
+      "falseAlarms": 2962,
+      "review": 80,
       "tiers": [
         {
           "tier": "2",
-          "raised": 2997,
+          "raised": 2993,
           "detections": 23,
-          "falseAlarms": 2967,
-          "precision": 0.007692307692307693,
+          "falseAlarms": 2962,
+          "precision": 0.007705192629815745,
           "detectionShare": 1,
           "leadHours": {
             "median": 290.73937815999346,
@@ -955,10 +1189,10 @@
         },
         {
           "tier": "3",
-          "raised": 2914,
+          "raised": 2910,
           "detections": 22,
-          "falseAlarms": 2885,
-          "precision": 0.007567939456484348,
+          "falseAlarms": 2880,
+          "precision": 0.007580978635423846,
           "detectionShare": 0.9565217391304348,
           "leadHours": {
             "median": 290.73937815999346,
@@ -968,10 +1202,10 @@
         },
         {
           "tier": "5",
-          "raised": 2243,
+          "raised": 2240,
           "detections": 17,
-          "falseAlarms": 2221,
-          "precision": 0.007596067917783735,
+          "falseAlarms": 2217,
+          "precision": 0.007609668755595345,
           "detectionShare": 0.7391304347826086,
           "leadHours": {
             "median": 282.73937815999346,
@@ -981,10 +1215,10 @@
         },
         {
           "tier": "D1",
-          "raised": 2494,
+          "raised": 2491,
           "detections": 21,
-          "falseAlarms": 2469,
-          "precision": 0.008433734939759036,
+          "falseAlarms": 2465,
+          "precision": 0.008447304907481898,
           "detectionShare": 0.9130434782608695,
           "leadHours": {
             "median": 290.73937815999346,
@@ -994,10 +1228,10 @@
         },
         {
           "tier": "D3",
-          "raised": 1927,
+          "raised": 1925,
           "detections": 17,
-          "falseAlarms": 1906,
-          "precision": 0.008840353614144566,
+          "falseAlarms": 1903,
+          "precision": 0.008854166666666666,
           "detectionShare": 0.7391304347826086,
           "leadHours": {
             "median": 290.73937815999346,
@@ -1007,10 +1241,10 @@
         },
         {
           "tier": "D5",
-          "raised": 1718,
+          "raised": 1716,
           "detections": 11,
-          "falseAlarms": 1703,
-          "precision": 0.006417736289381563,
+          "falseAlarms": 1700,
+          "precision": 0.006428988895382817,
           "detectionShare": 0.4782608695652174,
           "leadHours": {
             "median": 290.73937815999346,
@@ -1022,8 +1256,8 @@
           "tier": "D7",
           "raised": 1481,
           "detections": 8,
-          "falseAlarms": 1470,
-          "precision": 0.005412719891745603,
+          "falseAlarms": 1469,
+          "precision": 0.005416384563303994,
           "detectionShare": 0.34782608695652173,
           "leadHours": {
             "median": 410.5288,
@@ -1033,34 +1267,34 @@
         }
       ],
       "confirmed": {
-        "confirmations": 28,
-        "ofTrue": 12,
-        "ofExempt": 2,
-        "ofFalseAlarms": 14,
+        "confirmations": 27,
+        "ofTrue": 13,
+        "ofExempt": 5,
+        "ofFalseAlarms": 9,
         "ofNearEvent": 2,
         "daysToConfirmation": 0,
-        "precision": 0.42857142857142855,
-        "precisionByParent": 0.5,
+        "precision": 0.48148148148148145,
+        "precisionByParent": 0.5555555555555556,
         "reported": 54,
-        "reportedAlerted": 20,
-        "reportedConfirmed": 11,
-        "confirmedRate": 0.2037037037037037,
+        "reportedAlerted": 21,
+        "reportedConfirmed": 12,
+        "confirmedRate": 0.2222222222222222,
         "daysFromEvent": {
           "median": 9.80486111111111,
           "tail": 34.047222222222224,
-          "count": 11
+          "count": 12
         },
         "daysFromAlert": {
-          "median": 0.8333333333333334,
+          "median": 0,
           "tail": 7.333333333333333,
-          "count": 11
+          "count": 12
         },
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9923076923076923,
+      "falseAlarmRate": 0.9922948073701843,
       "bodyYears": 190898.26758990643,
-      "falseAlarmsPer10kBodyYears": 155.42309720556509,
+      "falseAlarmsPer10kBodyYears": 155.16117759450074,
       "leadHours": {
         "median": 290.73937815999346,
         "tail": 81.60032655999078,
@@ -1079,8 +1313,8 @@
           "targets": 42,
           "undetectable": 13,
           "detected": 13,
-          "late": 4,
-          "missed": 25,
+          "late": 5,
+          "missed": 24,
           "detectionRate": 0.30952380952380953
         },
         "MEO": {
@@ -1121,8 +1355,8 @@
           "targets": 68,
           "undetectable": 15,
           "detected": 22,
-          "late": 5,
-          "missed": 41,
+          "late": 6,
+          "missed": 40,
           "detectionRate": 0.3235294117647059
         },
         "anomalous": {
@@ -1182,7 +1416,6 @@
     },
     "all": {
       "years": [
-        2005,
         2006,
         2007,
         2008,
@@ -1208,51 +1441,51 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 60,
-            "noFragments": 18,
+            "targets": 58,
+            "noFragments": 16,
             "noParentOrbit": 10,
-            "detected": 40,
-            "missed": 20,
-            "rate": 0.6666666666666666,
+            "detected": 39,
+            "missed": 19,
+            "rate": 0.6724137931034483,
             "interval": [
-              0.540566298666634,
-              0.7727090578407216
+              0.5442381364257336,
+              0.779168761196579
             ]
           },
           "breakups C": {
             "targets": 11,
-            "noFragments": 9,
+            "noFragments": 7,
             "noParentOrbit": 12,
-            "detected": 6,
-            "missed": 5,
-            "rate": 0.5454545454545454,
+            "detected": 5,
+            "missed": 6,
+            "rate": 0.45454545454545453,
             "interval": [
-              0.28008775568998817,
-              0.7872904245601196
+              0.21270957543988045,
+              0.7199122443100118
             ]
           },
           "breakups D": {
             "targets": 14,
             "noFragments": 9,
             "noParentOrbit": 4,
-            "detected": 1,
-            "missed": 13,
-            "rate": 0.07142857142857142,
+            "detected": 0,
+            "missed": 14,
+            "rate": 0,
             "interval": [
-              0.012721886112291636,
-              0.3146926955395781
+              0,
+              0.21531701192718142
             ]
           },
           "anomalous A-B": {
-            "targets": 10,
+            "targets": 9,
             "noFragments": 5,
             "noParentOrbit": 2,
-            "detected": 4,
-            "missed": 6,
-            "rate": 0.4,
+            "detected": 2,
+            "missed": 7,
+            "rate": 0.2222222222222222,
             "interval": [
-              0.16817758120350967,
-              0.6873304525498135
+              0.06322376231222723,
+              0.5474166563271946
             ]
           },
           "anomalous C-D": {
@@ -1268,62 +1501,167 @@
             ]
           }
         },
-        "verdicts": 120,
-        "attributed": 76,
-        "detections": 59,
-        "duplicates": 2,
-        "exempt": 10,
-        "falseAlarms": 49,
-        "detectedAllLines": 58,
-        "detectedNoFragments": 3,
-        "falseAlarmRate": 0.45794392523364486,
+        "verdicts": 87,
+        "attributed": 46,
+        "detections": 52,
+        "duplicates": 9,
+        "exempt": 5,
+        "falseAlarms": 21,
+        "detectedAllLines": 52,
+        "detectedNoFragments": 2,
+        "falseAlarmRate": 0.2876712328767123,
         "falseAlarmInterval": [
-          0.3666360103087867,
-          0.5521670383660793
+          0.19651589092755173,
+          0.40005679886547707
         ],
         "lead": {
           "median": 40.166666666666664,
           "tail": -24.5,
+          "count": 38
+        },
+        "withStatement": 38,
+        "beforeStatement": 31,
+        "statementDays": 0,
+        "statementMonths": 38,
+        "lag": {
+          "median": 0.12499999666567202,
+          "tail": 4.540570743334735,
           "count": 39
         },
-        "withStatement": 39,
-        "beforeStatement": 32,
+        "timing": {
+          "median": 582.9541279988607,
+          "tail": 118847.14983585612,
+          "count": 36
+        },
+        "falseByClass": {
+          "payload": 16,
+          "rocket body": 4,
+          "debris": 1,
+          "unknown": 0
+        },
+        "falseAttributed": 13,
+        "twins": 4
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 58,
+            "noFragments": 16,
+            "noParentOrbit": 10,
+            "detected": 39,
+            "missed": 19,
+            "rate": 0.6724137931034483,
+            "interval": [
+              0.5442381364257336,
+              0.779168761196579
+            ]
+          },
+          "breakups C": {
+            "targets": 11,
+            "noFragments": 7,
+            "noParentOrbit": 12,
+            "detected": 5,
+            "missed": 6,
+            "rate": 0.45454545454545453,
+            "interval": [
+              0.21270957543988045,
+              0.7199122443100118
+            ]
+          },
+          "breakups D": {
+            "targets": 14,
+            "noFragments": 9,
+            "noParentOrbit": 4,
+            "detected": 0,
+            "missed": 14,
+            "rate": 0,
+            "interval": [
+              0,
+              0.21531701192718142
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 9,
+            "noFragments": 5,
+            "noParentOrbit": 2,
+            "detected": 2,
+            "missed": 7,
+            "rate": 0.2222222222222222,
+            "interval": [
+              0.06322376231222723,
+              0.5474166563271946
+            ]
+          },
+          "anomalous C-D": {
+            "targets": 8,
+            "noFragments": 2,
+            "noParentOrbit": 1,
+            "detected": 4,
+            "missed": 4,
+            "rate": 0.5,
+            "interval": [
+              0.21521252682444186,
+              0.7847874731755582
+            ]
+          }
+        },
+        "verdicts": 87,
+        "attributed": 46,
+        "detections": 52,
+        "duplicates": 9,
+        "exempt": 5,
+        "falseAlarms": 21,
+        "detectedAllLines": 52,
+        "detectedNoFragments": 2,
+        "falseAlarmRate": 0.2876712328767123,
+        "falseAlarmInterval": [
+          0.19651589092755173,
+          0.40005679886547707
+        ],
+        "lead": {
+          "median": 40.166666666666664,
+          "tail": -15.166666666666666,
+          "count": 38
+        },
+        "withStatement": 38,
+        "beforeStatement": 31,
         "statementDays": 0,
-        "statementMonths": 39,
+        "statementMonths": 38,
         "lag": {
-          "median": 0.11213322666592068,
-          "tail": 4.062692740000972,
-          "count": 40
+          "median": 0.12499999666567202,
+          "tail": 4.540570743334735,
+          "count": 39
         },
         "timing": {
           "median": 582.9541279988607,
           "tail": 89663.468046403,
-          "count": 37
+          "count": 36
         },
         "falseByClass": {
-          "payload": 38,
-          "rocket body": 10,
+          "payload": 16,
+          "rocket body": 4,
           "debris": 1,
           "unknown": 0
         },
-        "falseAttributed": 34
+        "falseAttributed": 13,
+        "twins": 4
       },
       "lines": {
         "breakups A-B": {
-          "targets": 75,
+          "targets": 71,
           "undetectable": 13,
-          "detected": 29,
-          "late": 6,
-          "missed": 40,
-          "detectionRate": 0.38666666666666666
+          "detected": 28,
+          "late": 7,
+          "missed": 36,
+          "detectionRate": 0.39436619718309857
         },
         "breakups C": {
-          "targets": 18,
+          "targets": 16,
           "undetectable": 14,
           "detected": 5,
           "late": 1,
-          "missed": 12,
-          "detectionRate": 0.2777777777777778
+          "missed": 10,
+          "detectionRate": 0.3125
         },
         "breakups D": {
           "targets": 23,
@@ -1334,12 +1672,12 @@
           "detectionRate": 0
         },
         "anomalous A-B": {
-          "targets": 14,
+          "targets": 13,
           "undetectable": 3,
           "detected": 1,
-          "late": 2,
+          "late": 1,
           "missed": 11,
-          "detectionRate": 0.07142857142857142
+          "detectionRate": 0.07692307692307693
         },
         "anomalous C-D": {
           "targets": 10,
@@ -1350,162 +1688,162 @@
           "detectionRate": 0.1
         }
       },
-      "alerts": 6462,
-      "duplicates": 245,
-      "exempt": 45,
-      "falseAlarms": 6125,
-      "review": 164,
+      "alerts": 5802,
+      "duplicates": 248,
+      "exempt": 43,
+      "falseAlarms": 5465,
+      "review": 151,
       "tiers": [
         {
           "tier": "2",
-          "raised": 6172,
-          "detections": 36,
-          "falseAlarms": 6125,
-          "precision": 0.005843207271546827,
+          "raised": 5511,
+          "detections": 35,
+          "falseAlarms": 5465,
+          "precision": 0.006363636363636364,
           "detectionShare": 1,
           "leadHours": {
             "median": 296.8338755999756,
             "tail": 81.60032655999078,
-            "count": 24
+            "count": 23
           }
         },
         {
           "tier": "3",
-          "raised": 5595,
-          "detections": 35,
-          "falseAlarms": 5549,
-          "precision": 0.006267908309455587,
-          "detectionShare": 0.9722222222222222,
+          "raised": 5378,
+          "detections": 34,
+          "falseAlarms": 5333,
+          "precision": 0.006335010247810695,
+          "detectionShare": 0.9714285714285714,
           "leadHours": {
             "median": 296.8338755999756,
             "tail": 81.60032655999078,
-            "count": 24
+            "count": 23
           }
         },
         {
           "tier": "5",
-          "raised": 4288,
-          "detections": 28,
-          "falseAlarms": 4251,
-          "precision": 0.006543584949754616,
-          "detectionShare": 0.7777777777777778,
+          "raised": 4100,
+          "detections": 27,
+          "falseAlarms": 4064,
+          "precision": 0.0065998533365925205,
+          "detectionShare": 0.7714285714285715,
           "leadHours": {
-            "median": 410.5288,
+            "median": 282.73937815999346,
             "tail": 68.44429807996961,
-            "count": 19
+            "count": 18
           }
         },
         {
           "tier": "D1",
-          "raised": 4798,
-          "detections": 32,
-          "falseAlarms": 4758,
-          "precision": 0.006680584551148226,
-          "detectionShare": 0.8888888888888888,
+          "raised": 4603,
+          "detections": 31,
+          "falseAlarms": 4564,
+          "precision": 0.006746463547334059,
+          "detectionShare": 0.8857142857142857,
           "leadHours": {
-            "median": 576.1433076799859,
-            "tail": 81.60032655999078,
-            "count": 21
+            "median": 290.73937815999346,
+            "tail": 68.44429807996961,
+            "count": 20
           }
         },
         {
           "tier": "D3",
-          "raised": 3765,
-          "detections": 28,
-          "falseAlarms": 3729,
-          "precision": 0.007452754857599149,
-          "detectionShare": 0.7777777777777778,
+          "raised": 3600,
+          "detections": 27,
+          "falseAlarms": 3565,
+          "precision": 0.007516703786191537,
+          "detectionShare": 0.7714285714285715,
           "leadHours": {
-            "median": 564.1433076799859,
+            "median": 290.73937815999346,
             "tail": 20.444298079969617,
-            "count": 19
+            "count": 18
           }
         },
         {
           "tier": "D5",
-          "raised": 3318,
-          "detections": 20,
-          "falseAlarms": 3288,
-          "precision": 0.006045949214026602,
-          "detectionShare": 0.5555555555555556,
+          "raised": 3169,
+          "detections": 19,
+          "falseAlarms": 3140,
+          "precision": 0.006014561570117125,
+          "detectionShare": 0.5428571428571428,
           "leadHours": {
             "median": 512.1433076799859,
             "tail": 30.197930080023873,
-            "count": 12
+            "count": 11
           }
         },
         {
           "tier": "D7",
-          "raised": 2917,
-          "detections": 16,
-          "falseAlarms": 2894,
-          "precision": 0.005498281786941581,
-          "detectionShare": 0.4444444444444444,
+          "raised": 2791,
+          "detections": 15,
+          "falseAlarms": 2769,
+          "precision": 0.005387931034482759,
+          "detectionShare": 0.42857142857142855,
           "leadHours": {
-            "median": 529.0000000800238,
+            "median": 410.5288,
             "tail": 88.00000008002387,
-            "count": 9
+            "count": 8
           }
         }
       ],
       "confirmed": {
-        "confirmations": 45,
-        "ofTrue": 17,
-        "ofExempt": 2,
-        "ofFalseAlarms": 26,
+        "confirmations": 42,
+        "ofTrue": 19,
+        "ofExempt": 6,
+        "ofFalseAlarms": 17,
         "ofNearEvent": 6,
         "daysToConfirmation": 0,
-        "precision": 0.37777777777777777,
-        "precisionByParent": 0.5111111111111111,
-        "reported": 90,
-        "reportedAlerted": 34,
-        "reportedConfirmed": 16,
-        "confirmedRate": 0.17777777777777778,
+        "precision": 0.4523809523809524,
+        "precisionByParent": 0.5952380952380952,
+        "reported": 87,
+        "reportedAlerted": 33,
+        "reportedConfirmed": 18,
+        "confirmedRate": 0.20689655172413793,
         "daysFromEvent": {
-          "median": 9.80486111111111,
+          "median": 11.645138888888889,
           "tail": 39.13472222222222,
-          "count": 16
+          "count": 18
         },
         "daysFromAlert": {
           "median": 2.3333333333333335,
           "tail": 24.166666666666668,
-          "count": 16
+          "count": 18
         },
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9941567927284531,
-      "bodyYears": 376455.78971397894,
-      "falseAlarmsPer10kBodyYears": 162.70170807184587,
+      "falseAlarmRate": 0.9936363636363637,
+      "bodyYears": 367870.66636521334,
+      "falseAlarmsPer10kBodyYears": 148.5576453811209,
       "leadHours": {
         "median": 296.8338755999756,
         "tail": 81.60032655999078,
-        "count": 24
+        "count": 23
       },
       "latencyHours": {
-        "median": 131.31666666666666,
+        "median": 132,
         "tail": 622.65,
-        "count": 36
+        "count": 35
       },
-      "confirmedShare": 0.3055555555555556,
+      "confirmedShare": 0.3142857142857143,
       "daysToConfirmation": 4,
-      "timingErrorMinutes": 299.7406071777344,
+      "timingErrorMinutes": 114.39496103515626,
       "byRegime": {
         "LEO": {
-          "targets": 77,
+          "targets": 72,
           "undetectable": 23,
-          "detected": 23,
+          "detected": 22,
           "late": 8,
-          "missed": 46,
-          "detectionRate": 0.2987012987012987
+          "missed": 42,
+          "detectionRate": 0.3055555555555556
         },
         "MEO": {
-          "targets": 7,
+          "targets": 6,
           "undetectable": 1,
           "detected": 1,
           "late": 1,
-          "missed": 5,
-          "detectionRate": 0.14285714285714285
+          "missed": 4,
+          "detectionRate": 0.16666666666666666
         },
         "GEO": {
           "targets": 6,
@@ -1516,12 +1854,12 @@
           "detectionRate": 0.6666666666666666
         },
         "HEO": {
-          "targets": 30,
+          "targets": 29,
           "undetectable": 8,
           "detected": 8,
           "late": 2,
-          "missed": 20,
-          "detectionRate": 0.26666666666666666
+          "missed": 19,
+          "detectionRate": 0.27586206896551724
         },
         "unknown": {
           "targets": 20,
@@ -1534,20 +1872,20 @@
       },
       "byKind": {
         "breakup": {
-          "targets": 116,
+          "targets": 110,
           "undetectable": 31,
-          "detected": 34,
-          "late": 7,
-          "missed": 75,
-          "detectionRate": 0.29310344827586204
+          "detected": 33,
+          "late": 8,
+          "missed": 69,
+          "detectionRate": 0.3
         },
         "anomalous": {
-          "targets": 24,
+          "targets": 23,
           "undetectable": 4,
           "detected": 2,
-          "late": 4,
+          "late": 3,
           "missed": 18,
-          "detectionRate": 0.08333333333333333
+          "detectionRate": 0.08695652173913043
         },
         "aerodynamic": {
           "targets": 0,
@@ -1575,24 +1913,24 @@
         }
       },
       "scoped": {
-        "targets": 49,
+        "targets": 46,
         "undetectable": 0,
         "detected": 7,
         "late": 0,
-        "missed": 42,
-        "excluded": 39,
-        "headlineEvents": 88,
+        "missed": 39,
+        "excluded": 38,
+        "headlineEvents": 84,
         "detectedAllLines": 8,
-        "falseAlarms": 82,
-        "detectionRate": 0.14285714285714285,
+        "falseAlarms": 78,
+        "detectionRate": 0.15217391304347827,
         "detectionInterval": [
-          0.07096333720544586,
-          0.2666797318916292
+          0.07572186234017478,
+          0.28224417406315094
         ],
-        "falseAlarmRate": 0.9111111111111111,
+        "falseAlarmRate": 0.9069767441860465,
         "falseAlarmInterval": [
-          0.8342928001780632,
-          0.9542700546752215
+          0.8270407914425884,
+          0.9521082887162691
         ]
       }
     },
@@ -1659,18 +1997,18 @@
             "interval": null
           }
         },
-        "verdicts": 13,
-        "attributed": 9,
+        "verdicts": 6,
+        "attributed": 3,
         "detections": 4,
-        "duplicates": 1,
-        "exempt": 5,
-        "falseAlarms": 3,
+        "duplicates": 0,
+        "exempt": 1,
+        "falseAlarms": 1,
         "detectedAllLines": 4,
         "detectedNoFragments": 1,
-        "falseAlarmRate": 0.42857142857142855,
+        "falseAlarmRate": 0.2,
         "falseAlarmInterval": [
-          0.15821692226262685,
-          0.7495457695909742
+          0.036223160969787505,
+          0.6244717358814612
         ],
         "lead": {
           "median": 63.333333333333336,
@@ -1688,16 +2026,115 @@
         },
         "timing": {
           "median": 59.04654282633464,
-          "tail": 70676.14933313396,
+          "tail": 232808.53867056884,
           "count": 2
         },
         "falseByClass": {
-          "payload": 3,
+          "payload": 1,
           "rocket body": 0,
           "debris": 0,
           "unknown": 0
         },
-        "falseAttributed": 2
+        "falseAttributed": 0,
+        "twins": 0
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 2,
+            "noFragments": 2,
+            "noParentOrbit": 2,
+            "detected": 2,
+            "missed": 0,
+            "rate": 1,
+            "interval": [
+              0.34237195288961925,
+              1
+            ]
+          },
+          "breakups C": {
+            "targets": 1,
+            "noFragments": 2,
+            "noParentOrbit": 0,
+            "detected": 1,
+            "missed": 0,
+            "rate": 1,
+            "interval": [
+              0.20654329147389294,
+              1
+            ]
+          },
+          "breakups D": {
+            "targets": 2,
+            "noFragments": 3,
+            "noParentOrbit": 1,
+            "detected": 0,
+            "missed": 2,
+            "rate": 0,
+            "interval": [
+              0,
+              0.6576280471103807
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 0,
+            "noFragments": 0,
+            "noParentOrbit": 0,
+            "detected": 0,
+            "missed": 0,
+            "rate": null,
+            "interval": null
+          },
+          "anomalous C-D": {
+            "targets": 0,
+            "noFragments": 0,
+            "noParentOrbit": 0,
+            "detected": 0,
+            "missed": 0,
+            "rate": null,
+            "interval": null
+          }
+        },
+        "verdicts": 6,
+        "attributed": 3,
+        "detections": 4,
+        "duplicates": 0,
+        "exempt": 1,
+        "falseAlarms": 1,
+        "detectedAllLines": 4,
+        "detectedNoFragments": 1,
+        "falseAlarmRate": 0.2,
+        "falseAlarmInterval": [
+          0.036223160969787505,
+          0.6244717358814612
+        ],
+        "lead": {
+          "median": 63.333333333333336,
+          "tail": 63.333333333333336,
+          "count": 2
+        },
+        "withStatement": 2,
+        "beforeStatement": 2,
+        "statementDays": 0,
+        "statementMonths": 2,
+        "lag": {
+          "median": 0.008415176665694626,
+          "tail": 0.1372392433336046,
+          "count": 2
+        },
+        "timing": {
+          "median": 59.04654282633464,
+          "tail": 232808.53867056884,
+          "count": 2
+        },
+        "falseByClass": {
+          "payload": 1,
+          "rocket body": 0,
+          "debris": 0,
+          "unknown": 0
+        },
+        "falseAttributed": 0,
+        "twins": 0
       },
       "lines": {
         "breakups A-B": {
@@ -1741,18 +2178,18 @@
           "detectionRate": null
         }
       },
-      "alerts": 977,
+      "alerts": 976,
       "duplicates": 11,
       "exempt": 24,
-      "falseAlarms": 936,
-      "review": 7,
+      "falseAlarms": 935,
+      "review": 8,
       "tiers": [
         {
           "tier": "2",
-          "raised": 942,
+          "raised": 941,
           "detections": 6,
-          "falseAlarms": 936,
-          "precision": 0.006369426751592357,
+          "falseAlarms": 935,
+          "precision": 0.006376195536663124,
           "detectionShare": 1,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1762,10 +2199,10 @@
         },
         {
           "tier": "3",
-          "raised": 899,
+          "raised": 898,
           "detections": 5,
-          "falseAlarms": 894,
-          "precision": 0.0055617352614015575,
+          "falseAlarms": 893,
+          "precision": 0.005567928730512249,
           "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1775,10 +2212,10 @@
         },
         {
           "tier": "5",
-          "raised": 645,
+          "raised": 644,
           "detections": 4,
-          "falseAlarms": 641,
-          "precision": 0.006201550387596899,
+          "falseAlarms": 640,
+          "precision": 0.006211180124223602,
           "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1788,10 +2225,10 @@
         },
         {
           "tier": "D1",
-          "raised": 696,
+          "raised": 695,
           "detections": 5,
-          "falseAlarms": 691,
-          "precision": 0.007183908045977011,
+          "falseAlarms": 690,
+          "precision": 0.007194244604316547,
           "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1801,10 +2238,10 @@
         },
         {
           "tier": "D3",
-          "raised": 508,
+          "raised": 507,
           "detections": 4,
-          "falseAlarms": 504,
-          "precision": 0.007874015748031496,
+          "falseAlarms": 503,
+          "precision": 0.007889546351084813,
           "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 71.79803576002332,
@@ -1814,10 +2251,10 @@
         },
         {
           "tier": "D5",
-          "raised": 435,
+          "raised": 434,
           "detections": 3,
-          "falseAlarms": 431,
-          "precision": 0.0069124423963133645,
+          "falseAlarms": 430,
+          "precision": 0.006928406466512702,
           "detectionShare": 0.5,
           "leadHours": {
             "median": 290.73937815999346,
@@ -1840,14 +2277,14 @@
         }
       ],
       "confirmed": {
-        "confirmations": 5,
+        "confirmations": 4,
         "ofTrue": 2,
         "ofExempt": 1,
-        "ofFalseAlarms": 2,
+        "ofFalseAlarms": 1,
         "ofNearEvent": 0,
         "daysToConfirmation": 1.5,
-        "precision": 0.4,
-        "precisionByParent": 0.4,
+        "precision": 0.5,
+        "precisionByParent": 0.5,
         "reported": 4,
         "reportedAlerted": 2,
         "reportedConfirmed": 1,
@@ -1865,9 +2302,9 @@
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9936305732484076,
+      "falseAlarmRate": 0.9936238044633369,
       "bodyYears": 77551.85267166856,
-      "falseAlarmsPer10kBodyYears": 120.69344158194971,
+      "falseAlarmsPer10kBodyYears": 120.56449559735361,
       "leadHours": {
         "median": 103.79803576002332,
         "tail": 103.79803576002332,
@@ -1989,7 +2426,6 @@
     },
     "chronologicalTrain": {
       "years": [
-        2005,
         2006,
         2007,
         2008,
@@ -2006,20 +2442,20 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 31,
-            "noFragments": 14,
+            "targets": 29,
+            "noFragments": 12,
             "noParentOrbit": 6,
-            "detected": 25,
+            "detected": 23,
             "missed": 6,
-            "rate": 0.8064516129032258,
+            "rate": 0.7931034482758621,
             "interval": [
-              0.6371939644454013,
-              0.9081311641365236
+              0.6160955339174228,
+              0.9015406348441479
             ]
           },
           "breakups C": {
             "targets": 5,
-            "noFragments": 7,
+            "noFragments": 5,
             "noParentOrbit": 10,
             "detected": 1,
             "missed": 4,
@@ -2033,24 +2469,24 @@
             "targets": 12,
             "noFragments": 4,
             "noParentOrbit": 0,
-            "detected": 1,
-            "missed": 11,
-            "rate": 0.08333333333333333,
+            "detected": 0,
+            "missed": 12,
+            "rate": 0,
             "interval": [
-              0.014864709450773478,
-              0.35388592179859524
+              0,
+              0.2425007574992425
             ]
           },
           "anomalous A-B": {
-            "targets": 8,
+            "targets": 7,
             "noFragments": 4,
             "noParentOrbit": 0,
-            "detected": 4,
-            "missed": 4,
-            "rate": 0.5,
+            "detected": 2,
+            "missed": 5,
+            "rate": 0.2857142857142857,
             "interval": [
-              0.21521252682444186,
-              0.7847874731755582
+              0.0822171657090155,
+              0.6410709098517873
             ]
           },
           "anomalous C-D": {
@@ -2066,62 +2502,167 @@
             ]
           }
         },
-        "verdicts": 76,
-        "attributed": 46,
-        "detections": 35,
-        "duplicates": 0,
-        "exempt": 4,
-        "falseAlarms": 37,
-        "detectedAllLines": 34,
+        "verdicts": 48,
+        "attributed": 24,
+        "detections": 29,
+        "duplicates": 2,
+        "exempt": 3,
+        "falseAlarms": 14,
+        "detectedAllLines": 29,
         "detectedNoFragments": 0,
-        "falseAlarmRate": 0.5211267605633803,
+        "falseAlarmRate": 0.32558139534883723,
         "falseAlarmInterval": [
-          0.4068579625004498,
-          0.6332266962989345
+          0.20493115181779809,
+          0.47484067493449045
         ],
         "lead": {
           "median": 37.166666666666664,
           "tail": -15.166666666666666,
-          "count": 24
+          "count": 22
         },
-        "withStatement": 24,
-        "beforeStatement": 19,
+        "withStatement": 22,
+        "beforeStatement": 17,
         "statementDays": 0,
-        "statementMonths": 24,
+        "statementMonths": 22,
         "lag": {
           "median": 0.11946290000067816,
           "tail": 0.1481542466679326,
-          "count": 25
-        },
-        "timing": {
-          "median": 1204.7156031982422,
-          "tail": 119134.13386593017,
           "count": 23
         },
+        "timing": {
+          "median": 582.9541279988607,
+          "tail": 118847.14983585612,
+          "count": 22
+        },
         "falseByClass": {
-          "payload": 28,
-          "rocket body": 8,
+          "payload": 10,
+          "rocket body": 3,
           "debris": 1,
           "unknown": 0
         },
-        "falseAttributed": 27
+        "falseAttributed": 10,
+        "twins": 2
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 29,
+            "noFragments": 12,
+            "noParentOrbit": 6,
+            "detected": 23,
+            "missed": 6,
+            "rate": 0.7931034482758621,
+            "interval": [
+              0.6160955339174228,
+              0.9015406348441479
+            ]
+          },
+          "breakups C": {
+            "targets": 5,
+            "noFragments": 5,
+            "noParentOrbit": 10,
+            "detected": 1,
+            "missed": 4,
+            "rate": 0.2,
+            "interval": [
+              0.03622316096978745,
+              0.6244717358814613
+            ]
+          },
+          "breakups D": {
+            "targets": 12,
+            "noFragments": 4,
+            "noParentOrbit": 0,
+            "detected": 0,
+            "missed": 12,
+            "rate": 0,
+            "interval": [
+              0,
+              0.2425007574992425
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 7,
+            "noFragments": 4,
+            "noParentOrbit": 0,
+            "detected": 2,
+            "missed": 5,
+            "rate": 0.2857142857142857,
+            "interval": [
+              0.0822171657090155,
+              0.6410709098517873
+            ]
+          },
+          "anomalous C-D": {
+            "targets": 7,
+            "noFragments": 2,
+            "noParentOrbit": 1,
+            "detected": 3,
+            "missed": 4,
+            "rate": 0.42857142857142855,
+            "interval": [
+              0.15821692226262685,
+              0.7495457695909742
+            ]
+          }
+        },
+        "verdicts": 48,
+        "attributed": 24,
+        "detections": 29,
+        "duplicates": 2,
+        "exempt": 3,
+        "falseAlarms": 14,
+        "detectedAllLines": 29,
+        "detectedNoFragments": 0,
+        "falseAlarmRate": 0.32558139534883723,
+        "falseAlarmInterval": [
+          0.20493115181779809,
+          0.47484067493449045
+        ],
+        "lead": {
+          "median": 37.166666666666664,
+          "tail": -12.333333333333334,
+          "count": 22
+        },
+        "withStatement": 22,
+        "beforeStatement": 17,
+        "statementDays": 0,
+        "statementMonths": 22,
+        "lag": {
+          "median": 0.11946290000067816,
+          "tail": 0.1481542466679326,
+          "count": 23
+        },
+        "timing": {
+          "median": 582.9541279988607,
+          "tail": 89663.468046403,
+          "count": 22
+        },
+        "falseByClass": {
+          "payload": 10,
+          "rocket body": 3,
+          "debris": 1,
+          "unknown": 0
+        },
+        "falseAttributed": 10,
+        "twins": 2
       },
       "lines": {
         "breakups A-B": {
-          "targets": 44,
+          "targets": 40,
           "undetectable": 7,
-          "detected": 16,
+          "detected": 15,
           "late": 4,
-          "missed": 24,
-          "detectionRate": 0.36363636363636365
+          "missed": 21,
+          "detectionRate": 0.375
         },
         "breakups C": {
-          "targets": 10,
+          "targets": 8,
           "undetectable": 12,
           "detected": 1,
           "late": 0,
-          "missed": 9,
-          "detectionRate": 0.1
+          "missed": 7,
+          "detectionRate": 0.125
         },
         "breakups D": {
           "targets": 16,
@@ -2132,12 +2673,12 @@
           "detectionRate": 0
         },
         "anomalous A-B": {
-          "targets": 12,
+          "targets": 11,
           "undetectable": 0,
           "detected": 1,
-          "late": 2,
+          "late": 1,
           "missed": 9,
-          "detectionRate": 0.08333333333333333
+          "detectionRate": 0.09090909090909091
         },
         "anomalous C-D": {
           "targets": 9,
@@ -2148,117 +2689,117 @@
           "detectionRate": 0.1111111111111111
         }
       },
-      "alerts": 3398,
+      "alerts": 2736,
       "duplicates": 163,
-      "exempt": 17,
-      "falseAlarms": 3191,
-      "review": 109,
+      "exempt": 15,
+      "falseAlarms": 2533,
+      "review": 94,
       "tiers": [
         {
           "tier": "2",
-          "raised": 3218,
-          "detections": 19,
-          "falseAlarms": 3191,
-          "precision": 0.005919003115264798,
+          "raised": 2558,
+          "detections": 18,
+          "falseAlarms": 2533,
+          "precision": 0.007056056448451587,
           "detectionShare": 1,
           "leadHours": {
-            "median": 248.00000008002388,
+            "median": 187.5454985599772,
             "tail": 52.999999919976126,
-            "count": 15
+            "count": 14
           }
         },
         {
           "tier": "3",
-          "raised": 2702,
-          "detections": 19,
-          "falseAlarms": 2675,
-          "precision": 0.007052709725315516,
+          "raised": 2486,
+          "detections": 18,
+          "falseAlarms": 2461,
+          "precision": 0.007260992335619202,
           "detectionShare": 1,
           "leadHours": {
-            "median": 248.00000008002388,
+            "median": 187.5454985599772,
             "tail": 52.999999919976126,
-            "count": 15
+            "count": 14
           }
         },
         {
           "tier": "5",
-          "raised": 2092,
-          "detections": 13,
-          "falseAlarms": 2072,
-          "precision": 0.006235011990407674,
-          "detectionShare": 0.6842105263157895,
+          "raised": 1905,
+          "detections": 12,
+          "falseAlarms": 1887,
+          "precision": 0.00631911532385466,
+          "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 187.5454985599772,
             "tail": 68.44429807996961,
-            "count": 10
+            "count": 9
           }
         },
         {
           "tier": "D1",
-          "raised": 2424,
-          "detections": 16,
-          "falseAlarms": 2403,
-          "precision": 0.006614303431169905,
-          "detectionShare": 0.8421052631578947,
+          "raised": 2230,
+          "detections": 15,
+          "falseAlarms": 2211,
+          "precision": 0.006738544474393531,
+          "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 187.5454985599772,
             "tail": 68.44429807996961,
-            "count": 12
+            "count": 11
           }
         },
         {
           "tier": "D3",
-          "raised": 1976,
-          "detections": 13,
-          "falseAlarms": 1957,
-          "precision": 0.006598984771573604,
-          "detectionShare": 0.6842105263157895,
+          "raised": 1812,
+          "detections": 12,
+          "falseAlarms": 1795,
+          "precision": 0.006640841173215274,
+          "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 156.00000008002388,
             "tail": 20.444298079969617,
-            "count": 10
+            "count": 9
           }
         },
         {
           "tier": "D5",
-          "raised": 1751,
-          "detections": 8,
-          "falseAlarms": 1737,
-          "precision": 0.004584527220630372,
-          "detectionShare": 0.42105263157894735,
+          "raised": 1602,
+          "detections": 7,
+          "falseAlarms": 1590,
+          "precision": 0.004383218534752661,
+          "detectionShare": 0.3888888888888889,
           "leadHours": {
             "median": 156.00000008002388,
             "tail": 20.444298079969617,
-            "count": 6
+            "count": 5
           }
         },
         {
           "tier": "D7",
-          "raised": 1577,
-          "detections": 6,
-          "falseAlarms": 1567,
-          "precision": 0.003814367450731087,
-          "detectionShare": 0.3157894736842105,
+          "raised": 1450,
+          "detections": 5,
+          "falseAlarms": 1442,
+          "precision": 0.0034554250172771253,
+          "detectionShare": 0.2777777777777778,
           "leadHours": {
-            "median": 529.0000000800238,
+            "median": 769.8749335999892,
             "tail": 88.00000008002387,
-            "count": 4
+            "count": 3
           }
         }
       ],
       "confirmed": {
-        "confirmations": 30,
+        "confirmations": 24,
         "ofTrue": 12,
-        "ofExempt": 0,
-        "ofFalseAlarms": 18,
+        "ofExempt": 1,
+        "ofFalseAlarms": 11,
         "ofNearEvent": 4,
         "daysToConfirmation": 0,
-        "precision": 0.4,
-        "precisionByParent": 0.5333333333333333,
-        "reported": 57,
-        "reportedAlerted": 22,
+        "precision": 0.5,
+        "precisionByParent": 0.6666666666666666,
+        "reported": 54,
+        "reportedAlerted": 20,
         "reportedConfirmed": 12,
-        "confirmedRate": 0.21052631578947367,
+        "confirmedRate": 0.2222222222222222,
         "daysFromEvent": {
           "median": 9.595833333333333,
           "tail": 34.047222222222224,
@@ -2272,38 +2813,38 @@
         "withStatement": 0,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9940809968847352,
-      "bodyYears": 174084.31202902232,
-      "falseAlarmsPer10kBodyYears": 183.30198527412483,
+      "falseAlarmRate": 0.9929439435515484,
+      "bodyYears": 165499.18868025675,
+      "falseAlarmsPer10kBodyYears": 153.05210981388785,
       "leadHours": {
-        "median": 248.00000008002388,
+        "median": 187.5454985599772,
         "tail": 52.999999919976126,
-        "count": 15
+        "count": 14
       },
       "latencyHours": {
         "median": 123.8,
         "tail": 1153.3833333333334,
-        "count": 19
+        "count": 18
       },
-      "confirmedShare": 0.3684210526315789,
+      "confirmedShare": 0.3888888888888889,
       "daysToConfirmation": 4,
       "timingErrorMinutes": 582.9541279988607,
       "byRegime": {
         "LEO": {
-          "targets": 45,
+          "targets": 40,
           "undetectable": 13,
-          "detected": 12,
-          "late": 6,
-          "missed": 27,
-          "detectionRate": 0.26666666666666666
+          "detected": 11,
+          "late": 5,
+          "missed": 24,
+          "detectionRate": 0.275
         },
         "MEO": {
-          "targets": 5,
+          "targets": 4,
           "undetectable": 1,
           "detected": 1,
           "late": 0,
-          "missed": 4,
-          "detectionRate": 0.2
+          "missed": 3,
+          "detectionRate": 0.25
         },
         "GEO": {
           "targets": 3,
@@ -2314,12 +2855,12 @@
           "detectionRate": 0.3333333333333333
         },
         "HEO": {
-          "targets": 22,
+          "targets": 21,
           "undetectable": 6,
           "detected": 5,
           "late": 2,
-          "missed": 15,
-          "detectionRate": 0.22727272727272727
+          "missed": 14,
+          "detectionRate": 0.23809523809523808
         },
         "unknown": {
           "targets": 16,
@@ -2332,20 +2873,20 @@
       },
       "byKind": {
         "breakup": {
-          "targets": 70,
+          "targets": 64,
           "undetectable": 19,
-          "detected": 17,
+          "detected": 16,
           "late": 4,
-          "missed": 49,
-          "detectionRate": 0.24285714285714285
+          "missed": 44,
+          "detectionRate": 0.25
         },
         "anomalous": {
-          "targets": 21,
+          "targets": 20,
           "undetectable": 1,
           "detected": 2,
-          "late": 4,
+          "late": 3,
           "missed": 15,
-          "detectionRate": 0.09523809523809523
+          "detectionRate": 0.1
         },
         "aerodynamic": {
           "targets": 0,
@@ -2373,24 +2914,24 @@
         }
       },
       "scoped": {
-        "targets": 26,
+        "targets": 23,
         "undetectable": 0,
         "detected": 4,
         "late": 0,
-        "missed": 22,
-        "excluded": 25,
-        "headlineEvents": 51,
+        "missed": 19,
+        "excluded": 24,
+        "headlineEvents": 47,
         "detectedAllLines": 4,
-        "falseAlarms": 39,
-        "detectionRate": 0.15384615384615385,
+        "falseAlarms": 35,
+        "detectionRate": 0.17391304347826086,
         "detectionInterval": [
-          0.06149933998929477,
-          0.33531584418313565
+          0.06978540350612772,
+          0.37138054785295666
         ],
-        "falseAlarmRate": 0.9069767441860465,
+        "falseAlarmRate": 0.8974358974358975,
         "falseAlarmInterval": [
-          0.7839701160146733,
-          0.9632289548966535
+          0.7642084129775517,
+          0.9593873444171301
         ]
       }
     },
@@ -2412,24 +2953,24 @@
             "targets": 29,
             "noFragments": 4,
             "noParentOrbit": 4,
-            "detected": 15,
-            "missed": 14,
-            "rate": 0.5172413793103449,
+            "detected": 16,
+            "missed": 13,
+            "rate": 0.5517241379310345,
             "interval": [
-              0.3443073797056916,
-              0.6861418066920478
+              0.37547667068067625,
+              0.715870888512542
             ]
           },
           "breakups C": {
             "targets": 6,
             "noFragments": 2,
             "noParentOrbit": 2,
-            "detected": 5,
-            "missed": 1,
-            "rate": 0.8333333333333334,
+            "detected": 4,
+            "missed": 2,
+            "rate": 0.6666666666666666,
             "interval": [
-              0.43649056343635395,
-              0.9699474141282697
+              0.29998832134152864,
+              0.9032306674407831
             ]
           },
           "breakups D": {
@@ -2469,53 +3010,158 @@
             ]
           }
         },
-        "verdicts": 44,
-        "attributed": 30,
-        "detections": 24,
-        "duplicates": 2,
-        "exempt": 6,
-        "falseAlarms": 12,
-        "detectedAllLines": 24,
-        "detectedNoFragments": 3,
-        "falseAlarmRate": 0.3333333333333333,
+        "verdicts": 39,
+        "attributed": 22,
+        "detections": 23,
+        "duplicates": 7,
+        "exempt": 2,
+        "falseAlarms": 7,
+        "detectedAllLines": 23,
+        "detectedNoFragments": 2,
+        "falseAlarmRate": 0.23333333333333334,
         "falseAlarmInterval": [
-          0.20214424774586048,
-          0.49666302907033166
+          0.11792239210501221,
+          0.40928672330324256
         ],
         "lead": {
           "median": 40.166666666666664,
           "tail": -24.5,
-          "count": 15
+          "count": 16
         },
-        "withStatement": 15,
-        "beforeStatement": 13,
+        "withStatement": 16,
+        "beforeStatement": 14,
         "statementDays": 0,
-        "statementMonths": 15,
+        "statementMonths": 16,
         "lag": {
-          "median": 0.11165842333193178,
-          "tail": 39.278325089998596,
-          "count": 15
+          "median": 0.1372392433336046,
+          "tail": 17.170086386667887,
+          "count": 16
         },
         "timing": {
-          "median": 59.18196990559896,
+          "median": 72.77253002929687,
           "tail": 40265.4093759196,
           "count": 14
         },
         "falseByClass": {
-          "payload": 10,
-          "rocket body": 2,
+          "payload": 6,
+          "rocket body": 1,
           "debris": 0,
           "unknown": 0
         },
-        "falseAttributed": 7
+        "falseAttributed": 3,
+        "twins": 2
+      },
+      "confirmedLineTwins": {
+        "lines": {
+          "breakups A-B": {
+            "targets": 29,
+            "noFragments": 4,
+            "noParentOrbit": 4,
+            "detected": 16,
+            "missed": 13,
+            "rate": 0.5517241379310345,
+            "interval": [
+              0.37547667068067625,
+              0.715870888512542
+            ]
+          },
+          "breakups C": {
+            "targets": 6,
+            "noFragments": 2,
+            "noParentOrbit": 2,
+            "detected": 4,
+            "missed": 2,
+            "rate": 0.6666666666666666,
+            "interval": [
+              0.29998832134152864,
+              0.9032306674407831
+            ]
+          },
+          "breakups D": {
+            "targets": 2,
+            "noFragments": 5,
+            "noParentOrbit": 4,
+            "detected": 0,
+            "missed": 2,
+            "rate": 0,
+            "interval": [
+              0,
+              0.6576280471103807
+            ]
+          },
+          "anomalous A-B": {
+            "targets": 2,
+            "noFragments": 1,
+            "noParentOrbit": 2,
+            "detected": 0,
+            "missed": 2,
+            "rate": 0,
+            "interval": [
+              0,
+              0.6576280471103807
+            ]
+          },
+          "anomalous C-D": {
+            "targets": 1,
+            "noFragments": 0,
+            "noParentOrbit": 0,
+            "detected": 1,
+            "missed": 0,
+            "rate": 1,
+            "interval": [
+              0.20654329147389294,
+              1
+            ]
+          }
+        },
+        "verdicts": 39,
+        "attributed": 22,
+        "detections": 23,
+        "duplicates": 7,
+        "exempt": 2,
+        "falseAlarms": 7,
+        "detectedAllLines": 23,
+        "detectedNoFragments": 2,
+        "falseAlarmRate": 0.23333333333333334,
+        "falseAlarmInterval": [
+          0.11792239210501221,
+          0.40928672330324256
+        ],
+        "lead": {
+          "median": 40.166666666666664,
+          "tail": -24.5,
+          "count": 16
+        },
+        "withStatement": 16,
+        "beforeStatement": 14,
+        "statementDays": 0,
+        "statementMonths": 16,
+        "lag": {
+          "median": 0.1372392433336046,
+          "tail": 17.170086386667887,
+          "count": 16
+        },
+        "timing": {
+          "median": 72.77253002929687,
+          "tail": 40265.4093759196,
+          "count": 14
+        },
+        "falseByClass": {
+          "payload": 6,
+          "rocket body": 1,
+          "debris": 0,
+          "unknown": 0
+        },
+        "falseAttributed": 3,
+        "twins": 2
       },
       "lines": {
         "breakups A-B": {
           "targets": 31,
           "undetectable": 6,
           "detected": 13,
-          "late": 2,
-          "missed": 16,
+          "late": 3,
+          "missed": 15,
           "detectionRate": 0.41935483870967744
         },
         "breakups C": {
@@ -2551,18 +3197,18 @@
           "detectionRate": 0
         }
       },
-      "alerts": 3064,
-      "duplicates": 82,
+      "alerts": 3066,
+      "duplicates": 85,
       "exempt": 28,
-      "falseAlarms": 2934,
-      "review": 55,
+      "falseAlarms": 2932,
+      "review": 57,
       "tiers": [
         {
           "tier": "2",
-          "raised": 2954,
+          "raised": 2953,
           "detections": 17,
-          "falseAlarms": 2934,
-          "precision": 0.0057607590647238225,
+          "falseAlarms": 2932,
+          "precision": 0.005764665988470668,
           "detectionShare": 1,
           "leadHours": {
             "median": 718.5288,
@@ -2572,10 +3218,10 @@
         },
         {
           "tier": "3",
-          "raised": 2893,
+          "raised": 2892,
           "detections": 16,
-          "falseAlarms": 2874,
-          "precision": 0.005536332179930796,
+          "falseAlarms": 2872,
+          "precision": 0.00554016620498615,
           "detectionShare": 0.9411764705882353,
           "leadHours": {
             "median": 718.5288,
@@ -2585,10 +3231,10 @@
         },
         {
           "tier": "5",
-          "raised": 2196,
+          "raised": 2195,
           "detections": 15,
-          "falseAlarms": 2179,
-          "precision": 0.0068368277119416595,
+          "falseAlarms": 2177,
+          "precision": 0.006843065693430657,
           "detectionShare": 0.8823529411764706,
           "leadHours": {
             "median": 576.1433076799859,
@@ -2598,10 +3244,10 @@
         },
         {
           "tier": "D1",
-          "raised": 2374,
+          "raised": 2373,
           "detections": 16,
-          "falseAlarms": 2355,
-          "precision": 0.006748207507380852,
+          "falseAlarms": 2353,
+          "precision": 0.006753904601097509,
           "detectionShare": 0.9411764705882353,
           "leadHours": {
             "median": 718.5288,
@@ -2611,10 +3257,10 @@
         },
         {
           "tier": "D3",
-          "raised": 1789,
+          "raised": 1788,
           "detections": 15,
-          "falseAlarms": 1772,
-          "precision": 0.008393956351426972,
+          "falseAlarms": 1770,
+          "precision": 0.008403361344537815,
           "detectionShare": 0.8823529411764706,
           "leadHours": {
             "median": 718.5288,
@@ -2626,8 +3272,8 @@
           "tier": "D5",
           "raised": 1567,
           "detections": 12,
-          "falseAlarms": 1551,
-          "precision": 0.007677543186180422,
+          "falseAlarms": 1550,
+          "precision": 0.0076824583866837385,
           "detectionShare": 0.7058823529411765,
           "leadHours": {
             "median": 512.1433076799859,
@@ -2637,7 +3283,7 @@
         },
         {
           "tier": "D7",
-          "raised": 1340,
+          "raised": 1341,
           "detections": 10,
           "falseAlarms": 1327,
           "precision": 0.0074794315632011965,
@@ -2650,34 +3296,34 @@
         }
       ],
       "confirmed": {
-        "confirmations": 15,
-        "ofTrue": 5,
-        "ofExempt": 2,
-        "ofFalseAlarms": 8,
+        "confirmations": 18,
+        "ofTrue": 7,
+        "ofExempt": 5,
+        "ofFalseAlarms": 6,
         "ofNearEvent": 2,
         "daysToConfirmation": 0,
-        "precision": 0.3333333333333333,
-        "precisionByParent": 0.4666666666666667,
+        "precision": 0.3888888888888889,
+        "precisionByParent": 0.5,
         "reported": 33,
-        "reportedAlerted": 12,
-        "reportedConfirmed": 4,
-        "confirmedRate": 0.12121212121212122,
+        "reportedAlerted": 13,
+        "reportedConfirmed": 6,
+        "confirmedRate": 0.18181818181818182,
         "daysFromEvent": {
-          "median": 27.625,
+          "median": 25.59722222222222,
           "tail": 39.13472222222222,
-          "count": 4
+          "count": 6
         },
         "daysFromAlert": {
           "median": 4.333333333333333,
           "tail": 30,
-          "count": 4
+          "count": 6
         },
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9942392409352762,
+      "falseAlarmRate": 0.9942353340115293,
       "bodyYears": 202371.4776849566,
-      "falseAlarmsPer10kBodyYears": 144.9809050941224,
+      "falseAlarmsPer10kBodyYears": 144.88207693795735,
       "leadHours": {
         "median": 718.5288,
         "tail": 81.60032655999078,
@@ -2696,8 +3342,8 @@
           "targets": 32,
           "undetectable": 10,
           "detected": 11,
-          "late": 2,
-          "missed": 19,
+          "late": 3,
+          "missed": 18,
           "detectionRate": 0.34375
         },
         "MEO": {
@@ -2738,8 +3384,8 @@
           "targets": 46,
           "undetectable": 12,
           "detected": 17,
-          "late": 3,
-          "missed": 26,
+          "late": 4,
+          "missed": 25,
           "detectionRate": 0.3695652173913043
         },
         "anomalous": {

@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
-import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
-import { alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
-import { brackets, lineOf, marginDaysOf, noticesOf, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
+import { SCORED_FROM_YEAR, alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readingOf, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
+import { STATION_LAUNCHES, brackets, landConfirmed, lineOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
 import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
 import { readStates, writeStates } from "../scripts/kpi/states.ts";
@@ -447,12 +447,14 @@ describe("the matching rule's pieces", () => {
     expect(usa32).toMatchObject({ launch: "1988-078", at: Date.UTC(2026, 8, 17) });
   });
 
-  test("the splits and the percentile", () => {
+  test("the splits and the percentile: 2005, the warm-up year, is replayed and scored on no split", () => {
     const years = [2005, 2006, 2016, 2017, 2018, 2025, 2026];
-    expect(splitYears(years, "validation")).toEqual([2005, 2017, 2025]);
+    expect(SCORED_FROM_YEAR).toBe(2006);
+    expect(splitYears(years, "validation")).toEqual([2017, 2025]);
     expect(splitYears(years, "train")).toEqual([2006, 2016, 2018, 2026]);
+    expect(splitYears(years, "all")).toEqual([2006, 2016, 2017, 2018, 2025, 2026]);
     expect(splitYears(years, "recent")).toEqual([2018, 2025, 2026]);
-    expect(splitYears(years, "chronologicalTrain")).toEqual([2005, 2006, 2016, 2017]);
+    expect(splitYears(years, "chronologicalTrain")).toEqual([2006, 2016, 2017]);
     expect(splitYears(years, "chronologicalValidation")).toEqual([2018, 2025, 2026]);
     expect(percentile([5, 1, 3], 50)).toBe(3);
     expect(percentile([5, 1, 3, 4], 10)).toBe(1);
@@ -503,5 +505,55 @@ describe("the scoped line", () => {
     expect(l).toBeLessThan(0.9);
     expect(h).toBeGreaterThan(0.9);
     expect(h).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("the Confirmed line's landings: the stations and the twins", () => {
+  const T = Date.UTC(2016, 5, 1);
+  const rowOn = (parent: number, from: number, launch: string): Row => ({ breakup: { id: `${parent}:${new Date(from).toISOString().slice(0, 10)}`, parent: { catalogueNumber: parent, designator: `${launch}A`, name: "TWIN" }, kind: "breakup", scoreable: true, exemptReason: null } as unknown as Breakup, from, to: from, margin: DAY, launch, fragments: new Set(), scored: null });
+  // Two ullage motors of one launch, the second breaking up in June; the first in March.
+  const rows = [rowOn(33472, T - 67 * DAY, "2008-067"), rowOn(33473, T, "2008-067")];
+  const verdict = (number: number, candidates?: number[], launch = "2008-067", eventAt = T + 16 * DAY) => ({ number, launch, raisedAt: T + 40 * DAY, step: null, event: { at: eventAt, from: eventAt, to: eventAt }, evidence: { bodyClass: 1 }, ...(candidates === undefined ? {} : { candidates }) });
+
+  test("a verdict naming twins is matched on the body named first with the switch off, and at the launch with it on", () => {
+    // Off: the body named first had an event within the half year, the March one: a detection of that one.
+    const twin = landConfirmed(verdict(33472, [33472, 33473]), 0, rows);
+    expect(twin.outcome).toBe("detection");
+    expect(twin.event).toBe(rows[0]!.breakup.id);
+    expect(twin.candidates).toEqual([33472, 33473]);
+    // On: the candidates' event nearest the verdict's instant, June's.
+    expect(readingOf(twin, true).event).toBe(rows[1]!.breakup.id);
+    expect(readingOf(twin, false).event).toBe(rows[0]!.breakup.id);
+    // Named on a body with no event, with the parent among the candidates: false off, a detection on.
+    const wrong = landConfirmed(verdict(99999, [99999, 33473], "2008-067", T + 2 * DAY), 0, rows);
+    expect(wrong.outcome).toBe("false-alarm");
+    expect(readingOf(wrong, true).outcome).toBe("detection");
+    expect(readingOf(wrong, true).event).toBe(rows[1]!.breakup.id);
+    // No candidate with an event: false either way.
+    const none = landConfirmed(verdict(99998, [99998, 99999]), 0, rows);
+    expect(none.outcome).toBe("false-alarm");
+    expect(readingOf(none, true).outcome).toBe("false-alarm");
+    // A verdict naming one body reads the same either way.
+    const single = landConfirmed(verdict(33473), 0, rows);
+    expect(single.twin).toBeUndefined();
+    expect(readingOf(single, true)).toEqual(single);
+  });
+
+  test("a confirmed verdict under a crewed station's launch is exempt, whatever it names", () => {
+    expect(STATION_LAUNCHES).toContain("1998-067");
+    expect(STATION_LAUNCHES).toContain("2021-035");
+    const station = landConfirmed(verdict(25544, undefined, "1998-067"), 0, rows);
+    expect(station.outcome).toBe("exempt");
+    expect(station.note).toContain("crewed station");
+    expect(readingOf(landConfirmed(verdict(25544, [25544, 33473], "1998-067"), 0, rows), true).outcome).toBe("exempt");
+  });
+
+  test("the Confirmed cells read the twins both ways, and the warm-up year scores on no split", () => {
+    const files = [2005, 2016].map((year) => ({ year, score: { year, timeBasis: "created" as const, events: [], alerts: [], review: [], confirmations: [{ ...landConfirmed(verdict(99999, [99999, 33473], "2008-067", T + 2 * DAY), 0, rows), raisedAt: Date.UTC(year, 6, 1) }] } }));
+    expect(confirmedCellsOf(files.filter((f) => splitYears([2005, 2016], "all").includes(f.year))).falseAlarms).toBe(1);
+    const on = confirmedCellsOf(files.slice(1), firstConfirmationsOf(files, true), true);
+    expect(on.falseAlarms).toBe(0);
+    expect(on.twins).toBe(1);
+    expect(firstConfirmationsOf(files).size).toBe(0);
   });
 });

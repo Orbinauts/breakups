@@ -100,6 +100,8 @@ export interface Verdict {
   reasons: string[];
   /** The bodies the verdict rests on beside the object: the pieces that confirmed it, or a cloud's consistent pieces; absent where none. */
   bodies?: number[];
+  /** For a confirmed verdict whose pieces cannot be told from two bodies of the launch or more (twins): every such body, the one named first; the verdict names the launch, and `number` is the body the centre of the pieces or a persistent step picked. Absent on any other verdict. */
+  candidates?: number[];
 }
 
 /**
