@@ -1,6 +1,6 @@
 # The detector, as built
 
-What `src/` does, module by module, with the gates it decides by, the states an alert passes through, what each phase of the build bought in the scorecard's numbers, and where the parent-step channel's ceiling lies and on what evidence. The fitting notes (`d1-fitting.md` to `d6-fitting.md`, and `d7-scope.md` for the scope study) record each phase's sweeps on the training split; `kpi/latest.md` carries the scorecard as last run; `events.md` dissects every reported event. Every threshold is in `src/params.ts`, tagged physical, policy or fitted with the sweep that chose it (`PARAMETER_PROVENANCE`).
+What `src/` does, module by module, with the gates it decides by, the states an alert passes through, what each phase of the build bought in the scorecard's numbers, and where the parent-step channel's ceiling lies and on what evidence. The fitting notes (`d1-fitting.md` to `d6-fitting.md`, `d7-scope.md` for the scope study and `d8-audit.md` for the truth audit) record each phase's sweeps on the training split; `kpi/latest.md` carries the scorecard as last run; `events.md` dissects every reported event. Every threshold is in `src/params.ts`, tagged physical, policy or fitted with the sweep that chose it (`PARAMETER_PROVENANCE`).
 
 ## The signal and the clock
 
