@@ -155,6 +155,8 @@ export interface ArchivedBody {
   bodyClass: BodyClass;
   launch: string | null;
   decay: string | null;
+  /** The operational status code from the snapshot (`+`, `P`, `B`, `S`, `X`, `D`, `-`); null where blank or where the snapshot has no row; absent in a body table written before the status was carried (`annotate.ts` adds it). The status is the snapshot's, today's, not the year's. */
+  opsStatus?: string | null;
 }
 
 export interface BundleSource {

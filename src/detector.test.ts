@@ -185,7 +185,7 @@ describe("the detector on synthetic series", () => {
     expect(late.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("station-keeping"));
     expect(late.evidence.n365).toBeGreaterThanOrEqual(24);
     expect(late.evidence.sameSignShare).toBeCloseTo(0.5, 1);
-    expect(late.reasons.join(" ")).toContain("a manoeuvre, not a breakup");
+    expect(late.reasons.join(" ")).toContain("not a breakup");
   });
 
   test("a low-orbit raising campaign on a young payload: the first raise starts a campaign, the next ones continue it, none is suspected", () => {
@@ -600,5 +600,176 @@ describe("the confirmation rules", () => {
     const row = alertRow(fed, 1)!;
     expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
     expect(row.signals.confirmRefused).toBe(1);
+  });
+});
+
+/**
+ * The sixth phase's discriminators, each on the series it was built for:
+ * a maintenance saw-tooth, a constellation's raising campaign and a
+ * straggler's climb towards its mates, a dead satellite's lone step, a
+ * kicked body whose scatter triples, and a lowering on a never-manoeuvred
+ * object. Where the fitted value might read otherwise, the parameter under
+ * test is given, so each case documents the mechanism rather than the fit.
+ */
+describe("the sixth phase's discriminators", () => {
+  /** A payload decaying from `a0` at `rate` kilometres a day, raised back to `a0` every `period` days, sampled every eight hours with a few metres of noise. */
+  function sawTooth(a0: number, rate: number, period: number, days: number, seed = 61): SyntheticSet[] {
+    const gauss = noise(seed);
+    const sets: SyntheticSet[] = [];
+    for (let t = 0; t <= days * DAY; t += 8 * HOUR) {
+      const sincePeak = (t / DAY) % period;
+      sets.push({ epochMs: T0 + t, aKm: a0 - rate * sincePeak + 0.004 * gauss(), bstar: 1e-4 });
+    }
+    return sets;
+  }
+
+  test("a maintenance saw-tooth: each raise back to the held altitude is a manoeuvre, by the envelope, on a payload the catalogue says nothing of", () => {
+    const parameters = { maintenanceToleranceSigmas: 3, maintenanceToleranceKm: 0.1, opsStatusEvidence: false };
+    const fed = feed(one(sawTooth(7000, 0.02, 45, 200).map((s) => setOf(1, s, "payload"))), { parameters });
+    const persistent = fed.verdicts.filter((v) => v.state === "suspected" || v.state === "manoeuvre");
+    expect(persistent.length).toBeGreaterThanOrEqual(3);
+    expect(suspected(fed)).toEqual([]);
+    // The first raise, on a payload under ninety days old, starts a campaign by the record alone; every later one is a return to the held altitude.
+    expect(persistent[0]!.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("campaign"));
+    for (const later of persistent.slice(1)) {
+      expect(later.evidence.envelopeMissKm).toBeLessThan(0.05);
+      expect(later.evidence.envelopeTopKm).toBeGreaterThan(0.8);
+      expect(later.reasons.join(" ")).toContain("orbit maintenance");
+    }
+    // A lone return on an old payload with no record: unique by the record, explained by the envelope alone.
+    const lone = feed(one(sawTooth(7000, 0.02, 150, 200).map((s) => setOf(4, s, "payload"))), { parameters });
+    expect(suspected(lone)).toEqual([]);
+    const only = lone.verdicts.find((v) => v.state === "manoeuvre")!;
+    expect(only.evidence.manoeuvreClass).toBe(MANOEUVRE_CLASSES.indexOf("unique"));
+    expect(only.evidence.explanations).toBe(1);
+    expect(only.evidence.envelopeMonths).toBeGreaterThanOrEqual(5);
+    // The same raise on a rocket body: a stage does not maintain its orbit, so the envelope explains nothing and the first raise is suspected.
+    const stage = feed(one(sawTooth(7000, 0.02, 45, 100).map((s) => setOf(2, s, "rocket body"))), { parameters: { ...parameters, explanationsForNonPayloads: false } });
+    expect(suspected(stage).length).toBeGreaterThanOrEqual(1);
+    // A kick that lands the object a kilometre above anything it held is not a return: the lone raise of day 150, overshooting by a kilometre.
+    const kicked = sawTooth(7000, 0.02, 150, 200);
+    for (let i = 0; i < kicked.length; i++) if (kicked[i]!.epochMs >= T0 + 150 * DAY) kicked[i]!.aKm += 1;
+    const far = feed(one(kicked.map((s) => setOf(3, s, "payload"))), { parameters });
+    const raised = suspected(far);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.evidence.envelopeMissKm).toBeGreaterThan(0.9);
+    expect(raised[0]!.evidence.explanations).toBe(0);
+  });
+
+  test("a constellation's raising campaign: the first raises of a launch are alone, the later ones have siblings and are manoeuvres; a straggler climbing towards its mates is deploying", () => {
+    const gauss = noise(71);
+    const launch = "2021-010";
+    const members = [11, 12, 13, 14, 15];
+    const batches: ReturnType<typeof setOf>[][] = [];
+    // Five payloads of one launch, older than the record's youth, each raising five kilometres on its own day from day 200 on.
+    for (let t = 0; t <= 215 * DAY; t += 8 * HOUR) {
+      batches.push(members.map((number, i) => {
+        const raised = t >= (200 + i) * DAY;
+        return setOf(number, { epochMs: T0 + t, aKm: 6900 + (raised ? 5 : 0) + 0.004 * gauss(), bstar: 1e-4 }, "payload", { designator: `${launch}${"ABCDE"[i]}` });
+      }));
+    }
+    const parameters = { siblingsMin: 2, opsStatusEvidence: false, maintenanceToleranceKm: -1 };
+    const fed = feed(batches, { parameters });
+    const persistent = fed.verdicts.filter((v) => (v.state === "suspected" || v.state === "manoeuvre") && v.step!.deltaKm > 4);
+    expect(persistent).toHaveLength(5);
+    const raised = suspected(fed);
+    // The first two climb alone and are suspected; from the third on two siblings explain the climb.
+    expect(raised.map((v) => v.number)).toEqual([11, 12]);
+    const third = persistent.find((v) => v.number === 13)!;
+    expect(third.state).toBe("manoeuvre");
+    expect(third.evidence.siblingsLaunch).toBe(2);
+    expect(third.reasons.join(" ")).toContain("a coordinated manoeuvre");
+    expect(persistent.find((v) => v.number === 15)!.evidence.siblingsLaunch).toBe(4);
+    // With three siblings required the third climbs alone too.
+    expect(suspected(feed(batches, { parameters: { ...parameters, siblingsMin: 3 } })).map((v) => v.number)).toEqual([11, 12, 13]);
+    // A straggler: a payload of a launch whose four mates fly at 7100, thirty days old, climbing five kilometres towards them; in the record alone a young payload's first raise is a campaign, so the record is told to say nothing of youth here.
+    const straggler: ReturnType<typeof setOf>[][] = [];
+    for (let t = 0; t <= 40 * DAY; t += 8 * HOUR) {
+      const mates = [22, 23, 24, 25].map((number, i) => setOf(number, { epochMs: T0 + t, aKm: 7100 + 0.004 * gauss(), bstar: 1e-4 }, "payload", { designator: `2021-011${"BCDE"[i]}` }));
+      straggler.push([...mates, setOf(21, { epochMs: T0 + t, aKm: 7080 + (t >= 30 * DAY ? 5 : 0) + 0.004 * gauss(), bstar: 1e-4 }, "payload", { designator: "2021-011A" })]);
+    }
+    const climbing = { ...parameters, deployAgeDays: 180, newObjectDays: 0 };
+    const deploying = feed(straggler, { parameters: climbing });
+    expect(suspected(deploying)).toEqual([]);
+    const climb = deploying.verdicts.find((v) => v.state === "manoeuvre" && v.number === 21)!;
+    expect(climb.evidence.mates).toBe(4);
+    expect(climb.evidence.matesMedianAKm).toBeCloseTo(7100, 0);
+    expect(climb.evidence.towardsMates).toBe(1);
+    expect(climb.reasons.join(" ")).toContain("deploying");
+    // The same climb away from the mates, or on an object past the age, is suspected.
+    const away = feed(straggler.map((batch) => batch.map((s) => (s.number === 21 ? { ...s, meanMotion: meanMotionOf(7120 + (s.epochMs >= T0 + 30 * DAY ? 5 : 0) + 0.004 * gauss()) } : s))), { parameters: climbing });
+    expect(suspected(away).map((v) => v.number)).toEqual([21]);
+    expect(suspected(feed(straggler, { parameters: { ...climbing, deployAgeDays: 10 } })).map((v) => v.number)).toEqual([21]);
+  });
+
+  test("a dead satellite's lone step: the same return to a held altitude is suspected on a payload nonoperational today, a manoeuvre on one working today, and read neither way with the status off", () => {
+    // One raise on day 150, on an object with no record, back to the altitude it held in the spring.
+    const series = sawTooth(7000, 0.02, 150, 200);
+    const parameters = { maintenanceToleranceSigmas: 3, maintenanceToleranceKm: 0.1, opsStatusEvidence: true, nonoperationalOverrides: true };
+    const dead = feed(one(series.map((s) => setOf(1, s, "payload", { opsStatus: "nonoperational" }))), { parameters });
+    expect(suspected(dead).length).toBeGreaterThanOrEqual(1);
+    expect(suspected(dead)[0]!.reasons.join(" ")).toContain("nonoperational");
+    expect(suspected(dead)[0]!.evidence.explanations).toBe(1);
+    const alive = feed(one(series.map((s) => setOf(2, s, "payload", { opsStatus: "operational" }))), { parameters });
+    expect(suspected(alive)).toEqual([]);
+    const burn = alive.verdicts.find((v) => v.state === "manoeuvre")!;
+    expect(burn.reasons.join(" ")).toContain("could have burned");
+    expect(burn.evidence.explanations).toBe(2);
+    // The status off: both read as the envelope alone reads them, a manoeuvre.
+    const off = { ...parameters, opsStatusEvidence: false };
+    expect(suspected(feed(one(series.map((s) => setOf(3, s, "payload", { opsStatus: "nonoperational" }))), { parameters: off }))).toEqual([]);
+    expect(feed(one(series.map((s) => setOf(4, s, "payload", { opsStatus: "operational" }))), { parameters: off }).verdicts.find((v) => v.state === "manoeuvre")!.evidence.explanations).toBe(1);
+    // A working satellite's lone step that no envelope explains is a manoeuvre by its status alone; a dead one's is suspected whatever the envelope.
+    const lone = decaying(7200, 0.02, 0.004, 120);
+    for (let i = 0; i < lone.length; i++) if (lone[i]!.epochMs >= T0 + 100 * DAY) lone[i]!.aKm += 3;
+    expect(suspected(feed(one(lone.map((s) => setOf(5, s, "payload", { opsStatus: "operational" }))), { parameters }))).toEqual([]);
+    expect(suspected(feed(one(lone.map((s) => setOf(6, s, "payload", { opsStatus: "nonoperational" }))), { parameters })).length).toBe(1);
+  });
+
+  test("a kicked body whose residual scatter triples after the step: the alert's row carries a damage ratio near three, and a clean step one near one", () => {
+    const gauss = noise(81);
+    const kicked: SyntheticSet[] = [];
+    const clean: SyntheticSet[] = [];
+    for (let t = 0; t <= 60 * DAY; t += 8 * HOUR) {
+      const after = t >= 20 * DAY;
+      const g = gauss();
+      kicked.push({ epochMs: T0 + t, aKm: 7200 - 0.02 * (t / DAY) - (after ? 0.5 : 0) + (after ? 0.012 : 0.004) * g, bstar: 1e-4 });
+      clean.push({ epochMs: T0 + t, aKm: 7200 - 0.02 * (t / DAY) - (after ? 0.5 : 0) + 0.004 * g, bstar: 1e-4 });
+    }
+    const parameters = { damageFromDays: 14, damageToDays: 28 };
+    const damaged = feed(one(kicked.map((s) => setOf(1, s, "rocket body"))), { parameters, until: T0 + 60 * DAY });
+    expect(suspected(damaged)).toHaveLength(1);
+    const row = damaged.log.find((r) => r.signals.phase === 3)!;
+    expect(row).toBeDefined();
+    expect(row.signals.damageResiduals).toBeGreaterThanOrEqual(10);
+    expect(row.signals.damageRatio).toBeGreaterThan(2);
+    expect(row.signals.damageRatio).toBeLessThan(5);
+    const whole = feed(one(clean.map((s) => setOf(2, s, "rocket body"))), { parameters, until: T0 + 60 * DAY });
+    const control = whole.log.find((r) => r.signals.phase === 3)!;
+    expect(control.signals.damageRatio).toBeGreaterThan(0.5);
+    expect(control.signals.damageRatio).toBeLessThan(1.6);
+  });
+
+  test("a lowering on a never-manoeuvred object is the breakup pattern: suspected on a working payload too where the parameter reads a lowering with no record against drag, and on a record of one raise", () => {
+    const series = decaying(7200, 0.02, 0.004, 60);
+    for (let i = 0; i < series.length; i++) if (series[i]!.epochMs >= T0 + 40 * DAY) series[i]!.aKm -= 0.5;
+    // The working status explains the lowering; with the record's signatures never outweighed, the move against drag beats it where the parameter reads a bare lowering, and with one independent explanation outweighing them it does not.
+    const base = { maintenanceToleranceKm: -1, opsStatusEvidence: true, independentOutweighs: Number.POSITIVE_INFINITY };
+    expect(suspected(feed(one(series.map((s) => setOf(1, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: Number.POSITIVE_INFINITY } }))).toEqual([]);
+    const bare = suspected(feed(one(series.map((s) => setOf(2, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: 0 } }));
+    expect(bare).toHaveLength(1);
+    expect(bare[0]!.reasons.join(" ")).toContain("a move against drag");
+    expect(bare[0]!.evidence.againstDrag).toBe(1);
+    expect(suspected(feed(one(series.map((s) => setOf(5, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: 0, independentOutweighs: 1 } }))).toEqual([]);
+    // A record of one raise, then a lowering: against drag from one raise, not from two.
+    const gauss = noise(91);
+    const twice: SyntheticSet[] = [];
+    for (let t = 0; t <= 120 * DAY; t += 8 * HOUR) twice.push({ epochMs: T0 + t, aKm: 7200 + (t >= 50 * DAY ? 0.4 : 0) - (t >= 100 * DAY ? 0.4 : 0) + 0.004 * gauss(), bstar: 1e-4 });
+    const fromOne = feed(one(twice.map((s) => setOf(3, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: 1 } });
+    const lowering = suspected(fromOne).filter((v) => v.step!.deltaKm < 0);
+    expect(lowering).toHaveLength(1);
+    expect(lowering[0]!.evidence.pastRaises).toBe(1);
+    expect(lowering[0]!.reasons.join(" ")).toContain("past step was a raise");
+    expect(suspected(feed(one(twice.map((s) => setOf(4, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: 2 } })).filter((v) => v.step!.deltaKm < 0)).toEqual([]);
   });
 });

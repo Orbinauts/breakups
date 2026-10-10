@@ -87,6 +87,8 @@ export interface HistoryFeatures {
   disposalLike: boolean;
   /** Whether the object is younger than the parameter: its history is unknown rather than empty. */
   young: boolean;
+  /** How many of the past steps raised the orbit, for the direction against drag. */
+  pastRaises: number;
 }
 
 /** Drops records older than the history's reach before the epoch, and the oldest beyond its size. */
@@ -157,6 +159,7 @@ export function featuresOf(steps: StepRecord[], step: CurrentStep, firstEpochMs:
     normalShare: n730 > 0 ? past.filter((s) => s.normalMps > s.tangentialMps).length / n730 : Number.NaN,
     disposalLike: isDisposalLike(step, params),
     young: ageDays < params.newObjectDays,
+    pastRaises: past.filter((s) => s.deltaKm > 0).length,
   };
 }
 
@@ -183,15 +186,29 @@ export function classify(features: HistoryFeatures, step: CurrentStep, params: D
   return "occasional";
 }
 
+/** The four tests by which a step on a manoeuvring object is still raised, each with its sentence where it fires: the step's size over the record's, its direction against the record's, the eccentricity change beyond a tangential impulse's reach, and the drag term's change across it. */
+export interface AtypicalTests {
+  size: string | null;
+  direction: string | null;
+  geometry: string | null;
+  dragTerm: string | null;
+}
+
+export function atypicalTests(features: HistoryFeatures, step: CurrentStep, params: DetectorParameters): AtypicalTests {
+  // A ratio of zero is a post set whose drag term the catalogue printed as zero, which says nothing of the area over the mass.
+  const dragTerm = Number.isFinite(step.bstarRatio) && step.bstarRatio > 0 && (step.bstarRatio >= params.bstarRatioMax || step.bstarRatio <= 1 / params.bstarRatioMax);
+  return {
+    size: features.typicality >= params.typicalityMax ? `the step is ${features.typicality.toFixed(1)} times the median of the object's past steps` : null,
+    direction: features.n730 >= params.oppositeMinSteps && features.sameSignShare === 0 ? `the step is opposite in direction to every one of the object's ${features.n730} past steps` : null,
+    geometry: step.consistency >= params.consistencyMin ? `the eccentricity change needs a radial kick a tangential burn cannot give (chi-squared ${step.consistency.toFixed(1)})` : null,
+    dragTerm: dragTerm ? `the drag term changed ${step.bstarRatio >= 1 ? step.bstarRatio.toFixed(1) : (1 / step.bstarRatio).toFixed(1)}-fold across the step` : null,
+  };
+}
+
 /** The tests by which a step on a manoeuvring object is still raised: each a sentence, or none. */
 export function atypicalReasons(features: HistoryFeatures, step: CurrentStep, params: DetectorParameters): string[] {
-  const reasons: string[] = [];
-  if (features.typicality >= params.typicalityMax) reasons.push(`the step is ${features.typicality.toFixed(1)} times the median of the object's past steps`);
-  if (features.n730 >= params.oppositeMinSteps && features.sameSignShare === 0) reasons.push(`the step is opposite in direction to every one of the object's ${features.n730} past steps`);
-  if (step.consistency >= params.consistencyMin) reasons.push(`the eccentricity change needs a radial kick a tangential burn cannot give (chi-squared ${step.consistency.toFixed(1)})`);
-  // A ratio of zero is a post set whose drag term the catalogue printed as zero, which says nothing of the area over the mass.
-  if (Number.isFinite(step.bstarRatio) && step.bstarRatio > 0 && (step.bstarRatio >= params.bstarRatioMax || step.bstarRatio <= 1 / params.bstarRatioMax)) reasons.push(`the drag term changed ${step.bstarRatio >= 1 ? step.bstarRatio.toFixed(1) : (1 / step.bstarRatio).toFixed(1)}-fold across the step`);
-  return reasons;
+  const tests = atypicalTests(features, step, params);
+  return [tests.size, tests.direction, tests.geometry, tests.dragTerm].filter((reason): reason is string => reason !== null);
 }
 
 /** Whether a step of the class is raised on the parent alone: a unique step, one the atypical tests single out, or, where the parameter says so, an occasional step on an object the catalogue does not class as a payload, since a stage or a fragment does not manoeuvre and its past step was the catalogue's fit absorbing something. */

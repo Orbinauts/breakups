@@ -3,6 +3,7 @@ import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
 import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
+import { newLedger, type StepLedger } from "./siblings.ts";
 import { launchOf, type BodyClass } from "./truth.ts";
 
 /**
@@ -102,6 +103,8 @@ export interface CatalogueRecord {
   alerted: number[];
   /** The instant of the first run, in milliseconds since 1970: every body the detector meets in its first window is new to it, so no launch is judged until the window has passed. */
   startedAt: number;
+  /** The persistent steps of the last weeks, every object's, for the siblings test; absent in a record written before the ledger existed. */
+  ledger?: StepLedger;
 }
 
 /** The launch a set is filed under: its designator's launch, a pseudo-launch for an analyst object, or null where neither applies. */
@@ -132,7 +135,13 @@ export function noteCloud(launch: LaunchRecord, now: number, eventMs: number): v
 }
 
 export function newCatalogue(): CatalogueRecord {
-  return { key: CATALOGUE_KEY, markAt: [], markNumber: [], noticesApplied: [], alerted: [], startedAt: Number.POSITIVE_INFINITY };
+  return { key: CATALOGUE_KEY, markAt: [], markNumber: [], noticesApplied: [], alerted: [], startedAt: Number.POSITIVE_INFINITY, ledger: newLedger() };
+}
+
+/** The catalogue's step ledger, made where the record was written before it existed. */
+export function ledgerOf(catalogue: CatalogueRecord): StepLedger {
+  if (catalogue.ledger === undefined) catalogue.ledger = newLedger();
+  return catalogue.ledger;
 }
 
 /** The launch's record in the map, made where missing. */

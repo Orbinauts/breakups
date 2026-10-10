@@ -55,7 +55,7 @@ by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 
 The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. A target is a reported event whose parent had at least five public element sets in the sixty days before it; one with fewer is undetectable from public elements and listed apart. A detection is an alert on the parent's own orbit, raised before the first fragment's element set was published and before any notice; the same alert after that is late; an alert matching no reported event is a false alarm. The headline line is breakups reported to the day or better, scored on the odd years, held out from the even years the thresholds are fitted on; the other lines are shown so nothing is mixed into it. The targets are nine in ten detected and fewer than one false alarm in ten. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the rule. The per-year files under `kpi/years/` (every verdict and every logged candidate, tens of megabytes a run) are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and are not committed; the aggregate is.
 
-**This is the fifth phase of the detector**, the parent-step channel read against the object's own record, confirmed or not by what the catalogue goes on to list under the parent's launch, and timed from the two sets either side of the step. A suspected step stays open for thirty days: pieces new by numbering, in the parent's plane and first published after it confirm it, a public notice confirms it, nothing expires it. The detection rate and the false alarms are the parent-step channel's: the fragments confirm, they do not detect, and the owner's definition scores the alert before them. The tier table reads every alert's later sets, so the trade between waiting longer and false alarms is shown with the numbers in hand: the false alarms that remain are persistent steps that hold for a week as a breakup's does, so waiting buys little. The confirmed table is the product's second line: of the events the catalogue itself reported (new bodies under the launch within ninety days), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing. The fifth phase's rules (a cloud velocity of a metre a second, no fresh piece of a cloud as a parent, a launch's cloud remembered for a year, a debris parent's pieces nearer than the cloud, a single piece only under a quiet launch) are what make that line one the product can show; [docs/detector/d5-fitting.md](docs/detector/d5-fitting.md) lists every confirmation before and after them on both splits, and [docs/detector/events.md](docs/detector/events.md) every reported event with the cause of its outcome. The odd years below were not looked at while choosing the thresholds.
+**This is the sixth phase of the detector**, the parent-step channel read against the object's own record and, since this phase, against what else is public about the object and its company: whether the step returns it to an altitude it held in the last year (orbit maintenance), whether its launch-mates or shell-mates stepped alike in the fortnight before (a campaign), whether a young object is climbing towards where its launch-mates fly (deployment), and what the satellite catalogue says of its operational status. One explanation from outside the record outweighs the record's own breakup signatures; a satellite nonoperational today owes no manoeuvre explanation. The status is today's, so the backtest carries hindsight (a satellite that broke up is usually nonoperational today); the tables below are with the status read, and [docs/detector/d6-fitting.md](docs/detector/d6-fitting.md) gives the same with it off (8,278 validation false alarms instead of 4,764, the headline line unchanged) and what each discriminator removed and cost. A suspected step stays open for thirty days: pieces new by numbering, in the parent's plane and first published after it confirm it, a public notice confirms it, nothing expires it. The detection rate and the false alarms are the parent-step channel's: the fragments confirm, they do not detect, and the owner's definition scores the alert before them. The discriminators removed seven false alarms in ten; the false-alarm rate stays above 99%, since it is a ratio against sixteen detections. The tier table reads every alert's later sets, so the trade between waiting longer and false alarms is shown with the numbers in hand. The confirmed table is the product's second line: of the events the catalogue itself reported (new bodies under the launch within ninety days), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing, under the fifth phase's confirmation rules ([docs/detector/d5-fitting.md](docs/detector/d5-fitting.md)). [docs/detector/events.md](docs/detector/events.md) lists every reported event with the cause of its outcome. The odd years below were not looked at while choosing the thresholds.
 
 | Validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -63,37 +63,37 @@ The scorecard replays the detector over the Archive, every element set of every 
 | Breakups, confidence C | 8 | 9 | 2 | 0 | 6 | 25% |
 | Breakups, confidence D | 8 | 1 | 0 | 0 | 8 | 0% |
 | Anomalous events, confidence A and B | 9 | 1 | 1 | 2 | 6 | 11% |
-| Anomalous events, confidence C and D | 4 | 0 | 3 | 0 | 1 | 75% |
+| Anomalous events, confidence C and D | 4 | 0 | 2 | 0 | 2 | 50% |
 
 | Alerts, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 15739 |
-| Duplicates | 156 |
-| Exempt | 16 |
-| False alarms | 15546 |
+| Alerts (object verdicts, suspected or confirmed) | 4908 |
+| Duplicates | 111 |
+| Exempt | 13 |
+| False alarms | 4764 |
 | False-alarm rate (the target is under 10%) | 100% |
-| False alarms per 10,000 body-years | 837.8 |
-| Lead over the catalogue, hours: median (10th percentile) | 479.0 (94.0) |
-| Latency from the event, hours: median (90th percentile) | 140.1 (1153.4) |
-| Confirmed share of the detections | 24% |
+| False alarms per 10,000 body-years | 256.7 |
+| Lead over the catalogue, hours: median (10th percentile) | 479.0 (23.2) |
+| Latency from the event, hours: median (90th percentile) | 129.5 (1153.4) |
+| Confirmed share of the detections | 25% |
 | Days to confirmation, median | 4.0 |
-| Timing error, minutes, median | 44.2 |
-| Cloud verdicts, for review (a burst with no parent step) | 89 |
+| Timing error, minutes, median | 34.6 |
+| Cloud verdicts, for review (a burst with no parent step) | 88 |
 
 | Precision per persistence tier, validation: the odd years (2005 to 2025, 11 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 post sets over 18 h, or 3 (as raised) | 15567 | 17 | 15546 | 0% | 100% | 479.0 (94.0) |
-| 3 post sets | 14940 | 17 | 14919 | 0% | 100% | 479.0 (94.0) |
-| 5 post sets | 12275 | 14 | 12257 | 0% | 82% | 576.1 (94.0) |
-| 1 day of post sets | 13574 | 14 | 13556 | 0% | 82% | 576.1 (94.0) |
-| 3 days of post sets | 10388 | 14 | 10370 | 0% | 82% | 564.1 (54.0) |
-| 5 days of post sets | 8953 | 12 | 8935 | 0% | 71% | 557.0 (156.0) |
-| 7 days of post sets | 7737 | 10 | 7723 | 0% | 59% | 529.0 (88.0) |
+| 2 post sets over 18 h, or 3 (as raised) | 4784 | 16 | 4764 | 0% | 100% | 479.0 (23.2) |
+| 3 post sets | 4248 | 16 | 4228 | 0% | 100% | 479.0 (23.2) |
+| 5 post sets | 3383 | 13 | 3366 | 0% | 81% | 576.1 (94.0) |
+| 1 day of post sets | 3789 | 13 | 3772 | 0% | 81% | 576.1 (94.0) |
+| 3 days of post sets | 3035 | 13 | 3018 | 0% | 81% | 564.1 (54.0) |
+| 5 days of post sets | 2607 | 11 | 2590 | 0% | 69% | 557.0 (156.0) |
+| 7 days of post sets | 2288 | 10 | 2274 | 0% | 63% | 529.0 (88.0) |
 
 | The confirmed line, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 36 |
-| Of which alerted on the parent (detected or late) | 15 |
+| Of which alerted on the parent (detected or late) | 14 |
 | Of which confirmed | 5 |
 | Confirmed share of the reported events | 14% |
 | Days from the event to the confirmation, median (90th percentile) | 21.9 (49.1) |

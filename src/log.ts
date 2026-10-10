@@ -102,9 +102,27 @@ export const SIGNALS = {
   alternation: "ratio",
   normalShare: "ratio",
   disposalLike: "flag",
+  /** How many of the past steps raised the orbit. */
+  pastRaises: "count",
   manoeuvreClass: "index",
   /** How many of the atypical tests the step passed, by which the step on a manoeuvring object is still raised. */
   atypical: "count",
+  /** The sixth phase's discriminators, as read at the close. The envelope: how far the pre-step level had drifted below the highest altitude the object held in the last year and above the lowest, in kilometres, how far the post-step level misses the extreme the step went towards, and how many months of the window had sets. The siblings: how many other objects of the launch, and of other launches in the same shell, made a like step in the window before. The mates: how many other payloads of the launch have a known altitude, the median of their semi-major axes in kilometres, and whether the step carries the object towards it (1). The operational status by its index in `OPS_STATUSES`. The direction against drag: a lowering on a record of nothing but raises, not disposal-shaped (1). Then what the fusion made of it: how many manoeuvre explanations applied and how many breakup signatures, and the explanation and signature bits (1 the record, 2 maintenance, 4 siblings, 8 deployment, 16 the working status; 1 the size, 2 the direction, 4 the geometry, 8 the drag term, 16 against drag, 32 nonoperational). */
+  envelopeTopKm: "km",
+  envelopeBottomKm: "km",
+  envelopeMissKm: "km",
+  envelopeMonths: "count",
+  siblingsLaunch: "count",
+  siblingsOrbit: "count",
+  mates: "count",
+  matesMedianAKm: "km",
+  towardsMates: "flag",
+  opsStatus: "index",
+  againstDrag: "flag",
+  explanations: "count",
+  signatures: "count",
+  explanationBits: "code",
+  signatureBits: "code",
   /** The fitted line's value at the centroid of the post sets in units of its sigma (the weighted mean step), at the second and third post set and at the close; the level at the first post set under-reads a step the catalogue's fit converged on over several sets. */
   zMean: "sigma",
   zMean2: "sigma",
@@ -116,6 +134,10 @@ export const SIGNALS = {
   cadenceBefore: "sets/day",
   cadenceAfter: "sets/day",
   cadenceRatio: "ratio",
+  /** The alert row's damage reading: the robust scatter of the object's one-step-ahead residuals in the second to fourth week after the step, in kilometres, how many residuals it rests on, and the ratio to the object's short scatter before the step. A ratio well above one is a tumbling object or a changed shape. */
+  damageSigma: "km",
+  damageResiduals: "count",
+  damageRatio: "ratio",
   /** The alert row: the verdict the alert opened with (1 suspected, 5 manoeuvre), how many post sets it read in all and the hours they spanned, the days from the step to its close, and the last estimate's step, size and ratio. */
   alertState: "code",
   alertSets: "count",

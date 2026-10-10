@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
+import { opsStatusOf, runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
 import { readBodies, readColumn, readManifest, yearDir, type ArchivedBody, type ArchivedSet, type ColumnName, type Columns, type Manifest } from "../archive/archive.ts";
 import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
 
@@ -76,6 +76,8 @@ export interface LoadedYear {
   manifest: Manifest;
   bodies: ArchivedBody[];
   byNumber: Map<number, ArchivedBody>;
+  /** The operational status of each body the table says something of (the snapshot's, today's); a body absent here is `unknown`. */
+  statusByNumber: Map<number, OpsStatus>;
   columns: Columns;
   /** The set index at each position of the publication order. */
   order: Uint32Array;
@@ -93,11 +95,21 @@ export function loadYear(archive: string, year: number): LoadedYear {
   const order = orderOf(columns.rank as Uint32Array, year);
   const byNumber = new Map<number, ArchivedBody>();
   for (const body of bodies) byNumber.set(body.number, body);
-  return { year, manifest, bodies, byNumber, columns: columns as unknown as Columns, order, timeBasis: columns.created === undefined ? "epoch" : "created" };
+  return { year, manifest, bodies, byNumber, statusByNumber: statusMapOf(bodies), columns: columns as unknown as Columns, order, timeBasis: columns.created === undefined ? "epoch" : "created" };
+}
+
+/** The bodies' operational statuses by number, those the table says something of. */
+export function statusMapOf(bodies: readonly ArchivedBody[]): Map<number, OpsStatus> {
+  const statuses = new Map<number, OpsStatus>();
+  for (const body of bodies) {
+    const status = opsStatusOf(body.opsStatus);
+    if (status !== "unknown") statuses.set(body.number, status);
+  }
+  return statuses;
 }
 
 /** The light row of an Archive set, with what the body table says of the object. */
-export function fromArchivedSet(set: ArchivedSet, body: Pick<ArchivedBody, "designator" | "bodyClass"> | undefined): ElementSet {
+export function fromArchivedSet(set: ArchivedSet, body: Pick<ArchivedBody, "designator" | "bodyClass" | "opsStatus"> | undefined): ElementSet {
   return {
     number: set.number,
     designator: body?.designator ?? null,
@@ -114,6 +126,7 @@ export function fromArchivedSet(set: ArchivedSet, body: Pick<ArchivedBody, "desi
     meanMotionDdot: set.meanMotionDdot,
     elementSetNumber: set.elementSetNumber,
     bodyClass: body?.bodyClass ?? "unknown",
+    opsStatus: opsStatusOf(body?.opsStatus),
   };
 }
 
@@ -138,6 +151,7 @@ export function elementSetAt(loaded: LoadedYear, i: number): ElementSet {
     meanMotionDdot: c.meanMotionDdot[i]!,
     elementSetNumber: c.elementSetNumber[i]!,
     bodyClass: body?.bodyClass ?? "unknown",
+    opsStatus: loaded.statusByNumber.get(number) ?? "unknown",
   };
 }
 

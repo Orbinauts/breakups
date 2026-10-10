@@ -1,6 +1,7 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
 import type { OpenAlert } from "./fusion.ts";
+import { newEnvelope, snapshotEnvelope, type AltitudeEnvelope } from "./maintenance.ts";
 import type { StepRecord } from "./manoeuvre.ts";
 import { dragRateKmPerDay, fitWindow, median, robustScale, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
@@ -99,6 +100,8 @@ export interface Candidate {
   evidence3: number;
   span3: number;
   zMean3: number;
+  /** The object's envelope of held altitudes as it stood when the candidate opened, before the first post set was noted, so the post-step level is judged against where the object flew and never against itself. */
+  envelope: AltitudeEnvelope;
 }
 
 export interface SeriesState {
@@ -147,6 +150,8 @@ export interface SeriesState {
   alert: OpenAlert | null;
   /** Whether the object has been noted under its launch, so the launch's record is not searched on every set. */
   noted: boolean;
+  /** The lowest and highest semi-major axis seen in each of the last twelve calendar months, for the maintenance test: a step back to a held altitude. */
+  envelope: AltitudeEnvelope;
 }
 
 /** How many days of set counts the state keeps for the cadence. */
@@ -186,8 +191,18 @@ export function newState(number: number): SeriesState {
     dayOf: new Array<number>(CADENCE_DAYS).fill(Number.NEGATIVE_INFINITY),
     alert: null,
     noted: false,
+    envelope: newEnvelope(),
   };
 }
+
+/** The state's envelope, made where the state was written before the envelope existed. */
+export function envelopeOf(state: SeriesState): AltitudeEnvelope {
+  if (state.envelope === undefined) state.envelope = newEnvelope();
+  return state.envelope;
+}
+
+/** A copy of the state's envelope for a candidate to freeze. */
+export const frozenEnvelope = (state: SeriesState): AltitudeEnvelope => snapshotEnvelope(envelopeOf(state));
 
 /** Counts a set's epoch into the day bins. */
 export function countDay(state: SeriesState, epochMs: number): void {

@@ -315,7 +315,7 @@ async function strip(zip: string, member: { name: string; bytes: number }, satca
     while (j < n && sorted[j] === number) j++;
     const row = satcat?.rows.get(number);
     if (row === undefined) withoutSatcat++;
-    bodies.push({ number, first: i, count: j - i, designator: row?.designator ?? designators.get(number) ?? null, name: row?.name ?? null, bodyClass: row?.bodyClass ?? "unknown", launch: row?.launch ?? null, decay: row?.decay ?? null });
+    bodies.push({ number, first: i, count: j - i, designator: row?.designator ?? designators.get(number) ?? null, name: row?.name ?? null, bodyClass: row?.bodyClass ?? "unknown", launch: row?.launch ?? null, decay: row?.decay ?? null, opsStatus: row?.opsStatus ?? null });
     i = j;
   }
   return { columns: columns as unknown as Columns, bodies, sets: n, rejects, rejectSamples, withoutSatcat };

@@ -4,9 +4,18 @@ import { archiveHome, satcatDir, type BodyClass } from "./archive.ts";
 
 /**
  * The satellite catalogue, as CelesTrak serves it (`satcat.csv`, public):
- * every object ever catalogued with its name, type, launch and decay. A
- * snapshot is kept per day under the Archive's `satcat/`; the body table of
- * a year is joined to the latest. Run by hand: `npm run archive:satcat`.
+ * every object ever catalogued with its name, type, launch, decay and
+ * operational status. A snapshot is kept per day under the Archive's
+ * `satcat/`; the body table of a year is joined to the latest. Run by hand:
+ * `npm run archive:satcat`.
+ *
+ * The operational status is CelesTrak's `OPS_STATUS_CODE`, one letter: `+`
+ * operational, `P` partially operational, `B` backup or standby, `S` spare,
+ * `X` extended mission, `D` decayed, `-` nonoperational, and blank where
+ * nothing is known (every piece of debris and most rocket bodies). It is
+ * the status today, not at any past date: a satellite nonoperational in
+ * this snapshot may have been working in 2010, so a backtest that reads it
+ * carries hindsight, which the detector's fitting note states.
  */
 
 export const SATCAT_URL = "https://celestrak.org/pub/satcat.csv";
@@ -19,6 +28,8 @@ export interface SatcatRow {
   bodyClass: BodyClass;
   launch: string | null;
   decay: string | null;
+  /** The operational status code as the catalogue prints it; null where blank. */
+  opsStatus: string | null;
 }
 
 const classOf = (type: string): BodyClass => (type === "PAY" ? "payload" : type === "R/B" ? "rocket body" : type === "DEB" ? "debris" : "unknown");
@@ -32,14 +43,14 @@ export function parseSatcat(csv: string): Map<number, SatcatRow> {
     if (index === -1) throw new Error(`the catalogue has no column ${name}`);
     return index;
   };
-  const [iName, iDesignator, iNumber, iType, iLaunch, iDecay] = [at("OBJECT_NAME"), at("OBJECT_ID"), at("NORAD_CAT_ID"), at("OBJECT_TYPE"), at("LAUNCH_DATE"), at("DECAY_DATE")];
+  const [iName, iDesignator, iNumber, iType, iLaunch, iDecay, iOps] = [at("OBJECT_NAME"), at("OBJECT_ID"), at("NORAD_CAT_ID"), at("OBJECT_TYPE"), at("LAUNCH_DATE"), at("DECAY_DATE"), at("OPS_STATUS_CODE")];
   const rows = new Map<number, SatcatRow>();
   for (const line of lines.slice(1)) {
     if (line.trim() === "") continue;
     const cells = line.split(",");
     const number = Number(cells[iNumber]);
     if (!Number.isInteger(number)) continue;
-    rows.set(number, { number, designator: cells[iDesignator]!, name: cells[iName]!, bodyClass: classOf(cells[iType]!), launch: cells[iLaunch] || null, decay: cells[iDecay] || null });
+    rows.set(number, { number, designator: cells[iDesignator]!, name: cells[iName]!, bodyClass: classOf(cells[iType]!), launch: cells[iLaunch] || null, decay: cells[iDecay] || null, opsStatus: cells[iOps]?.trim() || null });
   }
   return rows;
 }

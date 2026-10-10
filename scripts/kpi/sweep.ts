@@ -1,6 +1,6 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OUTCOMES, REGIMES, atypicalReasons, classify, isRaised, launchOf, poissonTail, yearOf, type CurrentStep, type DetectorParameters, type HistoryFeatures, type LogRow, type ManoeuvreClass } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, EXPLANATION_BITS, MANOEUVRE_CLASSES, OPS_STATUSES, OUTCOMES, REGIMES, SIGNATURE_BITS, atypicalTests, classify, judgeStep, launchOf, poissonTail, yearOf, type CurrentStep, type DetectorParameters, type HistoryFeatures, type LogRow, type ManoeuvreClass, type StepEvidence, type StepJudgement } from "../../src/index.ts";
 import { brackets, marginDaysOf } from "./match.ts";
 import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";
@@ -44,6 +44,16 @@ import { alertKey, alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi
  * the ninety days before, and as false clouds otherwise. `--tiers` prints
  * the persistence-tier table over the alert rows of the years given.
  *
+ * The sixth phase's discriminators are swept the same way: every close
+ * row carries the envelope, siblings, mates and status readings, and the
+ * fusion's decision (`judgeStep`) is re-applied from them with the gate
+ * values asked, so each explanation and signature is re-thresholded
+ * exactly. The tally also says how many persistent steps each explanation
+ * silenced. `--separation` prints, for the signals the fusion cannot use
+ * at the raising (the drag term's ratio across the step, the damage ratio
+ * and the tracking cadence after it), their quartiles on the detections
+ * against the false alarms.
+ *
  * `--confirmations` sweeps the confirmation rules of the fifth phase
  * over the alert rows that carry a confirmation reading (pieces in the
  * parent's plane were judged, whether they confirmed or the rules refused
@@ -78,6 +88,18 @@ export interface Gates {
   occasionalRaisesNonPayload: number;
   /** Whether the persistence size is judged on the mean step at the post sets' centroid (1) rather than the level at the first post set (0). */
   persistOnMeanStep: number;
+  /** The sixth phase's gates, as the parameters of the same names (the booleans as 0 or 1). */
+  maintenanceToleranceSigmas: number;
+  maintenanceToleranceKm: number;
+  maintenanceLoweringsToo: number;
+  siblingsMin: number;
+  deployAgeDays: number;
+  opsStatusEvidence: number;
+  nonoperationalOverrides: number;
+  againstDragMinRaises: number;
+  geometryKickMinMps: number;
+  independentOutweighs: number;
+  explanationsForNonPayloads: number;
 }
 
 export const DETECTOR_GATES: Gates = {
@@ -94,6 +116,17 @@ export const DETECTOR_GATES: Gates = {
   occasionalRaises: 0,
   occasionalRaisesNonPayload: DETECTOR_PARAMETERS.occasionalRaisesNonPayload ? 1 : 0,
   persistOnMeanStep: DETECTOR_PARAMETERS.persistOnMeanStep ? 1 : 0,
+  maintenanceToleranceSigmas: DETECTOR_PARAMETERS.maintenanceToleranceSigmas,
+  maintenanceToleranceKm: DETECTOR_PARAMETERS.maintenanceToleranceKm,
+  maintenanceLoweringsToo: DETECTOR_PARAMETERS.maintenanceLoweringsToo ? 1 : 0,
+  siblingsMin: DETECTOR_PARAMETERS.siblingsMin,
+  deployAgeDays: DETECTOR_PARAMETERS.deployAgeDays,
+  opsStatusEvidence: DETECTOR_PARAMETERS.opsStatusEvidence ? 1 : 0,
+  nonoperationalOverrides: DETECTOR_PARAMETERS.nonoperationalOverrides ? 1 : 0,
+  againstDragMinRaises: DETECTOR_PARAMETERS.againstDragMinRaises,
+  geometryKickMinMps: DETECTOR_PARAMETERS.geometryKickMinMps,
+  independentOutweighs: DETECTOR_PARAMETERS.independentOutweighs,
+  explanationsForNonPayloads: DETECTOR_PARAMETERS.explanationsForNonPayloads ? 1 : 0,
 };
 
 /** A candidate as the sweep reads it: the row's trajectory, its reading and where its object's step landed in the replay. */
@@ -145,6 +178,19 @@ export interface SweptCandidate {
   alternation: number;
   normalShare: number;
   disposalLike: number;
+  pastRaises: number;
+  /** The sixth phase's readings, as logged. */
+  deltaVRadialMps: number;
+  sigmaOwn: number;
+  envelopeTopKm: number;
+  envelopeBottomKm: number;
+  envelopeMonths: number;
+  siblingsLaunch: number;
+  siblingsOrbit: number;
+  mates: number;
+  matesMedianAKm: number;
+  towardsMates: number;
+  opsStatus: number;
 }
 
 const signal = (row: LogRow, name: string): number => row.signals[name] ?? Number.NaN;
@@ -194,6 +240,18 @@ export function candidateOf(year: number, row: LogRow): SweptCandidate {
     alternation: signal(row, "alternation"),
     normalShare: signal(row, "normalShare"),
     disposalLike: signal(row, "disposalLike"),
+    pastRaises: signal(row, "pastRaises"),
+    deltaVRadialMps: signal(row, "deltaVRadialMps"),
+    sigmaOwn: signal(row, "sigmaOwn"),
+    envelopeTopKm: signal(row, "envelopeTopKm"),
+    envelopeBottomKm: signal(row, "envelopeBottomKm"),
+    envelopeMonths: row.signals.envelopeMonths ?? 0,
+    siblingsLaunch: row.signals.siblingsLaunch ?? 0,
+    siblingsOrbit: row.signals.siblingsOrbit ?? 0,
+    mates: row.signals.mates ?? 0,
+    matesMedianAKm: signal(row, "matesMedianAKm"),
+    towardsMates: row.signals.towardsMates ?? 0,
+    opsStatus: row.signals.opsStatus ?? OPS_STATUSES.indexOf("unknown"),
   };
 }
 
@@ -217,22 +275,33 @@ export function raisedAt(c: SweptCandidate, gates: Gates): 2 | 3 | "close" | nul
   return null;
 }
 
-/** Why a persistent step was raised, or that it was not: its class where unique, else the first atypical test it passed. */
-export type Why = ManoeuvreClass | "typicality" | "opposite" | "consistency" | "bstar" | "occasional-raised" | "manoeuvre";
+/** Why a persistent step was raised, or that it was not: `unique` where no manoeuvre explanation applied, else the first breakup signature that overrode the explanations (the size, the direction, the geometry, the drag term, the move against drag, the nonoperational status), `occasional-raised` for the non-payload rule, `manoeuvre` where it was not raised. */
+export type Why = ManoeuvreClass | "typicality" | "opposite" | "consistency" | "bstar" | "against-drag" | "nonoperational" | "occasional-raised" | "manoeuvre";
 
-/** The manoeuvre gate on a persistent candidate, with the thresholds: whether it is raised, and why. */
-export function gateOf(c: SweptCandidate, gates: Gates): { raised: boolean; why: Why; manoeuvreClass: ManoeuvreClass } {
-  const params: DetectorParameters = { ...DETECTOR_PARAMETERS, typicalityMax: gates.typicalityMax, oppositeMinSteps: gates.oppositeMinSteps, consistencyMin: gates.consistencyMin, bstarRatioMax: gates.bstarRatioMax, newObjectDays: gates.newObjectDays };
-  const features: HistoryFeatures = { ageDays: c.ageDays, n365: c.n365, n730: c.n730, daysSinceStep: c.daysSinceStep, regularity: c.regularity, typicality: c.typicality, sameSignShare: c.sameSignShare, alternation: c.alternation, normalShare: c.normalShare, disposalLike: c.disposalLike === 1, young: c.ageDays < gates.newObjectDays };
+/** The explanations a step may be silenced by, as the fusion names them. */
+export type Explanation = keyof typeof EXPLANATION_BITS;
+export const EXPLANATIONS = Object.keys(EXPLANATION_BITS) as Explanation[];
+
+/** The parameters a sweep's gates stand for. */
+export function paramsOf(gates: Gates): DetectorParameters {
+  return { ...DETECTOR_PARAMETERS, typicalityMax: gates.typicalityMax, oppositeMinSteps: gates.oppositeMinSteps, consistencyMin: gates.consistencyMin, bstarRatioMax: gates.bstarRatioMax, newObjectDays: gates.newObjectDays, occasionalRaisesNonPayload: gates.occasionalRaisesNonPayload === 1, maintenanceToleranceSigmas: gates.maintenanceToleranceSigmas, maintenanceToleranceKm: gates.maintenanceToleranceKm, maintenanceLoweringsToo: gates.maintenanceLoweringsToo === 1, siblingsMin: gates.siblingsMin, deployAgeDays: gates.deployAgeDays, opsStatusEvidence: gates.opsStatusEvidence === 1, nonoperationalOverrides: gates.nonoperationalOverrides === 1, againstDragMinRaises: gates.againstDragMinRaises, geometryKickMinMps: gates.geometryKickMinMps, independentOutweighs: gates.independentOutweighs, explanationsForNonPayloads: gates.explanationsForNonPayloads === 1 };
+}
+
+/** The fusion on a persistent candidate, with the gates' values: whether it is raised, why, its class, and the judgement with its explanations and signatures. */
+export function gateOf(c: SweptCandidate, gates: Gates): { raised: boolean; why: Why; manoeuvreClass: ManoeuvreClass; judgement: StepJudgement } {
+  const params = paramsOf(gates);
+  const features: HistoryFeatures = { ageDays: c.ageDays, n365: c.n365, n730: c.n730, daysSinceStep: c.daysSinceStep, regularity: c.regularity, typicality: c.typicality, sameSignShare: c.sameSignShare, alternation: c.alternation, normalShare: c.normalShare, disposalLike: c.disposalLike === 1, young: c.ageDays < gates.newObjectDays, pastRaises: c.pastRaises };
   const step: CurrentStep = { epochMs: c.afterEpoch, deltaKm: c.deltaKm, deltaPerigeeKm: c.deltaPerigeeKm, tangentialMps: c.deltaVMps, normalMps: c.deltaVNormalMps, consistency: c.impulseConsistency, bstarRatio: c.bstarRatio, regime: REGIMES[c.regime] ?? "unknown", bodyClass: BODY_CLASSES[c.bodyClass] ?? "unknown", apogeeHeightAfterKm: 0 };
   const manoeuvreClass = classify(features, step, params);
-  const atypical = atypicalReasons(features, step, params);
-  if (isRaised(manoeuvreClass, atypical, step.bodyClass, { occasionalRaisesNonPayload: gates.occasionalRaisesNonPayload === 1 })) {
-    const why: Why = manoeuvreClass === "unique" ? "unique" : atypical.length === 0 ? "occasional-raised" : atypical[0]!.includes("times the median") ? "typicality" : atypical[0]!.includes("opposite") ? "opposite" : atypical[0]!.includes("radial") ? "consistency" : "bstar";
-    return { raised: true, why, manoeuvreClass };
+  const evidence: StepEvidence = { manoeuvreClass, tests: atypicalTests(features, step, params), bodyClass: step.bodyClass, opsStatus: OPS_STATUSES[c.opsStatus] ?? "unknown", deltaKm: c.deltaKm, radialMps: c.deltaVRadialMps, n730: c.n730, pastRaises: c.pastRaises, disposalLike: features.disposalLike, ageDays: c.ageDays, sigmaOwnKm: c.sigmaOwn, held: { topKm: c.envelopeTopKm, bottomKm: c.envelopeBottomKm, months: c.envelopeMonths, topMonthsAgo: Number.NaN, bottomMonthsAgo: Number.NaN }, siblings: { launch: c.siblingsLaunch, orbit: c.siblingsOrbit }, mates: { count: c.mates, medianAKm: c.matesMedianAKm }, towardsMates: c.towardsMates === 1 };
+  const judgement = judgeStep(evidence, params);
+  if (judgement.raised) {
+    const bits = judgement.signatureBits;
+    const why: Why = judgement.explanations.length === 0 ? "unique" : judgement.signatures.length === 0 ? "occasional-raised" : bits & SIGNATURE_BITS.size ? "typicality" : bits & SIGNATURE_BITS.direction ? "opposite" : bits & SIGNATURE_BITS.geometry ? "consistency" : bits & SIGNATURE_BITS.dragTerm ? "bstar" : bits & SIGNATURE_BITS.againstDrag ? "against-drag" : "nonoperational";
+    return { raised: true, why, manoeuvreClass, judgement };
   }
-  if (gates.occasionalRaises === 1 && manoeuvreClass === "occasional") return { raised: true, why: "occasional-raised", manoeuvreClass };
-  return { raised: false, why: "manoeuvre", manoeuvreClass };
+  if (gates.occasionalRaises === 1 && manoeuvreClass === "occasional") return { raised: true, why: "occasional-raised", manoeuvreClass, judgement };
+  return { raised: false, why: "manoeuvre", manoeuvreClass, judgement };
 }
 
 export interface Tally {
@@ -252,9 +321,12 @@ export interface Tally {
   /** The false alarms by why they were raised, and the hits by the same. */
   falseAlarmsBy: Partial<Record<Why, number>>;
   hitsBy: Partial<Record<Why, number>>;
-  /** Persistent steps the gate read as manoeuvres, and the targets lost to it (persistent on the parent, in time, but not raised). */
+  /** Persistent steps the gate read as manoeuvres, and the targets lost to it (persistent on the parent, in time, but not raised), each with the explanations that silenced it. */
   manoeuvres: number;
   lostToGate: string[];
+  lostBy: Record<string, string>;
+  /** Of the steps read as manoeuvres that matched no target, how many each explanation applied to (a step may count under several). */
+  silencedBy: Partial<Record<Explanation, number>>;
 }
 
 /** A target of a year as the sweep sees it. */
@@ -294,7 +366,7 @@ const count = (record: Partial<Record<Why, number>>, why: Why): void => {
 
 /** The tally of a grid point over the files. */
 export function tally(files: YearFile[], gates: Gates): Tally {
-  const result: Tally = { gates, hit: [], minZ1: Number.POSITIVE_INFINITY, headlineHits: 0, headlineTargets: 0, hits: 0, targets: 0, falseAlarms: 0, falseAlarmsNonPayload: 0, raised: 0, falseAlarmsBy: {}, hitsBy: {}, manoeuvres: 0, lostToGate: [] };
+  const result: Tally = { gates, hit: [], minZ1: Number.POSITIVE_INFINITY, headlineHits: 0, headlineTargets: 0, hits: 0, targets: 0, falseAlarms: 0, falseAlarmsNonPayload: 0, raised: 0, falseAlarmsBy: {}, hitsBy: {}, manoeuvres: 0, lostToGate: [], lostBy: {}, silencedBy: {} };
   for (const file of files) {
     const targets = targetsOf(file);
     const landed = landedOf(file);
@@ -313,7 +385,12 @@ export function tally(files: YearFile[], gates: Gates): Tally {
       const gate = gateOf(c, gates);
       if (!gate.raised) {
         result.manoeuvres++;
-        for (const t of onParent) if (at < t.deadline) lost.add(t.id);
+        const by = EXPLANATIONS.filter((name) => (gate.judgement.explanationBits & EXPLANATION_BITS[name]) !== 0);
+        for (const t of onParent) if (at < t.deadline) {
+          lost.add(t.id);
+          result.lostBy[t.id] = by.join("+");
+        }
+        if (onParent.length === 0) for (const name of by) result.silencedBy[name] = (result.silencedBy[name] ?? 0) + 1;
         continue;
       }
       result.raised++;
@@ -360,10 +437,21 @@ const DEFAULT_GRID: Record<keyof Gates, number[]> = {
   occasionalRaises: [0, 1],
   occasionalRaisesNonPayload: [0, 1],
   persistOnMeanStep: [0, 1],
+  maintenanceToleranceSigmas: [0, 1, 2, 3, 5, 10],
+  maintenanceToleranceKm: [-1, 0, 0.25, 0.5, 1, 2, 5],
+  maintenanceLoweringsToo: [0, 1],
+  siblingsMin: [1, 2, 3, 5, Number.POSITIVE_INFINITY],
+  deployAgeDays: [0, 30, 90, 180, 365],
+  opsStatusEvidence: [0, 1],
+  nonoperationalOverrides: [0, 1],
+  againstDragMinRaises: [0, 1, 2, Number.POSITIVE_INFINITY],
+  geometryKickMinMps: [0, 0.5, 1, 2, 5, Number.POSITIVE_INFINITY],
+  independentOutweighs: [1, 2, 3, Number.POSITIVE_INFINITY],
+  explanationsForNonPayloads: [0, 1],
 };
 
-/** The third phase's gates, swept by default; the earlier phases' are swept only when asked. */
-const DEFAULT_AXES: (keyof Gates)[] = ["occasionalRaisesNonPayload", "persistOnMeanStep"];
+/** The sixth phase's gates, swept by default; the earlier phases' are swept only when asked. */
+const DEFAULT_AXES: (keyof Gates)[] = ["maintenanceToleranceSigmas", "maintenanceToleranceKm", "maintenanceLoweringsToo", "siblingsMin", "deployAgeDays", "opsStatusEvidence", "nonoperationalOverrides", "againstDragMinRaises", "geometryKickMinMps", "independentOutweighs", "explanationsForNonPayloads"];
 
 /** The per-launch channel's thresholds the cloud sweep varies. */
 export interface CloudGates {
@@ -503,12 +591,13 @@ function confirmationLine(label: string, rows: SweptConfirmation[], rules: Param
   return `| ${label} | ${kept.length} | ${count("detection") + count("late")} | ${count("near")} | ${count("false-alarm")} | ${count("other")} |`;
 }
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean } {
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean } {
   let years: number[] | null = null;
   let show = false;
   let clouds = false;
   let tiers = false;
   let confirmations = false;
+  let separation = false;
   const grid: Partial<Record<keyof Gates, number[]>> = {};
   const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
   for (let i = 0; i < args.length; i++) {
@@ -518,27 +607,84 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg === "--clouds") clouds = true;
     else if (arg === "--tiers") tiers = true;
     else if (arg === "--confirmations") confirmations = true;
+    else if (arg === "--separation") separation = true;
     else if (arg.startsWith("--") && arg.slice(2) in CLOUD_GRID) cloudGrid[arg.slice(2) as keyof CloudGates] = args[++i]!.split(",").map(Number);
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
-    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
+    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--separation] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid, clouds, cloudGrid, tiers, confirmations };
+  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation };
 }
 
-const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "occasional-raised"];
+const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "against-drag", "nonoperational", "occasional-raised"];
 
 function line(axis: keyof Gates, value: number, t: Tally): string {
-  const by = (record: Partial<Record<Why, number>>): string => WHYS.map((why) => `${why} ${record[why] ?? 0}`).join(", ");
-  return `| ${axis} | ${value} | ${t.headlineHits} of ${t.headlineTargets} | ${t.hits} of ${t.targets} | ${t.falseAlarms} | ${t.falseAlarmsNonPayload} | ${t.manoeuvres} | ${t.lostToGate.length} | ${by(t.falseAlarmsBy)} | ${by(t.hitsBy)} |`;
+  const by = (record: Partial<Record<Why, number>>): string => WHYS.filter((why) => (record[why] ?? 0) > 0).map((why) => `${why} ${record[why]}`).join(", ") || "none";
+  const silenced = EXPLANATIONS.filter((name) => (t.silencedBy[name] ?? 0) > 0).map((name) => `${name} ${t.silencedBy[name]}`).join(", ") || "none";
+  return `| ${axis} | ${value} | ${t.headlineHits} of ${t.headlineTargets} | ${t.hits} of ${t.targets} | ${t.falseAlarms} | ${t.falseAlarmsNonPayload} | ${t.manoeuvres} | ${t.lostToGate.length} | ${by(t.falseAlarmsBy)} | ${by(t.hitsBy)} | ${silenced} |`;
+}
+
+/** The quartiles of a signal over a set of rows, for the separation table. */
+function quartiles(values: number[]): string {
+  const finite = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (finite.length === 0) return "none";
+  const at = (p: number): number => finite[Math.min(finite.length - 1, Math.max(0, Math.ceil(p * finite.length) - 1))]!;
+  return `${finite.length}: ${at(0.25).toFixed(2)} / ${at(0.5).toFixed(2)} / ${at(0.75).toFixed(2)}`;
+}
+
+/**
+ * The separation of the signals the fusion cannot use at the raising:
+ * the drag term's ratio across the step (on the close rows), the damage
+ * ratio and the cadence ratio (on the alert rows), each as its quartiles
+ * on the detections and late alerts against the false alarms, and the
+ * share of the false alarms above the detections' median.
+ */
+function separationTable(files: YearFile[]): string[] {
+  const landed = new Map<string, "true" | "false">();
+  for (const file of files) for (const alert of file.score.alerts) {
+    if (alert.afterEpoch === null) continue;
+    if (alert.outcome === "detection" || alert.outcome === "late") landed.set(alertKey(alert.number, alert.afterEpoch), "true");
+    else if (alert.outcome === "false-alarm") landed.set(alertKey(alert.number, alert.afterEpoch), "false");
+  }
+  const signals: { name: string; phase: number; fold?: (v: number) => number }[] = [
+    { name: "bstarRatio", phase: 2, fold: (v) => (v > 0 && v < 1 ? 1 / v : v) },
+    { name: "damageRatio", phase: 3 },
+    { name: "cadenceRatio", phase: 3 },
+    { name: "envelopeMissKm", phase: 2 },
+    { name: "siblingsLaunch", phase: 2 },
+  ];
+  const out = ["| signal | detections and late (n: quartiles) | false alarms (n: quartiles) | false alarms above the detections' median |", "| --- | --- | --- | --- |"];
+  for (const { name, phase, fold } of signals) {
+    const yes: number[] = [];
+    const no: number[] = [];
+    for (const file of files) for (const row of file.log) {
+      if (row.signals.phase !== phase || row.signals.afterEpoch === undefined) continue;
+      const where = landed.get(alertKey(row.number, row.signals.afterEpoch));
+      if (where === undefined) continue;
+      const raw = row.signals[name];
+      const value = raw === undefined ? Number.NaN : fold === undefined ? raw : fold(raw);
+      (where === "true" ? yes : no).push(value);
+    }
+    const finiteYes = yes.filter(Number.isFinite).sort((a, b) => a - b);
+    const median = finiteYes.length === 0 ? Number.NaN : finiteYes[Math.ceil(finiteYes.length / 2) - 1]!;
+    const finiteNo = no.filter(Number.isFinite);
+    const above = finiteNo.length === 0 || !Number.isFinite(median) ? "–" : `${Math.round((100 * finiteNo.filter((v) => v > median).length) / finiteNo.length)}%`;
+    out.push(`| ${name} | ${quartiles(yes)} | ${quartiles(no)} | ${above} |`);
+  }
+  return out;
 }
 
 function main(): void {
-  const { years, show, grid, clouds, cloudGrid, tiers, confirmations } = parseArgs(process.argv.slice(2));
+  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation } = parseArgs(process.argv.slice(2));
   const all = readYearFiles(process.env.KPI_DIR === undefined ? KPI_DIR : resolve(process.env.KPI_DIR));
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
   if (tiers) {
     console.log(tiersTable(cellsOf(files, alertRowsOf(all)), `Precision per persistence tier, years ${files.map((f) => f.year).join(", ")}`));
+    return;
+  }
+  if (separation) {
+    console.log(`years ${files.map((f) => f.year).join(", ")}: the signals the fusion cannot use at the raising`);
+    for (const row of separationTable(files)) console.log(row);
     return;
   }
   if (confirmations) {
@@ -583,14 +729,14 @@ function main(): void {
   }
   const axes = (Object.keys(grid) as (keyof Gates)[]).length > 0 ? (Object.keys(grid) as (keyof Gates)[]) : DEFAULT_AXES;
   console.log(`years ${files.map((f) => f.year).join(", ")}; the detector's gates: ${Object.entries(DETECTOR_GATES).map(([k, v]) => `${k} ${v}`).join(", ")}`);
-  console.log("| gate | value | headline hits | hits | false alarms | non-payload | manoeuvres | lost to the gate | false alarms by why | hits by why |");
-  console.log("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+  console.log("| gate | value | headline hits | hits | false alarms | non-payload | manoeuvres | lost to the gate | false alarms by why | hits by why | silenced by |");
+  console.log("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
   // One axis at a time, the others at the detector's values: the grid over every axis at once is too large to read.
   for (const axis of axes) {
     for (const value of grid[axis] ?? DEFAULT_GRID[axis]) {
       const t = tally(files, { ...DETECTOR_GATES, [axis]: value });
       console.log(line(axis, value, t));
-      if (show) console.log(`  hit: ${t.hit.join(", ")}; lost to the gate: ${t.lostToGate.join(", ") || "none"}; the smallest first-set size among the hits ${t.minZ1.toFixed(1)} sigma`);
+      if (show) console.log(`  hit: ${t.hit.join(", ")}; lost to the gate: ${t.lostToGate.map((id) => `${id} (${t.lostBy[id]})`).join(", ") || "none"}; the smallest first-set size among the hits ${t.minZ1.toFixed(1)} sigma`);
     }
   }
 }

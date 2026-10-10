@@ -49,6 +49,7 @@
     "truth:fetch": "node --experimental-strip-types scripts/truth/fetch-sources.ts",
     "archive:strip": "node --experimental-strip-types scripts/archive/strip.ts",
     "archive:satcat": "node --experimental-strip-types scripts/archive/satcat.ts",
+    "archive:annotate": "node --experimental-strip-types scripts/archive/annotate.ts",
     "archive:space": "node --experimental-strip-types scripts/archive/space-weather.ts",
     "archive:upload": "node --experimental-strip-types scripts/archive/release.ts upload",
     "archive:download": "node --experimental-strip-types scripts/archive/release.ts download",

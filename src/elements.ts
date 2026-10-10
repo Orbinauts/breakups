@@ -52,12 +52,55 @@ export interface ElementSet {
   elementSetNumber: number;
   /** What the catalogue says the object is; `unknown` where it says nothing. */
   bodyClass: BodyClass;
+  /** What the satellite catalogue says of the object's operational status, where the caller has it; absent or `unknown` where it says nothing. It is the status as of the catalogue snapshot the caller read, which for a backtest is today's, not the set's day: the detector reads it as evidence under that caveat. */
+  opsStatus?: OpsStatus;
 }
+
+/**
+ * The operational status of an object as the satellite catalogue codes
+ * it: working (`+`), partially working (`P`), a backup (`B`) or a spare
+ * (`S`), on an extended mission (`X`), nonoperational (`-`), decayed
+ * (`D`), or nothing said (blank, which is every piece of debris and most
+ * rocket bodies). The detector folds these into three readings: an
+ * object that works today could have burned at the step, one that is
+ * nonoperational today may not have been able to, and the rest say
+ * nothing. A decayed object says nothing either: that it has since fallen
+ * does not say whether it worked at the step.
+ */
+export const OPS_STATUSES = ["operational", "partially operational", "backup", "spare", "extended mission", "nonoperational", "decayed", "unknown"] as const;
+export type OpsStatus = (typeof OPS_STATUSES)[number];
+
+/** The status a catalogue code stands for; `unknown` for a blank, a null or an unrecognised code. */
+export function opsStatusOf(code: string | null | undefined): OpsStatus {
+  switch (code?.trim()) {
+    case "+":
+      return "operational";
+    case "P":
+      return "partially operational";
+    case "B":
+      return "backup";
+    case "S":
+      return "spare";
+    case "X":
+      return "extended mission";
+    case "-":
+      return "nonoperational";
+    case "D":
+      return "decayed";
+    default:
+      return "unknown";
+  }
+}
+
+/** Whether the status says the object works today, in any of the catalogue's working grades. */
+export const isWorkingStatus = (status: OpsStatus | undefined): boolean => status === "operational" || status === "partially operational" || status === "backup" || status === "spare" || status === "extended mission";
 
 /** What a caller knows of the object beyond its message: when the set was published, and what the object is. */
 export interface SetContext {
   createdMs?: number | null;
   bodyClass?: BodyClass;
+  /** The catalogue's operational status code, or the status itself. */
+  opsStatus?: OpsStatus | string | null;
 }
 
 /**
@@ -84,6 +127,7 @@ export function fromElements(elements: Elements, context: SetContext = {}): Elem
     meanMotionDdot: omm.MEAN_MOTION_DDOT,
     elementSetNumber: omm.ELEMENT_SET_NO,
     bodyClass: context.bodyClass ?? "unknown",
+    opsStatus: (OPS_STATUSES as readonly string[]).includes(context.opsStatus ?? "") ? (context.opsStatus as OpsStatus) : opsStatusOf(context.opsStatus),
   };
 }
 

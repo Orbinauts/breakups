@@ -32,10 +32,16 @@ export interface SyntheticSet {
   meanMotionDot?: number;
 }
 
-export function setOf(number: number, s: SyntheticSet, bodyClass: ElementSet["bodyClass"] = "payload"): ElementSet {
+/** What a test may set beside the orbit: the designator (the launch the object is filed under) and the catalogue's operational status. */
+export interface SetExtras {
+  designator?: string;
+  opsStatus?: ElementSet["opsStatus"];
+}
+
+export function setOf(number: number, s: SyntheticSet, bodyClass: ElementSet["bodyClass"] = "payload", extras: SetExtras = {}): ElementSet {
   return {
     number,
-    designator: `2010-00${number % 10}A`,
+    designator: extras.designator ?? `2010-00${number % 10}A`,
     epochMs: s.epochMs,
     createdMs: null,
     meanMotion: meanMotionOf(s.aKm),
@@ -49,6 +55,7 @@ export function setOf(number: number, s: SyntheticSet, bodyClass: ElementSet["bo
     meanMotionDdot: 0,
     elementSetNumber: 1,
     bodyClass,
+    opsStatus: extras.opsStatus ?? "unknown",
   };
 }
 

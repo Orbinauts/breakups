@@ -160,6 +160,37 @@ export interface DetectorParameters {
   singlePieceNeedsQuietLaunch: boolean;
   /** How long a launch's cloud, once listed for review, is not listed again as its pieces keep coming, in days. Policy: the alert's time to live. */
   cloudRepeatDays: number;
+  /** The tolerance by which a step's post-step level may miss a range the object held in the last year and still be a return to a held altitude (orbit maintenance): the larger of this many times the object's own scatter and this many kilometres; a negative floor turns the test off. Fitted on the training split by sweeping the log. */
+  maintenanceToleranceSigmas: number;
+  maintenanceToleranceKm: number;
+  /** How many calendar months back the envelope of held altitudes is read, at most the twelve it keeps. Policy: a year. */
+  maintenanceMonths: number;
+  /** Whether a lowering back to a level the object held is read as maintenance too, as a raise back to one is. Fitted on the training split. */
+  maintenanceLoweringsToo: boolean;
+  /** The window before a step within which other objects' steps count as its siblings, in days; the factor within which two steps' sizes are alike; and the fewest siblings (launch-mates and shell-mates together) for the step to be a coordinated manoeuvre. Policy for the window and the factor (a campaign's steps come within a fortnight at about the same size); the count fitted on the training split. */
+  siblingWindowDays: number;
+  siblingSizeFactor: number;
+  siblingsMin: number;
+  /** The shell: another launch's object is in the same shell when its inclination is within this many degrees and its semi-major axis within this many kilometres. Policy: a tenth of a degree, a constellation's shells are tens of kilometres apart. */
+  siblingOrbitInclinationDeg: number;
+  siblingOrbitAltitudeKm: number;
+  /** An object younger than this, in days from its first set, is deploying when it climbs towards the median altitude of its launch's other payloads. Fitted on the training split. */
+  deployAgeDays: number;
+  /** Whether the catalogue's operational status is read as evidence: a step on an object working today needs a breakup signature to be raised, a step on one nonoperational today needs no manoeuvre explanation. The status is the snapshot's, today's, so a backtest carries hindsight; off, the detector reads none of it. Policy, with the training split's evidence and the scorecard run both ways. */
+  opsStatusEvidence: boolean;
+  /** Whether a nonoperational status voids the manoeuvre explanations that are not the object's own record (maintenance, siblings, deployment): the record is contemporaneous evidence that the object was moving itself then, the status is today's. Fitted on the training split. */
+  nonoperationalOverrides: boolean;
+  /** The fewest past raises for a lowering on an object whose record holds nothing but raises, and whose step is not disposal-shaped, to be the breakup pattern (a move against drag that no make-up burn makes): zero reads a lowering with no record as the pattern too; a value beyond reach turns the test off. Fitted on the training split. */
+  againstDragMinRaises: number;
+  /** The least radial component, in metres a second, for the geometry test (the eccentricity change beyond a tangential impulse's reach) to override a manoeuvre explanation: a small radial residue is what two burns half an orbit apart or a low-thrust arc leaves, a large one is a kick. Fitted on the training split. */
+  geometryKickMinMps: number;
+  /** How many explanations independent of the object's record (maintenance, siblings, deployment, the working status) outweigh the record's own breakup signatures (the size, the direction, the geometry, the drag term, the move against drag); the nonoperational signature is never outweighed. A value beyond reach lets any signature override every explanation. Fitted on the training split. */
+  independentOutweighs: number;
+  /** Whether the manoeuvre explanations that are not the record (maintenance, siblings, deployment, the working status) apply to objects the catalogue does not class as payloads: a stage or a fragment does not maintain its orbit. Fitted on the training split. */
+  explanationsForNonPayloads: boolean;
+  /** The days after the step over which the object's one-step-ahead residual scatter is read for damage (tumbling or a changed shape), against its scatter before the step: from this many days to this many. Policy: the second to fourth week, once the post-step fit has settled and before the alert's time to live. */
+  damageFromDays: number;
+  damageToDays: number;
   /** The event-time search: the grid step in seconds, how many hours before the pre set's epoch the grid starts, and the position error of a published set, in kilometres, that divides the along-track slope for the time's sigma. Physical: a minute resolves an event to its revolution; a mean element set places an object to about a kilometre in low orbit. */
   eventGridSeconds: number;
   eventLeadHours: number;
@@ -248,6 +279,24 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   debrisParentNeedsNearerThanCloud: true,
   singlePieceNeedsQuietLaunch: true,
   cloudRepeatDays: 30,
+  maintenanceToleranceSigmas: 3,
+  maintenanceToleranceKm: 1,
+  maintenanceMonths: 12,
+  maintenanceLoweringsToo: true,
+  siblingWindowDays: 14,
+  siblingSizeFactor: 2,
+  siblingsMin: 2,
+  siblingOrbitInclinationDeg: 0.1,
+  siblingOrbitAltitudeKm: 50,
+  deployAgeDays: 180,
+  opsStatusEvidence: true,
+  nonoperationalOverrides: true,
+  againstDragMinRaises: 1e6,
+  geometryKickMinMps: 0,
+  independentOutweighs: 1,
+  explanationsForNonPayloads: true,
+  damageFromDays: 14,
+  damageToDays: 28,
   eventGridSeconds: 60,
   eventLeadHours: 6,
   eventSigmaPositionKm: 1,
@@ -355,6 +404,24 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   debrisParentNeedsNearerThanCloud: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table" },
   singlePieceNeedsQuietLaunch: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table: single-piece confirmations on the training split" },
   cloudRepeatDays: { kind: "policy", source: "the alert's time to live" },
+  maintenanceToleranceSigmas: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat from 0 to 10" },
+  maintenanceToleranceKm: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: the knee at a kilometre" },
+  maintenanceMonths: { kind: "policy", source: "a year of held altitudes, the envelope's reach" },
+  maintenanceLoweringsToo: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: a hundred fewer, nothing lost" },
+  siblingWindowDays: { kind: "policy", source: "a campaign's steps come within a fortnight of each other" },
+  siblingSizeFactor: { kind: "policy", source: "a campaign's steps are of about one size" },
+  siblingsMin: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: one loses two headline hits" },
+  siblingOrbitInclinationDeg: { kind: "policy", source: "a constellation's shells share an inclination to a tenth of a degree" },
+  siblingOrbitAltitudeKm: { kind: "policy", source: "a constellation's shells are tens of kilometres apart" },
+  deployAgeDays: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat to half a year" },
+  opsStatusEvidence: { kind: "policy", source: "d6-fitting.md and the fifth decision record: read as evidence with the hindsight stated, the scorecard run both ways" },
+  nonoperationalOverrides: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: one headline hit for 143 false alarms" },
+  againstDragMinRaises: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: from two raises the direction test reads it, from fewer it only costs" },
+  geometryKickMinMps: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: any floor loses two headline hits" },
+  independentOutweighs: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: from 21,068 false alarms to 4,985, no hit lost" },
+  explanationsForNonPayloads: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: 265 fewer, no training hit lost" },
+  damageFromDays: { kind: "policy", source: "the second to fourth week after the step, once the post-step fit has settled" },
+  damageToDays: { kind: "policy", source: "as damageFromDays" },
   eventGridSeconds: { kind: "physical", source: "a minute resolves an event to its revolution" },
   eventLeadHours: { kind: "policy", source: "six hours before the pre set's epoch" },
   eventSigmaPositionKm: { kind: "physical", source: "a mean element set places an object to about a kilometre in low orbit" },

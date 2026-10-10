@@ -313,7 +313,7 @@ describe("the replay's runs", () => {
     const rows = sets.rows.filter((row) => row[0] === 40006).slice(0, 5).map((row) => [...row]);
     rows[1]![1] = "2020-06-01T00:00:00.000Z";
     const year = yearOf(rows, bodies);
-    const loaded: LoadedYear = { year: YEAR, manifest: year.manifest, bodies: year.bodies, byNumber: new Map(year.bodies.map((b) => [b.number, b])), columns: year.columns, order: Uint32Array.from(year.columns.rank.map((_, i) => i)), timeBasis: "epoch" };
+    const loaded: LoadedYear = { year: YEAR, manifest: year.manifest, bodies: year.bodies, byNumber: new Map(year.bodies.map((b) => [b.number, b])), statusByNumber: new Map(), columns: year.columns, order: Uint32Array.from(year.columns.rank.map((_, i) => i)), timeBasis: "epoch" };
     const runs = [...runsOf(loaded)].filter((run) => run.sets.length > 0);
     // The wild set moves the clock a day past the set before it, not seven years, and the sets after it run on their own days.
     expect(runs.map((run) => [new Date(run.now).toISOString().slice(0, 13), run.sets.map((s) => new Date(s.epochMs).toISOString().slice(0, 10))])).toEqual([
@@ -327,7 +327,7 @@ describe("the replay's runs", () => {
 
   test("an Archive set becomes the light row the detector reads", () => {
     const row = fromArchivedSet({ number: 25544, epoch: at(1, 1), meanMotion: 15.5, eccentricity: 0.0007, inclination: 51.6, raan: 100, argOfPerigee: 200, meanAnomaly: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, revAtEpoch: 1, rank: 1, created: at(1, 1, 3) }, { designator: "1998-067A", bodyClass: "payload" });
-    expect(row).toEqual({ number: 25544, designator: "1998-067A", epochMs: at(1, 1), createdMs: at(1, 1, 3), meanMotion: 15.5, eccentricity: 0.0007, inclinationDeg: 51.6, raanDeg: 100, argpDeg: 200, meanAnomalyDeg: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, bodyClass: "payload" });
+    expect(row).toEqual({ number: 25544, designator: "1998-067A", epochMs: at(1, 1), createdMs: at(1, 1, 3), meanMotion: 15.5, eccentricity: 0.0007, inclinationDeg: 51.6, raanDeg: 100, argpDeg: 200, meanAnomalyDeg: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, bodyClass: "payload", opsStatus: "unknown" });
     expect(fromArchivedSet({ ...row, epoch: 0, inclination: 0, raan: 0, argOfPerigee: 0, meanAnomaly: 0, revAtEpoch: 0, rank: 2 }, undefined)).toMatchObject({ designator: null, createdMs: null, bodyClass: "unknown" });
   });
 });

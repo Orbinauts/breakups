@@ -199,7 +199,7 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
     while (j < n && sorted[j] === number) j++;
     const row = satcat?.rows.get(number);
     if (row === undefined) withoutSatcat++;
-    bodies.push({ number, first: i, count: j - i, designator: row?.designator ?? designators.get(number) ?? null, name: row?.name ?? null, bodyClass: row?.bodyClass ?? "unknown", launch: row?.launch ?? null, decay: row?.decay ?? null });
+    bodies.push({ number, first: i, count: j - i, designator: row?.designator ?? designators.get(number) ?? null, name: row?.name ?? null, bodyClass: row?.bodyClass ?? "unknown", launch: row?.launch ?? null, decay: row?.decay ?? null, opsStatus: row?.opsStatus ?? null });
     i = j;
   }
   const kept = days.map((f) => f.slice(0, 10));

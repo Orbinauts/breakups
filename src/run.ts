@@ -1,16 +1,18 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step, Verdict } from "./detector.ts";
-import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
+import { OPS_STATUSES, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
 import { eventTimeOf } from "./event-time.ts";
-import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
-import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, openAlert, persistent, trackAlert, type ConfirmationReading, type OpenAlert } from "./fusion.ts";
+import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
+import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, judgeStep, noteDamage, openAlert, persistent, trackAlert, type ConfirmationReading, type OpenAlert, type StepJudgement } from "./fusion.ts";
 import { impulseOf, type Impulse } from "./impulse.ts";
 import { ORIGINS, OUTCOMES, PHASES, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
-import { MANOEUVRE_CLASSES, atypicalReasons, classify, featuresOf, isRaised, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
+import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenance.ts";
+import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { median, predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, fitOf, firstAfter, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
@@ -33,16 +35,23 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
  * long lapse at the end of the run, their unconfirmed set dropped so the
  * step is measured afresh when the next set comes.
  *
- * A persistent step is then read against the object's own record: the
- * impulse it implies and the object's accepted steps over the last two
- * years class it (`manoeuvre.ts`), and it is raised as suspected only
- * where the record does not explain it, as the first step in two years
- * or as one unlike the others; otherwise the verdict is a manoeuvre, a
- * terminal verdict the scorecard counts as nothing. Either way the step
- * joins the object's record, and opens an alert (`fusion.ts`) that stays
- * for the policy's time to live, reading the object's later sets for the
- * persistence tiers the scorecard sweeps. A suspected step is also timed
- * (`event-time.ts`) from the two sets either side of it.
+ * A persistent step is then read against everything the detector knows
+ * of the object: the impulse it implies and the object's accepted steps
+ * over the last two years class it (`manoeuvre.ts`); its post-step level
+ * is read against the altitudes the object held in the last year
+ * (`maintenance.ts`); the steps of its launch-mates and shell-mates in
+ * the weeks before, and where its launch's other payloads fly, say
+ * whether it moved alone (`siblings.ts`); and the catalogue's class and
+ * operational status say whether it could have burned. The fusion
+ * (`judgeStep` in `fusion.ts`) raises it as suspected where no manoeuvre
+ * explanation applies or a breakup signature overrides them; otherwise
+ * the verdict is a manoeuvre, a terminal verdict the scorecard counts as
+ * nothing. Either way the step joins the object's record and the
+ * catalogue's ledger of recent steps, and opens an alert (`fusion.ts`)
+ * that stays for the policy's time to live, reading the object's later
+ * sets for the persistence tiers the scorecard sweeps and for the damage
+ * after the step. A suspected step is also timed (`event-time.ts`) from
+ * the two sets either side of it.
  *
  * Launches: every launch the run brought new bodies to is judged
  * (`fragments.ts`) for a burst over its own background and for pieces
@@ -63,7 +72,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "fusion-v4";
+export const DETECTOR_NAME = "fusion-v5";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -189,17 +198,33 @@ function baseSignals(state: SeriesState, candidate: Candidate, item: Pending, co
   };
 }
 
-/** What a persistent step was read as: the impulse it implies, the object's history at it, its class and the atypical tests it passed. */
+/** What a persistent step was read as: the impulse it implies, the object's history at it, its class and the atypical tests it passed; the sixth phase's readings (the held altitudes, the siblings, the mates, the status); and the fusion's judgement of them all. */
 interface Reading {
   impulse: Impulse;
   step: CurrentStep;
   features: HistoryFeatures;
   manoeuvreClass: ManoeuvreClass;
   atypical: string[];
+  held: HeldLevel;
+  siblings: Siblings;
+  mates: Mates;
+  towards: boolean;
+  opsStatus: OpsStatus;
+  judgement: StepJudgement;
+  /** The step as the catalogue's ledger will keep it, where it is persistent. */
+  ledgerStep: LedgerStep;
 }
 
-/** The step's impulse, the object's history at it and its class, from the estimate so far. */
-function readStep(state: SeriesState, candidate: Candidate, estimate: StepEstimate, item: Pending, params: DetectorParameters): Reading {
+/** The altitude an object's state gives, its ring's last set; null where it has none. */
+function altitudeOf(states: Map<number, SeriesState>, number: number): number | null {
+  const state = states.get(number);
+  if (state === undefined || state.epochs.length === 0) return null;
+  return state.a[state.epochs.length - 1]!;
+}
+
+/** The step's impulse, the object's history at it, its class, the sixth phase's readings and the fusion's judgement, from the estimate so far. */
+function readStep(state: SeriesState, candidate: Candidate, estimate: StepEstimate, item: Pending, context: RunContext): Reading {
+  const { params } = context;
   const eccentricity = Math.max(0, 1 - candidate.rpKm / candidate.aKm);
   const impulse = impulseOf({ aKm: candidate.aKm, eccentricity }, { deltaKm: estimate.delta, sigmaKm: estimate.sigmaDelta, deltaPerigeeKm: estimate.deltaPerigee, sigmaPerigeeKm: estimate.zPerigee === 0 ? estimate.sigmaDelta : Math.abs(estimate.deltaPerigee / estimate.zPerigee), deltaInclinationDeg: estimate.deltaInclination }, params);
   const apogeeAfterKm = 2 * (candidate.aKm + estimate.delta) - (candidate.rpKm + estimate.deltaPerigee);
@@ -217,7 +242,23 @@ function readStep(state: SeriesState, candidate: Candidate, estimate: StepEstima
   };
   const features = featuresOf(state.steps, step, state.firstEpoch, params);
   const manoeuvreClass = classify(features, step, params);
-  return { impulse, step, features, manoeuvreClass, atypical: atypicalReasons(features, step, params) };
+  const tests = atypicalTests(features, step, params);
+  const postAKm = candidate.aKm + estimate.delta;
+  const held = heldLevel(candidate.envelope ?? envelopeOf(state), candidate.aKm, candidate.afterEpoch, params.maintenanceMonths);
+  const launchKey = launchKeyOf(item.set);
+  const ledgerStep = ledgerStepOf(state, candidate, estimate, launchKey);
+  const siblings = siblingsOf(ledgerOf(context.catalogue), ledgerStep, params);
+  const launch = launchKey === null ? undefined : (context.launches.get(launchKey) as LaunchRecord | undefined);
+  const mates = launch === undefined || isAnalystLaunch(launchKey!) ? { count: 0, medianAKm: Number.NaN } : matesOf(launch.bodies, state.number, (number) => altitudeOf(context.states, number));
+  const towards = towardsMates(candidate.aKm, postAKm, mates, Math.abs(estimate.delta) / 2);
+  const opsStatus = item.set.opsStatus ?? "unknown";
+  const judgement = judgeStep({ manoeuvreClass, tests, bodyClass: item.set.bodyClass, opsStatus, deltaKm: estimate.delta, radialMps: impulse.radialMps, n730: features.n730, pastRaises: features.pastRaises, disposalLike: features.disposalLike, ageDays: features.ageDays, sigmaOwnKm: candidate.sigmaOwn, held, siblings, mates, towardsMates: towards }, params);
+  return { impulse, step, features, manoeuvreClass, atypical: atypicalReasons(features, step, params), held, siblings, mates, towards, opsStatus, judgement, ledgerStep };
+}
+
+/** The step as the ledger keeps it: on the orbit at the bracket's first edge, under the launch's code (zero with no launch). */
+function ledgerStepOf(state: SeriesState, candidate: Candidate, estimate: StepEstimate, launchKey: string | null): LedgerStep {
+  return { number: state.number, launchCode: launchKey === null || isAnalystLaunch(launchKey) ? 0 : launchCodeOf(launchKey), epochMs: candidate.afterEpoch, aKm: candidate.aKm, inclinationDeg: candidate.incDeg, deltaKm: estimate.delta };
 }
 
 function readingSignals(reading: Reading): Partial<Record<SignalName, number>> {
@@ -238,8 +279,24 @@ function readingSignals(reading: Reading): Partial<Record<SignalName, number>> {
     alternation: features.alternation,
     normalShare: features.normalShare,
     disposalLike: features.disposalLike ? 1 : 0,
+    pastRaises: features.pastRaises,
     manoeuvreClass: MANOEUVRE_CLASSES.indexOf(reading.manoeuvreClass),
     atypical: reading.atypical.length,
+    envelopeTopKm: reading.held.topKm,
+    envelopeBottomKm: reading.held.bottomKm,
+    envelopeMissKm: reading.held.months === 0 ? Number.NaN : returnMissKm(reading.held, reading.step.deltaKm),
+    envelopeMonths: reading.held.months,
+    siblingsLaunch: reading.siblings.launch,
+    siblingsOrbit: reading.siblings.orbit,
+    mates: reading.mates.count,
+    matesMedianAKm: reading.mates.medianAKm,
+    towardsMates: reading.towards ? 1 : 0,
+    opsStatus: OPS_STATUSES.indexOf(reading.opsStatus),
+    againstDrag: features.n730 === features.pastRaises && reading.step.deltaKm < 0 && !features.disposalLike ? 1 : 0,
+    explanations: reading.judgement.explanations.length,
+    signatures: reading.judgement.signatures.length,
+    explanationBits: reading.judgement.explanationBits,
+    signatureBits: reading.judgement.signatureBits,
   };
 }
 
@@ -273,7 +330,7 @@ function estimateSignals(candidate: Candidate, estimate: StepEstimate): Partial<
 }
 
 /** The signals a verdict carries as its evidence: the numbers it was judged by, by the log's names. */
-const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "zMean", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "manoeuvreClass", "atypical", "cadenceBefore", "cadenceAfter"];
+const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "zMean", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "pastRaises", "manoeuvreClass", "atypical", "envelopeTopKm", "envelopeBottomKm", "envelopeMissKm", "envelopeMonths", "siblingsLaunch", "siblingsOrbit", "mates", "matesMedianAKm", "towardsMates", "opsStatus", "againstDrag", "explanations", "signatures", "explanationBits", "signatureBits", "cadenceBefore", "cadenceAfter"];
 
 function evidenceOf(signals: Partial<Record<SignalName, number>>, params: DetectorParameters): Record<string, number> {
   const evidence: Record<string, number> = {};
@@ -365,6 +422,7 @@ function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEp
     evidence3: Number.NaN,
     span3: Number.NaN,
     zMean3: Number.NaN,
+    envelope: frozenEnvelope(state),
   };
   state.candidate = candidate;
   context.recentCandidates++;
@@ -391,6 +449,8 @@ function closeCandidate(state: SeriesState, candidate: Candidate, outcome: numbe
   }
   if (persistent && reading !== null) {
     recordStep(state.steps, { epochMs: candidate.afterEpoch, deltaKm: reading.step.deltaKm, deltaPerigeeKm: reading.step.deltaPerigeeKm, deltaInclinationDeg: estimate?.deltaInclination ?? 0, tangentialMps: reading.impulse.tangentialMps, normalMps: reading.impulse.normalMps }, context.params);
+    // The catalogue's ledger of recent steps, by which the next object's step finds its siblings.
+    noteLedgerStep(ledgerOf(context.catalogue), reading.ledgerStep);
   }
   if (outcome === OUTCOMES.suspected) {
     state.stepsRaised++;
@@ -515,8 +575,8 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
   const judged = judge(candidate, estimate, state.regime, context);
   if (judged.outcome === OUTCOMES.open) return;
   // Every closed candidate is read against the object's record, so the sweeps can re-threshold the persistence gates and class what they raise.
-  const reading = readStep(state, candidate, estimate, item, context.params);
-  const { outcome, reasons } = fuse(judged, reading, context.params);
+  const reading = readStep(state, candidate, estimate, item, context);
+  const { outcome, reasons } = fuse(judged, reading);
   const signals = { ...baseSignals(state, candidate, item, context), ...estimateSignals(candidate, estimate), ...readingSignals(reading), phase: PHASES.close, outcome };
   context.log.push(logRow(context.now, state.number, signals));
   const evidence = evidenceOf(signals, context.params);
@@ -534,21 +594,23 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
 }
 
 /**
- * The fusion of a persistent step with the object's record: raised as
- * suspected where the record does not explain it (a unique step, or one
- * the atypical tests single out), a manoeuvre otherwise. A step that was
- * not persistent keeps its outcome.
+ * The fusion of a persistent step with everything read of it: raised as
+ * suspected where no manoeuvre explanation applies or a breakup signature
+ * overrides them (`judgeStep`), a manoeuvre otherwise, with the reasons
+ * saying which explanations and signatures applied. A step that was not
+ * persistent keeps its outcome.
  */
-function fuse(judged: { outcome: number; reasons: string[] }, reading: Reading, params: DetectorParameters): { outcome: number; reasons: string[] } {
+function fuse(judged: { outcome: number; reasons: string[] }, reading: Reading): { outcome: number; reasons: string[] } {
   if (judged.outcome !== OUTCOMES.suspected) return judged;
-  const { features, manoeuvreClass, atypical, impulse, step } = reading;
+  const { features, manoeuvreClass, impulse, judgement } = reading;
   const record = features.n730 === 0 ? (features.young ? `no accepted step on an object ${features.ageDays.toFixed(0)} days old` : `no accepted step in ${Math.min(features.ageDays, 730).toFixed(0)} days`) : `${features.n730} accepted step${features.n730 > 1 ? "s" : ""} in two years, ${features.n365} in the year, the last ${features.daysSinceStep.toFixed(0)} days before`;
   const summary = `the impulse is ${impulse.tangentialMps.toFixed(2)} m/s along the track${impulse.normalMps > 0 ? `, ${impulse.normalMps.toFixed(2)} m/s across it` : ""}${impulse.radialMps > 0 ? `, at least ${impulse.radialMps.toFixed(2)} m/s radial` : ""}; the object's record: ${record}; the step is classed ${manoeuvreClass}`;
-  if (isRaised(manoeuvreClass, atypical, step.bodyClass, params)) {
-    const why = manoeuvreClass === "occasional" && atypical.length === 0 ? [`an occasional step on an object the catalogue does not class as a payload: a stage or a fragment does not manoeuvre`] : atypical;
-    return { outcome: OUTCOMES.suspected, reasons: [...judged.reasons, summary, ...why] };
+  if (judgement.raised) {
+    const why = judgement.explanations.length === 0 ? [`no manoeuvre explains the step: ${judgement.signatures.length === 0 ? "a step alone on an object with no record of moving itself" : "and the breakup signatures below"}`] : [`the manoeuvre explanations (${judgement.explanations.join("; ")}) are overridden by a breakup signature`];
+    const occasional = judgement.explanations.length > 0 && judgement.signatures.length === 0 ? [`an occasional step on an object the catalogue does not class as a payload: a stage or a fragment does not manoeuvre`] : [];
+    return { outcome: OUTCOMES.suspected, reasons: [...judged.reasons, summary, ...why, ...judgement.signatures, ...occasional] };
   }
-  return { outcome: OUTCOMES.manoeuvre, reasons: [...judged.reasons, summary, `a persistent step the object's own record explains: a manoeuvre, not a breakup`] };
+  return { outcome: OUTCOMES.manoeuvre, reasons: [...judged.reasons, summary, ...judgement.explanations, `a persistent step a manoeuvre explains, with no breakup signature against it: not a breakup`] };
 }
 
 /** The decide pass for a set predicted from the object's own trailing model: the step and CUSUM tests, and a candidate opened where either fires. */
@@ -574,7 +636,11 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
     if (first !== -1 && pre !== null && state.epochs[first]! < item.set.epochMs) candidate = openCandidate(state, "cusum", state.cusumFrom, state.epochs[first]!, pre, noise, windowBstar(state, params, state.cusumFrom), stats, context);
     if (candidate === null) resetCusum(state, item.set.epochMs);
   }
-  if (candidate === null) return;
+  if (candidate === null) {
+    // The set's level joins the object's envelope of held altitudes: a set that opens a candidate does not, so a jump is never judged against itself, and a bad set never widens the envelope; the sets after a step that stays join it once the candidate has closed.
+    noteLevel(envelopeOf(state), item.aKm, item.set.epochMs);
+    return;
+  }
   if (candidate.origin === "step" && isQuiet(state, noise, candidate.z1, context)) {
     candidate.watched = true;
     const signals = { ...baseSignals(state, candidate, item, context), phase: PHASES.open, outcome: OUTCOMES.open, k: 1 };
@@ -597,6 +663,7 @@ function track(item: Pending, stats: BandStats, context: RunContext): void {
   context.tracked.add(alert);
   const environment: Environment = { commonMode: stats.commonMode, scale: stats.scale, weather: context.weather.dragFactor };
   trackAlert(state, alert, item.set.epochMs, environment, context.now, context.params);
+  noteDamage(alert, state, context.params);
 }
 
 /** Candidates that saw no post set in too long for their regime lapse, at the end of the run. */
