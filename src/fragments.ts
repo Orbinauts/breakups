@@ -1,0 +1,407 @@
+import { semiMajorAxisOf, type ElementSet } from "./elements.ts";
+import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
+import { median } from "./model.ts";
+import type { DetectorParameters } from "./params.ts";
+import { nodePrecessionDegPerDay } from "./series.ts";
+import { launchOf, type BodyClass } from "./truth.ts";
+
+/**
+ * The per-launch channel: what the catalogue says about a launch by the
+ * bodies it lists under it. A breakup's fragments are catalogued under
+ * the parent's launch, numbered above every object that existed at the
+ * event, with their first element sets days to weeks after it, in the
+ * parent's orbital plane, spread in period about the parent's as a
+ * Gabbard diagram shows. The channel keeps, per launch, every body seen
+ * with its first set's epoch, when the detector first saw it, and the
+ * orbit of that first set; and, catalogue-wide, the high-water mark of
+ * designated catalogue numbers against time. From these it reads four
+ * things on a run that brings a launch new bodies:
+ *
+ * - a burst over the launch's own background: the count of new bodies in
+ *   the sliding window against a Poisson rate read off the year before
+ *   it, floored, so a big old cloud whose late pieces trickle in at tens
+ *   a month is not read as a new event when a batch arrives, while five
+ *   new pieces under a launch that gained none in a year is;
+ * - the numbering: a body numbered at or below the high-water mark at the
+ *   alleged event existed before it and is a returning old body, not a
+ *   piece; and a body with any set before the event is not a piece;
+ * - the plane: a piece's inclination and node against each candidate
+ *   parent's, the node adjusted for each orbit's own J2 precession from
+ *   the event to the piece's first set, as a distance in units of the
+ *   tolerances; pieces within the bound share the parent's plane;
+ * - the cloud's velocity and spread: the median change of semi-major axis
+ *   of the consistent pieces from the parent's, read as a tangential
+ *   impulse in metres a second, and the range of their semi-major axes.
+ *   A rideshare's satellites leave their dispenser at under a metre a
+ *   second and are classed payloads; fragments are classed debris and
+ *   spread over tens of metres a second or more.
+ *
+ * None of this is a detection: it is the catalogue's own report, read
+ * back, and it confirms a parent's step or lists a cloud for review. The
+ * analyst objects (numbered from eighty thousand, and from two hundred
+ * and seventy thousand) have no designator, so they go to a pseudo-launch
+ * each; their numbers are reused, so neither the mark nor the first set
+ * says anything of them, and they are listed, never confirming.
+ */
+
+const DAY_MS = 86_400_000;
+
+/** The first analyst range and the second, by catalogue number. Physical: the catalogue's own conventions. */
+export const ANALYST_FLOOR = 80_000;
+export const ANALYST_SECOND_FLOOR = 270_000;
+/** How many months of new-body counts a launch keeps. Policy: two years, the reach of the object's own history. */
+export const LAUNCH_MONTHS = 24;
+/** The reserved key under which the catalogue-wide state (the high-water mark, the notices applied) is kept in the launches map: no launch designator reads so. */
+export const CATALOGUE_KEY = "catalogue";
+/** How far back the high-water mark's record reaches, in days: two years, beyond which one entry stands for all that came before. Policy. */
+export const MARK_DAYS = 730;
+
+/** One body seen under a launch: when it was first seen and the orbit of its first set. */
+export interface BodyRecord {
+  number: number;
+  /** The run's instant when the detector first saw a set of it, in milliseconds since 1970: the earliest it is known to have been published. */
+  firstSeenAt: number;
+  /** The epoch of that first set, and the earliest epoch any set of it carried, which an older set slotted in later lowers. */
+  firstEpoch: number;
+  minEpoch: number;
+  /** The orbit of the first set: semi-major axis in kilometres, eccentricity, inclination and node in degrees, mean motion in revolutions a day. */
+  aKm: number;
+  eccentricity: number;
+  inclinationDeg: number;
+  raanDeg: number;
+  meanMotion: number;
+  bodyClass: BodyClass;
+}
+
+/** What the detector keeps of one launch between runs. */
+export interface LaunchRecord {
+  key: string;
+  /** Every body seen under it, in the order first seen. */
+  bodies: BodyRecord[];
+  /** When the first body was first seen: the launch's age is read from here, since the designator gives the year alone. */
+  firstSeenAt: number;
+  /** New bodies by month over the last two years: the count per bin and the month (years since 1970 times twelve plus the month) each bin stands for. */
+  monthCounts: number[];
+  monthOf: number[];
+  /** When the launch was last listed for review, so a cloud whose pieces keep coming is listed once. */
+  lastCloudAt: number;
+}
+
+/** The catalogue-wide state: the high-water mark of designated numbers against time, and the notices already applied. */
+export interface CatalogueRecord {
+  key: typeof CATALOGUE_KEY;
+  /** The record of new maxima: when each was first seen and the number, both ascending. */
+  markAt: number[];
+  markNumber: number[];
+  /** The notices applied, as `number:at` or `launch:at`. */
+  noticesApplied: string[];
+  /** The objects with an open alert, by number, so a run finds them without walking every state. */
+  alerted: number[];
+  /** The instant of the first run, in milliseconds since 1970: every body the detector meets in its first window is new to it, so no launch is judged until the window has passed. */
+  startedAt: number;
+}
+
+/** The launch a set is filed under: its designator's launch, a pseudo-launch for an analyst object, or null where neither applies. */
+export function launchKeyOf(set: Pick<ElementSet, "number" | "designator">): string | null {
+  const launch = launchOf(set.designator);
+  if (launch !== null) return launch;
+  if (set.number >= ANALYST_SECOND_FLOOR) return `analyst-${ANALYST_SECOND_FLOOR}`;
+  if (set.number >= ANALYST_FLOOR) return `analyst-${ANALYST_FLOOR}`;
+  return null;
+}
+
+export const isAnalystLaunch = (key: string): boolean => key.startsWith("analyst-");
+
+/** The launch as a number for the log: the year times a thousand plus the launch number, or the analyst range's floor. */
+export function launchCodeOf(key: string): number {
+  if (isAnalystLaunch(key)) return Number(key.slice("analyst-".length));
+  return Number(key.slice(0, 4)) * 1000 + Number(key.slice(5, 8));
+}
+
+export function newLaunch(key: string): LaunchRecord {
+  return { key, bodies: [], firstSeenAt: Number.POSITIVE_INFINITY, monthCounts: new Array<number>(LAUNCH_MONTHS).fill(0), monthOf: new Array<number>(LAUNCH_MONTHS).fill(Number.NEGATIVE_INFINITY), lastCloudAt: Number.NEGATIVE_INFINITY };
+}
+
+export function newCatalogue(): CatalogueRecord {
+  return { key: CATALOGUE_KEY, markAt: [], markNumber: [], noticesApplied: [], alerted: [], startedAt: Number.POSITIVE_INFINITY };
+}
+
+/** The launch's record in the map, made where missing. */
+export function launchFor(launches: Map<string, unknown>, key: string): LaunchRecord {
+  let record = launches.get(key) as LaunchRecord | undefined;
+  if (record === undefined) {
+    record = newLaunch(key);
+    launches.set(key, record);
+  }
+  return record;
+}
+
+export function catalogueFor(launches: Map<string, unknown>): CatalogueRecord {
+  let record = launches.get(CATALOGUE_KEY) as CatalogueRecord | undefined;
+  if (record === undefined) {
+    record = newCatalogue();
+    launches.set(CATALOGUE_KEY, record);
+  }
+  return record;
+}
+
+const monthIndexOf = (ms: number): number => {
+  const date = new Date(ms);
+  return date.getUTCFullYear() * 12 + date.getUTCMonth();
+};
+
+/**
+ * Notes a body under its launch on the first set of it the detector
+ * sees, and the catalogue-wide mark where it is a designated number
+ * above every one seen. Returns the record where the body is new to the
+ * launch, null where it was already there (an older set of it slotted in
+ * only lowers its earliest epoch).
+ */
+export function noteBody(launches: Map<string, unknown>, set: ElementSet, now: number): BodyRecord | null {
+  const key = launchKeyOf(set);
+  if (key === null) return null;
+  const launch = launchFor(launches, key);
+  const known = launch.bodies.find((b) => b.number === set.number);
+  if (known !== undefined) {
+    if (set.epochMs < known.minEpoch) known.minEpoch = set.epochMs;
+    return null;
+  }
+  const record: BodyRecord = { number: set.number, firstSeenAt: now, firstEpoch: set.epochMs, minEpoch: set.epochMs, aKm: semiMajorAxisOf(set), eccentricity: set.eccentricity, inclinationDeg: set.inclinationDeg, raanDeg: set.raanDeg, meanMotion: set.meanMotion, bodyClass: set.bodyClass };
+  launch.bodies.push(record);
+  if (now < launch.firstSeenAt) launch.firstSeenAt = now;
+  const month = monthIndexOf(now);
+  const bin = ((month % LAUNCH_MONTHS) + LAUNCH_MONTHS) % LAUNCH_MONTHS;
+  if (launch.monthOf[bin] !== month) {
+    launch.monthOf[bin] = month;
+    launch.monthCounts[bin] = 0;
+  }
+  launch.monthCounts[bin]!++;
+  if (!isAnalystLaunch(key)) noteMark(catalogueFor(launches), set.number, now);
+  return record;
+}
+
+/** Records a new maximum of the designated numbers, and prunes the record to its reach. */
+export function noteMark(catalogue: CatalogueRecord, number: number, now: number): void {
+  const last = catalogue.markNumber.length === 0 ? 0 : catalogue.markNumber[catalogue.markNumber.length - 1]!;
+  if (number <= last) return;
+  catalogue.markAt.push(now);
+  catalogue.markNumber.push(number);
+  const oldest = now - MARK_DAYS * DAY_MS;
+  let drop = 0;
+  while (drop + 1 < catalogue.markAt.length && catalogue.markAt[drop + 1]! < oldest) drop++;
+  if (drop > 0) {
+    catalogue.markAt.splice(0, drop);
+    catalogue.markNumber.splice(0, drop);
+  }
+}
+
+/** The highest designated number first seen before the instant; zero where none was. */
+export function markAt(catalogue: CatalogueRecord, at: number): number {
+  let lo = 0;
+  let hi = catalogue.markAt.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (catalogue.markAt[mid]! < at) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo === 0 ? 0 : catalogue.markNumber[lo - 1]!;
+}
+
+/** What the plane test reads of an orbit, at an epoch. */
+export interface PlaneOrbit {
+  epochMs: number;
+  aKm: number;
+  eccentricity: number;
+  inclinationDeg: number;
+  raanDeg: number;
+  meanMotion: number;
+}
+
+export const planeOrbitOf = (body: BodyRecord): PlaneOrbit => ({ epochMs: body.firstEpoch, aKm: body.aKm, eccentricity: body.eccentricity, inclinationDeg: body.inclinationDeg, raanDeg: body.raanDeg, meanMotion: body.meanMotion });
+
+const wrapDegrees = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
+
+export interface PlaneDistance {
+  /** The inclination difference, in degrees. */
+  deltaInclinationDeg: number;
+  /** The node difference at the piece's epoch, the parent's node carried there at its own J2 rate and the rates' difference since the event taken off, in degrees. */
+  deltaNodeDeg: number;
+  /** The distance in units of the tolerances; infinite where the piece's set is too far from the event to carry the node. */
+  distance: number;
+}
+
+/**
+ * How far a piece's plane is from a parent's. Both were on one plane at
+ * the event; since then each node has precessed at its own J2 rate, so
+ * the parent's node is carried to the piece's epoch at the parent's
+ * rate, and the difference of the two rates over the time from the event
+ * to the piece's set is taken off. A piece catalogued longer after the
+ * event than the parameter allows is not tested.
+ */
+export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters): PlaneDistance {
+  const deltaInclinationDeg = piece.inclinationDeg - parent.inclinationDeg;
+  const parentRate = nodePrecessionDegPerDay(parent.aKm, parent.eccentricity, parent.inclinationDeg, parent.meanMotion);
+  const pieceRate = nodePrecessionDegPerDay(piece.aKm, piece.eccentricity, piece.inclinationDeg, piece.meanMotion);
+  const sinceParent = (piece.epochMs - parent.epochMs) / DAY_MS;
+  const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
+  const parentNodeAtPiece = parent.raanDeg + parentRate * sinceParent;
+  const deltaNodeDeg = wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
+  const distance = Math.abs(sinceEvent) > params.planeMaxDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
+  return { deltaInclinationDeg, deltaNodeDeg, distance };
+}
+
+/** The tangential impulse, in metres a second, that moves the semi-major axis of a near-circular orbit at `aKm` by `deltaKm`. */
+export function deltaVOfAxisChange(aKm: number, deltaKm: number): number {
+  return (Math.abs(deltaKm) * MU_KM3_PER_S2) / (2 * aKm * aKm * speedAt(aKm, aKm)) * 1000;
+}
+
+/**
+ * The upper tail of a Poisson distribution: the probability of at least
+ * `n` events at rate `lambda`. One where `n` is zero or no more than the
+ * rate (the count is not even above its expectation); the terms are
+ * summed in the logarithm so a large rate does not underflow.
+ */
+export function poissonTail(n: number, lambda: number): number {
+  if (n <= 0) return 1;
+  if (lambda <= 0) return 0;
+  if (n <= lambda) return 1;
+  // P(X < n) = sum_{k<n} e^{-lambda} lambda^k / k!, summed from the largest term down.
+  let logTerm = -lambda;
+  let sum = 0;
+  const terms: number[] = [logTerm];
+  for (let k = 1; k < n; k++) {
+    logTerm += Math.log(lambda) - Math.log(k);
+    terms.push(logTerm);
+  }
+  const top = Math.max(...terms);
+  for (const t of terms) sum += Math.exp(t - top);
+  const below = Math.exp(top) * sum;
+  return Math.max(0, Math.min(1, 1 - below));
+}
+
+/** A parent the launch's new bodies are tested against: its number, the orbit used, and the event instant the node is carried from. */
+export interface ParentCandidate {
+  number: number;
+  orbit: PlaneOrbit;
+  eventMs: number;
+}
+
+/** One new body as the cloud test read it. */
+export interface PieceReading {
+  number: number;
+  bodyClass: BodyClass;
+  firstSeenAt: number;
+  firstEpoch: number;
+  /** Whether its number is above the high-water mark at the event, so it did not exist before; always true for an analyst pseudo-launch, whose numbers say nothing. */
+  aboveMark: boolean;
+  /** The nearest parent by plane distance and that distance; null where the launch has no parent. */
+  parent: number | null;
+  distance: number;
+  /** Its change of semi-major axis from that parent, in kilometres, and as a tangential impulse in metres a second. */
+  deltaKm: number;
+  deltaVMps: number;
+}
+
+/** The cloud as the launch pass judged it on one run. */
+export interface CloudVerdict {
+  key: string;
+  /** How many new bodies the run brought, and how many were first seen in the window. */
+  newBodies: number;
+  windowBodies: number;
+  /** The background rate per window as read off the year before (unfloored), the floored rate the tail was computed at, and the Poisson tail probability of the window's count. */
+  rate: number;
+  lambda: number;
+  p: number;
+  burst: boolean;
+  /** The window's bodies, each as read. */
+  pieces: PieceReading[];
+  /** The pieces that are new by numbering and share some parent's plane, and are not a deployment. */
+  consistent: PieceReading[];
+  /** The candidate parents and, per parent, the least plane distance over the window's pieces. */
+  parents: { number: number; distance: number }[];
+  /** The median tangential impulse of the consistent pieces, in metres a second, and the range of their semi-major axes, in kilometres; NaN with none. */
+  cloudDeltaVMps: number;
+  gabbardSpreadKm: number;
+  /** The launch's age at the run, in days from its first body's first set. */
+  launchAgeDays: number;
+  /** The confounds found: returning old bodies, pieces with a set before the event, payload-classed bodies at deployment speed, and an old cloud's background. */
+  returning: number;
+  seenBefore: number;
+  deployments: number;
+  oldCloud: boolean;
+  /** Why, in words. */
+  reasons: string[];
+}
+
+/** The bodies of the launch first seen in the window `(from, to]`. */
+function bodiesSeenIn(launch: LaunchRecord, from: number, to: number): BodyRecord[] {
+  return launch.bodies.filter((b) => b.firstSeenAt > from && b.firstSeenAt <= to);
+}
+
+/** Whether the class the catalogue gives a body is a fragment's: debris, or not yet said. */
+export const isFragmentClass = (bodyClass: BodyClass): boolean => bodyClass === "debris" || bodyClass === "unknown";
+
+/**
+ * The launch's cloud judged at the run's instant against the parents
+ * given: the burst over the launch's own background, and each window
+ * body's numbering, plane and velocity. `eventMs` is the alleged event
+ * the mark is taken at and the nodes are carried from: a parent's step
+ * where there is one, else the first window body's first epoch.
+ */
+export function judgeCloud(launch: LaunchRecord, catalogue: CatalogueRecord, parents: ParentCandidate[], now: number, newBodies: number, params: DetectorParameters): CloudVerdict {
+  const window = params.burstWindowDays * DAY_MS;
+  // A candidate parent is not a piece of itself.
+  const inWindow = bodiesSeenIn(launch, now - window, now).filter((body) => !parents.some((p) => p.number === body.number));
+  const before = bodiesSeenIn(launch, now - window - params.burstBackgroundDays * DAY_MS, now - window);
+  const rate = (before.length * params.burstWindowDays) / params.burstBackgroundDays;
+  const lambda = Math.max(rate, params.lambdaFloor);
+  const analyst = isAnalystLaunch(launch.key);
+  const eventMs = parents.length > 0 ? Math.min(...parents.map((p) => p.eventMs)) : inWindow.length > 0 ? Math.min(...inWindow.map((b) => b.firstEpoch)) : now;
+  const mark = analyst ? 0 : markAt(catalogue, eventMs);
+  const pieces: PieceReading[] = inWindow.map((body) => {
+    let parent: number | null = null;
+    let distance = Number.POSITIVE_INFINITY;
+    let deltaKm = Number.NaN;
+    for (const candidate of parents) {
+      if (candidate.number === body.number) continue;
+      const d = planeDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params).distance;
+      if (d < distance) [parent, distance, deltaKm] = [candidate.number, d, body.aKm - candidate.orbit.aKm];
+    }
+    const aboveMark = analyst || body.number > mark;
+    return { number: body.number, bodyClass: body.bodyClass, firstSeenAt: body.firstSeenAt, firstEpoch: body.firstEpoch, aboveMark, parent, distance, deltaKm, deltaVMps: parent === null ? Number.NaN : deltaVOfAxisChange(parents.find((p) => p.number === parent)!.orbit.aKm, deltaKm) };
+  });
+  const n = pieces.filter((p) => p.aboveMark).length;
+  const p = poissonTail(n, lambda);
+  const burst = n >= params.burstMinBodies && p <= params.pBurst;
+  const returning = pieces.length - n;
+  const seenBefore = pieces.filter((piece) => piece.aboveMark && piece.firstEpoch < eventMs - DAY_MS).length;
+  const inPlane = pieces.filter((piece) => piece.aboveMark && piece.firstEpoch >= eventMs - DAY_MS && piece.distance <= params.planeDistanceMax);
+  const deployments = inPlane.filter((piece) => piece.bodyClass === "payload" || piece.bodyClass === "rocket body").length;
+  let consistent = inPlane.filter((piece) => isFragmentClass(piece.bodyClass));
+  const cloudDeltaVMps = consistent.length === 0 ? Number.NaN : median(consistent.map((piece) => piece.deltaVMps));
+  const launchAgeDays = Number.isFinite(launch.firstSeenAt) ? (now - launch.firstSeenAt) / DAY_MS : Number.POSITIVE_INFINITY;
+  const reasons: string[] = [];
+  if (launchAgeDays < params.youngLaunchDays && consistent.length > 0 && !(cloudDeltaVMps >= params.youngLaunchDeltaVMps)) {
+    reasons.push(`the launch is ${launchAgeDays.toFixed(0)} days old and its new bodies move ${cloudDeltaVMps.toFixed(2)} m/s from the parent, under ${params.youngLaunchDeltaVMps}: its own objects being catalogued, whatever their class`);
+    consistent = [];
+  }
+  if (consistent.length > 0 && cloudDeltaVMps < params.deploymentDeltaVMps && consistent.every((piece) => piece.bodyClass !== "debris")) {
+    reasons.push(`the new bodies move ${cloudDeltaVMps.toFixed(2)} m/s from the parent and none is classed debris: a deployment`);
+    consistent = [];
+  }
+  const axes = consistent.map((piece) => piece.deltaKm);
+  const gabbardSpreadKm = axes.length === 0 ? Number.NaN : Math.max(...axes) - Math.min(...axes);
+  const oldCloud = n >= params.burstMinBodies && !burst && rate > params.lambdaFloor;
+  reasons.unshift(`${n} new bod${n === 1 ? "y" : "ies"} under ${launch.key} in ${params.burstWindowDays} days against a background of ${lambda.toFixed(2)} (${before.length} in the year before): Poisson tail ${p.toExponential(1)}${burst ? ", a burst" : oldCloud ? ", an old cloud's own cataloguing" : ", no burst"}`);
+  if (returning > 0) reasons.push(`${returning} numbered at or below the catalogue's mark of ${mark} at the event: returning old bodies, not pieces`);
+  if (seenBefore > 0) reasons.push(`${seenBefore} with a set before the event: not pieces of it`);
+  if (deployments > 0) reasons.push(`${deployments} in plane but classed payload or rocket body: the launch's own objects`);
+  if (consistent.length > 0) reasons.push(`${consistent.length} piece${consistent.length > 1 ? "s" : ""} in the plane of parent ${consistent[0]!.parent} (distance under ${params.planeDistanceMax}), moving ${cloudDeltaVMps.toFixed(1)} m/s, the semi-major axes spread over ${gabbardSpreadKm.toFixed(1)} km`);
+  const parentRows = parents.map((candidate) => ({ number: candidate.number, distance: pieces.reduce((least, piece) => (piece.parent === candidate.number ? Math.min(least, piece.distance) : least), Number.POSITIVE_INFINITY) }));
+  return { key: launch.key, newBodies, windowBodies: inWindow.length, rate, lambda, p, burst, pieces, consistent, parents: parentRows, cloudDeltaVMps, gabbardSpreadKm, launchAgeDays, returning, seenBefore, deployments, oldCloud, reasons };
+}
+
+/** The pieces within each plane distance, for the log's sweep columns. */
+export function piecesWithin(verdict: CloudVerdict, distance: number): number {
+  return verdict.pieces.filter((piece) => piece.aboveMark && piece.distance <= distance).length;
+}

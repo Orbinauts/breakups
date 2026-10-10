@@ -3,6 +3,7 @@ import { OUTCOMES } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { DAY, HOUR, feed, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
+import type { ElementSet } from "./elements.ts";
 
 /**
  * The detector end to end on synthetic series, each the shape of one
@@ -265,5 +266,191 @@ describe("the detector on synthetic series", () => {
     expect(suspected(stormy)[0]!.step!.postSets).toBe(3);
     expect(suspected(stormy)[0]!.reasons.join(" ")).toContain("storm hold");
     expect(suspected(stormy)[0]!.evidence.kpMax).toBe(7);
+  });
+});
+
+/**
+ * The fusion with the fragments: a suspected step is confirmed by new
+ * debris bodies under the parent's launch in its plane, first published
+ * after the step; expires when nothing comes in thirty days; is dismissed
+ * when bodies came and every one was old by numbering or out of the plane;
+ * is confirmed by a notice; and a quiet parent whose launch bursts with
+ * pieces in its plane is listed as a cloud for review, never a detection.
+ * The suspected verdict carries the event's time from the two sets either
+ * side of the step, bounded by the bracket.
+ */
+describe("the fusion with the fragments", () => {
+  /** The real-step series: a decaying object, number 1 of launch 2010-001, stepping down 0.3 km at set 105 (day thirty-five, so the launch is older than a month at the step). */
+  function stepped(): { series: SyntheticSet[]; stepAt: number } {
+    const series = decaying(7200, 0.02, 0.004, 48);
+    const stepAt = 105;
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
+    return { series, stepAt };
+  }
+
+  /** Six debris bodies under launch 2010-001, numbered from `from`, at the epoch and node given, spread a few kilometres about 7,200 km. */
+  function pieces(from: number, epochMs: number, raanDeg: number): ElementSet[] {
+    return Array.from({ length: 6 }, (_, i) => ({ ...setOf(from + i, { epochMs, aKm: 7200 + (i - 2.5) * 3, raanDeg }, "debris"), designator: `2010-001${"CDEFGH"[i]}` }));
+  }
+
+  test("a suspected step is confirmed by pieces in the parent's plane first published after it, and the verdict carries the event's time", () => {
+    const { series, stepAt } = stepped();
+    const parent = series.map((s) => setOf(1, s, "rocket body"));
+    const stepEpoch = series[stepAt]!.epochMs;
+    // The pieces' first sets are dated an hour after the parent's first post set and published five days later.
+    const batches = [...one(parent.filter((s) => s.epochMs < stepEpoch + 5 * DAY)), pieces(50001, stepEpoch + HOUR, 100), ...one(parent.filter((s) => s.epochMs >= stepEpoch + 5 * DAY))];
+    const fed = feed(batches);
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    const confirmed = fed.verdicts.filter((v) => v.state === "confirmed");
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.number).toBe(1);
+    expect(confirmed[0]!.launch).toBe("2010-001");
+    expect(confirmed[0]!.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+    expect(confirmed[0]!.step).toEqual(raised[0]!.step);
+    expect(confirmed[0]!.evidence.piecesInPlane).toBe(6);
+    expect(confirmed[0]!.evidence.daysToConfirmation).toBeGreaterThan(4);
+    expect(confirmed[0]!.evidence.daysToConfirmation).toBeLessThan(6);
+    expect(confirmed[0]!.reasons.join(" ")).toContain("in the parent's plane");
+    expect(confirmed[0]!.raisedAt).toBeGreaterThan(raised[0]!.raisedAt);
+    expect(fed.verdicts.filter((v) => v.state === "expired" || v.state === "dismissed" || v.kind === "cloud")).toEqual([]);
+    // The event's time lies within the bracket, widened by the lead the search allows before the pre set.
+    const event = raised[0]!.event!;
+    expect(event.at).toBeGreaterThanOrEqual(series[stepAt - 1]!.epochMs - params.eventLeadHours * HOUR);
+    expect(event.at).toBeLessThanOrEqual(stepEpoch);
+    expect(event.from).toBeLessThanOrEqual(event.at);
+    expect(event.to).toBeGreaterThanOrEqual(event.at);
+    expect(raised[0]!.reasons.join(" ")).toMatch(/along-track separation crosses zero|closest approach/);
+    // The alert's row was logged with its tiers and the cadence after the step.
+    const row = fed.log.find((r) => r.signals.phase === 3 && r.number === 1);
+    expect(row).toBeDefined();
+    expect(row!.signals.outcome).toBe(OUTCOMES.confirmed);
+    expect(row!.signals.tier3Held).toBe(1);
+    expect(row!.signals.tierD1Held).toBe(1);
+    expect(row!.signals.cadenceBefore).toBeCloseTo(3, 0);
+    expect(row!.signals.cadenceAfter).toBeCloseTo(3, 0);
+    expect(row!.signals.piecesInPlane).toBe(6);
+  });
+
+  test("a suspected step with nothing under the launch expires after the time to live, and says so", () => {
+    const { series, stepAt } = stepped();
+    const fed = feed(one(series.map((s) => setOf(1, s, "rocket body"))), { until: series[stepAt]!.epochMs + 33 * DAY });
+    expect(suspected(fed)).toHaveLength(1);
+    const expired = fed.verdicts.filter((v) => v.state === "expired");
+    expect(expired).toHaveLength(1);
+    expect(expired[0]!.number).toBe(1);
+    expect(expired[0]!.evidence.piecesNew).toBe(0);
+    expect(expired[0]!.raisedAt - suspected(fed)[0]!.raisedAt).toBeGreaterThanOrEqual(params.alertTtlDays * DAY);
+    expect(expired[0]!.reasons[0]).toContain("no new body under the launch");
+    const row = fed.log.find((r) => r.signals.phase === 3 && r.number === 1);
+    expect(row!.signals.outcome).toBe(OUTCOMES.expired);
+    expect(row!.signals.tierD7Held).toBe(1);
+  });
+
+  test("bodies numbered under the catalogue's mark and out of the parent's plane dismiss the alert when the time runs out", () => {
+    const { series, stepAt } = stepped();
+    const parent = series.map((s) => setOf(1, s, "rocket body"));
+    const stepEpoch = series[stepAt]!.epochMs;
+    // Another launch's body numbered 60000 was catalogued before the step, so the mark is far above the late batch's numbers; the batch is also thirty degrees off in node.
+    const marker: ElementSet = { ...setOf(60000, { epochMs: series[0]!.epochMs, aKm: 7500, raanDeg: 200 }, "payload"), designator: "2010-009A" };
+    const batches = [[marker], ...one(parent.filter((s) => s.epochMs < stepEpoch + 5 * DAY)), pieces(50001, stepEpoch + HOUR, 130), ...one(parent.filter((s) => s.epochMs >= stepEpoch + 5 * DAY))];
+    const fed = feed(batches, { until: stepEpoch + 33 * DAY });
+    expect(suspected(fed)).toHaveLength(1);
+    expect(fed.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
+    const dismissed = fed.verdicts.filter((v) => v.state === "dismissed" && v.number === 1 && v.step !== null && v.step.afterEpoch === stepEpoch);
+    expect(dismissed).toHaveLength(1);
+    expect(dismissed[0]!.evidence.piecesNew).toBe(6);
+    expect(dismissed[0]!.evidence.piecesInPlane).toBe(0);
+    expect(dismissed[0]!.reasons[0]).toContain("every one was old");
+    const cloud = fed.log.find((r) => r.signals.phase === 4 && r.signals.launch === 2010001 && r.signals.newBodies === 6);
+    expect(cloud).toBeDefined();
+    expect(cloud!.signals.aboveMark).toBe(0);
+    expect(cloud!.signals.openAlert).toBe(1);
+  });
+
+  test("a notice naming the object confirms the alert", () => {
+    const { series, stepAt } = stepped();
+    const stepEpoch = series[stepAt]!.epochMs;
+    const notice = { number: 1, launch: "2010-001", at: stepEpoch + 3 * DAY, text: "a notice confirms the fragmentation of object 1" };
+    const fed = feed(one(series.map((s) => setOf(1, s, "rocket body"))), { notices: [notice] });
+    const confirmed = fed.verdicts.filter((v) => v.state === "confirmed");
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.reasons[0]).toContain("a public notice names the object");
+    expect(confirmed[0]!.evidence.noticed).toBe(1);
+    expect(confirmed[0]!.raisedAt).toBeGreaterThanOrEqual(notice.at);
+    expect(confirmed[0]!.bodies).toEqual([]);
+  });
+
+  test("a burst of pieces in the plane of a parent that did not move is listed as a cloud for review, never a detection", () => {
+    const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload"));
+    const at = quiet[110]!.epochMs;
+    const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50011 + i, { epochMs: at + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
+    const fed = feed([...one(quiet.slice(0, 115)), cloudPieces, ...one(quiet.slice(115))]);
+    expect(suspected(fed)).toEqual([]);
+    const clouds = fed.verdicts.filter((v) => v.kind === "cloud");
+    expect(clouds).toHaveLength(1);
+    expect(clouds[0]!.state).toBe("cloud-only");
+    expect(clouds[0]!.number).toBe(2);
+    expect(clouds[0]!.launch).toBe("2010-002");
+    expect(clouds[0]!.bodies).toHaveLength(6);
+    expect(clouds[0]!.evidence.piecesInPlane).toBe(6);
+    expect(clouds[0]!.evidence.pBurst).toBeLessThan(params.pBurst);
+    expect(clouds[0]!.reasons[0]).toContain("listed for review, not a detection");
+    // Listed once: the same cloud's later pieces do not list it again within the repeat window.
+    const more = Array.from({ length: 3 }, (_, i) => ({ ...setOf(50021 + i, { epochMs: at + 2 * DAY, aKm: 7201, raanDeg: 102 }, "debris"), designator: "2010-002J" }));
+    const again = feed([...one(quiet.slice(0, 115)), cloudPieces, ...one(quiet.slice(115, 125)), more, ...one(quiet.slice(125))]);
+    expect(again.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
+  });
+
+  test("pieces under a launch younger than a month, or one with a cloud still being catalogued, confirm nothing", () => {
+    const { series, stepAt } = stepped();
+    const stepEpoch = series[stepAt]!.epochMs;
+    // The launch's first body was seen a week before the step: its pieces are its own objects.
+    const young = feed([...one(series.slice(stepAt - 20).map((s) => setOf(1, s, "rocket body")).filter((s) => s.epochMs < stepEpoch + 5 * DAY)), pieces(50001, stepEpoch + HOUR, 100), ...one(series.slice(stepAt - 20).map((s) => setOf(1, s, "rocket body")).filter((s) => s.epochMs >= stepEpoch + 5 * DAY))], { until: stepEpoch + 33 * DAY });
+    expect(young.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
+    // A launch that gained a hundred bodies in the year before the step is an old cloud under cataloguing: its next pieces confirm nothing.
+    const parent = series.map((s) => setOf(1, s, "rocket body"));
+    const backlog = Array.from({ length: 100 }, (_, i) => ({ ...setOf(40001 + i, { epochMs: series[0]!.epochMs - 300 * DAY + i * 2 * DAY, aKm: 7190, raanDeg: 150 }, "debris"), designator: "2010-001Z" }));
+    const old = feed([...one(backlog), ...one(parent.filter((s) => s.epochMs < stepEpoch + 5 * DAY)), pieces(50001, stepEpoch + HOUR, 100), ...one(parent.filter((s) => s.epochMs >= stepEpoch + 5 * DAY))], { until: stepEpoch + 33 * DAY });
+    expect(suspected(old)).toHaveLength(1);
+    expect(old.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
+    const row = old.log.find((r) => r.signals.phase === 4 && r.signals.launch === 2010001 && r.signals.newBodies === 6)!;
+    expect(row.signals.lambdaRate).toBeGreaterThan(params.confirmBackgroundMax);
+  });
+
+  test("a step raised more than the time to live after it (a batch of decades-old sets) opens no alert", () => {
+    // A set of another object fixes the run's instant in 2020; then the stepped series is published at once with its epochs moved back thirty-three years, as a bundle's batch of old sets is.
+    const { series, stepAt } = stepped();
+    const stale = series.map((s) => setOf(1, { ...s, epochMs: s.epochMs - 33 * 365 * DAY }, "rocket body")).slice(0, stepAt + 10);
+    const fed = feed([[setOf(9, { epochMs: T0, aKm: 7300 })], stale], { until: T0 + 40 * DAY });
+    expect(fed.verdicts.filter((v) => v.state === "expired" || v.state === "confirmed")).toEqual([]);
+    for (const v of suspected(fed)) expect(v.reasons.join(" ")).toContain("no alert is kept");
+    expect(fed.log.filter((r) => r.signals.phase === 3)).toEqual([]);
+  });
+
+  test("in the detector's first fortnight every body is new to it, so no cloud is listed then", () => {
+    // The same cloud as above, but the pieces come on the detector's third day: nothing is listed; the next batch after the fortnight is.
+    const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload"));
+    const early = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50041 + i, { epochMs: quiet[9]!.epochMs + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
+    const fed = feed([...one(quiet.slice(0, 10)), early, ...one(quiet.slice(10))]);
+    expect(fed.verdicts.filter((v) => v.kind === "cloud")).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.phase === 4)).toEqual([]);
+  });
+
+  test("a persistent step the record explains, a manoeuvre, is promoted to confirmed when pieces come, and says so", () => {
+    // A young payload's raise of five kilometres starts a campaign, a manoeuvre; six debris bodies in its plane then say otherwise.
+    const gauss = noise(61);
+    const series: SyntheticSet[] = [];
+    for (let i = 0; i < 200; i++) series.push({ epochMs: T0 + i * 6 * HOUR, aKm: (i >= 160 ? 6905 : 6900) + 0.005 * gauss(), bstar: 1e-4 });
+    const parent = series.map((s) => setOf(3, s, "payload"));
+    const stepEpoch = series[160]!.epochMs;
+    const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50031 + i, { epochMs: stepEpoch + HOUR, aKm: 6905 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-003${"CDEFGH"[i]}` }));
+    const fed = feed([...one(parent.slice(0, 170)), cloudPieces, ...one(parent.slice(170))]);
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toHaveLength(1);
+    const confirmed = fed.verdicts.filter((v) => v.state === "confirmed");
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.number).toBe(3);
+    expect(confirmed[0]!.reasons.join(" ")).toContain("read as a manoeuvre");
   });
 });

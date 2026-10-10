@@ -194,7 +194,8 @@ export function atypicalReasons(features: HistoryFeatures, step: CurrentStep, pa
   return reasons;
 }
 
-/** Whether a step of the class is raised on the parent alone: a unique step, or one the atypical tests single out. */
-export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[]): boolean {
-  return manoeuvreClass === "unique" || atypical.length > 0;
+/** Whether a step of the class is raised on the parent alone: a unique step, one the atypical tests single out, or, where the parameter says so, an occasional step on an object the catalogue does not class as a payload, since a stage or a fragment does not manoeuvre and its past step was the catalogue's fit absorbing something. */
+export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[], bodyClass: BodyClass = "payload", params?: Pick<DetectorParameters, "occasionalRaisesNonPayload">): boolean {
+  if (manoeuvreClass === "unique" || atypical.length > 0) return true;
+  return params?.occasionalRaisesNonPayload === true && manoeuvreClass === "occasional" && bodyClass !== "payload";
 }

@@ -65,3 +65,7 @@ export { type Fit } from "./model.ts";
 export { ORIGINS, OUTCOMES, PHASES, SIGNALS, type SignalName } from "./log.ts";
 export { MU_KM3_PER_S2, impulseOf, speedAt, type Impulse, type MeasuredStep, type Orbit } from "./impulse.ts";
 export { MANOEUVRE_CLASSES, atypicalReasons, classify, featuresOf, isDisposalLike, isRaised, pruneHistory, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass, type StepRecord } from "./manoeuvre.ts";
+export { ANALYST_FLOOR, ANALYST_SECOND_FLOOR, CATALOGUE_KEY, deltaVOfAxisChange, isFragmentClass, judgeCloud, launchCodeOf, launchKeyOf, markAt, noteBody, planeDistance, poissonTail, type BodyRecord, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneDistance, type PlaneOrbit } from "./fragments.ts";
+export { cartesianOf, elementsOf, eventTimeOf, type EventTime, type Minimum, type Vector } from "./event-time.ts";
+export { estimateStep, fitSegment, type Environment, type SegmentFit, type StepEstimate } from "./step.ts";
+export { persistent, type AlertOrigin, type OpenAlert, type PieceCounts, type TierKey, type TierPoint } from "./fusion.ts";

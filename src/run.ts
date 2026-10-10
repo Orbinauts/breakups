@@ -1,29 +1,33 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
-import type { DetectorInput, DetectorOutput, LogRow, Verdict } from "./detector.ts";
+import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step, Verdict } from "./detector.ts";
 import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
+import { eventTimeOf } from "./event-time.ts";
+import { catalogueFor, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, noteBody, piecesWithin, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PlaneOrbit } from "./fragments.ts";
+import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, openAlert, persistent, trackAlert, type OpenAlert } from "./fusion.ts";
 import { impulseOf, type Impulse } from "./impulse.ts";
 import { ORIGINS, OUTCOMES, PHASES, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
 import { MANOEUVRE_CLASSES, atypicalReasons, classify, featuresOf, isRaised, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { fitOf, firstAfter, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, fitOf, firstAfter, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
 /**
  * One run of the detector over the sets published since the last, in
- * three passes. Measure: each set is screened against its object's ring,
+ * passes. Measure: each set is screened against its object's ring,
  * predicted from the object's trailing model (or, for a post set of a
  * live candidate, from the candidate's frozen pre-step model), and pushed
- * into the ring with the residual it left. Environment: the residuals of
- * the run are read by band for the day's common-mode drag and live
- * scale, and the space-weather indices for the storm hold and the prior.
- * Decide: each residual is normalised with its band's values; a first set
- * past the candidate threshold opens a candidate on a bracket from the
- * last set before it to itself, and a watch verdict shows it on a quiet
- * object; each later set re-estimates the step, and the candidate is
- * closed as a persistent step when the step holds across enough sets
+ * into the ring with the residual it left; a set of a body the detector
+ * had not seen notes the body under its launch. Environment: the
+ * residuals of the run are read by band for the day's common-mode drag
+ * and live scale, and the space-weather indices for the storm hold and
+ * the prior. Decide: each residual is normalised with its band's values;
+ * a first set past the candidate threshold opens a candidate on a bracket
+ * from the last set before it to itself, and a watch verdict shows it on
+ * a quiet object; each later set re-estimates the step, and the candidate
+ * is closed as a persistent step when the step holds across enough sets
  * over enough hours, dismissed when the next sets undo it, or closed
  * after the last gap it was allowed. Candidates that saw no set for too
  * long lapse at the end of the run, their unconfirmed set dropped so the
@@ -35,8 +39,19 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
  * where the record does not explain it, as the first step in two years
  * or as one unlike the others; otherwise the verdict is a manoeuvre, a
  * terminal verdict the scorecard counts as nothing. Either way the step
- * joins the object's record. The fragment confirmation of a later phase
- * is what turns a suspected step into a confirmed one.
+ * joins the object's record, and opens an alert (`fusion.ts`) that stays
+ * for the policy's time to live, reading the object's later sets for the
+ * persistence tiers the scorecard sweeps. A suspected step is also timed
+ * (`event-time.ts`) from the two sets either side of it.
+ *
+ * Launches: every launch the run brought new bodies to is judged
+ * (`fragments.ts`) for a burst over its own background and for pieces
+ * that are new by numbering and share a parent's plane. Such pieces
+ * first published after an open alert's step confirm it; a notice naming
+ * the object confirms it too; a burst with consistent pieces and no
+ * alert on any parent is listed for review as a cloud, never a
+ * detection. An alert nothing confirmed expires at the time to live, or
+ * is dismissed where bodies came under the launch and every one was old.
  */
 
 const DAY_MS = 86_400_000;
@@ -46,7 +61,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "step-v2";
+export const DETECTOR_NAME = "fusion-v3";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -77,13 +92,22 @@ interface RunContext {
   recentCandidates: number;
   /** The candidates judged in this run, each once, on the ring as it stands after the measure pass. */
   judged: Set<Candidate>;
+  /** The alerts tracked in this run, each once. */
+  tracked: Set<OpenAlert>;
+  states: Map<number, SeriesState>;
+  launches: Map<string, unknown>;
+  catalogue: CatalogueRecord;
+  /** The launches the run brought new bodies to, with how many. */
+  newBodies: Map<string, number>;
+  notices: Notice[];
 }
 
 const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
 
-/** The measure pass for one set: screened, predicted, pushed. */
+/** The measure pass for one set: screened, predicted, pushed, and the body noted under its launch. */
 function measure(state: SeriesState, set: ElementSet, context: RunContext, pending: Pending[]): void {
   const { params, weather } = context;
+  const firstEpochBefore = state.firstEpoch;
   for (const accepted of screenSet(state, set, params)) {
     const aKm = semiMajorAxisOf(accepted);
     const regime = state.epochs.length === 0 ? regimeOf(accepted) : state.regime;
@@ -122,10 +146,19 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     }
     pending.push(item);
   }
+  // The body under its launch, on the first set of it the detector sees; an older set of a known body only lowers its earliest epoch.
+  if (!state.noted || set.epochMs < firstEpochBefore) {
+    const record = noteBody(context.launches, set, context.now);
+    state.noted = true;
+    if (record !== null) {
+      const key = launchKeyOf(set)!;
+      context.newBodies.set(key, (context.newBodies.get(key) ?? 0) + 1);
+    }
+  }
 }
 
 /** The signals every row of a candidate carries. */
-function baseSignals(state: SeriesState, candidate: Candidate, item: Pending, stats: BandStats, context: RunContext): Partial<Record<SignalName, number>> {
+function baseSignals(state: SeriesState, candidate: Candidate, item: Pending, context: RunContext): Partial<Record<SignalName, number>> {
   return {
     origin: ORIGINS[candidate.origin],
     regime: regimeIndex(state.regime),
@@ -135,6 +168,8 @@ function baseSignals(state: SeriesState, candidate: Candidate, item: Pending, st
     delta1: candidate.delta1,
     z1: candidate.z1,
     sigmaOwn: candidate.sigmaOwn,
+    sigmaShort: candidate.sigmaShort,
+    sigmaLong: candidate.sigmaLong,
     sigmaPred: candidate.sigma1,
     bandScale1: candidate.bandScale1,
     commonMode1: candidate.commonMode1,
@@ -148,6 +183,7 @@ function baseSignals(state: SeriesState, candidate: Candidate, item: Pending, st
     recentCandidates: context.recentCandidates,
     preSets: candidate.pre.n,
     residuals: candidate.residuals,
+    cadenceBefore: candidate.cadenceBefore,
   };
 }
 
@@ -209,6 +245,7 @@ function estimateSignals(candidate: Candidate, estimate: StepEstimate): Partial<
   return {
     deltaKm: estimate.delta,
     zk: estimate.z,
+    zMean: estimate.zMean,
     k: estimate.k,
     spanHours: estimate.spanHours,
     rhoMedian: estimate.rhoMedian,
@@ -218,20 +255,23 @@ function estimateSignals(candidate: Candidate, estimate: StepEstimate): Partial<
     zPerigee: estimate.zPerigee,
     deltaInclinationDeg: estimate.deltaInclination,
     zInclination: estimate.zInclination,
+    cadenceAfter: estimate.k / Math.max(estimate.spanHours / 24, 1 / 6),
     cusumPos: candidate.cusumAtOpen,
     z2: candidate.z2,
     rho2: candidate.rho2,
     evidence2: candidate.evidence2,
     span2: candidate.span2,
+    zMean2: candidate.zMean2,
     z3: candidate.z3,
     rho3: candidate.rho3,
     evidence3: candidate.evidence3,
     span3: candidate.span3,
+    zMean3: candidate.zMean3,
   };
 }
 
 /** The signals a verdict carries as its evidence: the numbers it was judged by, by the log's names. */
-const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "manoeuvreClass", "atypical"];
+const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "zMean", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "manoeuvreClass", "atypical", "cadenceBefore", "cadenceAfter"];
 
 function evidenceOf(signals: Partial<Record<SignalName, number>>, params: DetectorParameters): Record<string, number> {
   const evidence: Record<string, number> = {};
@@ -245,18 +285,21 @@ function evidenceOf(signals: Partial<Record<SignalName, number>>, params: Detect
   return evidence;
 }
 
-function verdictOf(state: SeriesState, candidate: Candidate, item: Pending, verdictState: Verdict["state"], estimate: StepEstimate | null, evidence: Record<string, number>, reasons: string[], now: number): Verdict {
-  const step = estimate === null
+function stepOf(candidate: Candidate, estimate: StepEstimate | null): Step {
+  return estimate === null
     ? { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: candidate.delta1, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 1, z: candidate.z1 }
     : { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: estimate.delta, deltaPerigeeKm: estimate.deltaPerigee, deltaApogeeKm: 2 * estimate.delta - estimate.deltaPerigee, deltaInclinationDeg: estimate.deltaInclination, postSets: estimate.k, z: estimate.z };
+}
+
+function verdictOf(state: SeriesState, candidate: Candidate, item: Pending, verdictState: Verdict["state"], estimate: StepEstimate | null, evidence: Record<string, number>, reasons: string[], now: number, event: EventEstimate | null = { at: candidate.tStep, from: candidate.beforeEpoch, to: candidate.afterEpoch }): Verdict {
   return {
     kind: "object",
     state: verdictState,
     number: state.number,
     launch: launchOf(item.set.designator),
     raisedAt: now,
-    step,
-    event: { at: candidate.tStep, from: candidate.beforeEpoch, to: candidate.afterEpoch },
+    step: stepOf(candidate, estimate),
+    event,
     evidence,
     reasons,
   };
@@ -290,6 +333,8 @@ function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEp
     preRp,
     preInc,
     sigmaOwn: noise.sigma,
+    sigmaShort: noise.short,
+    sigmaLong: noise.long,
     bstar,
     aKm: predictAt(pre, beforeEpoch).value,
     rpKm: predictAt(preRp, beforeEpoch).value,
@@ -307,14 +352,17 @@ function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEp
     watched: false,
     suspected: false,
     lastPostAt: context.now,
+    cadenceBefore: cadenceBefore(state, afterEpoch, context.params.cadenceBeforeDays),
     z2: Number.NaN,
     rho2: Number.NaN,
     evidence2: Number.NaN,
     span2: Number.NaN,
+    zMean2: Number.NaN,
     z3: Number.NaN,
     rho3: Number.NaN,
     evidence3: Number.NaN,
     span3: Number.NaN,
+    zMean3: Number.NaN,
   };
   state.candidate = candidate;
   context.recentCandidates++;
@@ -361,10 +409,9 @@ function judge(candidate: Candidate, estimate: StepEstimate, regime: Regime, con
   const stressed = context.recentCandidates >= params.stressCandidatesPerDay || weather.stormHold;
   const minSets = stressed ? params.persistMinSetsUnderStress : params.persistMinSets;
   const enoughSets = estimate.k >= params.persistMinSetsAlone || (estimate.k >= minSets && estimate.spanHours >= params.persistMinSpanHours[regimeKey(regime)]);
-  const inBand = Number.isFinite(estimate.rhoMedian) && estimate.rhoMedian >= params.rhoMin && estimate.rhoMedian <= params.rhoMax;
-  const persistent = Math.abs(estimate.z) >= params.zPersist && inBand && estimate.evidence >= params.evidenceMin;
-  if (enoughSets && persistent) {
-    reasons.push(`a step of ${estimate.delta.toFixed(3)} km holds over ${estimate.k} post sets spanning ${estimate.spanHours.toFixed(1)} h: ${estimate.z.toFixed(1)} sigma, the later sets keep ${estimate.rhoMedian.toFixed(2)} of the first jump, evidence ${estimate.evidence.toFixed(1)} against a drift`);
+  if (enoughSets && persistent(estimate, params)) {
+    const size = params.persistOnMeanStep ? `${estimate.zMean.toFixed(1)} sigma at the post sets' centroid` : `${estimate.z.toFixed(1)} sigma`;
+    reasons.push(`a step of ${estimate.delta.toFixed(3)} km holds over ${estimate.k} post sets spanning ${estimate.spanHours.toFixed(1)} h: ${size}, the later sets keep ${estimate.rhoMedian.toFixed(2)} of the first jump, evidence ${estimate.evidence.toFixed(1)} against a drift`);
     if (stressed) reasons.push(weather.stormHold ? `three post sets were required under a storm hold (Kp ${weather.kpMax})` : `three post sets were required under run stress (${context.recentCandidates} candidates in a day)`);
     return { outcome: OUTCOMES.suspected, reasons };
   }
@@ -377,8 +424,72 @@ function judge(candidate: Candidate, estimate: StepEstimate, regime: Regime, con
 
 /** Records the trajectory's second and third points on the candidate, for the sweeps. */
 function recordTrajectory(candidate: Candidate, estimate: StepEstimate): void {
-  if (estimate.k >= 2 && Number.isNaN(candidate.z2)) [candidate.z2, candidate.rho2, candidate.evidence2, candidate.span2] = [estimate.z, estimate.rhoMedian, estimate.evidence, estimate.spanHours];
-  if (estimate.k >= 3 && Number.isNaN(candidate.z3)) [candidate.z3, candidate.rho3, candidate.evidence3, candidate.span3] = [estimate.z, estimate.rhoMedian, estimate.evidence, estimate.spanHours];
+  if (estimate.k >= 2 && Number.isNaN(candidate.z2)) [candidate.z2, candidate.rho2, candidate.evidence2, candidate.span2, candidate.zMean2] = [estimate.z, estimate.rhoMedian, estimate.evidence, estimate.spanHours, estimate.zMean];
+  if (estimate.k >= 3 && Number.isNaN(candidate.z3)) [candidate.z3, candidate.rho3, candidate.evidence3, candidate.span3, candidate.zMean3] = [estimate.z, estimate.rhoMedian, estimate.evidence, estimate.spanHours, estimate.zMean];
+}
+
+/** The parent's orbit after the step, for the plane test: the ring's set at the bracket's second edge, or the ring's last set. */
+function orbitAfterStep(state: SeriesState, candidate: Candidate): PlaneOrbit {
+  let i = indexOfEpoch(state, candidate.afterEpoch);
+  if (i === -1) i = state.epochs.length - 1;
+  return { epochMs: state.epochs[i]!, aKm: state.a[i]!, eccentricity: Math.max(0, 1 - state.rp[i]! / state.a[i]!), inclinationDeg: state.inc[i]!, raanDeg: state.raan[i]!, meanMotion: state.meanMotion[i]! };
+}
+
+/** The event's time from the sets either side of the bracket, where both are still in the ring and the engine propagates them; else the bracket itself. */
+function eventOf(state: SeriesState, candidate: Candidate, designator: string | null, params: DetectorParameters): { event: EventEstimate; reasons: string[] } {
+  const before = indexOfEpoch(state, candidate.beforeEpoch);
+  const after = indexOfEpoch(state, candidate.afterEpoch);
+  const fallback = { event: { at: candidate.tStep, from: candidate.beforeEpoch, to: candidate.afterEpoch }, reasons: [`the event's time is the middle of the bracket: the sets either side could not be propagated`] };
+  if (before === -1 || after === -1) return fallback;
+  const timed = eventTimeOf(ringSetAt(state, before, designator), ringSetAt(state, after, designator), params);
+  if (timed === null) return fallback;
+  const iso = (ms: number): string => new Date(ms).toISOString().slice(0, 16).replace("T", " ");
+  const reasons = [timed.fromMinimum ? `the event's time is the closest approach of the two orbits, ${iso(timed.at)}, within half a revolution: the step left the period alone, so the along-track drift cannot place it` : `the two orbits' along-track separation crosses zero at ${iso(timed.at)}, sigma ${timed.sigmaMinutes.toFixed(0)} min (drift ${timed.slopeKmPerHour.toFixed(2)} km/h over a position error of ${Math.max(params.eventSigmaPositionKm, timed.residualKm).toFixed(1)} km)${timed.ambiguousRevolutions > 1 ? `; ${timed.ambiguousRevolutions} revolutions' closest approaches lie within two sigmas` : ""}`];
+  return { event: { at: timed.at, from: timed.from, to: timed.to }, reasons };
+}
+
+/** Opens the alert on a persistent step, suspected or manoeuvre, with the event's time where suspected. */
+function raiseAlert(state: SeriesState, candidate: Candidate, item: Pending, origin: OpenAlert["origin"], estimate: StepEstimate, evidence: Record<string, number>, reasons: string[], context: RunContext): Verdict | null {
+  const { params, now } = context;
+  // A step older than the time to live when it is raised (a bundle's batch of decades-old sets) could be confirmed by any body ever catalogued after it: no alert is opened, and the verdict stands on its own.
+  if (now - candidate.afterEpoch > params.alertTtlDays * DAY_MS) {
+    return origin === "suspected" ? verdictOf(state, candidate, item, "suspected", estimate, evidence, [...reasons, `the step is ${((now - candidate.afterEpoch) / DAY_MS).toFixed(0)} days old at its raising: no alert is kept for the fragments`], now) : null;
+  }
+  if (state.alert !== null) {
+    // A second persistent step while the first's alert is open: the first closes as it stands, and the new one is tracked.
+    closeAlert(state, state.alert, closingOutcome(state.alert), context, state.alert.origin === "suspected");
+  }
+  const timed = origin === "suspected" ? eventOf(state, candidate, item.set.designator, params) : null;
+  const alert = openAlert(state, { origin, now, candidate, step: stepOf(candidate, estimate), event: timed?.event ?? { at: candidate.tStep, from: candidate.beforeEpoch, to: candidate.afterEpoch }, launch: launchKeyOf(item.set), orbit: orbitAfterStep(state, candidate), regime: state.regime, bodyClass: item.set.bodyClass, evidence, reasons: timed === null ? reasons : [...reasons, ...timed.reasons], estimate, cadenceBefore: candidate.cadenceBefore }, params);
+  if (!context.catalogue.alerted.includes(state.number)) context.catalogue.alerted.push(state.number);
+  if (origin !== "suspected") return null;
+  return verdictOf(state, candidate, item, "suspected", estimate, evidence, alert.reasons, now, alert.event);
+}
+
+/** Closes an alert: its log row, the verdict where it was a suspected one and `withVerdict`, and the object's slot cleared. */
+function closeAlert(state: SeriesState, alert: OpenAlert, outcome: number, context: RunContext, withVerdict: boolean, extra: { reasons?: string[]; evidence?: Record<string, number>; bodies?: number[] } = {}): void {
+  const { now, params } = context;
+  const signals: Partial<Record<SignalName, number>> = { phase: PHASES.alert, outcome, origin: alert.candidate.origin === "step" ? ORIGINS.step : ORIGINS.cusum, regime: regimeIndex(alert.regime), bodyClass: BODY_CLASSES.indexOf(alert.bodyClass), beforeEpoch: alert.candidate.beforeEpoch, afterEpoch: alert.candidate.afterEpoch, delta1: alert.candidate.delta1, z1: alert.candidate.z1, sigmaOwn: alert.candidate.sigmaOwn, bstar: alert.candidate.bstar, bstarRatio: alert.candidate.bstarRatio, ...alertSignals(alert, now, params) };
+  context.log.push(logRow(now, state.number, signals));
+  if (withVerdict && alert.origin === "suspected" && outcome !== OUTCOMES.confirmed) {
+    const days = daysAfterStep(alert, now);
+    const reasons = outcome === OUTCOMES.dismissed
+      ? [`${alert.pieces.new} new bod${alert.pieces.new === 1 ? "y" : "ies"} came under the launch in the ${params.alertTtlDays} days after the step and every one was old by numbering, had a set before the step, or lay out of the parent's plane: not this step's pieces`, ...(extra.reasons ?? [])]
+      : [`no new body under the launch and no notice in the ${params.alertTtlDays} days after the step (${days.toFixed(0)} days)`, ...(extra.reasons ?? [])];
+    context.verdicts.push({ kind: "object", state: outcome === OUTCOMES.dismissed ? "dismissed" : "expired", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...(extra.evidence ?? {}), alertDays: round5(days), piecesNew: alert.pieces.new, piecesInPlane: alert.pieces.inPlane }, reasons, bodies: extra.bodies });
+  }
+  state.alert = null;
+  const alerted = context.catalogue.alerted;
+  const at = alerted.indexOf(state.number);
+  if (at !== -1) alerted.splice(at, 1);
+}
+
+/** Confirms an open alert by pieces or a notice: the verdict and the close. */
+function confirmAlert(state: SeriesState, alert: OpenAlert, context: RunContext, reasons: string[], evidence: Record<string, number>, bodies: number[]): void {
+  const days = daysAfterStep(alert, context.now);
+  const promoted = alert.origin === "manoeuvre" ? [`the step was read as a manoeuvre from the object's own record; the catalogue says otherwise`] : [];
+  context.verdicts.push({ kind: "object", state: "confirmed", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: context.now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...evidence, daysToConfirmation: round5(days) }, reasons: [...reasons, ...promoted, `confirmed ${days.toFixed(1)} days after the step`], bodies });
+  closeAlert(state, alert, OUTCOMES.confirmed, context, false);
 }
 
 /** The decide pass for a post set of a live candidate: the candidate judged once in the run, on every post set the ring holds. */
@@ -392,7 +503,7 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
   const estimate = estimateStep(state, candidate, environment, context.params);
   if (estimate === null) {
     // The post sets left the ring before they were judged (a burst of sets in one run, more than the ring holds past the window): the candidate is closed unjudged rather than left open to silence the object.
-    context.log.push(logRow(context.now, state.number, { ...baseSignals(state, candidate, item, stats, context), k: candidate.postSets, phase: PHASES.close, outcome: OUTCOMES.faded }));
+    context.log.push(logRow(context.now, state.number, { ...baseSignals(state, candidate, item, context), k: candidate.postSets, phase: PHASES.close, outcome: OUTCOMES.faded }));
     closeCandidate(state, candidate, OUTCOMES.faded, null, null, context);
     return;
   }
@@ -403,16 +514,19 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
   if (judged.outcome === OUTCOMES.open) return;
   // Every closed candidate is read against the object's record, so the sweeps can re-threshold the persistence gates and class what they raise.
   const reading = readStep(state, candidate, estimate, item, context.params);
-  const { outcome, reasons } = fuse(judged, reading);
-  const signals = { ...baseSignals(state, candidate, item, stats, context), ...estimateSignals(candidate, estimate), ...readingSignals(reading), phase: PHASES.close, outcome };
+  const { outcome, reasons } = fuse(judged, reading, context.params);
+  const signals = { ...baseSignals(state, candidate, item, context), ...estimateSignals(candidate, estimate), ...readingSignals(reading), phase: PHASES.close, outcome };
   context.log.push(logRow(context.now, state.number, signals));
+  const evidence = evidenceOf(signals, context.params);
   if (outcome === OUTCOMES.suspected) {
     candidate.suspected = true;
-    context.verdicts.push(verdictOf(state, candidate, item, "suspected", estimate, evidenceOf(signals, context.params), reasons, context.now));
+    const verdict = raiseAlert(state, candidate, item, "suspected", estimate, evidence, reasons, context);
+    if (verdict !== null) context.verdicts.push(verdict);
   } else if (outcome === OUTCOMES.manoeuvre) {
-    context.verdicts.push(verdictOf(state, candidate, item, "manoeuvre", estimate, evidenceOf(signals, context.params), reasons, context.now));
+    context.verdicts.push(verdictOf(state, candidate, item, "manoeuvre", estimate, evidence, reasons, context.now));
+    raiseAlert(state, candidate, item, "manoeuvre", estimate, evidence, reasons, context);
   } else if (candidate.watched) {
-    context.verdicts.push(verdictOf(state, candidate, item, "dismissed", estimate, evidenceOf(signals, context.params), reasons, context.now));
+    context.verdicts.push(verdictOf(state, candidate, item, "dismissed", estimate, evidence, reasons, context.now));
   }
   closeCandidate(state, candidate, outcome, estimate, reading, context);
 }
@@ -423,12 +537,15 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
  * the atypical tests single out), a manoeuvre otherwise. A step that was
  * not persistent keeps its outcome.
  */
-function fuse(judged: { outcome: number; reasons: string[] }, reading: Reading): { outcome: number; reasons: string[] } {
+function fuse(judged: { outcome: number; reasons: string[] }, reading: Reading, params: DetectorParameters): { outcome: number; reasons: string[] } {
   if (judged.outcome !== OUTCOMES.suspected) return judged;
-  const { features, manoeuvreClass, atypical, impulse } = reading;
+  const { features, manoeuvreClass, atypical, impulse, step } = reading;
   const record = features.n730 === 0 ? (features.young ? `no accepted step on an object ${features.ageDays.toFixed(0)} days old` : `no accepted step in ${Math.min(features.ageDays, 730).toFixed(0)} days`) : `${features.n730} accepted step${features.n730 > 1 ? "s" : ""} in two years, ${features.n365} in the year, the last ${features.daysSinceStep.toFixed(0)} days before`;
   const summary = `the impulse is ${impulse.tangentialMps.toFixed(2)} m/s along the track${impulse.normalMps > 0 ? `, ${impulse.normalMps.toFixed(2)} m/s across it` : ""}${impulse.radialMps > 0 ? `, at least ${impulse.radialMps.toFixed(2)} m/s radial` : ""}; the object's record: ${record}; the step is classed ${manoeuvreClass}`;
-  if (isRaised(manoeuvreClass, atypical)) return { outcome: OUTCOMES.suspected, reasons: [...judged.reasons, summary, ...atypical] };
+  if (isRaised(manoeuvreClass, atypical, step.bodyClass, params)) {
+    const why = manoeuvreClass === "occasional" && atypical.length === 0 ? [`an occasional step on an object the catalogue does not class as a payload: a stage or a fragment does not manoeuvre`] : atypical;
+    return { outcome: OUTCOMES.suspected, reasons: [...judged.reasons, summary, ...why] };
+  }
   return { outcome: OUTCOMES.manoeuvre, reasons: [...judged.reasons, summary, `a persistent step the object's own record explains: a manoeuvre, not a breakup`] };
 }
 
@@ -458,12 +575,26 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
   if (candidate === null) return;
   if (candidate.origin === "step" && isQuiet(state, noise, candidate.z1, context)) {
     candidate.watched = true;
-    const signals = { ...baseSignals(state, candidate, item, stats, context), phase: PHASES.open, outcome: OUTCOMES.open, k: 1 };
+    const signals = { ...baseSignals(state, candidate, item, context), phase: PHASES.open, outcome: OUTCOMES.open, k: 1 };
     const reasons = [`one set moved the semi-major axis ${candidate.delta1.toFixed(3)} km from the object's own model, ${candidate.z1.toFixed(1)} sigma, on a quiet object: to be judged by the next`];
     context.verdicts.push(verdictOf(state, candidate, item, "watch", null, evidenceOf(signals, context.params), reasons, context.now));
   }
   // A CUSUM candidate already has its post sets in the ring: judge it now.
   if (candidate.origin === "cusum") advance(item, stats, context);
+}
+
+/** The alert pass for a set of an object with an open alert: the step read once more against the frozen pre fits, once per run. */
+function track(item: Pending, stats: BandStats, context: RunContext): void {
+  const state = item.state;
+  const alert = state.alert;
+  if (alert === null || item.set.epochMs <= alert.candidate.beforeEpoch) return;
+  if (context.tracked.has(alert)) {
+    if (item.set.epochMs > alert.candidate.afterEpoch && alert.postEpochs.length < context.params.alertMaxPostSets && !alert.postEpochs.includes(item.set.epochMs)) alert.postEpochs.push(item.set.epochMs);
+    return;
+  }
+  context.tracked.add(alert);
+  const environment: Environment = { commonMode: stats.commonMode, scale: stats.scale, weather: context.weather.dragFactor };
+  trackAlert(state, alert, item.set.epochMs, environment, context.now, context.params);
 }
 
 /** Candidates that saw no post set in too long for their regime lapse, at the end of the run. */
@@ -473,7 +604,7 @@ function lapse(states: Map<number, SeriesState>, context: RunContext): void {
     if (candidate === null) continue;
     const days = context.params.lapseDays[regimeKey(state.regime)];
     if (context.now - candidate.lastPostAt <= days * DAY_MS) continue;
-    context.log.push(logRow(context.now, state.number, { phase: PHASES.close, outcome: OUTCOMES.lapsed, origin: ORIGINS[candidate.origin], regime: regimeIndex(state.regime), beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, delta1: candidate.delta1, z1: candidate.z1, k: candidate.postSets, bstar: candidate.bstar, sigmaOwn: candidate.sigmaOwn, residuals: candidate.residuals, z2: candidate.z2, rho2: candidate.rho2, evidence2: candidate.evidence2, span2: candidate.span2 }));
+    context.log.push(logRow(context.now, state.number, { phase: PHASES.close, outcome: OUTCOMES.lapsed, origin: ORIGINS[candidate.origin], regime: regimeIndex(state.regime), beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, delta1: candidate.delta1, z1: candidate.z1, k: candidate.postSets, bstar: candidate.bstar, sigmaOwn: candidate.sigmaOwn, residuals: candidate.residuals, z2: candidate.z2, rho2: candidate.rho2, evidence2: candidate.evidence2, span2: candidate.span2, zMean2: candidate.zMean2 }));
     if (candidate.watched) {
       context.verdicts.push({ kind: "object", state: "dismissed", number: state.number, launch: null, raisedAt: context.now, step: { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: candidate.delta1, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: candidate.postSets, z: candidate.z1 }, event: null, evidence: { delta1: round5(candidate.delta1), z1: round5(candidate.z1), k: candidate.postSets, lapseDays: days }, reasons: [`no further set followed within ${days} days; the step will be measured again when one comes`] });
     }
@@ -489,6 +620,145 @@ function recentCandidatesOf(states: Map<number, SeriesState>, now: number): numb
   return count;
 }
 
+/** The objects with an open alert, by number, as the catalogue state lists them. */
+function alertedStates(context: RunContext): SeriesState[] {
+  const states: SeriesState[] = [];
+  for (const number of context.catalogue.alerted) {
+    const state = context.states.get(number);
+    if (state?.alert) states.push(state);
+  }
+  return states;
+}
+
+/** The orbit a candidate parent is tested at: its ring's last set where it has a state with sets, else the launch's record of its first set. */
+function parentOrbit(context: RunContext, number: number, fallback: PlaneOrbit): PlaneOrbit {
+  const state = context.states.get(number);
+  if (state === undefined || state.epochs.length === 0) return fallback;
+  const i = state.epochs.length - 1;
+  return { epochMs: state.epochs[i]!, aKm: state.a[i]!, eccentricity: Math.max(0, 1 - state.rp[i]! / state.a[i]!), inclinationDeg: state.inc[i]!, raanDeg: state.raan[i]!, meanMotion: state.meanMotion[i]! };
+}
+
+/** The cloud row's signals. */
+function cloudSignals(launch: LaunchRecord, verdict: CloudVerdict, openAlert: boolean, decision: number): Partial<Record<SignalName, number>> {
+  return {
+    phase: PHASES.cloud,
+    launch: launchCodeOf(launch.key),
+    launchAgeDays: verdict.launchAgeDays,
+    newBodies: verdict.newBodies,
+    windowBodies: verdict.windowBodies,
+    lambda: verdict.lambda,
+    lambdaRate: verdict.rate,
+    pBurst: verdict.p,
+    parents: verdict.parents.length,
+    aboveMark: verdict.pieces.filter((p) => p.aboveMark).length,
+    inPlane1: piecesWithin(verdict, 1),
+    inPlane3: piecesWithin(verdict, 3),
+    inPlane5: piecesWithin(verdict, 5),
+    inPlane10: piecesWithin(verdict, 10),
+    debrisPieces: verdict.pieces.filter((p) => p.aboveMark && p.bodyClass === "debris").length,
+    payloadPieces: verdict.pieces.filter((p) => p.aboveMark && p.bodyClass === "payload").length,
+    cloudDeltaVMps: verdict.cloudDeltaVMps,
+    gabbardSpreadKm: verdict.gabbardSpreadKm,
+    openAlert: openAlert ? 1 : 0,
+    cloudDecision: decision,
+  };
+}
+
+/** The decisions a cloud row records. */
+const CLOUD_DECISIONS = { nothing: 0, confirmed: 1, listed: 2, burstNoPiece: 3, deployment: 4, oldCloud: 5 } as const;
+
+/**
+ * The launch pass: every launch the run brought new bodies to is judged
+ * for a burst and for pieces, open alerts on its parents are confirmed
+ * by pieces in their plane first published after the step, and a burst
+ * with consistent pieces and no alert on any parent is listed for review.
+ */
+function judgeLaunches(context: RunContext): void {
+  const { params, now } = context;
+  // Every body the detector meets in its first window is new to it: no launch is judged until the window has passed since the first run.
+  if (now - context.catalogue.startedAt < params.burstWindowDays * DAY_MS) return;
+  for (const [key, newBodies] of context.newBodies) {
+    const launch = launchFor(context.launches, key);
+    const analyst = isAnalystLaunch(key);
+    // Read afresh per launch: a confirmation closes an alert.
+    const alerted = alertedStates(context);
+    const alertsHere = analyst ? alerted.filter((s) => s.alert!.origin === "suspected") : alerted.filter((s) => s.alert!.launch === key);
+    const parents: ParentCandidate[] = alertsHere.map((s) => ({ number: s.number, orbit: s.alert!.orbit, eventMs: s.alert!.candidate.tStep }));
+    if (!analyst) {
+      // Every other body of the launch not classed debris and seen before this run is a candidate parent (a day-old stage included), its event the first window body's first epoch.
+      const window = now - params.burstWindowDays * DAY_MS;
+      const firstEpoch = Math.min(...launch.bodies.filter((b) => b.firstSeenAt > window).map((b) => b.firstEpoch));
+      for (const body of launch.bodies) {
+        if (isFragmentClass(body.bodyClass) || parents.some((p) => p.number === body.number) || body.firstSeenAt >= now) continue;
+        parents.push({ number: body.number, orbit: parentOrbit(context, body.number, { epochMs: body.firstEpoch, aKm: body.aKm, eccentricity: body.eccentricity, inclinationDeg: body.inclinationDeg, raanDeg: body.raanDeg, meanMotion: body.meanMotion }), eventMs: firstEpoch });
+      }
+    }
+    const verdict = judgeCloud(launch, context.catalogue, parents, now, newBodies, params);
+    let decision: number = CLOUD_DECISIONS.nothing;
+    // Open alerts first: the pieces nearest each alerted parent, new by numbering, in its plane and first published after its step.
+    for (const state of alertsHere) {
+      const alert = state.alert!;
+      const mine = verdict.pieces.filter((piece) => piece.parent === state.number || (verdict.parents.length === 1 && piece.parent === null));
+      const afterStep = mine.filter((piece) => piece.firstSeenAt >= alert.candidate.beforeEpoch && piece.firstEpoch >= alert.candidate.beforeEpoch - DAY_MS);
+      alert.pieces.new += mine.length;
+      alert.pieces.aboveMark += afterStep.filter((piece) => piece.aboveMark).length;
+      const confirming = verdict.consistent.filter((piece) => piece.parent === state.number && piece.firstSeenAt >= alert.candidate.beforeEpoch && piece.firstEpoch >= alert.candidate.beforeEpoch - DAY_MS);
+      alert.pieces.inPlane += confirming.length;
+      alert.pieces.afterStep += afterStep.length;
+      if (confirming.length === 0 || analyst) continue;
+      // The launch must be old enough for its new bodies not to be its own, and quiet enough in the year before for them not to be an old cloud's backlog.
+      if (verdict.launchAgeDays < params.youngLaunchDays || verdict.rate > params.confirmBackgroundMax) continue;
+      decision = CLOUD_DECISIONS.confirmed;
+      const evidence: Record<string, number> = { piecesInPlane: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(verdict.cloudDeltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax };
+      const reasons = [`${confirming.length} new bod${confirming.length === 1 ? "y" : "ies"} under launch ${key} (${confirming.map((p) => p.number).join(", ")}) numbered above the catalogue's mark at the step, first published after it, in the parent's plane (distance ${confirming.map((p) => p.distance.toFixed(1)).join(", ")}), moving ${verdict.cloudDeltaVMps.toFixed(1)} m/s from it`, ...verdict.reasons];
+      confirmAlert(state, alert, context, reasons, evidence, confirming.map((p) => p.number));
+    }
+    if (decision === CLOUD_DECISIONS.nothing) {
+      const consistent = verdict.consistent;
+      const anyAlert = alertsHere.length > 0 && !analyst;
+      if (verdict.burst && consistent.length > 0 && verdict.cloudDeltaVMps >= params.cloudOnlyDeltaVMinMps && !anyAlert && now - launch.lastCloudAt > params.cloudRepeatDays * DAY_MS) {
+        decision = CLOUD_DECISIONS.listed;
+        launch.lastCloudAt = now;
+        const byParent = new Map<number | null, number>();
+        for (const piece of consistent) byParent.set(piece.parent, (byParent.get(piece.parent) ?? 0) + 1);
+        const parent = [...byParent.entries()].sort((a, b) => b[1] - a[1])[0]![0];
+        context.verdicts.push({ kind: "cloud", state: "cloud-only", number: parent, launch: analyst ? null : key, raisedAt: now, step: null, event: null, evidence: { windowBodies: verdict.windowBodies, piecesInPlane: consistent.length, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(verdict.cloudDeltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), launchAgeDays: round5(verdict.launchAgeDays) }, reasons: [`a burst of new bodies under ${analyst ? `the analyst range ${key}` : `launch ${key}`} in the plane of ${parent ?? "no catalogued parent"} with no step on any parent: listed for review, not a detection`, ...verdict.reasons], bodies: consistent.map((p) => p.number) });
+      } else if (verdict.burst && consistent.length === 0) decision = verdict.deployments > 0 || verdict.reasons.some((r) => r.includes("deployment")) ? CLOUD_DECISIONS.deployment : CLOUD_DECISIONS.burstNoPiece;
+      else if (verdict.oldCloud) decision = CLOUD_DECISIONS.oldCloud;
+    }
+    context.log.push(logRow(now, verdict.parents[0]?.number ?? 0, cloudSignals(launch, verdict, alertsHere.length > 0, decision)));
+  }
+}
+
+/** The notices published by the run's instant and not yet applied: each confirms the open alerts naming its object or its launch, after their step. */
+function applyNotices(context: RunContext): void {
+  const applied = context.catalogue.noticesApplied;
+  for (const notice of context.notices) {
+    if (notice.at > context.now) continue;
+    const key = `${notice.number ?? notice.launch ?? "?"}:${notice.at}`;
+    if (applied.includes(key)) continue;
+    applied.push(key);
+    for (const state of alertedStates(context)) {
+      const alert = state.alert!;
+      const named = (notice.number !== null && notice.number === state.number) || (notice.number === null && notice.launch !== null && notice.launch === alert.launch);
+      if (!named || notice.at < alert.candidate.beforeEpoch) continue;
+      alert.noticed = true;
+      confirmAlert(state, alert, context, [`a public notice names the object: ${notice.text}`], { noticed: 1 }, []);
+    }
+  }
+  if (applied.length > 256) applied.splice(0, applied.length - 256);
+}
+
+/** Alerts past the time to live close: dismissed where bodies came under the launch and every one was old, expired otherwise. */
+function expire(context: RunContext): void {
+  for (const state of alertedStates(context)) {
+    const alert = state.alert!;
+    if (context.now - alert.raisedAt < context.params.alertTtlDays * DAY_MS) continue;
+    const outcome = closingOutcome(alert);
+    closeAlert(state, alert, outcome === OUTCOMES.confirmed ? OUTCOMES.expired : outcome, context, true, { evidence: { cadenceAfter: round5(cadenceAfter(alert, context.now, context.params)) } });
+  }
+}
+
 /**
  * One run of the detector: the sets published since the last run, the
  * states the last run returned, the run's instant and the day's weather
@@ -497,7 +767,9 @@ function recentCandidatesOf(states: Map<number, SeriesState>, now: number): numb
 export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set() };
+  const launches = input.launches as Map<string, unknown>;
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [] };
+  if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {
     let state = states.get(set.number);
@@ -517,6 +789,10 @@ export function runDetector(input: DetectorInput): DetectorOutput {
     if (item.post) advance(item, band, context);
     else decide(item, band, context);
   }
+  for (const item of pending) if (item.state.alert !== null) track(item, statsFor(stats, item.band, item.regime), context);
   lapse(states, context);
+  judgeLaunches(context);
+  applyNotices(context);
+  expire(context);
   return { states, launches: input.launches, verdicts: context.verdicts, log: context.log };
 }

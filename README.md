@@ -6,12 +6,12 @@ The detector behind [Orbinauts](https://orbinauts.com), the live satellite map.
 
 A satellite, a rocket body or a piece of debris that breaks up in orbit leaves two traces in public data: its own orbit jumps, by metres to kilometres, in the element sets the catalogue publishes for it; and days to weeks later new objects appear under its launch. This library reads the first trace to raise an alert before the second is published, and uses the second to confirm it. Every alert carries the numbers it was judged by.
 
-What this repository holds: the **ground truth**, one row per breakup an authority reported since 1961, built from its sources by a script and checked by the tests; the **Archive** of every object's element sets since 2005, published as release assets; the **scorecard** that replays the detector over the Archive and scores it against the truth; and the **detector**, in its second phase: the parent's own step, measured against the object's own noise and the day's drag, on every object in every orbit, read against the object's own record of steps and the impulse the step implies, so that a working satellite's manoeuvres are named as such and not raised.
+What this repository holds: the **ground truth**, one row per breakup an authority reported since 1961, built from its sources by a script and checked by the tests; the **Archive** of every object's element sets since 2005, published as release assets; the **scorecard** that replays the detector over the Archive and scores it against the truth; and the **detector**, in its third phase: the parent's own step, measured against the object's own noise and the day's drag, on every object in every orbit, read against the object's own record of steps and the impulse the step implies, so that a working satellite's manoeuvres are named as such and not raised; then confirmed, or not, by the bodies the catalogue goes on to list under the parent's launch, and timed from the two sets either side of the step.
 
 - Ground truth: every reported breakup and anomalous event, with each source's statement verbatim, the resolved time, orbit, cause and piece count, which source each came from, and every disagreement between sources.
 - Detector: each object's sets are kept in a ring and modelled by a robust local polynomial; a set that leaves the model by more than the object's own scatter and the band's live scale opens a candidate, and the candidate is a persistent step when it holds across the next sets and is not a drift drag could produce. The step is then read against the object's own record over two years and the impulse it implies by Gauss's equations: the first step in two years, or one unlike the object's own in size, direction or geometry, is raised as suspected; a station-keeping step, a campaign's or a disposal's is a manoeuvre. Every verdict carries the numbers it was judged by.
-- Scorecard: the detector replayed over twenty-one years in the catalogue's publication order, the states carried from year to year, and scored on held-out years, with the table below read from its committed result.
-- Next: confirming steps by the fragments the catalogue goes on to publish, and a review list of clouds whose parent did not move.
+- Fragments: every launch the catalogue lists new bodies under is read for a burst over the launch's own background, for pieces that are new by numbering and share a parent's plane once each node's own precession is taken off, and for the cloud's velocity and spread. Such pieces, first published after a suspected step, confirm it; a notice naming the object confirms it; nothing in thirty days expires it; and a burst with pieces in the plane of a parent that did not move is listed for review, never counted as a detection. Once raised, an alert keeps reading the parent's sets so the scorecard can say what waiting longer would have cost.
+- Scorecard: the detector replayed over twenty-two years in the catalogue's publication order, the states carried from year to year, and scored on held-out years, with the tables below read from its committed result: the detection rate, the false alarms, the precision per persistence tier, and the confirmations.
 
 [Changelog](CHANGELOG.md) · [Design record](docs/decisions/0001-a-standalone-truth-driven-package.md) · [How the truth was built](docs/truth.md)
 
@@ -55,7 +55,7 @@ by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 
 The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. A target is a reported event whose parent had at least five public element sets in the sixty days before it; one with fewer is undetectable from public elements and listed apart. A detection is an alert on the parent's own orbit, raised before the first fragment's element set was published and before any notice; the same alert after that is late; an alert matching no reported event is a false alarm. The headline line is breakups reported to the day or better, scored on the odd years, held out from the even years the thresholds are fitted on; the other lines are shown so nothing is mixed into it. The targets are nine in ten detected and fewer than one false alarm in ten. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the rule. The per-year files under `kpi/years/` (every verdict and every logged candidate, tens of megabytes a run) are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and are not committed; the aggregate is.
 
-**This is the second phase of the detector**, the parent-step channel read against the object's own record. A persistent step is raised only where the object's record of steps over the last two years does not explain it: the first step in two years, or one far larger than the object's own, opposite in direction to every one of them, or needing a radial kick no thruster gives. A working satellite's station-keeping, orbit raising and disposal moves are closed as manoeuvres, which the scorecard counts as nothing. The false alarms that remain are lone manoeuvres on satellites that seldom move, the second step of a young satellite the other way from its first, and manoeuvres whose eccentricity change one burn cannot explain; they are counted by cause in [docs/detector/d2-fitting.md](docs/detector/d2-fitting.md), which also records the sweeps on the even years. The detection rate is the number to read: of the reported breakups whose parent had public elements, how many the parent's own step caught before the fragments were catalogued; two training events whose parent broke up with a step just like its own manoeuvres are what the gate costs. The fragments' confirmation is the next phase. The odd years below were not looked at while choosing the thresholds.
+**This is the third phase of the detector**, the parent-step channel of the first two phases read against the object's own record, now confirmed or not by what the catalogue goes on to list under the parent's launch, and timed from the two sets either side of the step. A suspected step stays open for thirty days: pieces new by numbering, in the parent's plane and first published after it confirm it, a public notice confirms it, nothing expires it. The detection rate and the false alarms are the first two phases' almost to the alert: the fragments confirm, they do not detect, and the owner's definition scores the alert before them. The tier table reads every alert's later sets, so the trade between waiting longer and false alarms is shown with the numbers in hand: the false alarms that remain are persistent steps that hold for a week as a breakup's does, so waiting buys little. The confirmed lines say how many alerts the fragments bore out, and how many they bore out wrongly, which the third phase's rules (a launch older than a month, quiet in the year before, a step no older than the time to live when raised) cut from hundreds to a handful. [docs/detector/d3-fitting.md](docs/detector/d3-fitting.md) records the sweeps on the even years and the dissection of the highly elliptical line, where the parents' own sets do not show the events. The odd years below were not looked at while choosing the thresholds.
 
 | Validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -67,18 +67,34 @@ The scorecard replays the detector over the Archive, every element set of every 
 
 | Alerts, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 15732 |
-| Duplicates | 80 |
+| Alerts (object verdicts, suspected or confirmed) | 15756 |
+| Duplicates | 82 |
 | Exempt | 8 |
-| False alarms | 15623 |
+| False alarms | 15645 |
 | False-alarm rate (the target is under 10%) | 100% |
-| False alarms per 10,000 body-years | 841.9 |
+| False alarms per 10,000 body-years | 843.1 |
 | Lead over the catalogue, hours: median (10th percentile) | 402.9 (140.8) |
 | Latency from the event, hours: median (90th percentile) | 129.5 (441.2) |
-| Confirmed share of the detections | 0% |
-| Days to confirmation, median | – |
-| Timing error, minutes, median | 1086.1 |
-| Cloud verdicts, for review | 0 |
+| Confirmed share of the detections | 17% |
+| Days to confirmation, median | 4.0 |
+| Timing error, minutes, median | 34.6 |
+| Alerts confirmed by the fragments or a notice | 19 |
+| Of which on a reported event (a detection or a late alert) | 5 |
+| Of which inside an exempt window or a duplicate | 0 |
+| Of which matching no reported event (wrongly confirmed) | 14 |
+| Days from the alert to its confirmation, median | 4.0 |
+| Cloud verdicts, for review (a burst with no parent step) | 90 |
+
+| Precision per persistence tier, validation: the odd years (2005 to 2025, 11 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 post sets over 18 h, or 3 (as raised) | 15666 | 18 | 15645 | 0% | 100% | 402.9 (140.8) |
+| 3 post sets | 15035 | 18 | 15014 | 0% | 100% | 402.9 (140.8) |
+| 5 post sets | 12353 | 16 | 12335 | 0% | 89% | 402.9 (140.8) |
+| 1 day of post sets | 13664 | 16 | 13646 | 0% | 89% | 402.9 (140.8) |
+| 3 days of post sets | 10462 | 16 | 10444 | 0% | 89% | 362.9 (115.1) |
+| 5 days of post sets | 9013 | 16 | 8995 | 0% | 89% | 306.9 (68.8) |
+| 7 days of post sets | 7792 | 12 | 7778 | 0% | 67% | 370.4 (16.8) |
+
 ## Ground truth
 
 A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.

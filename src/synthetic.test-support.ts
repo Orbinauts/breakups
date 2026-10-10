@@ -1,5 +1,5 @@
 import { semiMajorAxisKm } from "@orbinauts/engine";
-import type { DetectorInput, DetectorOutput, SpaceWeatherDay } from "./detector.ts";
+import type { DetectorInput, DetectorOutput, Notice, SpaceWeatherDay } from "./detector.ts";
 import type { ElementSet } from "./elements.ts";
 import type { DetectorParameters } from "./params.ts";
 import { runDetector } from "./run.ts";
@@ -76,14 +76,14 @@ export interface Fed {
  * instant is an hour after its latest epoch. Runs with no set are added
  * every four hours up to `until`, so lapses happen.
  */
-export function feed(batches: ElementSet[][], options: { parameters?: Partial<DetectorParameters>; space?: SpaceWeatherDay[]; until?: number } = {}): Fed {
+export function feed(batches: ElementSet[][], options: { parameters?: Partial<DetectorParameters>; space?: SpaceWeatherDay[]; until?: number; notices?: Notice[] } = {}): Fed {
   let states: DetectorInput["states"] = new Map();
   let launches: DetectorInput["launches"] = new Map();
   const verdicts: Fed["verdicts"] = [];
   const log: Fed["log"] = [];
   let now = Number.NEGATIVE_INFINITY;
   const run = (sets: ElementSet[], at: number): void => {
-    const output = runDetector({ states, launches, sets, now: at, parameters: options.parameters, space: options.space });
+    const output = runDetector({ states, launches, sets, now: at, parameters: options.parameters, space: options.space, notices: options.notices?.filter((n) => n.at <= at) });
     states = output.states;
     launches = output.launches;
     verdicts.push(...output.verdicts);

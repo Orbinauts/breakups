@@ -1,5 +1,6 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
+import type { OpenAlert } from "./fusion.ts";
 import type { StepRecord } from "./manoeuvre.ts";
 import { dragRateKmPerDay, fitWindow, median, robustScale, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
@@ -55,8 +56,10 @@ export interface Candidate {
   pre: Fit;
   preRp: Fit;
   preInc: Fit;
-  /** The object's own scatter of the semi-major axis when the candidate opened, in kilometres, and the drag term of its window. */
+  /** The object's own scatter of the semi-major axis when the candidate opened, in kilometres, with the short scatter and the long memory it was the larger of, and the drag term of its window. */
   sigmaOwn: number;
+  sigmaShort: number;
+  sigmaLong: number;
   bstar: number;
   /** The orbit at the bracket's first edge, from the pre fits: the semi-major axis and perigee radius in kilometres and the inclination in degrees, for the impulse the step implies. */
   aKm: number;
@@ -83,26 +86,32 @@ export interface Candidate {
   suspected: boolean;
   /** When the last post set was seen, the run's instant. */
   lastPostAt: number;
-  /** The trajectory: the normalised step, the later sets' ratio, the evidence and the span when the second and the third post set were first read, for sweeps of the gates offline. NaN until reached. */
+  /** The sets a day the object had in the month before the step. */
+  cadenceBefore: number;
+  /** The trajectory: the normalised step (the level and the mean), the later sets' ratio, the evidence and the span when the second and the third post set were first read, for sweeps of the gates offline. NaN until reached. */
   z2: number;
   rho2: number;
   evidence2: number;
   span2: number;
+  zMean2: number;
   z3: number;
   rho3: number;
   evidence3: number;
   span3: number;
+  zMean3: number;
 }
 
 export interface SeriesState {
   number: number;
   regime: Regime;
-  /** The ring, oldest first: epochs in milliseconds since 1970, and per set the semi-major axis and perigee radius in kilometres, the inclination and node in degrees, the drag term, the mean motion and its printed half-derivative. */
+  /** The ring, oldest first: epochs in milliseconds since 1970, and per set the semi-major axis and perigee radius in kilometres, the inclination, node, argument of perigee and mean anomaly in degrees, the drag term, the mean motion and its printed half-derivative. The two angles of position are kept so the sets either side of a step can be propagated for the event's time. */
   epochs: number[];
   a: number[];
   rp: number[];
   inc: number[];
   raan: number[];
+  argp: number[];
+  ma: number[];
   bstar: number[];
   meanMotion: number[];
   meanMotionDot: number[];
@@ -131,7 +140,17 @@ export interface SeriesState {
   firstEpoch: number;
   /** The object's accepted steps over the history's reach, oldest first, whatever verdict each got: what a new step is classed by. */
   steps: StepRecord[];
+  /** How many sets arrived with an epoch on each of the last thirty days, by the day's number modulo thirty, with the day each bin stands for: the tracking cadence before a step is read from here, since the ring holds too few sets for a month of a low orbit. */
+  dayCounts: number[];
+  dayOf: number[];
+  /** The alert raised on the object and still open for the fragments or a notice to confirm; null where none is. */
+  alert: OpenAlert | null;
+  /** Whether the object has been noted under its launch, so the launch's record is not searched on every set. */
+  noted: boolean;
 }
+
+/** How many days of set counts the state keeps for the cadence. */
+export const CADENCE_DAYS = 30;
 
 export function newState(number: number): SeriesState {
   return {
@@ -142,6 +161,8 @@ export function newState(number: number): SeriesState {
     rp: [],
     inc: [],
     raan: [],
+    argp: [],
+    ma: [],
     bstar: [],
     meanMotion: [],
     meanMotionDot: [],
@@ -161,7 +182,32 @@ export function newState(number: number): SeriesState {
     closedAt: Number.NEGATIVE_INFINITY,
     firstEpoch: Number.POSITIVE_INFINITY,
     steps: [],
+    dayCounts: new Array<number>(CADENCE_DAYS).fill(0),
+    dayOf: new Array<number>(CADENCE_DAYS).fill(Number.NEGATIVE_INFINITY),
+    alert: null,
+    noted: false,
   };
+}
+
+/** Counts a set's epoch into the day bins. */
+export function countDay(state: SeriesState, epochMs: number): void {
+  const day = Math.floor(epochMs / DAY_MS);
+  const bin = ((day % CADENCE_DAYS) + CADENCE_DAYS) % CADENCE_DAYS;
+  if (state.dayOf[bin] !== day) {
+    state.dayOf[bin] = day;
+    state.dayCounts[bin] = 0;
+  }
+  state.dayCounts[bin]!++;
+}
+
+/** The sets a day the object had over the `days` whole days before the epoch's day, from the day bins, over the days the object has been seen at all where that is fewer; zero where the bins hold none of those days. */
+export function cadenceBefore(state: SeriesState, epochMs: number, days: number): number {
+  const day = Math.floor(epochMs / DAY_MS);
+  const seen = Number.isFinite(state.firstEpoch) ? Math.max(1, Math.ceil((epochMs - state.firstEpoch) / DAY_MS)) : days;
+  const span = Math.min(days, CADENCE_DAYS, seen);
+  let sets = 0;
+  for (let i = 0; i < CADENCE_DAYS; i++) if (state.dayOf[i]! < day && state.dayOf[i]! >= day - span) sets += state.dayCounts[i]!;
+  return sets / span;
 }
 
 /** Whether the set's numbers can be read at all: finite, a positive mean motion, a bound orbit, and a drag derivative no faster than any orbit can rise. */
@@ -225,6 +271,8 @@ function writeAt(state: SeriesState, i: number, set: ElementSet, aKm: number): v
   state.rp[i] = aKm * (1 - set.eccentricity);
   state.inc[i] = set.inclinationDeg;
   state.raan[i] = set.raanDeg;
+  state.argp[i] = set.argpDeg;
+  state.ma[i] = set.meanAnomalyDeg;
   state.bstar[i] = set.bstar;
   state.meanMotion[i] = set.meanMotion;
   state.meanMotionDot[i] = set.meanMotionDot;
@@ -237,6 +285,8 @@ function spliceAt(state: SeriesState, i: number, set: ElementSet, aKm: number, r
     state.rp.push(aKm * (1 - set.eccentricity));
     state.inc.push(set.inclinationDeg);
     state.raan.push(set.raanDeg);
+    state.argp.push(set.argpDeg);
+    state.ma.push(set.meanAnomalyDeg);
     state.bstar.push(set.bstar);
     state.meanMotion.push(set.meanMotion);
     state.meanMotionDot.push(set.meanMotionDot);
@@ -248,6 +298,8 @@ function spliceAt(state: SeriesState, i: number, set: ElementSet, aKm: number, r
   state.rp.splice(i, 0, 0);
   state.inc.splice(i, 0, 0);
   state.raan.splice(i, 0, 0);
+  state.argp.splice(i, 0, 0);
+  state.ma.splice(i, 0, 0);
   state.bstar.splice(i, 0, 0);
   state.meanMotion.splice(i, 0, 0);
   state.meanMotionDot.splice(i, 0, 0);
@@ -255,15 +307,39 @@ function spliceAt(state: SeriesState, i: number, set: ElementSet, aKm: number, r
   writeAt(state, i, set, aKm);
 }
 
+const columnsOf = (state: SeriesState): number[][] => [state.epochs, state.a, state.rp, state.inc, state.raan, state.argp, state.ma, state.bstar, state.meanMotion, state.meanMotionDot, state.resid];
+
 /** Drops the ring's oldest set. */
 function evictOldest(state: SeriesState): void {
-  for (const column of [state.epochs, state.a, state.rp, state.inc, state.raan, state.bstar, state.meanMotion, state.meanMotionDot, state.resid]) column.shift();
+  for (const column of columnsOf(state)) column.shift();
 }
 
 /** Removes the set at an index from the ring. */
 export function removeAt(state: SeriesState, i: number): void {
-  for (const column of [state.epochs, state.a, state.rp, state.inc, state.raan, state.bstar, state.meanMotion, state.meanMotionDot, state.resid]) column.splice(i, 1);
+  for (const column of columnsOf(state)) column.splice(i, 1);
   refreshScatter(state);
+}
+
+/** The ring's set at an index as the light row, for propagation: the publication time is not kept, the class is unknown, and the element set number and the second derivative are not kept either, which the propagation does not read. */
+export function ringSetAt(state: SeriesState, i: number, designator: string | null): ElementSet {
+  const aKm = state.a[i]!;
+  return {
+    number: state.number,
+    designator,
+    epochMs: state.epochs[i]!,
+    createdMs: null,
+    meanMotion: state.meanMotion[i]!,
+    eccentricity: Math.max(0, 1 - state.rp[i]! / aKm),
+    inclinationDeg: state.inc[i]!,
+    raanDeg: state.raan[i]!,
+    argpDeg: state.argp[i]!,
+    meanAnomalyDeg: state.ma[i]!,
+    bstar: state.bstar[i]!,
+    meanMotionDot: state.meanMotionDot[i]!,
+    meanMotionDdot: 0,
+    elementSetNumber: 0,
+    bodyClass: "unknown",
+  };
 }
 
 /**
@@ -294,6 +370,7 @@ export function screenSet(state: SeriesState, set: ElementSet, params: DetectorP
     while (i > 0 && state.epochs[i - 1]! > set.epochMs) i--;
     if (n >= params.ringSize && i === 0) return [];
     if (isForeign(referenceAt(state, i === 0 ? 0 : i - 1), set, aKm, params)) return [];
+    countDay(state, set.epochMs);
     spliceAt(state, i, set, aKm, Number.NaN);
     if (state.epochs.length > params.ringSize) evictOldest(state);
     return [];
@@ -326,6 +403,7 @@ export function screenSet(state: SeriesState, set: ElementSet, params: DetectorP
 export function pushSet(state: SeriesState, set: ElementSet, residual: number, params: DetectorParameters): void {
   const aKm = semiMajorAxisOf(set);
   if (set.epochMs < state.firstEpoch) state.firstEpoch = set.epochMs;
+  countDay(state, set.epochMs);
   spliceAt(state, state.epochs.length, set, aKm, residual);
   const evicted = state.epochs.length > params.ringSize;
   if (evicted) evictOldest(state);

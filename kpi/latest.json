@@ -6,7 +6,7 @@
   },
   "truthSha256": "39adb42981417b688d4c67f2f73a7b20af9789fdffeadbf4f04fbfcd5618e68f",
   "detector": {
-    "name": "step-v2",
+    "name": "fusion-v3",
     "parameters": {
       "ringSize": 32,
       "windowSets": {
@@ -88,7 +88,42 @@
       "oppositeMinSteps": 2,
       "consistencyMin": 100,
       "bstarRatioMax": 1000000,
-      "inclinationStepMinDeg": 0.01
+      "inclinationStepMinDeg": 0.01,
+      "occasionalRaisesNonPayload": false,
+      "persistOnMeanStep": false,
+      "alertMaxPostSets": 24,
+      "tierSets": [
+        3,
+        5
+      ],
+      "tierDays": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "cadenceAfterDays": 3,
+      "cadenceBeforeDays": 30,
+      "alertTtlDays": 30,
+      "burstWindowDays": 14,
+      "burstBackgroundDays": 365,
+      "lambdaFloor": 0.5,
+      "pBurst": 0.001,
+      "burstMinBodies": 2,
+      "planeInclinationToleranceDeg": 0.2,
+      "planeNodeToleranceDeg": 1.5,
+      "planeDistanceMax": 3,
+      "planeMaxDays": 180,
+      "deploymentDeltaVMps": 1,
+      "youngLaunchDays": 30,
+      "youngLaunchDeltaVMps": 5,
+      "cloudOnlyDeltaVMinMps": 1,
+      "confirmBackgroundMax": 2,
+      "cloudRepeatDays": 30,
+      "eventGridSeconds": 60,
+      "eventLeadHours": 6,
+      "eventSigmaPositionKm": 1,
+      "eventMaxPoints": 4000
     }
   },
   "archive": {
@@ -328,14 +363,114 @@
           "detectionRate": 0.75
         }
       },
-      "alerts": 15732,
-      "duplicates": 80,
+      "alerts": 15756,
+      "duplicates": 82,
       "exempt": 8,
-      "falseAlarms": 15623,
-      "review": 0,
-      "falseAlarmRate": 0.9988491784412762,
+      "falseAlarms": 15645,
+      "review": 90,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 15666,
+          "detections": 18,
+          "falseAlarms": 15645,
+          "precision": 0.0011492051331162612,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 140.77959,
+            "count": 10
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 15035,
+          "detections": 18,
+          "falseAlarms": 15014,
+          "precision": 0.001197445449707291,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 140.77959,
+            "count": 10
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 12353,
+          "detections": 16,
+          "falseAlarms": 12335,
+          "precision": 0.001295441664642539,
+          "detectionShare": 0.8888888888888888,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 140.77959,
+            "count": 9
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 13664,
+          "detections": 16,
+          "falseAlarms": 13646,
+          "precision": 0.0011711316059142146,
+          "detectionShare": 0.8888888888888888,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 140.77959,
+            "count": 9
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 10462,
+          "detections": 16,
+          "falseAlarms": 10444,
+          "precision": 0.0015296367112810707,
+          "detectionShare": 0.8888888888888888,
+          "leadHours": {
+            "median": 362.92768728000215,
+            "tail": 115.11084896002876,
+            "count": 9
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 9013,
+          "detections": 16,
+          "falseAlarms": 8995,
+          "precision": 0.0017756075907224503,
+          "detectionShare": 0.8888888888888888,
+          "leadHours": {
+            "median": 306.92768728000215,
+            "tail": 68.77959,
+            "count": 9
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 7792,
+          "detections": 12,
+          "falseAlarms": 7778,
+          "precision": 0.0015404364569961489,
+          "detectionShare": 0.6666666666666666,
+          "leadHours": {
+            "median": 370.3965476799859,
+            "tail": 16.77959,
+            "count": 5
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 19,
+        "ofTrue": 5,
+        "ofExempt": 0,
+        "ofFalseAlarms": 14,
+        "daysToConfirmation": 4
+      },
+      "falseAlarmRate": 0.9988507948668838,
       "bodyYears": 185557.5221240725,
-      "falseAlarmsPer10kBodyYears": 841.9491606249045,
+      "falseAlarmsPer10kBodyYears": 843.1347768019351,
       "leadHours": {
         "median": 402.92768728000215,
         "tail": 140.77959,
@@ -346,9 +481,9 @@
         "tail": 441.2,
         "count": 18
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 1086.1369552001954,
+      "confirmedShare": 0.16666666666666666,
+      "daysToConfirmation": 4,
+      "timingErrorMinutes": 34.64925600179036,
       "byRegime": {
         "LEO": {
           "targets": 35,
@@ -452,10 +587,10 @@
         "breakups A-B": {
           "targets": 43,
           "undetectable": 7,
-          "detected": 18,
-          "late": 2,
-          "missed": 23,
-          "detectionRate": 0.4186046511627907
+          "detected": 19,
+          "late": 3,
+          "missed": 21,
+          "detectionRate": 0.4418604651162791
         },
         "breakups C": {
           "targets": 10,
@@ -485,40 +620,140 @@
           "targets": 6,
           "undetectable": 1,
           "detected": 0,
-          "late": 1,
-          "missed": 5,
+          "late": 2,
+          "missed": 4,
           "detectionRate": 0
         }
       },
-      "alerts": 22330,
+      "alerts": 22357,
       "duplicates": 76,
-      "exempt": 168,
-      "falseAlarms": 22059,
-      "review": 0,
-      "falseAlarmRate": 0.9989584276786523,
+      "exempt": 170,
+      "falseAlarms": 22081,
+      "review": 73,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 22111,
+          "detections": 24,
+          "falseAlarms": 22081,
+          "precision": 0.0010857272110382267,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 620.3094180000136,
+            "tail": 33.97444359998915,
+            "count": 13
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 21660,
+          "detections": 23,
+          "falseAlarms": 21631,
+          "precision": 0.0010621594162741296,
+          "detectionShare": 0.9583333333333334,
+          "leadHours": {
+            "median": 620.3094180000136,
+            "tail": 33.97444359998915,
+            "count": 13
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 18176,
+          "detections": 18,
+          "falseAlarms": 18153,
+          "precision": 0.0009905894006934125,
+          "detectionShare": 0.75,
+          "leadHours": {
+            "median": 530.4741620800103,
+            "tail": 68.54423120001898,
+            "count": 11
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 19159,
+          "detections": 21,
+          "falseAlarms": 19134,
+          "precision": 0.001096319498825372,
+          "detectionShare": 0.875,
+          "leadHours": {
+            "median": 620.3094180000136,
+            "tail": 68.54423120001898,
+            "count": 12
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 13334,
+          "detections": 18,
+          "falseAlarms": 13312,
+          "precision": 0.001350337584396099,
+          "detectionShare": 0.75,
+          "leadHours": {
+            "median": 620.3094180000136,
+            "tail": 68.54423120001898,
+            "count": 11
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 10817,
+          "detections": 10,
+          "falseAlarms": 10802,
+          "precision": 0.000924898261191269,
+          "detectionShare": 0.4166666666666667,
+          "leadHours": {
+            "median": 312.3094180000136,
+            "tail": 22.262980480007595,
+            "count": 5
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 8783,
+          "detections": 8,
+          "falseAlarms": 8771,
+          "precision": 0.0009112655199908873,
+          "detectionShare": 0.3333333333333333,
+          "leadHours": {
+            "median": 312.3094180000136,
+            "tail": 99.96882688001844,
+            "count": 4
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 14,
+        "ofTrue": 8,
+        "ofExempt": 0,
+        "ofFalseAlarms": 6,
+        "daysToConfirmation": 3.5
+      },
+      "falseAlarmRate": 0.9989142727889617,
       "bodyYears": 190898.26758990643,
-      "falseAlarmsPer10kBodyYears": 1155.536940093549,
+      "falseAlarmsPer10kBodyYears": 1156.689386382232,
       "leadHours": {
-        "median": 586.4741620800103,
+        "median": 620.3094180000136,
         "tail": 33.97444359998915,
-        "count": 12
+        "count": 13
       },
       "latencyHours": {
         "median": 132,
         "tail": 504,
-        "count": 23
+        "count": 24
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 1796.780001599121,
+      "confirmedShare": 0.2916666666666667,
+      "daysToConfirmation": 3.5,
+      "timingErrorMinutes": 511.13623680013023,
       "byRegime": {
         "LEO": {
           "targets": 42,
           "undetectable": 13,
-          "detected": 13,
-          "late": 1,
-          "missed": 28,
-          "detectionRate": 0.30952380952380953
+          "detected": 14,
+          "late": 3,
+          "missed": 25,
+          "detectionRate": 0.3333333333333333
         },
         "MEO": {
           "targets": 4,
@@ -557,17 +792,17 @@
         "breakup": {
           "targets": 68,
           "undetectable": 15,
-          "detected": 22,
-          "late": 3,
-          "missed": 43,
-          "detectionRate": 0.3235294117647059
+          "detected": 23,
+          "late": 4,
+          "missed": 41,
+          "detectionRate": 0.3382352941176471
         },
         "anomalous": {
           "targets": 11,
           "undetectable": 3,
           "detected": 1,
-          "late": 1,
-          "missed": 9,
+          "late": 2,
+          "missed": 8,
           "detectionRate": 0.09090909090909091
         },
         "aerodynamic": {
@@ -625,10 +860,10 @@
         "breakups A-B": {
           "targets": 75,
           "undetectable": 13,
-          "detected": 29,
-          "late": 4,
-          "missed": 42,
-          "detectionRate": 0.38666666666666666
+          "detected": 30,
+          "late": 5,
+          "missed": 40,
+          "detectionRate": 0.4
         },
         "breakups C": {
           "targets": 18,
@@ -658,40 +893,140 @@
           "targets": 10,
           "undetectable": 1,
           "detected": 3,
-          "late": 1,
-          "missed": 6,
+          "late": 2,
+          "missed": 5,
           "detectionRate": 0.3
         }
       },
-      "alerts": 38062,
-      "duplicates": 156,
-      "exempt": 176,
-      "falseAlarms": 37682,
-      "review": 0,
-      "falseAlarmRate": 0.998913129920738,
+      "alerts": 38113,
+      "duplicates": 158,
+      "exempt": 178,
+      "falseAlarms": 37726,
+      "review": 163,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 37777,
+          "detections": 42,
+          "falseAlarms": 37726,
+          "precision": 0.0011120525312433805,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 542.3965476799859,
+            "tail": 68.54423120001898,
+            "count": 23
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 36695,
+          "detections": 41,
+          "falseAlarms": 36645,
+          "precision": 0.001117592542114158,
+          "detectionShare": 0.9761904761904762,
+          "leadHours": {
+            "median": 542.3965476799859,
+            "tail": 68.54423120001898,
+            "count": 23
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 30529,
+          "detections": 34,
+          "falseAlarms": 30488,
+          "precision": 0.0011139505930148745,
+          "detectionShare": 0.8095238095238095,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 68.54423120001898,
+            "count": 20
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 32823,
+          "detections": 37,
+          "falseAlarms": 32780,
+          "precision": 0.0011274644239266233,
+          "detectionShare": 0.8809523809523809,
+          "leadHours": {
+            "median": 542.3965476799859,
+            "tail": 135.96882688001844,
+            "count": 21
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 23796,
+          "detections": 34,
+          "falseAlarms": 23756,
+          "precision": 0.0014291719209751997,
+          "detectionShare": 0.8095238095238095,
+          "leadHours": {
+            "median": 484.31210616000703,
+            "tail": 68.54423120001898,
+            "count": 20
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 19830,
+          "detections": 26,
+          "falseAlarms": 19797,
+          "precision": 0.0013116077283963073,
+          "detectionShare": 0.6190476190476191,
+          "leadHours": {
+            "median": 306.92768728000215,
+            "tail": 68.77959,
+            "count": 14
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 16575,
+          "detections": 20,
+          "falseAlarms": 16549,
+          "precision": 0.001207073450419458,
+          "detectionShare": 0.47619047619047616,
+          "leadHours": {
+            "median": 370.3965476799859,
+            "tail": 16.77959,
+            "count": 9
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 33,
+        "ofTrue": 13,
+        "ofExempt": 0,
+        "ofFalseAlarms": 20,
+        "daysToConfirmation": 4
+      },
+      "falseAlarmRate": 0.9988879474687566,
       "bodyYears": 376455.78971397894,
-      "falseAlarmsPer10kBodyYears": 1000.9674716021708,
+      "falseAlarmsPer10kBodyYears": 1002.1362675458706,
       "leadHours": {
-        "median": 516.312106160007,
+        "median": 542.3965476799859,
         "tail": 68.54423120001898,
-        "count": 22
+        "count": 23
       },
       "latencyHours": {
         "median": 132,
         "tail": 495.5,
-        "count": 41
+        "count": 42
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 1139.8169800008138,
+      "confirmedShare": 0.23809523809523808,
+      "daysToConfirmation": 4,
+      "timingErrorMinutes": 299.7406071777344,
       "byRegime": {
         "LEO": {
           "targets": 77,
           "undetectable": 23,
-          "detected": 27,
-          "late": 3,
-          "missed": 47,
-          "detectionRate": 0.35064935064935066
+          "detected": 28,
+          "late": 5,
+          "missed": 44,
+          "detectionRate": 0.36363636363636365
         },
         "MEO": {
           "targets": 7,
@@ -730,17 +1065,17 @@
         "breakup": {
           "targets": 116,
           "undetectable": 31,
-          "detected": 35,
-          "late": 5,
-          "missed": 76,
-          "detectionRate": 0.3017241379310345
+          "detected": 36,
+          "late": 6,
+          "missed": 74,
+          "detectionRate": 0.3103448275862069
         },
         "anomalous": {
           "targets": 24,
           "undetectable": 4,
           "detected": 6,
-          "late": 2,
-          "missed": 16,
+          "late": 3,
+          "missed": 15,
           "detectionRate": 0.25
         },
         "aerodynamic": {
@@ -817,14 +1152,114 @@
           "detectionRate": null
         }
       },
-      "alerts": 17401,
+      "alerts": 17402,
       "duplicates": 13,
       "exempt": 159,
-      "falseAlarms": 17223,
-      "review": 0,
-      "falseAlarmRate": 0.9996517499564688,
+      "falseAlarms": 17224,
+      "review": 2,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 17230,
+          "detections": 6,
+          "falseAlarms": 17224,
+          "precision": 0.0003482298316889147,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 33.97444359998915,
+            "tail": 33.97444359998915,
+            "count": 2
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 16837,
+          "detections": 5,
+          "falseAlarms": 16832,
+          "precision": 0.00029696501752093604,
+          "detectionShare": 0.8333333333333334,
+          "leadHours": {
+            "median": 33.97444359998915,
+            "tail": 33.97444359998915,
+            "count": 2
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 14141,
+          "detections": 4,
+          "falseAlarms": 14137,
+          "precision": 0.0002828654267732126,
+          "detectionShare": 0.6666666666666666,
+          "leadHours": {
+            "median": 33.97444359998915,
+            "tail": 33.97444359998915,
+            "count": 2
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 14676,
+          "detections": 5,
+          "falseAlarms": 14671,
+          "precision": 0.0003406922867266285,
+          "detectionShare": 0.8333333333333334,
+          "leadHours": {
+            "median": 33.97444359998915,
+            "tail": 33.97444359998915,
+            "count": 2
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 9657,
+          "detections": 4,
+          "falseAlarms": 9653,
+          "precision": 0.0004142073107590349,
+          "detectionShare": 0.6666666666666666,
+          "leadHours": {
+            "median": 1.9744435999891492,
+            "tail": 1.9744435999891492,
+            "count": 2
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 7609,
+          "detections": 3,
+          "falseAlarms": 7605,
+          "precision": 0.0003943217665615142,
+          "detectionShare": 0.5,
+          "leadHours": {
+            "median": 135.96882688001844,
+            "tail": 135.96882688001844,
+            "count": 1
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 5959,
+          "detections": 2,
+          "falseAlarms": 5956,
+          "precision": 0.0003356831151393085,
+          "detectionShare": 0.3333333333333333,
+          "leadHours": {
+            "median": 99.96882688001844,
+            "tail": 99.96882688001844,
+            "count": 1
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 1,
+        "ofTrue": 1,
+        "ofExempt": 0,
+        "ofFalseAlarms": 0,
+        "daysToConfirmation": 1.5
+      },
+      "falseAlarmRate": 0.9996517701683111,
       "bodyYears": 77551.85267166856,
-      "falseAlarmsPer10kBodyYears": 2220.8366926986323,
+      "falseAlarmsPer10kBodyYears": 2220.9656386832285,
       "leadHours": {
         "median": 33.97444359998915,
         "tail": 33.97444359998915,
@@ -835,9 +1270,9 @@
         "tail": 622.65,
         "count": 6
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 329.9441968017578,
+      "confirmedShare": 0.16666666666666666,
+      "daysToConfirmation": 1.5,
+      "timingErrorMinutes": 59.04654282633464,
       "byRegime": {
         "LEO": {
           "targets": 8,
@@ -943,10 +1378,10 @@
         "breakups A-B": {
           "targets": 44,
           "undetectable": 7,
-          "detected": 15,
-          "late": 3,
-          "missed": 26,
-          "detectionRate": 0.3409090909090909
+          "detected": 16,
+          "late": 4,
+          "missed": 24,
+          "detectionRate": 0.36363636363636365
         },
         "breakups C": {
           "targets": 10,
@@ -976,40 +1411,140 @@
           "targets": 9,
           "undetectable": 1,
           "detected": 2,
-          "late": 1,
-          "missed": 6,
+          "late": 2,
+          "missed": 5,
           "detectionRate": 0.2222222222222222
         }
       },
-      "alerts": 8020,
-      "duplicates": 93,
-      "exempt": 13,
-      "falseAlarms": 7887,
-      "review": 0,
-      "falseAlarmRate": 0.9972183588317107,
+      "alerts": 8065,
+      "duplicates": 95,
+      "exempt": 14,
+      "falseAlarms": 7926,
+      "review": 142,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 7956,
+          "detections": 23,
+          "falseAlarms": 7926,
+          "precision": 0.0028934457164423197,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 586.4741620800103,
+            "tail": 68.54423120001898,
+            "count": 13
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 7301,
+          "detections": 23,
+          "falseAlarms": 7271,
+          "precision": 0.0031532766657526735,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 586.4741620800103,
+            "tail": 68.54423120001898,
+            "count": 13
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 5977,
+          "detections": 17,
+          "falseAlarms": 5955,
+          "precision": 0.0028466175485599462,
+          "detectionShare": 0.7391304347826086,
+          "leadHours": {
+            "median": 402.92768728000215,
+            "tail": 68.54423120001898,
+            "count": 10
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 6719,
+          "detections": 19,
+          "falseAlarms": 6696,
+          "precision": 0.002829486224869695,
+          "detectionShare": 0.8260869565217391,
+          "leadHours": {
+            "median": 550.4741620800103,
+            "tail": 158.2629804800076,
+            "count": 11
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 5486,
+          "detections": 17,
+          "falseAlarms": 5465,
+          "precision": 0.003101058008026268,
+          "detectionShare": 0.7391304347826086,
+          "leadHours": {
+            "median": 362.92768728000215,
+            "tail": 68.54423120001898,
+            "count": 10
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 4783,
+          "detections": 12,
+          "falseAlarms": 4767,
+          "precision": 0.0025109855618330196,
+          "detectionShare": 0.5217391304347826,
+          "leadHours": {
+            "median": 306.4480628799778,
+            "tail": 22.262980480007595,
+            "count": 6
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 4184,
+          "detections": 9,
+          "falseAlarms": 4172,
+          "precision": 0.0021525950729490554,
+          "detectionShare": 0.391304347826087,
+          "leadHours": {
+            "median": 659.4608388800049,
+            "tail": 47.110848960028754,
+            "count": 3
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 22,
+        "ofTrue": 9,
+        "ofExempt": 0,
+        "ofFalseAlarms": 13,
+        "daysToConfirmation": 1.5
+      },
+      "falseAlarmRate": 0.9971065542835577,
       "bodyYears": 174084.31202902232,
-      "falseAlarmsPer10kBodyYears": 453.0563327662245,
+      "falseAlarmsPer10kBodyYears": 455.296626537986,
       "leadHours": {
-        "median": 402.92768728000215,
+        "median": 586.4741620800103,
         "tail": 68.54423120001898,
-        "count": 12
+        "count": 13
       },
       "latencyHours": {
-        "median": 122.68333333333334,
+        "median": 123.8,
         "tail": 359.53333333333336,
-        "count": 22
+        "count": 23
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 1486.260984000651,
+      "confirmedShare": 0.30434782608695654,
+      "daysToConfirmation": 4,
+      "timingErrorMinutes": 328.29304799804686,
       "byRegime": {
         "LEO": {
           "targets": 45,
           "undetectable": 13,
-          "detected": 14,
-          "late": 2,
-          "missed": 29,
-          "detectionRate": 0.3111111111111111
+          "detected": 15,
+          "late": 4,
+          "missed": 26,
+          "detectionRate": 0.3333333333333333
         },
         "MEO": {
           "targets": 5,
@@ -1048,17 +1583,17 @@
         "breakup": {
           "targets": 70,
           "undetectable": 19,
-          "detected": 17,
-          "late": 3,
-          "missed": 50,
-          "detectionRate": 0.24285714285714285
+          "detected": 18,
+          "late": 4,
+          "missed": 48,
+          "detectionRate": 0.2571428571428571
         },
         "anomalous": {
           "targets": 21,
           "undetectable": 1,
           "detected": 5,
-          "late": 2,
-          "missed": 14,
+          "late": 3,
+          "missed": 13,
           "detectionRate": 0.23809523809523808
         },
         "aerodynamic": {
@@ -1141,14 +1676,114 @@
           "detectionRate": 1
         }
       },
-      "alerts": 30042,
+      "alerts": 30048,
       "duplicates": 63,
-      "exempt": 163,
-      "falseAlarms": 29795,
-      "review": 0,
-      "falseAlarmRate": 0.9993627155027839,
+      "exempt": 164,
+      "falseAlarms": 29800,
+      "review": 21,
+      "tiers": [
+        {
+          "tier": "2",
+          "raised": 29821,
+          "detections": 19,
+          "falseAlarms": 29800,
+          "precision": 0.000637177638418458,
+          "detectionShare": 1,
+          "leadHours": {
+            "median": 516.312106160007,
+            "tail": 33.97444359998915,
+            "count": 10
+          }
+        },
+        {
+          "tier": "3",
+          "raised": 29394,
+          "detections": 18,
+          "falseAlarms": 29374,
+          "precision": 0.0006124115405552531,
+          "detectionShare": 0.9473684210526315,
+          "leadHours": {
+            "median": 516.312106160007,
+            "tail": 33.97444359998915,
+            "count": 10
+          }
+        },
+        {
+          "tier": "5",
+          "raised": 24552,
+          "detections": 17,
+          "falseAlarms": 24533,
+          "precision": 0.0006924643584521385,
+          "detectionShare": 0.8947368421052632,
+          "leadHours": {
+            "median": 312.3094180000136,
+            "tail": 33.97444359998915,
+            "count": 10
+          }
+        },
+        {
+          "tier": "D1",
+          "raised": 26104,
+          "detections": 18,
+          "falseAlarms": 26084,
+          "precision": 0.0006896023293234234,
+          "detectionShare": 0.9473684210526315,
+          "leadHours": {
+            "median": 516.312106160007,
+            "tail": 33.97444359998915,
+            "count": 10
+          }
+        },
+        {
+          "tier": "D3",
+          "raised": 18310,
+          "detections": 17,
+          "falseAlarms": 18291,
+          "precision": 0.000928555822591217,
+          "detectionShare": 0.8947368421052632,
+          "leadHours": {
+            "median": 484.31210616000703,
+            "tail": 1.9744435999891492,
+            "count": 10
+          }
+        },
+        {
+          "tier": "D5",
+          "raised": 15047,
+          "detections": 14,
+          "falseAlarms": 15030,
+          "precision": 0.0009306035628822122,
+          "detectionShare": 0.7368421052631579,
+          "leadHours": {
+            "median": 312.3094180000136,
+            "tail": 68.77959,
+            "count": 8
+          }
+        },
+        {
+          "tier": "D7",
+          "raised": 12391,
+          "detections": 11,
+          "falseAlarms": 12377,
+          "precision": 0.0008879560865353568,
+          "detectionShare": 0.5789473684210527,
+          "leadHours": {
+            "median": 312.3094180000136,
+            "tail": 16.77959,
+            "count": 6
+          }
+        }
+      ],
+      "confirmed": {
+        "confirmations": 11,
+        "ofTrue": 4,
+        "ofExempt": 0,
+        "ofFalseAlarms": 7,
+        "daysToConfirmation": 4.333333333333333
+      },
+      "falseAlarmRate": 0.9993628223615816,
       "bodyYears": 202371.4776849566,
-      "falseAlarmsPer10kBodyYears": 1472.292456468772,
+      "falseAlarmsPer10kBodyYears": 1472.5395268591844,
       "leadHours": {
         "median": 516.312106160007,
         "tail": 33.97444359998915,
@@ -1159,9 +1794,9 @@
         "tail": 622.65,
         "count": 19
       },
-      "confirmedShare": 0,
-      "daysToConfirmation": null,
-      "timingErrorMinutes": 752.8685784016927,
+      "confirmedShare": 0.15789473684210525,
+      "daysToConfirmation": 3.5,
+      "timingErrorMinutes": 72.77253002929687,
       "byRegime": {
         "LEO": {
           "targets": 32,

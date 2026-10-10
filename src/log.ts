@@ -11,11 +11,11 @@ import { REGIMES, type Regime } from "./truth.ts";
  * A candidate still open when the caller stops has no row.
  */
 
-/** Where in a candidate's life the row was written: its opening on the first post set, a later post set, or its close. */
-export const PHASES = { open: 0, post: 1, close: 2 } as const;
+/** Where in a candidate's life the row was written: its opening on the first post set, a later post set, or its close; `alert` is the row an alert writes when it closes, with the persistence tiers and the cadence it read after the step; `cloud` is the row a launch writes in a run that brought it new bodies, with the burst and plane tests. */
+export const PHASES = { open: 0, post: 1, close: 2, alert: 3, cloud: 4 } as const;
 
-/** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, closed unraised after the last gap, or a persistent step the object's own history explains, closed as a manoeuvre. */
-export const OUTCOMES = { open: 0, suspected: 1, reverted: 2, lapsed: 3, faded: 4, manoeuvre: 5 } as const;
+/** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, closed unraised after the last gap, or a persistent step the object's own history explains, closed as a manoeuvre; and how an alert ended: confirmed by pieces or a notice, expired with nothing under the launch, or dismissed because every piece was old. */
+export const OUTCOMES = { open: 0, suspected: 1, reverted: 2, lapsed: 3, faded: 4, manoeuvre: 5, confirmed: 6, expired: 7, dismissed: 8 } as const;
 
 /** The origin of a candidate: a single set's jump, or the CUSUM's slow drift. */
 export const ORIGINS = { step: 0, cusum: 1 } as const;
@@ -105,6 +105,79 @@ export const SIGNALS = {
   manoeuvreClass: "index",
   /** How many of the atypical tests the step passed, by which the step on a manoeuvring object is still raised. */
   atypical: "count",
+  /** The fitted line's value at the centroid of the post sets in units of its sigma (the weighted mean step), at the second and third post set and at the close; the level at the first post set under-reads a step the catalogue's fit converged on over several sets. */
+  zMean: "sigma",
+  zMean2: "sigma",
+  zMean3: "sigma",
+  /** The object's short scatter and its long memory when the candidate opened, in kilometres: which of the two set `sigmaOwn`. */
+  sigmaShort: "km",
+  sigmaLong: "km",
+  /** The tracking cadence: sets a day in the days before the step, and in the post sets read so far (on a candidate row) or in the days after the step (on an alert row), with the ratio. */
+  cadenceBefore: "sets/day",
+  cadenceAfter: "sets/day",
+  cadenceRatio: "ratio",
+  /** The alert row: the verdict the alert opened with (1 suspected, 5 manoeuvre), how many post sets it read in all and the hours they spanned, the days from the step to its close, and the last estimate's step, size and ratio. */
+  alertState: "code",
+  alertSets: "count",
+  alertSpanHours: "h",
+  alertDays: "days",
+  /** The persistence tiers: at the third and fifth post set, and at one, three, five and seven days of span, whether the step still held (1), had failed (0), or was not reached (absent), the normalised step then (level and mean), the ratio, and the run's instant when the tier was reached, in milliseconds since 1970. */
+  tier3Held: "flag",
+  tier3Z: "sigma",
+  tier3ZMean: "sigma",
+  tier3Rho: "ratio",
+  tier3At: "ms",
+  tier5Held: "flag",
+  tier5Z: "sigma",
+  tier5ZMean: "sigma",
+  tier5Rho: "ratio",
+  tier5At: "ms",
+  tierD1Held: "flag",
+  tierD1Z: "sigma",
+  tierD1ZMean: "sigma",
+  tierD1Rho: "ratio",
+  tierD1At: "ms",
+  tierD3Held: "flag",
+  tierD3Z: "sigma",
+  tierD3ZMean: "sigma",
+  tierD3Rho: "ratio",
+  tierD3At: "ms",
+  tierD5Held: "flag",
+  tierD5Z: "sigma",
+  tierD5ZMean: "sigma",
+  tierD5Rho: "ratio",
+  tierD5At: "ms",
+  tierD7Held: "flag",
+  tierD7Z: "sigma",
+  tierD7ZMean: "sigma",
+  tierD7Rho: "ratio",
+  tierD7At: "ms",
+  /** The fragments an alert was judged by at its close: new bodies under the launch after the step, those numbered above the high-water mark and with no set before the step, those in the parent's plane, those first published after the step, and whether a notice named the object. */
+  piecesNew: "count",
+  piecesAboveMark: "count",
+  piecesInPlane: "count",
+  piecesAfterStep: "count",
+  noticed: "flag",
+  /** The cloud row: the launch as a number (the year times a thousand plus the launch number; 80000 or 270000 for the analyst ranges), its age in days from its first body's first set, the new bodies the run brought, the window's count of new bodies, the background rate per window, the Poisson tail probability, how many candidate parents the launch has, the pieces numbered above the mark, those within plane distance one, three, five and ten of some parent, those classed debris, those classed payload, the cloud velocity in metres a second, the Gabbard spread (the range of the consistent pieces' semi-major axes) in kilometres, whether an alert was open on a parent, and what the launch pass decided (0 nothing, 1 confirmed an alert, 2 listed for review, 3 a burst with no consistent piece, 4 a deployment, 5 an old cloud's background). */
+  launch: "code",
+  launchAgeDays: "days",
+  newBodies: "count",
+  windowBodies: "count",
+  lambda: "count",
+  lambdaRate: "count",
+  pBurst: "probability",
+  parents: "count",
+  aboveMark: "count",
+  inPlane1: "count",
+  inPlane3: "count",
+  inPlane5: "count",
+  inPlane10: "count",
+  debrisPieces: "count",
+  payloadPieces: "count",
+  cloudDeltaVMps: "m/s",
+  gabbardSpreadKm: "km",
+  openAlert: "flag",
+  cloudDecision: "code",
 } as const;
 
 export type SignalName = keyof typeof SIGNALS;
@@ -126,7 +199,7 @@ export function logRow(at: number, number: number, signals: Partial<Record<Signa
   const rounded: Record<string, number> = {};
   for (const [name, value] of Object.entries(signals)) {
     if (value === undefined) continue;
-    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" ? Math.round(value) : round5(value);
+    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") ? Math.round(value) : round5(value);
   }
   return { at, number, signals: rounded };
 }

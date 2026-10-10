@@ -1,10 +1,10 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OUTCOMES, REGIMES, atypicalReasons, classify, isRaised, type CurrentStep, type DetectorParameters, type HistoryFeatures, type LogRow, type ManoeuvreClass } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OUTCOMES, REGIMES, atypicalReasons, classify, isRaised, launchOf, poissonTail, yearOf, type CurrentStep, type DetectorParameters, type HistoryFeatures, type LogRow, type ManoeuvreClass } from "../../src/index.ts";
 import { brackets, marginDaysOf } from "./match.ts";
-import { readYearFiles, yearsDir } from "./run.ts";
+import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";
-import type { YearFile } from "./kpi.ts";
+import { alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
 
 /**
  * The offline sweep: the persistence gates and the manoeuvre gate
@@ -34,6 +34,15 @@ import type { YearFile } from "./kpi.ts";
  * the non-payload classes, and the false alarms by why they were raised;
  * by default over the even years, the training split, and with `--show`
  * listing the targets hit.
+ *
+ * `--clouds` sweeps the per-launch channel instead, over the cloud rows
+ * the launch pass logged (one per launch per run that brought it new
+ * bodies, with the window's count, the background rate, the pieces within
+ * each plane distance and the cloud velocity): for each threshold the
+ * rows that would list a cloud, de-duplicated per launch and month, are
+ * counted as hits where a scoreable reported event of the launch lies in
+ * the ninety days before, and as false clouds otherwise. `--tiers` prints
+ * the persistence-tier table over the alert rows of the years given.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -53,6 +62,10 @@ export interface Gates {
   newObjectDays: number;
   /** Whether a step classed occasional (a past step within two years, on no pattern) is raised: 1 to raise, 0 as the design, a manoeuvre. */
   occasionalRaises: number;
+  /** Whether an occasional step is raised on the classes the catalogue does not call payloads (1), as the third phase's parameter. */
+  occasionalRaisesNonPayload: number;
+  /** Whether the persistence size is judged on the mean step at the post sets' centroid (1) rather than the level at the first post set (0). */
+  persistOnMeanStep: number;
 }
 
 export const DETECTOR_GATES: Gates = {
@@ -67,6 +80,8 @@ export const DETECTOR_GATES: Gates = {
   bstarRatioMax: DETECTOR_PARAMETERS.bstarRatioMax,
   newObjectDays: DETECTOR_PARAMETERS.newObjectDays,
   occasionalRaises: 0,
+  occasionalRaisesNonPayload: DETECTOR_PARAMETERS.occasionalRaisesNonPayload ? 1 : 0,
+  persistOnMeanStep: DETECTOR_PARAMETERS.persistOnMeanStep ? 1 : 0,
 };
 
 /** A candidate as the sweep reads it: the row's trajectory, its reading and where its object's step landed in the replay. */
@@ -91,6 +106,10 @@ export interface SweptCandidate {
   rho3: number;
   evidence3: number;
   span3: number;
+  /** The mean step at the second and third post set and at the close. */
+  zMean2: number;
+  zMean3: number;
+  zMean: number;
   /** The final estimate, at the close. */
   zk: number;
   rhoMedian: number;
@@ -139,6 +158,9 @@ export function candidateOf(year: number, row: LogRow): SweptCandidate {
     rho3: signal(row, "rho3"),
     evidence3: signal(row, "evidence3"),
     span3: signal(row, "span3"),
+    zMean2: signal(row, "zMean2"),
+    zMean3: signal(row, "zMean3"),
+    zMean: signal(row, "zMean"),
     zk: signal(row, "zk"),
     rhoMedian: signal(row, "rhoMedian"),
     evidence: signal(row, "stepEvidence"),
@@ -176,9 +198,10 @@ function passes(z: number, rho: number, evidence: number, gates: Gates): boolean
  */
 export function raisedAt(c: SweptCandidate, gates: Gates): 2 | 3 | "close" | null {
   if (c.outcome === OUTCOMES.reverted) return null;
-  if (Number.isFinite(c.z2) && c.span2 >= gates.spanHours && passes(c.z2, c.rho2, c.evidence2, gates)) return 2;
-  if (Number.isFinite(c.z3) && passes(c.z3, c.rho3, c.evidence3, gates)) return 3;
-  if (c.k > 3 && passes(c.zk, c.rhoMedian, c.evidence, gates)) return "close";
+  const mean = gates.persistOnMeanStep === 1;
+  if (Number.isFinite(c.z2) && c.span2 >= gates.spanHours && passes(mean ? c.zMean2 : c.z2, c.rho2, c.evidence2, gates)) return 2;
+  if (Number.isFinite(c.z3) && passes(mean ? c.zMean3 : c.z3, c.rho3, c.evidence3, gates)) return 3;
+  if (c.k > 3 && passes(mean ? c.zMean : c.zk, c.rhoMedian, c.evidence, gates)) return "close";
   return null;
 }
 
@@ -192,8 +215,8 @@ export function gateOf(c: SweptCandidate, gates: Gates): { raised: boolean; why:
   const step: CurrentStep = { epochMs: c.afterEpoch, deltaKm: c.deltaKm, deltaPerigeeKm: c.deltaPerigeeKm, tangentialMps: c.deltaVMps, normalMps: c.deltaVNormalMps, consistency: c.impulseConsistency, bstarRatio: c.bstarRatio, regime: REGIMES[c.regime] ?? "unknown", bodyClass: BODY_CLASSES[c.bodyClass] ?? "unknown", apogeeHeightAfterKm: 0 };
   const manoeuvreClass = classify(features, step, params);
   const atypical = atypicalReasons(features, step, params);
-  if (isRaised(manoeuvreClass, atypical)) {
-    const why: Why = manoeuvreClass === "unique" ? "unique" : atypical[0]!.includes("times the median") ? "typicality" : atypical[0]!.includes("opposite") ? "opposite" : atypical[0]!.includes("radial") ? "consistency" : "bstar";
+  if (isRaised(manoeuvreClass, atypical, step.bodyClass, { occasionalRaisesNonPayload: gates.occasionalRaisesNonPayload === 1 })) {
+    const why: Why = manoeuvreClass === "unique" ? "unique" : atypical.length === 0 ? "occasional-raised" : atypical[0]!.includes("times the median") ? "typicality" : atypical[0]!.includes("opposite") ? "opposite" : atypical[0]!.includes("radial") ? "consistency" : "bstar";
     return { raised: true, why, manoeuvreClass };
   }
   if (gates.occasionalRaises === 1 && manoeuvreClass === "occasional") return { raised: true, why: "occasional-raised", manoeuvreClass };
@@ -323,23 +346,105 @@ const DEFAULT_GRID: Record<keyof Gates, number[]> = {
   bstarRatioMax: [2, 3, 5, 10, 20, Number.POSITIVE_INFINITY],
   newObjectDays: [0, 30, 60, 90, 180, 365],
   occasionalRaises: [0, 1],
+  occasionalRaisesNonPayload: [0, 1],
+  persistOnMeanStep: [0, 1],
 };
 
-/** The second phase's gates, swept by default; the first phase's are swept only when asked. */
-const DEFAULT_AXES: (keyof Gates)[] = ["typicalityMax", "oppositeMinSteps", "consistencyMin", "bstarRatioMax", "newObjectDays", "occasionalRaises"];
+/** The third phase's gates, swept by default; the earlier phases' are swept only when asked. */
+const DEFAULT_AXES: (keyof Gates)[] = ["occasionalRaisesNonPayload", "persistOnMeanStep"];
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>> } {
+/** The per-launch channel's thresholds the cloud sweep varies. */
+export interface CloudGates {
+  pBurst: number;
+  lambdaFloor: number;
+  /** The plane distance within which a piece counts, one of the logged bounds: 1, 3, 5 or 10. */
+  planeDistanceMax: number;
+  cloudOnlyDeltaVMinMps: number;
+  /** The launch age in days under which a cloud is listed only when its velocity reaches `youngLaunchDeltaVMps` whatever the pieces' class (0 lists young launches on debris-classed pieces too, as the design first had it). */
+  youngLaunchDays: number;
+}
+
+export const DETECTOR_CLOUD_GATES: CloudGates = { pBurst: DETECTOR_PARAMETERS.pBurst, lambdaFloor: DETECTOR_PARAMETERS.lambdaFloor, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax, cloudOnlyDeltaVMinMps: DETECTOR_PARAMETERS.cloudOnlyDeltaVMinMps, youngLaunchDays: DETECTOR_PARAMETERS.youngLaunchDays };
+
+const CLOUD_GRID: Record<keyof CloudGates, number[]> = {
+  pBurst: [1e-1, 1e-2, 1e-3, 1e-4, 1e-6, 1e-9],
+  lambdaFloor: [0.1, 0.25, 0.5, 1, 2, 4],
+  planeDistanceMax: [1, 3, 5, 10],
+  cloudOnlyDeltaVMinMps: [0, 0.5, 1, 2, 5, 10],
+  youngLaunchDays: [0, 30, 60, 90, 180],
+};
+
+/** The launch key of a cloud row's code; null for an analyst range. */
+function launchOfCode(code: number): string | null {
+  if (code < 1_000_000) return null;
+  return `${Math.floor(code / 1000)}-${String(code % 1000).padStart(3, "0")}`;
+}
+
+export interface CloudTally {
+  gates: CloudGates;
+  /** The clouds that would be listed (one per launch and thirty days), the distinct reported events among them, and the listings matching none. */
+  listed: number;
+  hits: number;
+  hitIds: string[];
+  falseClouds: number;
+  /** The scoreable events of the years whose launch is known, for the share hit. */
+  targets: number;
+}
+
+/** How many days before a cloud's listing a reported event of the launch may lie to be the cloud's event. Policy: the truth's own rule counts pieces to ninety days. */
+export const CLOUD_LOOKBACK_DAYS = 90;
+
+/** The cloud tally of a grid point over the files: every cloud row re-thresholded. */
+export function cloudTally(files: YearFile[], gates: CloudGates, truth: { launch: string; from: number; to: number; id: string; year: number }[]): CloudTally {
+  const result: CloudTally = { gates, listed: 0, hits: 0, hitIds: [], falseClouds: 0, targets: 0 };
+  const years = new Set(files.map((f) => f.year));
+  result.targets = truth.filter((t) => years.has(t.year)).length;
+  const hit = new Set<string>();
+  const lastListed = new Map<string, number>();
+  const inPlaneName = `inPlane${gates.planeDistanceMax}`;
+  for (const file of files) {
+    const rows = file.log.filter((r) => r.signals.phase === 4).sort((a, b) => a.at - b.at);
+    for (const row of rows) {
+      const launch = launchOfCode(row.signals.launch ?? 0);
+      if (launch === null) continue;
+      const n = row.signals.aboveMark ?? 0;
+      const lambda = Math.max(row.signals.lambdaRate ?? 0, gates.lambdaFloor);
+      if (n < DETECTOR_PARAMETERS.burstMinBodies || poissonTail(n, lambda) > gates.pBurst) continue;
+      if ((row.signals[inPlaneName] ?? 0) === 0) continue;
+      const deltaV = row.signals.cloudDeltaVMps;
+      if (gates.cloudOnlyDeltaVMinMps > 0 && !(deltaV !== undefined && deltaV >= gates.cloudOnlyDeltaVMinMps)) continue;
+      if ((row.signals.launchAgeDays ?? Number.POSITIVE_INFINITY) < gates.youngLaunchDays && !(deltaV !== undefined && deltaV >= DETECTOR_PARAMETERS.youngLaunchDeltaVMps)) continue;
+      if (row.at - (lastListed.get(launch) ?? Number.NEGATIVE_INFINITY) <= DETECTOR_PARAMETERS.cloudRepeatDays * DAY_MS) continue;
+      lastListed.set(launch, row.at);
+      result.listed++;
+      const event = truth.find((t) => t.launch === launch && t.from <= row.at + DAY_MS && t.to >= row.at - CLOUD_LOOKBACK_DAYS * DAY_MS);
+      if (event === undefined) result.falseClouds++;
+      else hit.add(event.id);
+    }
+  }
+  result.hits = hit.size;
+  result.hitIds = [...hit].sort();
+  return result;
+}
+
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean } {
   let years: number[] | null = null;
   let show = false;
+  let clouds = false;
+  let tiers = false;
   const grid: Partial<Record<keyof Gates, number[]>> = {};
+  const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
     if (arg === "--years") years = args[++i]!.split(",").map(Number);
     else if (arg === "--show") show = true;
+    else if (arg === "--clouds") clouds = true;
+    else if (arg === "--tiers") tiers = true;
+    else if (arg.startsWith("--") && arg.slice(2) in CLOUD_GRID) cloudGrid[arg.slice(2) as keyof CloudGates] = args[++i]!.split(",").map(Number);
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
-    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}`);
+    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid };
+  return { years, show, grid, clouds, cloudGrid, tiers };
 }
 
 const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "occasional-raised"];
@@ -350,10 +455,32 @@ function line(axis: keyof Gates, value: number, t: Tally): string {
 }
 
 function main(): void {
-  const { years, show, grid } = parseArgs(process.argv.slice(2));
+  const { years, show, grid, clouds, cloudGrid, tiers } = parseArgs(process.argv.slice(2));
   const all = readYearFiles(KPI_DIR);
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
+  if (tiers) {
+    console.log(tiersTable(cellsOf(files, alertRowsOf(all)), `Precision per persistence tier, years ${files.map((f) => f.year).join(", ")}`));
+    return;
+  }
+  if (clouds) {
+    const truth = readTruth().breakups.filter((b) => b.scoreable && b.kind !== "aerodynamic" && b.kind !== "release").flatMap((b) => {
+      const launch = launchOf(b.parent.designator);
+      return launch === null ? [] : [{ launch, from: Date.parse(b.event.from ?? b.event.to), to: Date.parse(b.event.to), id: b.id, year: yearOf(b) }];
+    });
+    const cloudAxes = (Object.keys(cloudGrid) as (keyof CloudGates)[]).length > 0 ? (Object.keys(cloudGrid) as (keyof CloudGates)[]) : (Object.keys(CLOUD_GRID) as (keyof CloudGates)[]);
+    console.log(`years ${files.map((f) => f.year).join(", ")}; the detector's cloud gates: ${Object.entries(DETECTOR_CLOUD_GATES).map(([k, v]) => `${k} ${v}`).join(", ")}`);
+    console.log("| gate | value | clouds listed | reported events hit | of targets with a launch | false clouds |");
+    console.log("| --- | --- | --- | --- | --- | --- |");
+    for (const axis of cloudAxes) {
+      for (const value of cloudGrid[axis] ?? CLOUD_GRID[axis]) {
+        const t = cloudTally(files, { ...DETECTOR_CLOUD_GATES, [axis]: value }, truth);
+        console.log(`| ${axis} | ${value} | ${t.listed} | ${t.hits} | ${t.targets} | ${t.falseClouds} |`);
+        if (show) console.log(`  hit: ${t.hitIds.join(", ")}`);
+      }
+    }
+    return;
+  }
   const axes = (Object.keys(grid) as (keyof Gates)[]).length > 0 ? (Object.keys(grid) as (keyof Gates)[]) : DEFAULT_AXES;
   console.log(`years ${files.map((f) => f.year).join(", ")}; the detector's gates: ${Object.entries(DETECTOR_GATES).map(([k, v]) => `${k} ${v}`).join(", ")}`);
   console.log("| gate | value | headline hits | hits | false alarms | non-payload | manoeuvres | lost to the gate | false alarms by why | hits by why |");

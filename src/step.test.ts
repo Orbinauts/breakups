@@ -8,7 +8,7 @@ const params = DETECTOR_PARAMETERS;
 
 describe("the two-segment fit", () => {
   test("one set is its own level, with the prediction's sigma", () => {
-    expect(fitSegment([0], [0.3], [0.01], 0.03)).toEqual({ delta: 0.3, slope: 0, sigmaDelta: 0.01, chi2: 0 });
+    expect(fitSegment([0], [0.3], [0.01], 0.03)).toEqual({ delta: 0.3, mean: 0.3, sigmaMean: 0.01, slope: 0, sigmaDelta: 0.01, chi2: 0 });
   });
 
   test("a flat step over four sets is recovered with a small slope and a smaller sigma than one set's", () => {

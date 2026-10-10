@@ -32,7 +32,10 @@ import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.t
  * own window) is exempt. Everything else is a false alarm, and a second
  * alert on the same object whose bracket overlaps an earlier alert's is
  * the same step raised again, a duplicate, since the unit the owner
- * counts is the step.
+ * counts is the step. A confirmed verdict on a step already alerted is
+ * the fragments' or a notice's confirmation of that alert, landed as
+ * such and recorded on it, so the scorecard can say how many alerts were
+ * confirmed, how many of those were true, and how long after.
  *
  * Per event the lead over the catalogue (hours from the alert to the
  * first fragment's set) and the latency from the event (hours from the
@@ -73,7 +76,7 @@ export function lineOf(breakup: Pick<Breakup, "kind" | "confidence">): Line {
 export const EVENT_STATUSES = ["detected", "late", "missed", "undetectable"] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
-export const ALERT_OUTCOMES = ["detection", "late", "duplicate", "exempt", "false-alarm"] as const;
+export const ALERT_OUTCOMES = ["detection", "late", "duplicate", "exempt", "false-alarm", "confirmation"] as const;
 export type AlertOutcome = (typeof ALERT_OUTCOMES)[number];
 
 /** One target of the year, scored. */
@@ -122,14 +125,23 @@ export interface ScoredAlert {
   /** The event it matched, was late on, duplicated or was exempt by; null for a false alarm. */
   event: string | null;
   note: string;
+  /** When a confirmed verdict on the same step followed, and how many days after this alert; null where none did. */
+  confirmedAt: number | null;
+  daysToConfirmation: number | null;
+  /** The step's second edge, by which the alert's row in the log is found; null for a verdict with no step. */
+  afterEpoch: number | null;
 }
 
 /** A cloud verdict, for the review list. */
 export interface ReviewRow {
   verdict: number;
   launch: string | null;
+  /** The parent the pieces attach to, where the launch has one. */
+  number: number | null;
   raisedAt: number;
   state: Verdict["state"];
+  /** How many consistent pieces the cloud rests on. */
+  pieces: number;
 }
 
 export interface YearScore {
@@ -250,14 +262,29 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
   const ordered = verdicts.map((verdict, i) => ({ verdict, i })).sort((a, b) => a.verdict.raisedAt - b.verdict.raisedAt || a.i - b.i);
   for (const { verdict, i } of ordered) {
     if (verdict.kind === "cloud") {
-      review.push({ verdict: i, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state });
+      review.push({ verdict: i, launch: verdict.launch, number: verdict.number, raisedAt: verdict.raisedAt, state: verdict.state, pieces: verdict.bodies?.length ?? 0 });
       continue;
     }
     if (!ALERT_STATES.includes(verdict.state) || verdict.number === null) continue;
     const number = verdict.number;
     const land = (outcome: AlertOutcome, event: string | null, note: string): void => {
-      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, note });
+      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, note, confirmedAt: null, daysToConfirmation: null, afterEpoch: verdict.step?.afterEpoch ?? null });
     };
+    // A confirmed verdict on a step already alerted: the confirmation of that alert.
+    if (verdict.state === "confirmed" && verdict.step !== null) {
+      const earlier = alerts.find((a) => a.number === number && a.outcome !== "confirmation" && a.outcome !== "duplicate" && overlaps(verdicts[a.verdict]!.step!, verdict.step!));
+      if (earlier !== undefined) {
+        earlier.confirmedAt = verdict.raisedAt;
+        earlier.daysToConfirmation = (verdict.raisedAt - earlier.raisedAt) / DAY_MS;
+        const scored = earlier.event === null ? undefined : rows.find((row) => row.scored?.id === earlier.event)?.scored;
+        if (scored && scored.alert === earlier.verdict && scored.confirmedAt === null) {
+          scored.confirmedAt = verdict.raisedAt;
+          scored.daysToConfirmation = (verdict.raisedAt - scored.alertAt!) / DAY_MS;
+        }
+        land("confirmation", earlier.event, earlier.outcome === "false-alarm" ? "the fragments or a notice confirmed an alert matching no reported event" : `the fragments or a notice confirmed the alert on ${earlier.event}`);
+        continue;
+      }
+    }
     // A counted alert on the parent of a target, on its step: a detection, late, a duplicate, or exempt for an undetectable one.
     const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && brackets(verdict.step, row.from, row.to, row.margin / DAY_MS)).sort((a, b) => a.from - b.from);
     const target = onParent.find((row) => row.scored !== null);

@@ -116,3 +116,21 @@ open:
   alert, not a false alarm. A reported breakup whose parent's step was
   read as a manoeuvre is a miss, which is what the detection rate must
   show.
+- A confirmed verdict on a step already alerted is the fragments' or a
+  notice's confirmation of that alert, not a second alert: the matcher
+  lands it as a confirmation, records on the alert when it came, and the
+  cells count how many alerts were confirmed, how many of those had
+  matched a reported event, how many an exempt window, and how many
+  nothing (a wrongly confirmed false alarm), with the median days from
+  the alert. A cloud verdict (a burst of new bodies under a launch with
+  no step on any parent) goes to the review list with its launch, the
+  parent its pieces attach to and their count; it is never a detection.
+- The precision per persistence tier is read off the alert rows of the
+  log: once raised, an alert keeps reading the object's sets against the
+  frozen pre-step model and records whether the step still held after
+  three and five post sets and after one, three, five and seven days,
+  and when each tier was reached. For each tier the cells give the
+  alerts that held, the detections that would still have beaten the
+  catalogue had the alert waited for the tier, the false alarms left, and
+  the lead; so the owner can trade timeliness against false alarms with
+  the numbers in hand, without a replay per tier.

@@ -11,7 +11,7 @@ import type { Regime } from "./truth.ts";
  *   how many sets to keep), to be changed by a decision, not by a fit;
  * - `fitted`: read off the training split (the even years) by sweeping the
  *   detector's log, and never touched while looking at the validation split.
- *   The sweep that chose each is recorded in `docs/detector/d1-fitting.md`.
+ *   The sweep that chose each is recorded in `docs/detector/d1-fitting.md`, `d2-fitting.md` and `d3-fitting.md`.
  *
  * The regimes are the four the ground truth uses; a value per regime is
  * given for all four even where only one differs, so a reader sees the
@@ -109,6 +109,51 @@ export interface DetectorParameters {
   bstarRatioMax: number;
   /** The inclination step below which no normal component is read, in degrees: the format prints four decimals, and the fits scatter by tens of them. Physical. */
   inclinationStepMinDeg: number;
+  /** Whether a persistent step on an object the catalogue does not class as a payload (a rocket body, a piece of debris, an unknown) is raised when its record classes it `occasional`, a past step within two years on no pattern: a stage does not manoeuvre, so its past "step" was the catalogue's fit absorbing something, not a burn. Fitted on the training split. */
+  occasionalRaisesNonPayload: boolean;
+  /** Whether the persistence size is judged on the fitted line's value at the centroid of the post sets (the weighted mean step, `zMean`) rather than on its level at the first post set (`z`): the catalogue's fit converges on a new orbit over several sets, so the first post set can carry a tenth of the step and the level under-reads it while the mean does not; the evidence against a drift still guards a ramp drag could produce. Fitted on the training split. */
+  persistOnMeanStep: boolean;
+  /** How many post sets an alert keeps reading after it was raised, so the sweeps can re-threshold the persistence tiers offline: enough sets for a week of a low orbit's cadence. Policy. */
+  alertMaxPostSets: number;
+  /** The persistence tiers the alert records for the sweeps: after this many post sets, and after these many days of span, whether the step still held. Policy: the tiers the owner asked to see. */
+  tierSets: number[];
+  tierDays: number[];
+  /** The days after the step over which the tracking cadence is counted (a breakup is re-observed: more sets a day) against the days before. Policy: three days against thirty. */
+  cadenceAfterDays: number;
+  cadenceBeforeDays: number;
+  /** How long an alert stays open for the fragments or a notice to confirm it, in days, after which it expires. Policy: thirty days, the window the truth's own burst rule counts pieces in. */
+  alertTtlDays: number;
+  /** The sliding window over which a launch's new bodies are counted for a burst, in days, and the span before it that gives the launch's own background rate. Policy: fourteen days, long enough for the catalogue to list a cloud's first pieces, against the year before. */
+  burstWindowDays: number;
+  burstBackgroundDays: number;
+  /** The least expected count of new bodies in the window, so a launch that gained nothing in a year is not read as bursting on two bodies by a zero rate. Fitted on the training split. */
+  lambdaFloor: number;
+  /** The Poisson tail probability at or under which the window's count is a burst over the launch's own background; a burst also needs at least `burstMinBodies` new bodies. Fitted on the training split. */
+  pBurst: number;
+  burstMinBodies: number;
+  /** The plane test's tolerances: the inclination difference and the node difference adjusted for each orbit's own J2 precession, in degrees, that count as one unit of distance, and the distance at or under which a piece shares the parent's plane. Fitted on the training split from the planes of catalogued fragments. */
+  planeInclinationToleranceDeg: number;
+  planeNodeToleranceDeg: number;
+  planeDistanceMax: number;
+  /** How far ahead of its first set a piece's node may be propagated with the J2 rate before the test is not made, in days: a piece catalogued a season after the event has drifted by what drag and the rate's own error allow. Policy: 180 days. */
+  planeMaxDays: number;
+  /** The cloud velocity (the median of the consistent pieces' change of semi-major axis from the parent's, as a tangential impulse) under which payload-classed new bodies are a deployment, not fragments, in metres a second. Physical: a dispenser pushes a satellite off at under a metre a second. */
+  deploymentDeltaVMps: number;
+  /** A launch younger than this, in days from its first body's first set, needs a cloud velocity of at least `youngLaunchDeltaVMps` before its new bodies count as fragments, whatever class the catalogue gives them: the first weeks of a launch catalogue its own objects, platforms and covers classed as debris among them. Policy: thirty days; the velocity bound was fitted on the training split, where the class alone let the launch's own objects through. */
+  youngLaunchDays: number;
+  youngLaunchDeltaVMps: number;
+  /** The least cloud velocity, in metres a second, for a cloud with no parent step to be listed for review: below it the new bodies are a deployment or the catalogue's own backlog. Fitted on the training split. */
+  cloudOnlyDeltaVMinMps: number;
+  /** The most new bodies per window a launch may have gained in the year before for its pieces to confirm a parent's step: an old cloud still being catalogued lists pieces in the parent's plane for years, and any later step on the parent would be confirmed by them. A launch younger than `youngLaunchDays` never confirms by pieces either, its first weeks' debris-classed objects being its own. Fitted on the training split. */
+  confirmBackgroundMax: number;
+  /** How long a launch's cloud, once listed for review, is not listed again as its pieces keep coming, in days. Policy: the alert's time to live. */
+  cloudRepeatDays: number;
+  /** The event-time search: the grid step in seconds, how many hours before the pre set's epoch the grid starts, and the position error of a published set, in kilometres, that divides the along-track slope for the time's sigma. Physical: a minute resolves an event to its revolution; a mean element set places an object to about a kilometre in low orbit. */
+  eventGridSeconds: number;
+  eventLeadHours: number;
+  eventSigmaPositionKm: number;
+  /** The most grid points the event-time search spends on one alert, beyond which the grid step is widened: a highly elliptical object with sets seventeen days apart would otherwise cost fifty thousand propagations. Policy. */
+  eventMaxPoints: number;
 }
 
 export const DETECTOR_PARAMETERS: DetectorParameters = {
@@ -163,6 +208,33 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   consistencyMin: 100,
   bstarRatioMax: 1e6,
   inclinationStepMinDeg: 0.01,
+  occasionalRaisesNonPayload: false,
+  persistOnMeanStep: false,
+  alertMaxPostSets: 24,
+  tierSets: [3, 5],
+  tierDays: [1, 3, 5, 7],
+  cadenceAfterDays: 3,
+  cadenceBeforeDays: 30,
+  alertTtlDays: 30,
+  burstWindowDays: 14,
+  burstBackgroundDays: 365,
+  lambdaFloor: 0.5,
+  pBurst: 0.001,
+  burstMinBodies: 2,
+  planeInclinationToleranceDeg: 0.2,
+  planeNodeToleranceDeg: 1.5,
+  planeDistanceMax: 3,
+  planeMaxDays: 180,
+  deploymentDeltaVMps: 1,
+  youngLaunchDays: 30,
+  youngLaunchDeltaVMps: 5,
+  cloudOnlyDeltaVMinMps: 1,
+  confirmBackgroundMax: 2,
+  cloudRepeatDays: 30,
+  eventGridSeconds: 60,
+  eventLeadHours: 6,
+  eventSigmaPositionKm: 1,
+  eventMaxPoints: 4000,
 };
 
 /** The parameters with a caller's overrides laid over the defaults, one level deep so a per-regime table can be overridden whole. */

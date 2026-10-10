@@ -94,6 +94,8 @@ export interface Verdict {
   evidence: Record<string, number>;
   /** Why, in words, one reason per line. */
   reasons: string[];
+  /** The bodies the verdict rests on beside the object: the pieces that confirmed it, or a cloud's consistent pieces; absent where none. */
+  bodies?: number[];
 }
 
 /**

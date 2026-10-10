@@ -138,8 +138,9 @@ function summary(file: YearFile): string {
   const count = (status: string): number => events.filter((e) => e.status === status).length;
   const alerts = (outcome: string): number => file.score.alerts.filter((a) => a.outcome === outcome).length;
   const manoeuvres = file.verdicts.filter((v) => v.state === "manoeuvre").length;
+  const confirmed = file.score.alerts.filter((a) => a.confirmedAt !== null);
   const start = file.carried ? "from the carried states" : file.warmup === null ? "cold" : `after ${file.warmup.runs} runs of ${file.warmup.year}`;
-  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; manoeuvres ${manoeuvres}; review ${file.score.review.length}`;
+  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length - alerts("confirmation")}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; confirmed ${confirmed.length} (${confirmed.filter((a) => a.outcome === "detection" || a.outcome === "late").length} on events); manoeuvres ${manoeuvres}; review ${file.score.review.length}`;
 }
 
 async function main(): Promise<void> {

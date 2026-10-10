@@ -21,6 +21,15 @@ import type { TimeBasis } from "./replay.ts";
  * late and missed both count against; the false-alarm rate is false
  * alarms over false alarms plus detections on every line, the owner's
  * "parent jumps it raises that match no such event".
+ *
+ * Two more things are read off the alerts. The precision per persistence
+ * tier: every alert's row in the log says whether its step still held
+ * after three and five post sets and after one, three, five and seven
+ * days, and when each tier was reached, so the cells say what raising
+ * only at that tier would have cost in false alarms and in detections
+ * that still beat the catalogue, which is the owner's trade to make. And
+ * the confirmations: of the alerts, how many the fragments or a notice
+ * confirmed, how many of those were true, and how long after.
  */
 
 export const SPLITS = ["validation", "train", "all", "recent", "chronologicalTrain", "chronologicalValidation"] as const;
@@ -65,6 +74,41 @@ export interface Spread {
   count: number;
 }
 
+/** The persistence tiers the sweep reads off the alert rows: as raised (two post sets), and the later ones. */
+export const TIERS = [
+  { key: "2", label: "2 post sets over 18 h, or 3 (as raised)" },
+  { key: "3", label: "3 post sets" },
+  { key: "5", label: "5 post sets" },
+  { key: "D1", label: "1 day of post sets" },
+  { key: "D3", label: "3 days of post sets" },
+  { key: "D5", label: "5 days of post sets" },
+  { key: "D7", label: "7 days of post sets" },
+] as const;
+export type TierKey = (typeof TIERS)[number]["key"];
+
+export interface TierCells {
+  tier: TierKey;
+  /** The alerts whose step still held at the tier (detections, late ones and false alarms alike), and of those the detections that still beat the catalogue and the false alarms. */
+  raised: number;
+  detections: number;
+  falseAlarms: number;
+  /** Detections over detections plus false alarms at the tier; null where both are zero. */
+  precision: number | null;
+  /** The tier's detections over the detections as raised; null where there were none. */
+  detectionShare: number | null;
+  leadHours: Spread | null;
+}
+
+export interface ConfirmedCells {
+  /** The alerts a confirmed verdict followed, and of those how many had matched a reported event (a detection or a late alert), how many an exempt window or a duplicate, and how many nothing. */
+  confirmations: number;
+  ofTrue: number;
+  ofExempt: number;
+  ofFalseAlarms: number;
+  /** The median days from the alert to its confirmation. */
+  daysToConfirmation: number | null;
+}
+
 export interface Cells {
   years: number[];
   lines: Record<Line, LineCells>;
@@ -73,6 +117,8 @@ export interface Cells {
   exempt: number;
   falseAlarms: number;
   review: number;
+  tiers: TierCells[];
+  confirmed: ConfirmedCells;
   /** False alarms over false alarms plus detections on every line; null where both are zero. */
   falseAlarmRate: number | null;
   bodyYears: number;
@@ -135,21 +181,69 @@ function rate(line: LineCells): void {
   line.detectionRate = line.targets === 0 ? null : line.detected / line.targets;
 }
 
-/** The cells over a set of scored years. */
-export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[]): Cells {
+/** The alert rows of the log, keyed by object and the step's second edge, over every year file: an alert raised in December closes in the next year's file. */
+export type AlertRows = Map<string, LogRow>;
+
+export const alertKey = (number: number, afterEpoch: number): string => `${number}:${Math.round(afterEpoch)}`;
+
+export function alertRowsOf(files: Pick<YearFile, "log">[]): AlertRows {
+  const rows: AlertRows = new Map();
+  for (const file of files) for (const row of file.log) if (row.signals.phase === 3 && row.signals.afterEpoch !== undefined) rows.set(alertKey(row.number, row.signals.afterEpoch), row);
+  return rows;
+}
+
+/** One counted alert as the tiers read it: its outcome as raised, the deadline it had to beat, its catalogue time, and its row. */
+export interface TieredAlert {
+  outcome: "detection" | "late" | "false-alarm";
+  deadline: number;
+  catalogueAt: number | null;
+  leadHours: number | null;
+  row: LogRow | undefined;
+}
+
+/** The tier cells over the counted alerts. */
+export function tierCellsOf(alerts: TieredAlert[]): TierCells[] {
+  const baseDetections = alerts.filter((a) => a.outcome === "detection").length;
+  return TIERS.map(({ key }) => {
+    let raised = 0;
+    let detections = 0;
+    let falseAlarms = 0;
+    const leads: number[] = [];
+    for (const alert of alerts) {
+      let at = Number.NEGATIVE_INFINITY;
+      if (key !== "2") {
+        if (alert.row?.signals[`tier${key}Held`] !== 1) continue;
+        at = alert.row.signals[`tier${key}At`]!;
+      }
+      raised++;
+      if (alert.outcome === "false-alarm") falseAlarms++;
+      else if (alert.outcome === "detection" && at < alert.deadline) {
+        detections++;
+        if (alert.catalogueAt !== null) leads.push(key === "2" ? alert.leadHours! : (alert.catalogueAt - at) / 3_600_000);
+      }
+    }
+    return { tier: key, raised, detections, falseAlarms, precision: detections + falseAlarms === 0 ? null : detections / (detections + falseAlarms), detectionShare: baseDetections === 0 ? null : detections / baseDetections, leadHours: spread(leads, 10) };
+  });
+}
+
+/** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers. */
+export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map()): Cells {
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, daysToConfirmation: null }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
+  const alertConfirmations: number[] = [];
   const timings: number[] = [];
+  const tiered: TieredAlert[] = [];
   let detections = 0;
   let confirmed = 0;
   for (const { score, bodyYears } of years) {
     cells.bodyYears += bodyYears;
     cells.review += score.review.length;
+    const eventsById = new Map(score.events.map((e) => [e.id, e]));
     for (const event of score.events) {
       for (const line of [lines[event.line], byRegime[event.regime], byKind[event.kind]]) {
         if (event.status === "undetectable") line.undetectable++;
@@ -170,12 +264,27 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[])
       }
     }
     for (const alert of score.alerts) {
+      if (alert.outcome === "confirmation") continue;
       cells.alerts++;
       if (alert.outcome === "duplicate") cells.duplicates++;
       else if (alert.outcome === "exempt") cells.exempt++;
       else if (alert.outcome === "false-alarm") cells.falseAlarms++;
+      if (alert.confirmedAt !== null) {
+        cells.confirmed.confirmations++;
+        if (alert.outcome === "detection" || alert.outcome === "late") cells.confirmed.ofTrue++;
+        else if (alert.outcome === "exempt" || alert.outcome === "duplicate") cells.confirmed.ofExempt++;
+        else cells.confirmed.ofFalseAlarms++;
+        alertConfirmations.push(alert.daysToConfirmation!);
+      }
+      if (alert.outcome === "detection" || alert.outcome === "late" || alert.outcome === "false-alarm") {
+        const event = alert.event === null ? undefined : eventsById.get(alert.event);
+        const deadline = Math.min(event?.catalogueAt ?? Number.POSITIVE_INFINITY, event?.noticeAt ?? Number.POSITIVE_INFINITY);
+        tiered.push({ outcome: alert.outcome, deadline, catalogueAt: event?.catalogueAt ?? null, leadHours: event?.leadHours ?? null, row: alert.afterEpoch === null ? undefined : rows.get(alertKey(alert.number, alert.afterEpoch)) });
+      }
     }
   }
+  cells.tiers = tierCellsOf(tiered);
+  cells.confirmed.daysToConfirmation = alertConfirmations.length === 0 ? null : percentile(alertConfirmations, 50);
   for (const group of [lines, byRegime, byKind]) for (const line of Object.values(group) as LineCells[]) rate(line);
   cells.falseAlarmRate = cells.falseAlarms + detections === 0 ? null : cells.falseAlarms / (cells.falseAlarms + detections);
   cells.falseAlarmsPer10kBodyYears = cells.bodyYears === 0 ? null : (cells.falseAlarms / cells.bodyYears) * 10_000;
@@ -209,7 +318,8 @@ export function splitYears(years: number[], split: SplitName): number[] {
 /** The aggregate over the year files. */
 export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "truthSha256" | "detector">): Latest {
   const years = files.map((f) => f.year).sort((a, b) => a - b);
-  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)))])) as Record<SplitName, Cells>;
+  const rows = alertRowsOf(files);
+  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows)])) as Record<SplitName, Cells>;
   const archive = Object.fromEntries(files.sort((a, b) => a.year - b.year).map((f) => [String(f.year), { ...f.archive, timeBasis: f.timeBasis }]));
   return { format: 1, ...meta, archive, years, splits };
 }
@@ -246,8 +356,21 @@ export function alertsTable(cells: Cells, title: string): string {
       ["Confirmed share of the detections", pct(cells.confirmedShare)],
       ["Days to confirmation, median", one(cells.daysToConfirmation)],
       ["Timing error, minutes, median", one(cells.timingErrorMinutes)],
-      ["Cloud verdicts, for review", cells.review],
+      ["Alerts confirmed by the fragments or a notice", cells.confirmed.confirmations],
+      ["Of which on a reported event (a detection or a late alert)", cells.confirmed.ofTrue],
+      ["Of which inside an exempt window or a duplicate", cells.confirmed.ofExempt],
+      ["Of which matching no reported event (wrongly confirmed)", cells.confirmed.ofFalseAlarms],
+      ["Days from the alert to its confirmation, median", one(cells.confirmed.daysToConfirmation)],
+      ["Cloud verdicts, for review (a burst with no parent step)", cells.review],
     ],
+  );
+}
+
+/** The table of a split's precision per persistence tier: what raising only once the step had held that long would have cost. */
+export function tiersTable(cells: Cells, title: string): string {
+  return table(
+    [title, "Raised", "Detections still before the catalogue", "False alarms", "Precision", "Share of the detections kept", "Lead over the catalogue, hours: median (10th percentile)"],
+    cells.tiers.map((tier) => [TIERS.find((t) => t.key === tier.tier)!.label, tier.raised, tier.detections, tier.falseAlarms, pct(tier.precision), pct(tier.detectionShare), spreadCell(tier.leadHours)]),
   );
 }
 
@@ -261,11 +384,12 @@ export function breakdownTable(cells: Cells, title: string): string {
 
 const yearsOf = (cells: Cells): string => (cells.years.length === 0 ? "no year" : cells.years.length === 1 ? String(cells.years[0]) : `${cells.years[0]} to ${cells.years.at(-1)}, ${cells.years.length} years`);
 
-/** The two tables the README carries: the headline split. */
+/** The three tables the README carries: the headline split. */
 export function readmeTables(latest: Latest): string[] {
   const cells = latest.splits.validation;
   const title = `${SPLIT_TITLES.validation} (${yearsOf(cells)})`;
-  return [linesTable(cells, title), alertsTable(cells, `Alerts, ${title.charAt(0).toLowerCase()}${title.slice(1)}`)];
+  const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
+  return [linesTable(cells, title), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`)];
 }
 
 /** The whole report: every split's tables, with the breakdown. */
@@ -273,15 +397,16 @@ export function renderLatest(latest: Latest): string {
   const sections = [
     "# The scorecard, as last run",
     "",
-    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first two tables; the tests check them against \`kpi/latest.json\`. Never edited by hand.`,
+    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first three tables; the tests check them against \`kpi/latest.json\`. Never edited by hand.`,
     "",
-    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound.",
+    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue; the confirmed lines count the alerts the fragments or a notice went on to confirm, and whether those alerts had matched a reported event.",
     "",
   ];
   for (const split of SPLITS) {
     const cells = latest.splits[split];
     const title = `${SPLIT_TITLES[split]} (${yearsOf(cells)})`;
-    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", alertsTable(cells, `Alerts, ${title.charAt(0).toLowerCase()}${title.slice(1)}`), "", breakdownTable(cells, `By regime and kind, ${title.charAt(0).toLowerCase()}${title.slice(1)}`), "");
+    const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
+    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
   }
   sections.push("## The years", "", table(["Year", "Source", "Built", "Sets", "Bodies", "Timed by"], latest.years.map((year) => {
     const record = latest.archive[String(year)]!;

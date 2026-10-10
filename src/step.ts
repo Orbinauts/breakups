@@ -42,6 +42,10 @@ export interface StepEstimate {
   delta: number;
   sigmaDelta: number;
   z: number;
+  /** The fitted line's value at the centroid of the post sets, the weighted mean step, in kilometres, its sigma and its normalised size: where a line fit is best determined, and what a step the catalogue's fit converged on over several sets reads as when its first post set carried only part of it. */
+  mean: number;
+  sigmaMean: number;
+  zMean: number;
   /** The fitted post-step slope, in kilometres per day. */
   slope: number;
   /** The fitted step over the first set's jump, and the median of the later sets' plain residuals over the first set's; the latter is NaN with one set. */
@@ -71,6 +75,9 @@ export interface SegmentFit {
   delta: number;
   slope: number;
   sigmaDelta: number;
+  /** The line's value at the weighted centroid of the times and its sigma. */
+  mean: number;
+  sigmaMean: number;
   chi2: number;
 }
 
@@ -82,7 +89,7 @@ export interface SegmentFit {
  */
 export function fitSegment(x: number[], u: number[], sigma: number[], slopePrior: number): SegmentFit {
   const k = x.length;
-  if (k === 1) return { delta: u[0]!, slope: 0, sigmaDelta: sigma[0]!, chi2: 0 };
+  if (k === 1) return { delta: u[0]!, slope: 0, sigmaDelta: sigma[0]!, mean: u[0]!, sigmaMean: sigma[0]!, chi2: 0 };
   let sw = 0;
   let swx = 0;
   let swxx = 0;
@@ -101,9 +108,11 @@ export function fitSegment(x: number[], u: number[], sigma: number[], slopePrior
   const delta = ((swxx + ridge) * swu - swx * swxu) / det;
   const slope = (sw * swxu - swx * swu) / det;
   const sigmaDelta = Math.sqrt((swxx + ridge) / det);
+  const centroid = swx / sw;
+  const sigmaMean = Math.sqrt(Math.max(0, (swxx + ridge - 2 * centroid * swx + centroid * centroid * sw) / det));
   let chi2 = slope * slope * ridge;
   for (let i = 0; i < k; i++) chi2 += (u[i]! - delta - slope * x[i]!) ** 2 / (sigma[i]! * sigma[i]!);
-  return { delta, slope, sigmaDelta, chi2 };
+  return { delta, slope, sigmaDelta, mean: delta + slope * centroid, sigmaMean, chi2 };
 }
 
 /** The weighted squares of a drift through the origin, `u = b x`, the slope under a Gaussian prior of width `slopePrior`: what a mispredicted rate growing from the step's instant, at a rate drag and noise allow, leaves. */
@@ -122,13 +131,13 @@ export function driftChi2(x: number[], u: number[], sigma: number[], slopePrior:
   return chi2;
 }
 
-/** The post sets of a candidate: the ring indices from the bracket's second edge (the set that opened it; failing that, the first after the first edge), at most the parameter's many. An older set slotted in between the edges later is neither pre nor post. */
-export function postIndices(state: SeriesState, candidate: Candidate, params: DetectorParameters): number[] {
+/** The post sets of a candidate: the ring indices from the bracket's second edge (the set that opened it; failing that, the first after the first edge), at most `maxPostSets` (the parameter's many by default; an open alert reads more). An older set slotted in between the edges later is neither pre nor post. */
+export function postIndices(state: SeriesState, candidate: Candidate, params: DetectorParameters, maxPostSets = params.maxPostSets): number[] {
   const opener = indexOfEpoch(state, candidate.afterEpoch);
   const first = opener === -1 ? firstAfter(state, candidate.beforeEpoch) : opener;
   if (first === -1) return [];
   const indices: number[] = [];
-  for (let i = first; i < state.epochs.length && indices.length < params.maxPostSets; i++) indices.push(i);
+  for (let i = first; i < state.epochs.length && indices.length < maxPostSets; i++) indices.push(i);
   return indices;
 }
 
@@ -165,8 +174,8 @@ function weightedMean(u: number[], sigma: number[]): { mean: number; z: number }
  * the semi-major axis in proportion to the object's drag term and the
  * gap, and the normalised step divided by the band's scale.
  */
-export function estimateStep(state: SeriesState, candidate: Candidate, environment: Environment, params: DetectorParameters): StepEstimate | null {
-  const indices = postIndices(state, candidate, params);
+export function estimateStep(state: SeriesState, candidate: Candidate, environment: Environment, params: DetectorParameters, maxPostSets = params.maxPostSets): StepEstimate | null {
+  const indices = postIndices(state, candidate, params, maxPostSets);
   if (indices.length === 0) return null;
   const regime = state.regime === "unknown" ? "LEO" : state.regime;
   const kappa = params.kappa[regime];
@@ -193,6 +202,9 @@ export function estimateStep(state: SeriesState, candidate: Candidate, environme
     delta: fit.delta,
     sigmaDelta: fit.sigmaDelta * environment.scale,
     z: fit.delta / (fit.sigmaDelta * environment.scale),
+    mean: fit.mean,
+    sigmaMean: fit.sigmaMean * environment.scale,
+    zMean: fit.mean / (fit.sigmaMean * environment.scale),
     slope: fit.slope,
     rho: fit.delta / delta1,
     rhoMedian,

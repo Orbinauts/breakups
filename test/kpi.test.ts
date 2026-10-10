@@ -200,7 +200,7 @@ describe("the scorecard on the synthetic year", () => {
   });
 
   test("the cloud verdict goes to the review list and counts as nothing", () => {
-    expect(file.score.review).toEqual([{ verdict: expect.any(Number), launch: "2010-001", raisedAt: CLOUD_AT, state: "cloud-only" }]);
+    expect(file.score.review).toEqual([{ verdict: expect.any(Number), launch: "2010-001", number: null, raisedAt: CLOUD_AT, state: "cloud-only", pieces: 0 }]);
     expect(file.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
   });
 
@@ -209,6 +209,10 @@ describe("the scorecard on the synthetic year", () => {
     expect(cells.lines["breakups A-B"]).toEqual({ targets: 2, undetectable: 1, detected: 1, late: 1, missed: 0, detectionRate: 0.5 });
     for (const line of ["breakups C", "breakups D", "anomalous A-B", "anomalous C-D"] as const) expect(cells.lines[line]).toEqual({ targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, detectionRate: null });
     expect(cells).toMatchObject({ alerts: 7, duplicates: 2, exempt: 2, falseAlarms: 1, review: 1, falseAlarmRate: 0.5, confirmedShare: 0, daysToConfirmation: null, timingErrorMinutes: 390 });
+    // The tiers: as raised, the detection, the late alert and the false alarm are the three counted; the trivial detector logs no alert row, so no later tier is reached.
+    expect(cells.tiers[0]).toEqual({ tier: "2", raised: 3, detections: 1, falseAlarms: 1, precision: 0.5, detectionShare: 1, leadHours: { median: 44, tail: 44, count: 1 } });
+    expect(cells.tiers.slice(1).every((t) => t.raised === 0 && t.detections === 0 && t.precision === null && t.detectionShare === 0)).toBe(true);
+    expect(cells.confirmed).toEqual({ confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, daysToConfirmation: null });
     expect(cells.leadHours).toEqual({ median: 44, tail: 44, count: 1 });
     expect(cells.latencyHours).toEqual({ median: 22.5, tail: 22.5, count: 1 });
     expect(cells.falseAlarmsPer10kBodyYears).toBeCloseTo(10_000 / file.bodyYears, 6);
@@ -230,13 +234,16 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [lines, alertsTable] = readmeTables(latest);
+    const [lines, alertsTable, tiers] = readmeTables(latest);
+    expect(tiers).toContain("| 2 post sets over 18 h, or 3 (as raised) | 3 | 1 | 1 | 50% | 100% | 44.0 (44.0) |");
+    expect(tiers).toContain("| 7 days of post sets | 0 | 0 | 0 | – | 0% | – |");
     expect(lines).toContain("| Breakups, confidence A and B (the target is 90%) | 2 | 1 | 1 | 1 | 0 | 50% |");
     expect(lines).toContain("| Breakups, confidence C | 0 | 0 | 0 | 0 | 0 | – |");
     expect(alertsTable).toContain("| False alarms | 1 |");
     expect(alertsTable).toContain("| False-alarm rate (the target is under 10%) | 50% |");
     expect(alertsTable).toContain("| Lead over the catalogue, hours: median (10th percentile) | 44.0 (44.0) |");
-    expect(alertsTable).toContain("| Cloud verdicts, for review | 1 |");
+    expect(alertsTable).toContain("| Cloud verdicts, for review (a burst with no parent step) | 1 |");
+    expect(alertsTable).toContain("| Alerts confirmed by the fragments or a notice | 0 |");
     const markdown = readFileSync(join(dir, "latest.md"), "utf8");
     expect(markdown).toBe(renderLatest(latest));
     expect(markdown).toContain(lines);
