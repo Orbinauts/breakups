@@ -85,6 +85,9 @@ export interface LaunchRecord {
   monthOf: number[];
   /** When the launch was last listed for review, so a cloud whose pieces keep coming is listed once. */
   lastCloudAt: number;
+  /** The launch's cloud memory: when a burst with consistent pieces was last judged under it or an alert on one of its bodies was last confirmed by pieces, and the event instant that cloud's nodes are carried from. A later alert under the launch is confirmed only by pieces this cloud cannot account for, for the policy's memory. */
+  lastCloudBurstAt: number;
+  lastCloudEventMs: number;
 }
 
 /** The catalogue-wide state: the high-water mark of designated numbers against time, and the notices already applied. */
@@ -119,7 +122,13 @@ export function launchCodeOf(key: string): number {
 }
 
 export function newLaunch(key: string): LaunchRecord {
-  return { key, bodies: [], firstSeenAt: Number.POSITIVE_INFINITY, monthCounts: new Array<number>(LAUNCH_MONTHS).fill(0), monthOf: new Array<number>(LAUNCH_MONTHS).fill(Number.NEGATIVE_INFINITY), lastCloudAt: Number.NEGATIVE_INFINITY };
+  return { key, bodies: [], firstSeenAt: Number.POSITIVE_INFINITY, monthCounts: new Array<number>(LAUNCH_MONTHS).fill(0), monthOf: new Array<number>(LAUNCH_MONTHS).fill(Number.NEGATIVE_INFINITY), lastCloudAt: Number.NEGATIVE_INFINITY, lastCloudBurstAt: Number.NEGATIVE_INFINITY, lastCloudEventMs: Number.NaN };
+}
+
+/** Records a cloud under the launch: a burst with consistent pieces, or a confirmation by pieces, at the run's instant, with the event instant its nodes are carried from. */
+export function noteCloud(launch: LaunchRecord, now: number, eventMs: number): void {
+  launch.lastCloudBurstAt = now;
+  launch.lastCloudEventMs = eventMs;
 }
 
 export function newCatalogue(): CatalogueRecord {
@@ -132,6 +141,10 @@ export function launchFor(launches: Map<string, unknown>, key: string): LaunchRe
   if (record === undefined) {
     record = newLaunch(key);
     launches.set(key, record);
+  } else if (record.lastCloudBurstAt === undefined) {
+    // A record written before the cloud memory existed: no cloud remembered.
+    record.lastCloudBurstAt = Number.NEGATIVE_INFINITY;
+    record.lastCloudEventMs = Number.NaN;
   }
   return record;
 }
@@ -238,7 +251,7 @@ export interface PlaneDistance {
  * to the piece's set is taken off. A piece catalogued longer after the
  * event than the parameter allows is not tested.
  */
-export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters): PlaneDistance {
+export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters, limitDays = params.planeMaxDays): PlaneDistance {
   const deltaInclinationDeg = piece.inclinationDeg - parent.inclinationDeg;
   const parentRate = nodePrecessionDegPerDay(parent.aKm, parent.eccentricity, parent.inclinationDeg, parent.meanMotion);
   const pieceRate = nodePrecessionDegPerDay(piece.aKm, piece.eccentricity, piece.inclinationDeg, piece.meanMotion);
@@ -246,8 +259,36 @@ export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: nu
   const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
   const parentNodeAtPiece = parent.raanDeg + parentRate * sinceParent;
   const deltaNodeDeg = wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
-  const distance = Math.abs(sinceEvent) > params.planeMaxDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
+  const distance = Math.abs(sinceEvent) > limitDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
   return { deltaInclinationDeg, deltaNodeDeg, distance };
+}
+
+/**
+ * The bodies of an earlier cloud under the launch: those classed as a
+ * fragment is (debris, or not yet said) first seen in the span, less the
+ * bodies excluded (the alerted parent, and the pieces now being judged).
+ * This is what a later alert's pieces are told apart from.
+ */
+export function cloudBodies(launch: LaunchRecord, from: number, to: number, exclude: ReadonlySet<number>): BodyRecord[] {
+  return launch.bodies.filter((b) => b.firstSeenAt > from && b.firstSeenAt <= to && isFragmentClass(b.bodyClass) && !exclude.has(b.number));
+}
+
+/**
+ * How near an orbit lies to a cloud: the least plane distance to any of
+ * the cloud's bodies, each distance taken both ways (the orbit as the
+ * reference and the body as the reference, since the node is carried at
+ * the reference's own rate) and the smaller kept, with no limit on how
+ * long after the cloud's event either set is, since the test is whether
+ * the orbit can be told from the cloud at all. Infinite with no body.
+ */
+export function nearestCloudDistance(orbit: PlaneOrbit, cloud: readonly BodyRecord[], eventMs: number, params: DetectorParameters): number {
+  let least = Number.POSITIVE_INFINITY;
+  for (const body of cloud) {
+    const other = planeOrbitOf(body);
+    const d = Math.min(planeDistance(orbit, other, eventMs, params, Number.POSITIVE_INFINITY).distance, planeDistance(other, orbit, eventMs, params, Number.POSITIVE_INFINITY).distance);
+    if (d < least) least = d;
+  }
+  return least;
 }
 
 /** The tangential impulse, in metres a second, that moves the semi-major axis of a near-circular orbit at `aKm` by `deltaKm`. */
@@ -305,9 +346,12 @@ export interface PieceReading {
 /** The cloud as the launch pass judged it on one run. */
 export interface CloudVerdict {
   key: string;
-  /** How many new bodies the run brought, and how many were first seen in the window. */
+  /** How many new bodies the run brought, how many were first seen in the window, and how many in the year before it (the background's count, every class). */
   newBodies: number;
   windowBodies: number;
+  backgroundBodies: number;
+  /** The event instant the mark was taken at and the nodes were carried from: a parent's step where there is one, else the first window body's first epoch. */
+  eventMs: number;
   /** The background rate per window as read off the year before (unfloored), the floored rate the tail was computed at, and the Poisson tail probability of the window's count. */
   rate: number;
   lambda: number;
@@ -398,7 +442,7 @@ export function judgeCloud(launch: LaunchRecord, catalogue: CatalogueRecord, par
   if (deployments > 0) reasons.push(`${deployments} in plane but classed payload or rocket body: the launch's own objects`);
   if (consistent.length > 0) reasons.push(`${consistent.length} piece${consistent.length > 1 ? "s" : ""} in the plane of parent ${consistent[0]!.parent} (distance under ${params.planeDistanceMax}), moving ${cloudDeltaVMps.toFixed(1)} m/s, the semi-major axes spread over ${gabbardSpreadKm.toFixed(1)} km`);
   const parentRows = parents.map((candidate) => ({ number: candidate.number, distance: pieces.reduce((least, piece) => (piece.parent === candidate.number ? Math.min(least, piece.distance) : least), Number.POSITIVE_INFINITY) }));
-  return { key: launch.key, newBodies, windowBodies: inWindow.length, rate, lambda, p, burst, pieces, consistent, parents: parentRows, cloudDeltaVMps, gabbardSpreadKm, launchAgeDays, returning, seenBefore, deployments, oldCloud, reasons };
+  return { key: launch.key, newBodies, windowBodies: inWindow.length, backgroundBodies: before.length, eventMs, rate, lambda, p, burst, pieces, consistent, parents: parentRows, cloudDeltaVMps, gabbardSpreadKm, launchAgeDays, returning, seenBefore, deployments, oldCloud, reasons };
 }
 
 /** The pieces within each plane distance, for the log's sweep columns. */

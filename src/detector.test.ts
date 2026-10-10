@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest";
 import { OUTCOMES } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
-import { DAY, HOUR, feed, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
+import { nodePrecessionDegPerDay } from "./series.ts";
+import { DAY, HOUR, feed, meanMotionOf, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
 
 /**
@@ -452,5 +453,152 @@ describe("the fusion with the fragments", () => {
     expect(confirmed).toHaveLength(1);
     expect(confirmed[0]!.number).toBe(3);
     expect(confirmed[0]!.reasons.join(" ")).toContain("read as a manoeuvre");
+  });
+});
+
+describe("the confirmation rules", () => {
+  /** The node's J2 rate at the test orbit, so a parent's sets and its pieces' first sets precess as real ones do and the plane test's carried node meets them. */
+  const RATE = nodePrecessionDegPerDay(7200, 0.001, 98, meanMotionOf(7200));
+  const nodeAt = (epochMs: number): number => 100 + RATE * ((epochMs - T0) / DAY);
+  const withNode = (set: ElementSet): ElementSet => ({ ...set, raanDeg: nodeAt(set.epochMs) });
+
+  /** A quiet decaying parent, number 1 of launch 2010-001, over `days`, stepping down 0.3 km at `stepAt` sets in, its node precessing. */
+  function parentSeries(days: number, stepAt: number, bodyClass: ElementSet["bodyClass"] = "rocket body"): ElementSet[] {
+    const series = decaying(7200, 0.02, 0.004, days);
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
+    return series.map((s) => withNode(setOf(1, s, bodyClass)));
+  }
+
+  /** Debris bodies under launch 2010-001 numbered from `from`, at the epoch, `nodeOffsetDeg` from the precessing plane, spread a few kilometres about the axis given. */
+  function debris(from: number, count: number, epochMs: number, nodeOffsetDeg: number, options: { aKm?: number; spreadKm?: number } = {}): ElementSet[] {
+    const spread = options.spreadKm ?? 3;
+    return Array.from({ length: count }, (_, i) => ({ ...setOf(from + i, { epochMs, aKm: (options.aKm ?? 7200) + (i - (count - 1) / 2) * spread, raanDeg: nodeAt(epochMs) + nodeOffsetDeg }, "debris"), designator: `2010-001${"CDEFGHJKLMNP"[i % 12]}` }));
+  }
+
+  /** The parent's sets in runs of one, with a batch of pieces slotted in after the last set before `pieceEpoch`. */
+  function runsWith(parent: ElementSet[], pieces: ElementSet[][], others: ElementSet[] = []): ElementSet[][] {
+    const runs = one([...parent, ...others].sort((a, b) => a.epochMs - b.epochMs));
+    for (const batch of pieces) {
+      const epoch = batch[0]!.epochMs;
+      const at = runs.findIndex((r) => r[0]!.epochMs > epoch);
+      runs.splice(at === -1 ? runs.length : at, 0, batch);
+    }
+    return runs;
+  }
+
+  const confirmedOn = (fed: ReturnType<typeof feed>, number: number) => fed.verdicts.filter((v) => v.state === "confirmed" && v.number === number);
+  const alertRow = (fed: ReturnType<typeof feed>, number: number) => fed.log.find((r) => r.signals.phase === 3 && r.number === number);
+
+  test("a fresh cloud on a quiet launch confirms, and the verdict carries the rules' reading", () => {
+    const parent = parentSeries(48, 105);
+    const stepEpoch = parent[105]!.epochMs;
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0)]));
+    const confirmed = confirmedOn(fed, 1);
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.bodies).toHaveLength(6);
+    expect(confirmed[0]!.evidence.piecesJudged).toBe(6);
+    expect(confirmed[0]!.evidence.cloudPieces).toBe(0);
+    // The parent itself, first seen thirty-five days before, is the launch's one new body in the year before.
+    expect(confirmed[0]!.evidence.backgroundBodies).toBe(1);
+    expect(confirmed[0]!.evidence.cloudDeltaVMps).toBeGreaterThan(params.confirmDeltaVMinMps);
+    const row = alertRow(fed, 1)!;
+    expect(row.signals.confirmPieces).toBe(6);
+    expect(row.signals.confirmRefused).toBe(0);
+    expect(row.signals.parentFragment).toBe(0);
+  });
+
+  test("a launch that had a burst within the year confirms nothing on a parent lying in that cloud's plane, and confirms a parent on another plane by pieces out of it", () => {
+    // Parent 1 steps on day sixty; on day thirty-two six pieces came under the launch on its plane, a cloud listed for review and remembered.
+    const parent = parentSeries(80, 180);
+    const stepEpoch = parent[180]!.epochMs;
+    const cloudEpoch = parent[96]!.epochMs + HOUR;
+    const same = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 0), debris(50011, 6, stepEpoch + 5 * DAY, 0)]), { until: stepEpoch + 33 * DAY });
+    expect(same.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
+    expect(suspected(same)).toHaveLength(1);
+    expect(confirmedOn(same, 1)).toEqual([]);
+    const row = alertRow(same, 1)!;
+    expect(row.signals.confirmPieces).toBe(6);
+    expect(row.signals.confirmRefused).toBe(1);
+    expect(row.signals.cloudPieces).toBe(6);
+    expect(row.signals.daysSinceCloud).toBeGreaterThan(25);
+    expect(row.signals.daysSinceCloud).toBeLessThan(params.cloudMemoryDays);
+    expect(row.signals.parentCloudDistance).toBeLessThan(params.planeDistanceMax);
+    expect(same.verdicts.filter((v) => v.state === "expired" && v.number === 1)).toHaveLength(1);
+    // The same launch with a second body sixty degrees of node away whose plane the earlier cloud shares: parent 1's new pieces lie out of that cloud's plane and confirm it.
+    const other = decaying(7200, 0.02, 0.004, 80, 8, 5).map((s) => ({ ...withNode(setOf(2, s, "payload")), designator: "2010-001B" })).map((s) => ({ ...s, raanDeg: s.raanDeg + 60 }));
+    const apart = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 60), debris(50011, 6, stepEpoch + 5 * DAY, 0)], other), { until: stepEpoch + 33 * DAY });
+    expect(apart.verdicts.filter((v) => v.kind === "cloud").map((v) => v.number)).toEqual([2]);
+    const confirmed = confirmedOn(apart, 1);
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.bodies).toHaveLength(6);
+    expect(confirmed[0]!.evidence.cloudPieces).toBe(6);
+    expect(confirmed[0]!.evidence.parentCloudDistance).toBeGreaterThan(params.planeDistanceMax);
+    expect(confirmed[0]!.reasons.join(" ")).toContain("on another plane");
+  });
+
+  test("a debris-classed parent that is itself a fresh piece of the launch's cloud is confirmed by nothing, and an old one under an active cloud only by pieces nearer its plane than the cloud is", () => {
+    // The launch's payload sits ninety degrees of node away, so the pieces attach to the piece's plane and not to the payload's.
+    const quiet = parentSeries(80, 10_000, "payload").map((s) => ({ ...s, raanDeg: s.raanDeg + 90 }));
+    /** Piece 50001's own series: `days` of eight-hourly sets from `from`, stepping down 0.3 km at `stepAt`. */
+    const pieceSeries = (from: number, days: number, stepAt: number): ElementSet[] => {
+      const gauss = noise(31);
+      const sets: ElementSet[] = [];
+      for (let i = 0; i <= days * 3; i++) sets.push({ ...withNode(setOf(50001, { epochMs: from + i * 8 * HOUR, aKm: (i >= stepAt ? 7196.7 : 7197) + 0.004 * gauss() }, "debris")), designator: "2010-001C" });
+      return sets;
+    };
+    // Catalogued with five siblings on day thirty-two, stepping eighteen days later: the siblings' next batch does not confirm it.
+    const cloudEpoch = quiet[96]!.epochMs + HOUR;
+    const fresh = pieceSeries(cloudEpoch, 40, 54);
+    const freshStep = fresh[54]!.epochMs;
+    const first = feed(runsWith(quiet, [[fresh[0]!, ...debris(50002, 5, cloudEpoch, 0)], debris(50021, 4, freshStep + 5 * DAY, 0)], fresh.slice(1)), { parameters: { cloudMemoryDays: 0 }, until: freshStep + 33 * DAY });
+    expect(suspected(first).map((v) => v.number)).toEqual([50001]);
+    expect(confirmedOn(first, 50001)).toEqual([]);
+    const row = alertRow(first, 50001)!;
+    expect(row.signals.parentFragment).toBe(1);
+    expect(row.signals.parentAgeDays).toBeLessThan(params.freshPieceDays);
+    expect(row.signals.confirmRefused).toBe(1);
+    // The same piece first catalogued two hundred days before its step, under a launch whose cloud trickles on a degree and a half of node from it: pieces on its own plane are nearer than the cloud and confirm it; pieces farther off than the cloud, though within the plane bound, do not.
+    const old = pieceSeries(T0 + 2 * DAY, 230, 600);
+    const oldStep = old[600]!.epochMs;
+    const trickle = [0, 60, 120].map((day, i) => ({ ...setOf(40001 + i, { epochMs: T0 + 10 * DAY + day * DAY, aKm: 7230, raanDeg: nodeAt(T0 + 10 * DAY + day * DAY) + 1.5 }, "debris"), designator: "2010-001D" }));
+    const scenario = (offsetDeg: number): ReturnType<typeof feed> => feed(runsWith(quiet, [debris(50021, 4, oldStep + 5 * DAY, offsetDeg)], [...old, ...trickle]), { parameters: { cloudMemoryDays: 0, singlePieceNeedsQuietLaunch: false }, until: oldStep + 33 * DAY });
+    const nearer = scenario(0);
+    expect(suspected(nearer).map((v) => v.number)).toEqual([50001]);
+    expect(confirmedOn(nearer, 50001)).toHaveLength(1);
+    expect(confirmedOn(nearer, 50001)[0]!.evidence.cloudPieces).toBe(3);
+    const asFar = scenario(2.5);
+    expect(suspected(asFar).map((v) => v.number)).toEqual([50001]);
+    expect(confirmedOn(asFar, 50001)).toEqual([]);
+    expect(alertRow(asFar, 50001)!.signals.piecesNearerThanCloud).toBe(0);
+  });
+
+  test("a single piece confirms a parent that is not debris under a launch that gained nothing in the year before, and nothing else", () => {
+    // The parent's first set is four hundred days before the step, so the launch gained nothing in the year before.
+    const parent = parentSeries(48, 105, "payload");
+    const stepEpoch = parent[105]!.epochMs;
+    const early: ElementSet = withNode(setOf(1, { epochMs: T0 - 400 * DAY, aKm: 7208 }, "payload"));
+    const piece = (pieceClass: "payload" | "debris"): ElementSet => ({ ...setOf(50001, { epochMs: stepEpoch + 5 * DAY, aKm: 7197, raanDeg: nodeAt(stepEpoch + 5 * DAY) }, pieceClass), designator: "2010-001C" });
+    const run = (others: ElementSet[]) => feed(runsWith([early, ...parent], [[piece("debris")]], others), { until: stepEpoch + 33 * DAY });
+    const quiet = run([]);
+    expect(suspected(quiet)).toHaveLength(1);
+    expect(confirmedOn(quiet, 1)).toHaveLength(1);
+    expect(confirmedOn(quiet, 1)[0]!.bodies).toEqual([50001]);
+    // A debris body catalogued under the launch a hundred days before the step: the launch is not quiet.
+    const busy = run([{ ...setOf(40001, { epochMs: stepEpoch - 100 * DAY, aKm: 7250, raanDeg: 140 }, "debris"), designator: "2010-001D" }]);
+    expect(suspected(busy)).toHaveLength(1);
+    expect(confirmedOn(busy, 1)).toEqual([]);
+    expect(alertRow(busy, 1)!.signals.backgroundBodies).toBe(1);
+    expect(alertRow(busy, 1)!.signals.confirmRefused).toBe(1);
+  });
+
+  test("pieces in the parent's own orbit at under a metre a second confirm nothing", () => {
+    const parent = parentSeries(48, 105);
+    const stepEpoch = parent[105]!.epochMs;
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0, { aKm: 7199.7, spreadKm: 0.1 })]), { until: stepEpoch + 33 * DAY });
+    expect(suspected(fed)).toHaveLength(1);
+    expect(confirmedOn(fed, 1)).toEqual([]);
+    const row = alertRow(fed, 1)!;
+    expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
+    expect(row.signals.confirmRefused).toBe(1);
   });
 });

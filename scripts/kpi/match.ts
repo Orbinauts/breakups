@@ -47,6 +47,12 @@ import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.t
 /** How many sets the parent must have in the days before the window to be judged on public elements. */
 export const MIN_PARENT_SETS = 5;
 export const PARENT_SETS_DAYS = 60;
+/** The days after the event within which the catalogue's new bodies under the launch count as the event's pieces: the truth's own rule counts a burst's pieces to ninety days. */
+export const PIECES_DAYS = 90;
+/** The days after the event over which the parent's own sets are counted (up to the catalogue's first fragment), for the dissection of a miss: the alert's time to live. */
+export const PARENT_SETS_AFTER_DAYS = 30;
+/** How long after a reported event's window a false alarm on the same parent is noted as near it, in days: the step is the event's parent's, late by up to the truth's burst window. The alert stays a false alarm; the note is for the confirmed line, where the product would name the right object. */
+export const NEAR_EVENT_DAYS = 30;
 /**
  * How far a step bracket and a truth window may miss each other and still
  * match, in days, per regime: the slop between epochs and instants. A day
@@ -93,9 +99,12 @@ export interface ScoredEvent {
   from: number;
   to: number;
   at: number | null;
-  /** The parent's sets in the sixty days before the window. */
+  /** The parent's sets in the sixty days before the window, and its sets from the window's start to the catalogue's first fragment (at most thirty days): whether a miss had sets to be judged on. */
   parentSetsBefore: number;
+  parentSetsAfter: number;
   status: EventStatus;
+  /** How many new bodies under the launch, numbered above the mark, were first published within ninety days of the event: the catalogue's own report of it, in the owner's definition. */
+  piecesWithin90Days: number;
   /** When the catalogue published the first set of a new body under the launch after the event, and which body; null where none was in the year. */
   catalogueAt: number | null;
   catalogueBody: number | null;
@@ -124,6 +133,8 @@ export interface ScoredAlert {
   outcome: AlertOutcome;
   /** The event it matched, was late on, duplicated or was exempt by; null for a false alarm. */
   event: string | null;
+  /** For a false alarm: a scoreable event on the same parent whose window ended within the month before the step, so the step is the right object's and late; null otherwise. */
+  nearEvent: string | null;
   note: string;
   /** When a confirmed verdict on the same step followed, and how many days after this alert; null where none did. */
   confirmedAt: number | null;
@@ -222,10 +233,14 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     const parentSetsBefore = index.countSets(parent, row.from - PARENT_SETS_DAYS * DAY_MS, row.from);
     let catalogueAt: number | null = null;
     let catalogueBody: number | null = null;
+    let piecesWithin90Days = 0;
     for (const number of row.fragments) {
       const first = index.firstPublicationFrom(number, row.from - row.margin);
-      if (first !== null && (catalogueAt === null || first < catalogueAt)) [catalogueAt, catalogueBody] = [first, number];
+      if (first === null) continue;
+      if (catalogueAt === null || first < catalogueAt) [catalogueAt, catalogueBody] = [first, number];
+      if (first <= row.from + PIECES_DAYS * DAY_MS) piecesWithin90Days++;
     }
+    const parentSetsAfter = index.countSets(parent, row.from, Math.max(row.from, Math.min(row.from + PARENT_SETS_AFTER_DAYS * DAY_MS, catalogueAt ?? Number.POSITIVE_INFINITY)));
     const noticeAt = notices.filter((n) => n.at >= row.from && ((n.number !== null && n.number === parent) || (n.number === null && n.launch !== null && n.launch === row.launch))).map((n) => n.at).sort((a, b) => a - b)[0] ?? null;
     row.scored = {
       id: breakup.id,
@@ -240,7 +255,9 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       to: row.to,
       at: breakup.event.at === null ? null : Date.parse(breakup.event.at),
       parentSetsBefore,
+      parentSetsAfter,
       status: parentSetsBefore < MIN_PARENT_SETS ? "undetectable" : "missed",
+      piecesWithin90Days,
       catalogueAt,
       catalogueBody,
       catalogueBasis: timeBasis,
@@ -267,8 +284,10 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     }
     if (!ALERT_STATES.includes(verdict.state) || verdict.number === null) continue;
     const number = verdict.number;
-    const land = (outcome: AlertOutcome, event: string | null, note: string): void => {
-      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, note, confirmedAt: null, daysToConfirmation: null, afterEpoch: verdict.step?.afterEpoch ?? null });
+    // A confirmed verdict that lands as an alert of its own (a step the record read as a manoeuvre, promoted by the pieces, which raised no counted alert before) is confirmed as it lands.
+    const land = (outcome: AlertOutcome, event: string | null, note: string, nearEvent: string | null = null): void => {
+      const promoted = verdict.state === "confirmed" && outcome !== "confirmation";
+      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, nearEvent, note, confirmedAt: promoted ? verdict.raisedAt : null, daysToConfirmation: promoted ? 0 : null, afterEpoch: verdict.step?.afterEpoch ?? null });
     };
     // A confirmed verdict on a step already alerted: the confirmation of that alert.
     if (verdict.state === "confirmed" && verdict.step !== null) {
@@ -332,7 +351,8 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       continue;
     }
     if (verdict.step !== null) stepsRaised.set(number, [...earlier, verdict.step]);
-    land("false-alarm", null, "matches no reported event");
+    const near = verdict.step === null ? undefined : rows.find((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber === number && verdict.step!.afterEpoch >= row.from - row.margin && verdict.step!.beforeEpoch <= row.to + NEAR_EVENT_DAYS * DAY_MS);
+    land("false-alarm", null, near === undefined ? "matches no reported event" : `matches no reported event; the parent of ${near.breakup.id}, whose window ended within the month before the step`, near?.breakup.id ?? null);
   }
   return { year, timeBasis, events, alerts, review };
 }

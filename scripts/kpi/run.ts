@@ -3,12 +3,13 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup } from "../../src/index.ts";
+import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorParameters } from "../../src/index.ts";
 import { archiveHome, builtYears, yearDir } from "../archive/archive.ts";
 import { jumpDetector } from "./jump.ts";
+import { writeEvents } from "./events.ts";
 import { aggregate, renderLatest, type Latest, type YearFile } from "./kpi.ts";
 import { matchYear, noticesOf } from "./match.ts";
-import { loadSlice, replayYear, type Carried, type Detector, type ReplayOptions, type ReplayResult } from "./replay.ts";
+import { indexOf, loadSlice, replayYear, type Carried, type Detector, type ReplayOptions, type ReplayResult } from "./replay.ts";
 import { hasStates, readStates, writeStates } from "./states.ts";
 
 /**
@@ -71,6 +72,14 @@ export function replayAndScore(archive: string, year: number, truth: Truth, opti
   return { file, result };
 }
 
+/** A year's file scored again from its verdicts, against the truth as it stands and the year's slices (the year's and the previous one's where the Archive has it): the matcher's rule re-applied without a replay. */
+export function rematch(archive: string, file: YearFile, truth: Truth): YearFile {
+  const notices = noticesOf(truth.breakups);
+  const previous = existsSync(join(yearDir(archive, file.year - 1), "manifest.json")) ? loadSlice(archive, file.year - 1) : null;
+  const index = indexOf(loadSlice(archive, file.year), previous);
+  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices) };
+}
+
 /** One year replayed and matched: the file as it is written. */
 export function scoreYear(archive: string, year: number, truth: Truth, options: ScoreYearOptions = {}): YearFile {
   return replayAndScore(archive, year, truth, options).file;
@@ -120,8 +129,8 @@ export function readYearFiles(dir: string): YearFile[] {
     .map((name) => readYearFile(join(yearsDir(dir), name)));
 }
 
-/** The aggregate over the year files in a directory, written beside them as `latest.json` and `latest.md`. */
-export function writeAggregate(dir: string, truth: Truth, root = ROOT): Latest {
+/** The aggregate over the year files in a directory, written beside them as `latest.json` and `latest.md`, with the per-event dissection written where `eventsPath` says (the committed one under `docs/detector/` for the committed results). */
+export function writeAggregate(dir: string, truth: Truth, root = ROOT, eventsPath = dir === KPI_DIR ? EVENTS_PATH : join(dir, "events.md")): Latest {
   const files = readYearFiles(dir);
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(dir)}: run a year first`);
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { name: string; version: string };
@@ -130,7 +139,20 @@ export function writeAggregate(dir: string, truth: Truth, root = ROOT): Latest {
   const latest = aggregate(files, { package: { name: pkg.name, version: pkg.version }, truthSha256: truth.sha256, detector: files[0]!.detector });
   writeFileSync(join(dir, "latest.json"), `${JSON.stringify(latest, null, 2)}\n`);
   writeFileSync(join(dir, "latest.md"), renderLatest(latest));
+  writeEvents(eventsPath, files, truth, latest);
   return latest;
+}
+
+/** Where the per-event dissection of the committed results is written. */
+export const EVENTS_PATH = join(ROOT, "docs/detector/events.md");
+
+/** A `--param name=value` argument: the name must be a parameter's, the value parses as JSON. */
+export function parseParameter(arg: string, into: Partial<DetectorParameters>): void {
+  const at = arg.indexOf("=");
+  if (at === -1) throw new Error(`--param wants name=value, got ${arg}`);
+  const name = arg.slice(0, at) as keyof DetectorParameters;
+  if (!(name in DETECTOR_PARAMETERS)) throw new Error(`no detector parameter named ${name}`);
+  (into as Record<string, unknown>)[name] = JSON.parse(arg.slice(at + 1)) as unknown;
 }
 
 function summary(file: YearFile): string {
@@ -148,32 +170,46 @@ async function main(): Promise<void> {
   const years: number[] = [];
   let all = false;
   let doAggregate = false;
+  let doRematch = false;
   let detector: Detector | undefined;
   let detectorName: string | undefined;
   let dir = KPI_DIR;
   let workDir = WORK_DIR;
+  const parameters: Partial<DetectorParameters> = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
     if (arg === "--year") years.push(Number(args[++i]));
     else if (arg === "--all") all = true;
     else if (arg === "--aggregate") doAggregate = true;
+    else if (arg === "--rematch") [doRematch, doAggregate] = [true, true];
+    else if (arg === "--param") parseParameter(args[++i]!, parameters);
+    else if (arg === "--out") [dir, workDir] = [resolve(args[++i]!), join(resolve(args[i]!), "work")];
     else if (arg === "--detector") {
       const name = args[++i];
       if (name === "jump") [detector, detectorName, dir, workDir] = [jumpDetector(), "jump", WORK_DIR, join(WORK_DIR, "jump")];
       else if (name !== "placeholder") throw new Error(`no detector named ${name}: placeholder or jump`);
-    } else throw new Error(`usage: run.ts --year <year> [--year ...] | --all | --aggregate [--detector placeholder|jump]`);
+    } else throw new Error(`usage: run.ts --year <year> [--year ...] | --all | --aggregate | --rematch [--detector placeholder|jump] [--param name=value ...] [--out <dir>]`);
   }
+  // A replay with overridden parameters is a trial, never the committed result.
+  if (Object.keys(parameters).length > 0 && dir === KPI_DIR) throw new Error("a replay with --param must also give --out: the committed results are the defaults'");
   const archive = archiveHome();
   const truth = readTruth();
   if (all) years.push(...builtYears(archive));
-  if (years.length === 0 && !doAggregate) throw new Error("nothing to do: give --year, --all or --aggregate");
+  if (years.length === 0 && !doAggregate) throw new Error("nothing to do: give --year, --all, --aggregate or --rematch");
+  if (doRematch) {
+    for (const file of readYearFiles(dir)) {
+      const scored = rematch(archive, file, truth);
+      writeYearFile(dir, scored);
+      console.log(summary(scored));
+    }
+  }
   years.sort((a, b) => a - b);
   // Each year starts from the states the one before ended with: the previous year of this command where it was replayed here, else its states file where a replay left one, else a warm-up.
   let carried: Carried | undefined;
   let carriedFrom: number | null = null;
   for (const year of years) {
     if (carriedFrom !== year - 1) carried = carriedFromFile(archive, workDir, year);
-    const { file, result } = replayAndScore(archive, year, truth, { detector, detectorName, carried });
+    const { file, result } = replayAndScore(archive, year, truth, { detector, detectorName, carried, parameters });
     writeYearFile(dir, file);
     writeStates(join(statesDir(workDir), statesFileName(year)), { format: 1, year, states: result.states, launches: result.launches });
     console.log(summary(file));

@@ -3,12 +3,12 @@ import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step
 import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
 import { eventTimeOf } from "./event-time.ts";
-import { catalogueFor, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, noteBody, piecesWithin, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PlaneOrbit } from "./fragments.ts";
-import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, openAlert, persistent, trackAlert, type OpenAlert } from "./fusion.ts";
+import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
+import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, openAlert, persistent, trackAlert, type ConfirmationReading, type OpenAlert } from "./fusion.ts";
 import { impulseOf, type Impulse } from "./impulse.ts";
 import { ORIGINS, OUTCOMES, PHASES, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
 import { MANOEUVRE_CLASSES, atypicalReasons, classify, featuresOf, isRaised, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
-import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
+import { median, predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
 import { cadenceBefore, fitOf, firstAfter, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
@@ -47,9 +47,11 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
  * Launches: every launch the run brought new bodies to is judged
  * (`fragments.ts`) for a burst over its own background and for pieces
  * that are new by numbering and share a parent's plane. Such pieces
- * first published after an open alert's step confirm it; a notice naming
- * the object confirms it too; a burst with consistent pieces and no
- * alert on any parent is listed for review as a cloud, never a
+ * first published after an open alert's step confirm it, under the rules
+ * of `judgeConfirmation` below, which keep a cloud still being catalogued
+ * from confirming the next step on any body of its launch; a notice
+ * naming the object confirms it too; a burst with consistent pieces and
+ * no alert on any parent is listed for review as a cloud, never a
  * detection. An alert nothing confirmed expires at the time to live, or
  * is dismissed where bodies came under the launch and every one was old.
  */
@@ -61,7 +63,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "fusion-v3";
+export const DETECTOR_NAME = "fusion-v4";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -668,6 +670,78 @@ function cloudSignals(launch: LaunchRecord, verdict: CloudVerdict, openAlert: bo
 const CLOUD_DECISIONS = { nothing: 0, confirmed: 1, listed: 2, burstNoPiece: 3, deployment: 4, oldCloud: 5 } as const;
 
 /**
+ * The confirmation rules: whether the pieces in an alerted parent's plane,
+ * new by numbering and first published after its step, confirm it, and
+ * which of them. The third phase's confirmation by any such piece was
+ * wrong more often than right, and the wrong ones were of a few kinds,
+ * each with a rule here:
+ *
+ * - the pieces lie in the parent's own orbit at under the review list's
+ *   velocity floor: the catalogue's re-designations or a release, not
+ *   fragments;
+ * - the parent is a debris-classed body first catalogued weeks before its
+ *   step: a fresh piece of the launch's own cloud, whose settling fit is
+ *   "confirmed" by its siblings;
+ * - the launch remembers a cloud (a burst with consistent pieces, or a
+ *   confirmation, within the memory): a cloud is catalogued in batches
+ *   for months, and every batch would confirm the next step on any body
+ *   of the launch, so the pieces must lie out of that cloud's plane and
+ *   the parent must not lie in it;
+ * - the parent is debris-classed under a launch with an active cloud: its
+ *   pieces must lie nearer its plane than the cloud's nearest body does;
+ * - a single piece confirms only a parent that is not debris, under a
+ *   launch that gained nothing in the year before and nothing else in the
+ *   window.
+ *
+ * Each rule is a parameter and can be turned off; the reading of every
+ * signal is kept on the alert, so the rules are re-thresholded offline
+ * from the alert rows (`npm run kpi:sweep -- --confirmations`).
+ */
+function judgeConfirmation(state: SeriesState, alert: OpenAlert, launch: LaunchRecord, verdict: CloudVerdict, confirming: PieceReading[], memory: { at: number; eventMs: number }, context: RunContext): { pieces: PieceReading[]; reading: ConfirmationReading; reasons: string[] } {
+  const { params, now } = context;
+  const reasons: string[] = [];
+  const own = launch.bodies.find((b) => b.number === state.number);
+  const parentAgeDays = own === undefined ? Number.POSITIVE_INFINITY : (alert.candidate.afterEpoch - own.firstEpoch) / DAY_MS;
+  const parentFragment = isFragmentClass(alert.bodyClass);
+  const exclude = new Set<number>([state.number, ...confirming.map((p) => p.number)]);
+  const cloud = cloudBodies(launch, now - (params.burstWindowDays + params.burstBackgroundDays) * DAY_MS, now, exclude);
+  const daysSinceCloud = (now - memory.at) / DAY_MS;
+  const cloudEventMs = Number.isFinite(memory.eventMs) ? memory.eventMs : cloud.length > 0 ? Math.min(...cloud.map((b) => b.firstEpoch)) : alert.candidate.tStep;
+  const parentCloudDistance = nearestCloudDistance(alert.orbit, cloud, cloudEventMs, params);
+  const orbitOf = (piece: PieceReading): PlaneOrbit => planeOrbitOf(launch.bodies.find((b) => b.number === piece.number)!);
+  const outOfCloud = cloud.length === 0 ? confirming : confirming.filter((piece) => nearestCloudDistance(orbitOf(piece), cloud, cloudEventMs, params) > params.planeDistanceMax);
+  const nearerThanCloud = confirming.filter((piece) => piece.distance < parentCloudDistance);
+  const deltaVMps = median(confirming.map((p) => p.deltaVMps));
+  let kept = confirming;
+  const refuse = (why: string): void => {
+    reasons.push(why);
+    kept = [];
+  };
+  if (params.confirmDeltaVMinMps > 0 && !(deltaVMps >= params.confirmDeltaVMinMps)) refuse(`the pieces move ${deltaVMps.toFixed(2)} m/s from the parent, under the floor of ${params.confirmDeltaVMinMps}: bodies in the parent's own orbit, not fragments of it`);
+  if (params.freshPieceDays > 0 && parentFragment && parentAgeDays < params.freshPieceDays) refuse(`the parent is classed debris and was first catalogued ${parentAgeDays.toFixed(0)} days before its step: a fresh piece of the launch's own cloud, not a parent`);
+  if (params.cloudMemoryDays > 0 && daysSinceCloud <= params.cloudMemoryDays && cloud.length > 0) {
+    if (parentCloudDistance <= params.planeDistanceMax) refuse(`the launch had a cloud ${daysSinceCloud.toFixed(0)} days ago and the parent lies in its plane (distance ${parentCloudDistance.toFixed(1)} to the nearest of its ${cloud.length} bodies): the new pieces cannot be told from that cloud's`);
+    else if (kept.length > 0) {
+      const left = kept.length - outOfCloud.length;
+      kept = kept.filter((piece) => outOfCloud.includes(piece));
+      reasons.push(left > 0 ? `the launch had a cloud ${daysSinceCloud.toFixed(0)} days ago: ${left} of the pieces lie in its plane and are left out, ${kept.length} lie out of it` : `the launch had a cloud ${daysSinceCloud.toFixed(0)} days ago on another plane (the parent is ${parentCloudDistance.toFixed(1)} from its nearest body), and every piece lies out of it`);
+    }
+  }
+  if (params.debrisParentNeedsNearerThanCloud && parentFragment && cloud.length > 0 && kept.length > 0) {
+    const before = kept.length;
+    kept = kept.filter((piece) => nearerThanCloud.includes(piece));
+    if (kept.length < before) reasons.push(`the parent is classed debris under a launch with an active cloud (${cloud.length} fragment-classed bodies in the year before, the nearest ${parentCloudDistance.toFixed(1)} from the parent's plane): ${before - kept.length} of the pieces lie no nearer the parent's plane than the cloud does and are left out`);
+  }
+  if (params.singlePieceNeedsQuietLaunch && kept.length === 1) {
+    if (parentFragment) refuse(`a single piece under a debris-classed parent confirms nothing`);
+    else if (verdict.backgroundBodies > 0) refuse(`a single piece under a launch that gained ${verdict.backgroundBodies} new bod${verdict.backgroundBodies === 1 ? "y" : "ies"} in the year before confirms nothing`);
+    else if (verdict.windowBodies > 1) refuse(`a single piece in the parent's plane among ${verdict.windowBodies} new bodies under the launch in the window confirms nothing: the stray of a cloud the plane test attached elsewhere`);
+  }
+  const reading: ConfirmationReading = { pieces: confirming.length, deltaVMps, parentAgeDays, parentFragment, backgroundBodies: verdict.backgroundBodies, cloudPieces: cloud.length, windowBodies: verdict.windowBodies, daysSinceCloud, parentCloudDistance, piecesOutOfCloud: outOfCloud.length, piecesNearerThanCloud: nearerThanCloud.length, refused: kept.length === 0 };
+  return { pieces: kept, reading, reasons };
+}
+
+/**
  * The launch pass: every launch the run brought new bodies to is judged
  * for a burst and for pieces, open alerts on its parents are confirmed
  * by pieces in their plane first published after the step, and a burst
@@ -695,6 +769,9 @@ function judgeLaunches(context: RunContext): void {
     }
     const verdict = judgeCloud(launch, context.catalogue, parents, now, newBodies, params);
     let decision: number = CLOUD_DECISIONS.nothing;
+    // The launch's cloud memory as it stood before this run, read once, so the order the alerts are judged in does not matter.
+    const memory = { at: launch.lastCloudBurstAt, eventMs: launch.lastCloudEventMs };
+    let confirmedHere = false;
     // Open alerts first: the pieces nearest each alerted parent, new by numbering, in its plane and first published after its step.
     for (const state of alertsHere) {
       const alert = state.alert!;
@@ -708,11 +785,18 @@ function judgeLaunches(context: RunContext): void {
       if (confirming.length === 0 || analyst) continue;
       // The launch must be old enough for its new bodies not to be its own, and quiet enough in the year before for them not to be an old cloud's backlog.
       if (verdict.launchAgeDays < params.youngLaunchDays || verdict.rate > params.confirmBackgroundMax) continue;
+      const judged = judgeConfirmation(state, alert, launch, verdict, confirming, memory, context);
+      alert.confirmation = judged.reading;
+      if (judged.pieces.length === 0) continue;
       decision = CLOUD_DECISIONS.confirmed;
-      const evidence: Record<string, number> = { piecesInPlane: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(verdict.cloudDeltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax };
-      const reasons = [`${confirming.length} new bod${confirming.length === 1 ? "y" : "ies"} under launch ${key} (${confirming.map((p) => p.number).join(", ")}) numbered above the catalogue's mark at the step, first published after it, in the parent's plane (distance ${confirming.map((p) => p.distance.toFixed(1)).join(", ")}), moving ${verdict.cloudDeltaVMps.toFixed(1)} m/s from it`, ...verdict.reasons];
-      confirmAlert(state, alert, context, reasons, evidence, confirming.map((p) => p.number));
+      confirmedHere = true;
+      const pieces = judged.pieces;
+      const evidence: Record<string, number> = { piecesInPlane: pieces.length, piecesJudged: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(judged.reading.deltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, parentAgeDays: round5(judged.reading.parentAgeDays), cloudPieces: judged.reading.cloudPieces, daysSinceCloud: round5(judged.reading.daysSinceCloud), parentCloudDistance: round5(judged.reading.parentCloudDistance) };
+      const reasons = [`${pieces.length} new bod${pieces.length === 1 ? "y" : "ies"} under launch ${key} (${pieces.map((p) => p.number).join(", ")}) numbered above the catalogue's mark at the step, first published after it, in the parent's plane (distance ${pieces.map((p) => p.distance.toFixed(1)).join(", ")}), moving ${judged.reading.deltaVMps.toFixed(1)} m/s from it`, ...judged.reasons, ...verdict.reasons];
+      confirmAlert(state, alert, context, reasons, evidence, pieces.map((p) => p.number));
     }
+    // The launch remembers its cloud: a burst with consistent pieces under a launch old enough for them not to be its own, or a confirmation by pieces.
+    if (!analyst && (confirmedHere || (verdict.burst && verdict.consistent.length > 0 && verdict.launchAgeDays >= params.youngLaunchDays))) noteCloud(launch, now, verdict.eventMs);
     if (decision === CLOUD_DECISIONS.nothing) {
       const consistent = verdict.consistent;
       const anyAlert = alertsHere.length > 0 && !analyst;

@@ -4,7 +4,7 @@ import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OUTCOMES, REGIMES
 import { brackets, marginDaysOf } from "./match.ts";
 import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";
-import { alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
+import { alertKey, alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
 
 /**
  * The offline sweep: the persistence gates and the manoeuvre gate
@@ -43,6 +43,18 @@ import { alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
  * counted as hits where a scoreable reported event of the launch lies in
  * the ninety days before, and as false clouds otherwise. `--tiers` prints
  * the persistence-tier table over the alert rows of the years given.
+ *
+ * `--confirmations` sweeps the confirmation rules of the fifth phase
+ * over the alert rows that carry a confirmation reading (pieces in the
+ * parent's plane were judged, whether they confirmed or the rules refused
+ * them; a replay with the rules off, `--param cloudMemoryDays=0` and the
+ * rest, logs every confirmation the third phase would have made): for
+ * each rule, and for all together, the confirmations kept and whether
+ * each was on a reported event's step, on the right object with the step
+ * late, or on nothing, as the matcher landed the alert. The composition
+ * of the per-piece rules is approximated by counts (the pieces left out
+ * by one rule are taken as the same the next would leave out), so the
+ * replay with the rules on is the record.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -427,11 +439,76 @@ export function cloudTally(files: YearFile[], gates: CloudGates, truth: { launch
   return result;
 }
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean } {
+/** One confirmation as the sweep reads it: the alert row's reading and where the matcher landed the alert. */
+export interface SweptConfirmation {
+  year: number;
+  number: number;
+  at: number;
+  outcome: "detection" | "late" | "near" | "false-alarm" | "other";
+  event: string | null;
+  pieces: number;
+  deltaVMps: number;
+  parentAgeDays: number;
+  parentFragment: boolean;
+  backgroundBodies: number;
+  cloudPieces: number;
+  windowBodies: number;
+  daysSinceCloud: number;
+  parentCloudDistance: number;
+  piecesOutOfCloud: number;
+  piecesNearerThanCloud: number;
+}
+
+/** The confirmation readings of the files' alert rows, each joined to the matcher's outcome for its alert. */
+export function confirmationsOf(files: YearFile[]): SweptConfirmation[] {
+  const landed = new Map<string, { outcome: SweptConfirmation["outcome"]; event: string | null }>();
+  for (const file of files) {
+    for (const alert of file.score.alerts) {
+      if (alert.afterEpoch === null || alert.outcome === "confirmation") continue;
+      const outcome: SweptConfirmation["outcome"] = alert.outcome === "detection" || alert.outcome === "late" ? alert.outcome : alert.outcome === "false-alarm" ? (alert.nearEvent !== null && alert.nearEvent !== undefined ? "near" : "false-alarm") : "other";
+      landed.set(alertKey(alert.number, alert.afterEpoch), { outcome, event: alert.event ?? alert.nearEvent ?? null });
+    }
+  }
+  const out: SweptConfirmation[] = [];
+  for (const file of files) {
+    for (const row of file.log) {
+      if (row.signals.phase !== 3 || row.signals.confirmPieces === undefined || row.signals.afterEpoch === undefined) continue;
+      const where = landed.get(alertKey(row.number, row.signals.afterEpoch));
+      const s = (name: string): number => row.signals[name] ?? Number.NaN;
+      out.push({ year: file.year, number: row.number, at: row.at, outcome: where?.outcome ?? "other", event: where?.event ?? null, pieces: s("confirmPieces"), deltaVMps: s("confirmDeltaVMps"), parentAgeDays: s("parentAgeDays"), parentFragment: s("parentFragment") === 1, backgroundBodies: s("backgroundBodies"), cloudPieces: s("cloudPieces"), windowBodies: s("windowBodies"), daysSinceCloud: s("daysSinceCloud"), parentCloudDistance: s("parentCloudDistance"), piecesOutOfCloud: s("piecesOutOfCloud"), piecesNearerThanCloud: s("piecesNearerThanCloud") });
+    }
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+
+/** The confirmation rules as the sweep applies them, each by its parameter; the pieces left after the rules, zero where refused. */
+export function piecesKept(c: SweptConfirmation, rules: Pick<DetectorParameters, "confirmDeltaVMinMps" | "cloudMemoryDays" | "freshPieceDays" | "debrisParentNeedsNearerThanCloud" | "singlePieceNeedsQuietLaunch" | "planeDistanceMax">): number {
+  let kept = c.pieces;
+  if (rules.confirmDeltaVMinMps > 0 && !(c.deltaVMps >= rules.confirmDeltaVMinMps)) return 0;
+  if (rules.freshPieceDays > 0 && c.parentFragment && c.parentAgeDays < rules.freshPieceDays) return 0;
+  if (rules.cloudMemoryDays > 0 && c.daysSinceCloud <= rules.cloudMemoryDays && c.cloudPieces > 0) {
+    if (c.parentCloudDistance <= rules.planeDistanceMax) return 0;
+    kept = Math.min(kept, c.piecesOutOfCloud);
+  }
+  if (rules.debrisParentNeedsNearerThanCloud && c.parentFragment && c.cloudPieces > 0) kept = Math.min(kept, c.piecesNearerThanCloud);
+  if (rules.singlePieceNeedsQuietLaunch && kept === 1 && (c.parentFragment || c.backgroundBodies > 0 || c.windowBodies > 1)) return 0;
+  return kept;
+}
+
+const OFF = { confirmDeltaVMinMps: 0, cloudMemoryDays: 0, freshPieceDays: 0, debrisParentNeedsNearerThanCloud: false, singlePieceNeedsQuietLaunch: false, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax } as const;
+
+function confirmationLine(label: string, rows: SweptConfirmation[], rules: Parameters<typeof piecesKept>[1]): string {
+  const kept = rows.filter((c) => piecesKept(c, rules) > 0);
+  const count = (outcome: SweptConfirmation["outcome"]): number => kept.filter((c) => c.outcome === outcome).length;
+  return `| ${label} | ${kept.length} | ${count("detection") + count("late")} | ${count("near")} | ${count("false-alarm")} | ${count("other")} |`;
+}
+
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean } {
   let years: number[] | null = null;
   let show = false;
   let clouds = false;
   let tiers = false;
+  let confirmations = false;
   const grid: Partial<Record<keyof Gates, number[]>> = {};
   const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
   for (let i = 0; i < args.length; i++) {
@@ -440,11 +517,12 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg === "--show") show = true;
     else if (arg === "--clouds") clouds = true;
     else if (arg === "--tiers") tiers = true;
+    else if (arg === "--confirmations") confirmations = true;
     else if (arg.startsWith("--") && arg.slice(2) in CLOUD_GRID) cloudGrid[arg.slice(2) as keyof CloudGates] = args[++i]!.split(",").map(Number);
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
-    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
+    else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid, clouds, cloudGrid, tiers };
+  return { years, show, grid, clouds, cloudGrid, tiers, confirmations };
 }
 
 const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "occasional-raised"];
@@ -455,12 +533,34 @@ function line(axis: keyof Gates, value: number, t: Tally): string {
 }
 
 function main(): void {
-  const { years, show, grid, clouds, cloudGrid, tiers } = parseArgs(process.argv.slice(2));
-  const all = readYearFiles(KPI_DIR);
+  const { years, show, grid, clouds, cloudGrid, tiers, confirmations } = parseArgs(process.argv.slice(2));
+  const all = readYearFiles(process.env.KPI_DIR === undefined ? KPI_DIR : resolve(process.env.KPI_DIR));
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
   if (tiers) {
     console.log(tiersTable(cellsOf(files, alertRowsOf(all)), `Precision per persistence tier, years ${files.map((f) => f.year).join(", ")}`));
+    return;
+  }
+  if (confirmations) {
+    const rows = confirmationsOf(files);
+    const p = DETECTOR_PARAMETERS;
+    console.log(`years ${files.map((f) => f.year).join(", ")}: ${rows.length} confirmation readings on the alert rows`);
+    console.log("| rule | kept | on a reported event's step | on the right object, the step late | on nothing | exempt or duplicate |");
+    console.log("| --- | --- | --- | --- | --- | --- |");
+    console.log(confirmationLine("as the third phase confirmed (the rules off)", rows, OFF));
+    for (const v of [0.5, 1, 2]) console.log(confirmationLine(`the pieces move at least ${v} m/s (confirmDeltaVMinMps)`, rows, { ...OFF, confirmDeltaVMinMps: v }));
+    for (const d of [30, 90, 180]) console.log(confirmationLine(`a debris-classed parent first seen under ${d} days before its step confirms nothing (freshPieceDays)`, rows, { ...OFF, freshPieceDays: d }));
+    for (const d of [180, 365, 730]) console.log(confirmationLine(`a launch with a cloud in the last ${d} days: pieces out of its plane, the parent not in it (cloudMemoryDays)`, rows, { ...OFF, cloudMemoryDays: d }));
+    console.log(confirmationLine("a debris-classed parent under an active cloud: pieces nearer than the cloud (debrisParentNeedsNearerThanCloud)", rows, { ...OFF, debrisParentNeedsNearerThanCloud: true }));
+    console.log(confirmationLine("a single piece: the parent not debris, the launch quiet (singlePieceNeedsQuietLaunch)", rows, { ...OFF, singlePieceNeedsQuietLaunch: true }));
+    console.log(confirmationLine("every rule at the detector's values", rows, p));
+    if (show) {
+      console.log("");
+      console.log("| year | object | alert landed | event | pieces | m/s | parent age d | debris parent | background | cloud bodies | window | days since cloud | parent to cloud | out of cloud | nearer than cloud | kept at the detector's values |");
+      console.log("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+      const f = (v: number): string => (Number.isFinite(v) ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : "–");
+      for (const c of rows) console.log(`| ${c.year} | ${c.number} | ${c.outcome} | ${c.event ?? "–"} | ${c.pieces} | ${f(c.deltaVMps)} | ${f(c.parentAgeDays)} | ${c.parentFragment ? "yes" : "no"} | ${c.backgroundBodies} | ${c.cloudPieces} | ${c.windowBodies} | ${f(c.daysSinceCloud)} | ${f(c.parentCloudDistance)} | ${c.piecesOutOfCloud} | ${c.piecesNearerThanCloud} | ${piecesKept(c, p)} |`);
+    }
     return;
   }
   if (clouds) {

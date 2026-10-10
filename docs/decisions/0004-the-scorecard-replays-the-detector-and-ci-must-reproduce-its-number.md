@@ -134,3 +134,33 @@ open:
   catalogue had the alert waited for the tier, the false alarms left, and
   the lead; so the owner can trade timeliness against false alarms with
   the numbers in hand, without a replay per tier.
+- The catalogue's mark follows the catalogue's publication order, by the
+  replay's clock, not a body's earliest set epoch: a yearly bundle lists
+  old debris catalogued in August with set epochs from January, and a mark
+  read off those epochs sat above a breakup's real pieces for months
+  (Cosmos 2392's ullage motor in 2005: the catalogue's time read ninety-
+  seven days after the event instead of thirty-two), and a fragment's
+  first set is dated by the same clock, since a newly catalogued piece's
+  first sets carry back-filled epochs from before it appeared (the same
+  motor's pieces, catalogued on 3 July with epochs from early June). The
+  clock is the latest publication bound seen so far in publication order,
+  a lower bound of the true time where the year has no publication times,
+  and it is what the detector saw. `npm run kpi -- --rematch` scores the
+  year files present again from their verdicts without a replay, so a
+  change to the matching rule never needs one.
+- The confirmed line is its own block: of the targets the catalogue itself
+  reported (new bodies under the launch within ninety days of the event),
+  how many were alerted and how many confirmed, and the days from the
+  event and from the alert; of every alert confirmed, how many were on a
+  reported event's step, how many on the parent of a reported event whose
+  window ended within the month before the step (the right object named
+  late, which the product would show as that object's breakup, noted on
+  the alert but counted as a false alarm by the step), and how many on
+  nothing; and how many confirmations came before an agency's statement
+  where the truth dates one, which it does for the notices alone, since
+  the agencies' publication dates are not otherwise in the truth.
+- The per-event dissection (`docs/detector/events.md`) is written with the
+  aggregate: one row per scoreable event with the matcher's outcome and
+  the cause read off the detector's own log for the parent around the
+  window, by the rules the first three phases' dissections established by
+  hand, so a change to the detector shows, event by event, what it moved.

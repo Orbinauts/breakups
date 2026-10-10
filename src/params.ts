@@ -11,7 +11,9 @@ import type { Regime } from "./truth.ts";
  *   how many sets to keep), to be changed by a decision, not by a fit;
  * - `fitted`: read off the training split (the even years) by sweeping the
  *   detector's log, and never touched while looking at the validation split.
- *   The sweep that chose each is recorded in `docs/detector/d1-fitting.md`, `d2-fitting.md` and `d3-fitting.md`.
+ *   The sweep that chose each is named in `PARAMETER_PROVENANCE` below,
+ *   by the fitting note and the table in it, and recorded in
+ *   `docs/detector/d1-fitting.md` to `d5-fitting.md`.
  *
  * The regimes are the four the ground truth uses; a value per regime is
  * given for all four even where only one differs, so a reader sees the
@@ -146,6 +148,16 @@ export interface DetectorParameters {
   cloudOnlyDeltaVMinMps: number;
   /** The most new bodies per window a launch may have gained in the year before for its pieces to confirm a parent's step: an old cloud still being catalogued lists pieces in the parent's plane for years, and any later step on the parent would be confirmed by them. A launch younger than `youngLaunchDays` never confirms by pieces either, its first weeks' debris-classed objects being its own. Fitted on the training split. */
   confirmBackgroundMax: number;
+  /** The least cloud velocity of the pieces that confirm an alert, in metres a second, whatever their class: the review list's floor applied to the confirmation, since bodies in the parent's own orbit at a tenth of a metre a second are the catalogue's re-designations or a release, not fragments. Zero turns the rule off. Fitted on the training split. */
+  confirmDeltaVMinMps: number;
+  /** How long a launch remembers a cloud, in days: after a burst with consistent pieces, or a confirmation by pieces, a later alert under the launch is confirmed only by pieces that lie in the alerted parent's plane and out of the remembered cloud's, and not at all where the parent itself lies in that cloud's plane, since a cloud is catalogued in batches for months and every batch would otherwise confirm the next step on any body of the launch. Policy: a year, the truth's own rule for one cloud catalogued in batches. Zero turns the rule off. */
+  cloudMemoryDays: number;
+  /** A debris-classed parent first catalogued under its launch less than this many days before its step is a fresh piece of the launch's own cloud, whose siblings would confirm its settling fit: it is confirmed by nothing. Policy, with the training split's evidence: ninety days, the age under which an object's record is unknown. Zero turns the rule off. */
+  freshPieceDays: number;
+  /** Whether a debris-classed parent under a launch with an active cloud (fragment-classed bodies first seen in the year before) is confirmed only by pieces nearer its plane than the nearest of the cloud's bodies is. Fitted on the training split. */
+  debrisParentNeedsNearerThanCloud: boolean;
+  /** Whether a single piece confirms only a parent that is not debris-classed, under a launch that gained no new body in the year before and none other in the window: one piece means something only where nothing else is being catalogued. Fitted on the training split. */
+  singlePieceNeedsQuietLaunch: boolean;
   /** How long a launch's cloud, once listed for review, is not listed again as its pieces keep coming, in days. Policy: the alert's time to live. */
   cloudRepeatDays: number;
   /** The event-time search: the grid step in seconds, how many hours before the pre set's epoch the grid starts, and the position error of a published set, in kilometres, that divides the along-track slope for the time's sigma. Physical: a minute resolves an event to its revolution; a mean element set places an object to about a kilometre in low orbit. */
@@ -230,6 +242,11 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   youngLaunchDeltaVMps: 5,
   cloudOnlyDeltaVMinMps: 1,
   confirmBackgroundMax: 2,
+  confirmDeltaVMinMps: 1,
+  cloudMemoryDays: 365,
+  freshPieceDays: 90,
+  debrisParentNeedsNearerThanCloud: true,
+  singlePieceNeedsQuietLaunch: true,
   cloudRepeatDays: 30,
   eventGridSeconds: 60,
   eventLeadHours: 6,
@@ -241,3 +258,105 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
 export function parametersWith(overrides: Partial<DetectorParameters> | undefined): DetectorParameters {
   return overrides === undefined ? DETECTOR_PARAMETERS : { ...DETECTOR_PARAMETERS, ...overrides };
 }
+
+/** Where a parameter's value comes from: a constant of the orbit or the format, a choice about the product, or a fit on the training split. */
+export type ParameterKind = "physical" | "policy" | "fitted";
+
+export interface Provenance {
+  kind: ParameterKind;
+  /** The fitting note that records the choice and the table or section in it; for a physical constant, what it is a constant of; for a policy, the decision it rests on. */
+  source: string;
+}
+
+/**
+ * Every parameter's kind and the sweep or decision that chose it, one
+ * entry per key of `DetectorParameters` (the type enforces it), so the
+ * freeze is a table a reader can check and a test can hold: a fitted
+ * value names the note and the table it was read off, a policy names
+ * what it rests on, a physical constant what it is.
+ */
+export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> = {
+  ringSize: { kind: "policy", source: "the window plus the post gaps with room for re-published sets, about two kilobytes an object" },
+  windowSets: { kind: "policy", source: "a week to a month of sets in low orbit; the whole ring in highly elliptical orbit for the lunisolar baseline" },
+  windowMaxDays: { kind: "policy", source: "an object silent for a season is fitted on its recent sets" },
+  quadraticMinSets: { kind: "policy", source: "six sets over three days is the least that resolves a curvature from noise" },
+  quadraticMinDays: { kind: "policy", source: "as quadraticMinSets" },
+  linearMinSets: { kind: "policy", source: "under three sets the single set's own drag rate is extrapolated" },
+  huberConstant: { kind: "physical", source: "the textbook constant for 95% efficiency at the Gaussian" },
+  residualsForScatter: { kind: "policy", source: "a median absolute deviation needs eight residuals to be robust with" },
+  longHalfLifeDays: { kind: "policy", source: "half a year spans a storm season" },
+  sigmaPrior: { kind: "fitted", source: "d1-fitting.md, the prior scatter: set from the measured scatter by regime on the training years, nothing to sweep against" },
+  sigmaPriorBstar: { kind: "fitted", source: "d1-fitting.md, the prior scatter: its knee in the drag term" },
+  kappa: { kind: "fitted", source: "d1-fitting.md, the drag term kappa table: the last value losing nothing" },
+  slopePriorSigmas: { kind: "policy", source: "what noise and drag do to the orbit in a day" },
+  commonModeMinBstar: { kind: "physical", source: "below it drag does not move the orbit measurably over a gap" },
+  bandMinMembers: { kind: "policy", source: "thirty residuals for a band's own common mode and scale" },
+  bandScaleFloor: { kind: "policy", source: "a calm band never makes a step look larger than the object's own scatter says" },
+  zCand: { kind: "fitted", source: "d1-fitting.md, the candidate threshold: the smallest first set that hit a training event is 6.3 sigma" },
+  zPersist: { kind: "fitted", source: "d1-fitting.md, the zPersist table: hits flat to 10, falling from 12" },
+  rhoRevert: { kind: "policy", source: "the earlier attempt's evidence: a bad set is undone by the next, a real step is kept" },
+  rhoMin: { kind: "fitted", source: "d1-fitting.md, the ratio's lower bound: 0.5 keeps Yaogan 1" },
+  rhoMax: { kind: "fitted", source: "d1-fitting.md, the ratio's upper bound: a bound of 2 loses COBE R/B's ramp" },
+  evidenceMin: { kind: "fitted", source: "d1-fitting.md, the evidence against a drift: no hit lost, 7% fewer alarms at 10" },
+  persistMinSets: { kind: "policy", source: "the owner's clock: one set cannot raise an alert" },
+  persistMinSpanHours: { kind: "fitted", source: "d1-fitting.md, the span two post sets must cover: 18 h loses nothing in low orbit; six hours above it where sets are sparse" },
+  persistMinSetsAlone: { kind: "policy", source: "three sets whatever they span" },
+  persistMinSetsUnderStress: { kind: "policy", source: "three post sets under a storm hold or run stress" },
+  maxPostSets: { kind: "policy", source: "eight gaps, after which an unraised candidate is noise or a slope change" },
+  lapseDays: { kind: "policy", source: "the regime's cadence: five days in low orbit, longer where sets are days to weeks apart" },
+  stormKp: { kind: "policy", source: "the earlier attempt's evidence: a hold at Kp 6 cost no true event" },
+  stressCandidatesPerDay: { kind: "policy", source: "ten candidates a day, where a quiet day opens a few" },
+  cusumDrift: { kind: "fitted", source: "d1-fitting.md, the CUSUM: kept as the design's side channel, no training hit came from it" },
+  hCusum: { kind: "fitted", source: "d1-fitting.md, the CUSUM: kept at 12, not lowered" },
+  foreignDeltaAKm: { kind: "physical", source: "no breakup and few manoeuvres move an orbit fifty kilometres in one gap; a cross-tagged set does" },
+  foreignDeltaIncDeg: { kind: "physical", source: "as foreignDeltaAKm, for the inclination" },
+  foreignRaanDeg: { kind: "physical", source: "as foreignDeltaAKm, for the node against its J2 precession" },
+  junkMeanMotionDot: { kind: "physical", source: "an orbit cannot rise that fast" },
+  historyDays: { kind: "policy", source: "two years, long enough for a yearly north-south step to recur" },
+  historyMaxSteps: { kind: "policy", source: "sixty-four steps hold two years of fortnightly east-west steps" },
+  newObjectDays: { kind: "policy", source: "d2-fitting.md, the age bound table: no hit moves with it; ninety days covers a raising campaign's start" },
+  stationKeepingMinSteps: { kind: "policy", source: "d2-fitting.md, what was chosen: the class names describe the record" },
+  regularityMax: { kind: "policy", source: "as stationKeepingMinSteps" },
+  alternationMin: { kind: "policy", source: "as stationKeepingMinSteps" },
+  monotoneShareMin: { kind: "policy", source: "as stationKeepingMinSteps" },
+  disposalPerigeeDropKm: { kind: "policy", source: "d2-fitting.md, what was chosen: the sizes operators use" },
+  disposalRaiseLeoKm: { kind: "policy", source: "as disposalPerigeeDropKm" },
+  disposalRaiseGeoKm: { kind: "policy", source: "as disposalPerigeeDropKm" },
+  typicalityMax: { kind: "fitted", source: "d2-fitting.md, the size test table: the knee at 10" },
+  oppositeMinSteps: { kind: "fitted", source: "d2-fitting.md, the direction test table: one doubles the false alarms, three loses Hitomi" },
+  consistencyMin: { kind: "fitted", source: "d2-fitting.md, the geometry test table: the last value losing nothing" },
+  bstarRatioMax: { kind: "fitted", source: "d2-fitting.md, the drag-term test table: two events for 15,700 false alarms, left off" },
+  inclinationStepMinDeg: { kind: "physical", source: "the format prints four decimals and the fits scatter by tens of them" },
+  occasionalRaisesNonPayload: { kind: "fitted", source: "d3-fitting.md, the two parent-side signals table: no training hit gained, off" },
+  persistOnMeanStep: { kind: "fitted", source: "d3-fitting.md, the two parent-side signals table: no training hit gained, off" },
+  alertMaxPostSets: { kind: "policy", source: "a week of a low orbit's cadence for the tiers" },
+  tierSets: { kind: "policy", source: "the tiers the owner asked to see" },
+  tierDays: { kind: "policy", source: "the tiers the owner asked to see" },
+  cadenceAfterDays: { kind: "policy", source: "three days against thirty" },
+  cadenceBeforeDays: { kind: "policy", source: "three days against thirty" },
+  alertTtlDays: { kind: "policy", source: "the truth's own burst rule counts pieces in thirty days" },
+  burstWindowDays: { kind: "policy", source: "a fortnight for the catalogue to list a cloud's first pieces" },
+  burstBackgroundDays: { kind: "policy", source: "the year before the window" },
+  lambdaFloor: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: the knee at 0.5" },
+  pBurst: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: the knee at a thousandth" },
+  burstMinBodies: { kind: "policy", source: "two bodies at least, whatever the tail" },
+  planeInclinationToleranceDeg: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: the plane bound is binding at three, so the tolerances are not loosened" },
+  planeNodeToleranceDeg: { kind: "fitted", source: "as planeInclinationToleranceDeg" },
+  planeDistanceMax: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: binding at three, five and ten add nothing" },
+  planeMaxDays: { kind: "policy", source: "a piece catalogued a season after the event has drifted by what drag and the rate's error allow" },
+  deploymentDeltaVMps: { kind: "physical", source: "a dispenser pushes a satellite off at under a metre a second" },
+  youngLaunchDays: { kind: "policy", source: "d3-fitting.md, the per-launch channel table: the first weeks of a launch catalogue its own objects" },
+  youngLaunchDeltaVMps: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: five false clouds for no event" },
+  cloudOnlyDeltaVMinMps: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: zero admits deployments, two loses four slow clouds" },
+  confirmBackgroundMax: { kind: "fitted", source: "d3-fitting.md, the confirmation table: 7 of 8 training confirmations kept, 102 wrong ones cut to 5" },
+  confirmDeltaVMinMps: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table: the review list's floor, two wrong training confirmations at under a tenth of a metre a second" },
+  cloudMemoryDays: { kind: "policy", source: "d5-fitting.md, the confirmation rules table: the truth's same-cloud rule, a year" },
+  freshPieceDays: { kind: "policy", source: "d5-fitting.md, the confirmation rules table: the age under which an object's record is unknown" },
+  debrisParentNeedsNearerThanCloud: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table" },
+  singlePieceNeedsQuietLaunch: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table: single-piece confirmations on the training split" },
+  cloudRepeatDays: { kind: "policy", source: "the alert's time to live" },
+  eventGridSeconds: { kind: "physical", source: "a minute resolves an event to its revolution" },
+  eventLeadHours: { kind: "policy", source: "six hours before the pre set's epoch" },
+  eventSigmaPositionKm: { kind: "physical", source: "a mean element set places an object to about a kilometre in low orbit" },
+  eventMaxPoints: { kind: "policy", source: "the most grid points one alert may cost" },
+};

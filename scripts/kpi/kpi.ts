@@ -1,7 +1,7 @@
 import { BREAKUP_KINDS, REGIMES, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type Verdict } from "../../src/index.ts";
 import type { Manifest } from "../archive/archive.ts";
 import { LINES, type Line, type YearScore } from "./match.ts";
-import type { TimeBasis } from "./replay.ts";
+import { DAY_MS, type TimeBasis } from "./replay.ts";
 
 /**
  * The scorecard's cells: what a year's matched verdicts add up to over a
@@ -105,8 +105,24 @@ export interface ConfirmedCells {
   ofTrue: number;
   ofExempt: number;
   ofFalseAlarms: number;
+  /** Of the false alarms confirmed, how many were on the parent of a reported event whose window ended within the month before the step: the right object named late, which the product would show as that object's breakup. */
+  ofNearEvent: number;
   /** The median days from the alert to its confirmation. */
   daysToConfirmation: number | null;
+  /** The precision of the confirmed alerts: those on a reported event's step over all; and counting the near ones as right. Null with no confirmation. */
+  precision: number | null;
+  precisionByParent: number | null;
+  /** The events the catalogue reported (targets whose launch gained new bodies within ninety days of the event), how many of those were alerted (detected or late), how many confirmed, and the days to the confirmation from the event and from the alert. */
+  reported: number;
+  reportedAlerted: number;
+  reportedConfirmed: number;
+  /** Confirmed over reported; null with no reported event. */
+  confirmedRate: number | null;
+  daysFromEvent: Spread | null;
+  daysFromAlert: Spread | null;
+  /** The targets with an agency's statement dated in the truth (a notice's day seen), and how many of those were confirmed before it. */
+  withStatement: number;
+  beforeStatement: number;
 }
 
 export interface Cells {
@@ -231,11 +247,13 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, daysToConfirmation: null }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
   const alertConfirmations: number[] = [];
+  const reportedFromEvent: number[] = [];
+  const reportedFromAlert: number[] = [];
   const timings: number[] = [];
   const tiered: TieredAlert[] = [];
   let detections = 0;
@@ -262,6 +280,22 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
           confirmations.push(event.daysToConfirmation!);
         }
       }
+      // The catalogue reported the event: new bodies under the launch within ninety days. Older year files have no count; the catalogue's first fragment within the span stands in.
+      const reported = event.status !== "undetectable" && ((event.piecesWithin90Days ?? 0) > 0 || (event.piecesWithin90Days === undefined && event.catalogueAt !== null && event.catalogueAt - event.from <= 90 * DAY_MS));
+      if (reported) {
+        cells.confirmed.reported++;
+        if (event.status === "detected" || event.status === "late") cells.confirmed.reportedAlerted++;
+        if (event.confirmedAt !== null) {
+          cells.confirmed.reportedConfirmed++;
+          reportedFromEvent.push((event.confirmedAt - (event.at ?? event.from)) / DAY_MS);
+          reportedFromAlert.push(event.daysToConfirmation!);
+        }
+      }
+      // An agency's statement dated in the truth (a notice's day seen), whether or not the catalogue listed pieces: was the confirmation ahead of it?
+      if (event.status !== "undetectable" && event.noticeAt !== null) {
+        cells.confirmed.withStatement++;
+        if (event.confirmedAt !== null && event.confirmedAt < event.noticeAt) cells.confirmed.beforeStatement++;
+      }
     }
     for (const alert of score.alerts) {
       if (alert.outcome === "confirmation") continue;
@@ -273,7 +307,10 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
         cells.confirmed.confirmations++;
         if (alert.outcome === "detection" || alert.outcome === "late") cells.confirmed.ofTrue++;
         else if (alert.outcome === "exempt" || alert.outcome === "duplicate") cells.confirmed.ofExempt++;
-        else cells.confirmed.ofFalseAlarms++;
+        else {
+          cells.confirmed.ofFalseAlarms++;
+          if (alert.nearEvent !== null && alert.nearEvent !== undefined) cells.confirmed.ofNearEvent++;
+        }
         alertConfirmations.push(alert.daysToConfirmation!);
       }
       if (alert.outcome === "detection" || alert.outcome === "late" || alert.outcome === "false-alarm") {
@@ -285,6 +322,11 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
   }
   cells.tiers = tierCellsOf(tiered);
   cells.confirmed.daysToConfirmation = alertConfirmations.length === 0 ? null : percentile(alertConfirmations, 50);
+  cells.confirmed.precision = cells.confirmed.confirmations === 0 ? null : cells.confirmed.ofTrue / cells.confirmed.confirmations;
+  cells.confirmed.precisionByParent = cells.confirmed.confirmations === 0 ? null : (cells.confirmed.ofTrue + cells.confirmed.ofNearEvent) / cells.confirmed.confirmations;
+  cells.confirmed.confirmedRate = cells.confirmed.reported === 0 ? null : cells.confirmed.reportedConfirmed / cells.confirmed.reported;
+  cells.confirmed.daysFromEvent = spread(reportedFromEvent, 90);
+  cells.confirmed.daysFromAlert = spread(reportedFromAlert, 90);
   for (const group of [lines, byRegime, byKind]) for (const line of Object.values(group) as LineCells[]) rate(line);
   cells.falseAlarmRate = cells.falseAlarms + detections === 0 ? null : cells.falseAlarms / (cells.falseAlarms + detections);
   cells.falseAlarmsPer10kBodyYears = cells.bodyYears === 0 ? null : (cells.falseAlarms / cells.bodyYears) * 10_000;
@@ -325,9 +367,9 @@ export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "tru
 }
 
 const DASH = "–";
-const pct = (value: number | null): string => (value === null ? DASH : `${Math.round(value * 100)}%`);
-const one = (value: number | null): string => (value === null ? DASH : value.toFixed(1));
-const spreadCell = (value: Spread | null): string => (value === null ? DASH : `${one(value.median)} (${one(value.tail)})`);
+const pct = (value: number | null | undefined): string => (value === null || value === undefined ? DASH : `${Math.round(value * 100)}%`);
+const one = (value: number | null | undefined): string => (value === null || value === undefined ? DASH : value.toFixed(1));
+const spreadCell = (value: Spread | null | undefined): string => (value === null || value === undefined ? DASH : `${one(value.median)} (${one(value.tail)})`);
 
 function table(headers: string[], rows: (string | number)[][]): string {
   return [`| ${headers.join(" | ")} |`, `| ${headers.map(() => "---").join(" | ")} |`, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
@@ -356,12 +398,40 @@ export function alertsTable(cells: Cells, title: string): string {
       ["Confirmed share of the detections", pct(cells.confirmedShare)],
       ["Days to confirmation, median", one(cells.daysToConfirmation)],
       ["Timing error, minutes, median", one(cells.timingErrorMinutes)],
-      ["Alerts confirmed by the fragments or a notice", cells.confirmed.confirmations],
-      ["Of which on a reported event (a detection or a late alert)", cells.confirmed.ofTrue],
-      ["Of which inside an exempt window or a duplicate", cells.confirmed.ofExempt],
-      ["Of which matching no reported event (wrongly confirmed)", cells.confirmed.ofFalseAlarms],
-      ["Days from the alert to its confirmation, median", one(cells.confirmed.daysToConfirmation)],
       ["Cloud verdicts, for review (a burst with no parent step)", cells.review],
+    ],
+  );
+}
+
+/**
+ * The table of a split's confirmed line: the events the catalogue
+ * reported (new bodies under the launch within ninety days), how many of
+ * those the detector confirmed and how long after the event and the
+ * alert; the confirmed alerts and what they were on, with the precision
+ * on the step and counting the right object named late; and how many
+ * confirmations came before an agency's statement where the truth dates
+ * one, which it does for the notices alone.
+ */
+export function confirmedTable(cells: Cells, title: string): string {
+  const c = cells.confirmed;
+  return table(
+    [title, "Count"],
+    [
+      ["Events the catalogue reported (new bodies under the launch within 90 days)", c.reported],
+      ["Of which alerted on the parent (detected or late)", c.reportedAlerted],
+      ["Of which confirmed", c.reportedConfirmed],
+      ["Confirmed share of the reported events", pct(c.confirmedRate)],
+      ["Days from the event to the confirmation, median (90th percentile)", spreadCell(c.daysFromEvent)],
+      ["Days from the alert to the confirmation, median (90th percentile)", spreadCell(c.daysFromAlert)],
+      ["Confirmed alerts (by the fragments or a notice)", c.confirmations],
+      ["Of which on a reported event's step (a detection or a late alert)", c.ofTrue],
+      ["Of which inside an exempt window or a duplicate", c.ofExempt],
+      ["Of which matching no reported event's step", c.ofFalseAlarms],
+      ["Of those, on the parent of a reported event within the month before (the right object, the step late)", c.ofNearEvent],
+      ["Precision of the confirmed alerts, on the step", pct(c.precision)],
+      ["Precision of the confirmed alerts, on the object", pct(c.precisionByParent)],
+      ["Targets with an agency's statement dated in the truth (the notices)", c.withStatement],
+      ["Of which confirmed before that statement", c.beforeStatement],
     ],
   );
 }
@@ -384,12 +454,12 @@ export function breakdownTable(cells: Cells, title: string): string {
 
 const yearsOf = (cells: Cells): string => (cells.years.length === 0 ? "no year" : cells.years.length === 1 ? String(cells.years[0]) : `${cells.years[0]} to ${cells.years.at(-1)}, ${cells.years.length} years`);
 
-/** The three tables the README carries: the headline split. */
+/** The four tables the README carries: the headline split. */
 export function readmeTables(latest: Latest): string[] {
   const cells = latest.splits.validation;
   const title = `${SPLIT_TITLES.validation} (${yearsOf(cells)})`;
   const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-  return [linesTable(cells, title), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`)];
+  return [linesTable(cells, title), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The confirmed line, ${lower}`)];
 }
 
 /** The whole report: every split's tables, with the breakdown. */
@@ -397,16 +467,16 @@ export function renderLatest(latest: Latest): string {
   const sections = [
     "# The scorecard, as last run",
     "",
-    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first three tables; the tests check them against \`kpi/latest.json\`. Never edited by hand.`,
+    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first four tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
     "",
-    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue; the confirmed lines count the alerts the fragments or a notice went on to confirm, and whether those alerts had matched a reported event.",
+    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The confirmed table is the product's second line: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing. The agencies' publication dates are not in the truth except for the notices, so the last two rows count those alone.",
     "",
   ];
   for (const split of SPLITS) {
     const cells = latest.splits[split];
     const title = `${SPLIT_TITLES[split]} (${yearsOf(cells)})`;
     const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
+    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The confirmed line, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
   }
   sections.push("## The years", "", table(["Year", "Source", "Built", "Sets", "Bodies", "Timed by"], latest.years.map((year) => {
     const record = latest.archive[String(year)]!;

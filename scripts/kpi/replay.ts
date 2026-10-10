@@ -89,18 +89,8 @@ export function loadYear(archive: string, year: number): LoadedYear {
   const bodies = readBodies(archive, year);
   const columns = {} as Record<ColumnName, Columns[ColumnName]>;
   for (const name of manifest.columns) if (READ_COLUMNS.includes(name)) columns[name] = readColumn(dir, name, manifest.sets);
-  const rank = columns.rank as Uint32Array;
   // Ranks are the file's ordinals, rejects counted, so they may have gaps: the order lists the sets that exist, by rank.
-  let top = 0;
-  for (let i = 0; i < rank.length; i++) if (rank[i]! > top) top = rank[i]!;
-  const byRank = new Uint32Array(top + 1).fill(0xffffffff);
-  for (let i = 0; i < rank.length; i++) {
-    if (byRank[rank[i]!] !== 0xffffffff) throw new Error(`${year}: two sets share rank ${rank[i]}`);
-    byRank[rank[i]!] = i;
-  }
-  const order = new Uint32Array(rank.length);
-  let at = 0;
-  for (let r = 0; r <= top; r++) if (byRank[r] !== 0xffffffff) order[at++] = byRank[r]!;
+  const order = orderOf(columns.rank as Uint32Array, year);
   const byNumber = new Map<number, ArchivedBody>();
   for (const body of bodies) byNumber.set(body.number, body);
   return { year, manifest, bodies, byNumber, columns: columns as unknown as Columns, order, timeBasis: columns.created === undefined ? "epoch" : "created" };
@@ -237,7 +227,7 @@ export interface SetIndex {
   countSets(number: number, from: number, to: number): number;
   /** The earliest a set of the object can have been published, over the year and its warm-up; null where it has none. */
   firstPublication(number: number): number | null;
-  /** The earliest any set of the object with an epoch at or after `from` can have been published; null where there is none. */
+  /** The earliest any set of the object with an epoch at or after `from` appeared in the catalogue's publication order, by the replay's clock; null where there is none. */
   firstPublicationFrom(number: number, from: number): number | null;
   /** The year's bodies, as the body table lists them. */
   bodies: ArchivedBody[];
@@ -266,43 +256,89 @@ export interface ReplayResult {
   slice: YearSlice;
 }
 
-/** A compact copy of what the matcher needs of a year: by object, the epochs in the body's own order and their publication bounds. */
+/**
+ * A compact copy of what the matcher needs of a year: by object, the
+ * epochs in the body's own order, their publication bounds (the
+ * publication time where the year has it, else the epoch), and the
+ * replay's clock at each set in the catalogue's publication order, which
+ * is when the detector saw it. The clock, not the set's own epoch, says
+ * when a body first appeared in the catalogue: a bundle lists old debris
+ * catalogued in August with set epochs from January, and a mark read off
+ * those epochs would sit above a breakup's real pieces for months.
+ */
 export interface YearSlice {
   year: number;
   bodies: ArchivedBody[];
   byNumber: Map<number, ArchivedBody>;
   epoch: Float64Array;
   published: Float64Array;
+  clock: Float64Array;
+}
+
+/** The replay's clock at each set: the latest publication bound seen so far in publication order, leaping at most a day on any one set, as `runsOf` keeps it. */
+export function clockOf(order: Uint32Array, published: Float64Array): Float64Array {
+  const clock = new Float64Array(published.length);
+  const leap = CLOCK_LEAP_MAX_DAYS * DAY_MS;
+  let now = Number.NEGATIVE_INFINITY;
+  for (let p = 0; p < order.length; p++) {
+    const i = order[p]!;
+    const at = published[i]!;
+    if (at > now) now = Number.isFinite(now) ? Math.min(at, now + leap) : at;
+    clock[i] = now;
+  }
+  return clock;
 }
 
 function sliceOf(loaded: LoadedYear): YearSlice {
   const published = loaded.columns.created ?? loaded.columns.epoch;
-  return { year: loaded.year, bodies: loaded.bodies, byNumber: loaded.byNumber, epoch: loaded.columns.epoch, published };
+  return { year: loaded.year, bodies: loaded.bodies, byNumber: loaded.byNumber, epoch: loaded.columns.epoch, published, clock: clockOf(loaded.order, published) };
 }
 
-/** The slice of a year alone, read from the two columns it needs rather than the fourteen a replay reads. */
+/** The publication order of a year from its rank column: the set indices by ascending rank, gaps skipped; two sets sharing a rank is an error in the year. */
+export function orderOf(rank: Uint32Array, year: number): Uint32Array {
+  let top = 0;
+  for (let i = 0; i < rank.length; i++) if (rank[i]! > top) top = rank[i]!;
+  const byRank = new Uint32Array(top + 1).fill(0xffffffff);
+  for (let i = 0; i < rank.length; i++) {
+    if (byRank[rank[i]!] !== 0xffffffff) throw new Error(`${year}: two sets share rank ${rank[i]}`);
+    byRank[rank[i]!] = i;
+  }
+  const order = new Uint32Array(rank.length);
+  let at = 0;
+  for (let r = 0; r <= top; r++) if (byRank[r] !== 0xffffffff) order[at++] = byRank[r]!;
+  return order;
+}
+
+/** The slice of a year alone, read from the three columns it needs rather than the fourteen a replay reads. */
 export function loadSlice(archive: string, year: number): YearSlice {
   const dir = yearDir(archive, year);
   const manifest = readManifest(archive, year);
   const bodies = readBodies(archive, year);
   const epoch = readColumn(dir, "epoch", manifest.sets) as Float64Array;
   const published = manifest.columns.includes("created") ? (readColumn(dir, "created", manifest.sets) as Float64Array) : epoch;
-  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published };
+  const order = orderOf(readColumn(dir, "rank", manifest.sets) as Uint32Array, year);
+  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published, clock: clockOf(order, published) };
 }
 
-function indexOf(current: YearSlice, previous: YearSlice | null): SetIndex {
+/** The matcher's index over a year's slice and the previous year's, where there is one. */
+export function indexOf(current: YearSlice, previous: YearSlice | null): SetIndex {
   const slices = previous === null ? [current] : [previous, current];
   const firstOf = (slice: YearSlice, body: ArchivedBody): number => {
     let first = Number.POSITIVE_INFINITY;
     for (let i = body.first; i < body.first + body.count; i++) if (slice.published[i]! < first) first = slice.published[i]!;
     return first;
   };
-  // Each designated body's earliest publication bound over both years, for the high-water mark.
+  // Each designated body's first appearance in the catalogue's publication order over both years, by the replay's clock, for the high-water mark.
+  const firstSeenOf = (slice: YearSlice, body: ArchivedBody): number => {
+    let first = Number.POSITIVE_INFINITY;
+    for (let i = body.first; i < body.first + body.count; i++) if (slice.clock[i]! < first) first = slice.clock[i]!;
+    return first;
+  };
   const designatedFirst = new Map<number, number>();
   for (const slice of slices) {
     for (const body of slice.bodies) {
       if (body.designator === null || body.number >= ANALYST_FLOOR) continue;
-      designatedFirst.set(body.number, Math.min(designatedFirst.get(body.number) ?? Number.POSITIVE_INFINITY, firstOf(slice, body)));
+      designatedFirst.set(body.number, Math.min(designatedFirst.get(body.number) ?? Number.POSITIVE_INFINITY, firstSeenOf(slice, body)));
     }
   }
   return {
@@ -324,11 +360,12 @@ function indexOf(current: YearSlice, previous: YearSlice | null): SetIndex {
       return Number.isFinite(first) ? first : null;
     },
     firstPublicationFrom(number, from) {
+      // By the replay's clock, as the detector saw it: a newly catalogued piece's first sets carry back-filled epochs from before it appeared.
       let first = Number.POSITIVE_INFINITY;
       for (const slice of slices) {
         const body = slice.byNumber.get(number);
         if (body === undefined) continue;
-        for (let i = body.first; i < body.first + body.count; i++) if (slice.epoch[i]! >= from && slice.published[i]! < first) first = slice.published[i]!;
+        for (let i = body.first; i < body.first + body.count; i++) if (slice.epoch[i]! >= from && slice.clock[i]! < first) first = slice.clock[i]!;
       }
       return Number.isFinite(first) ? first : null;
     },

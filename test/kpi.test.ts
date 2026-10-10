@@ -159,6 +159,9 @@ describe("the scorecard on the synthetic year", () => {
     expect(alpha.catalogueBasis).toBe("epoch");
     expect(alpha.leadHours).toBe(44);
     expect(alpha.latencyHours).toBe(22.5);
+    // Both fragments appeared within ninety days: the catalogue reported the event. Daily sets from the event to the fragments: the 10th (before the event's instant that day), the 11th and the 12th.
+    expect(alpha.piecesWithin90Days).toBe(2);
+    expect(alpha.parentSetsAfter).toBe(2);
     // The jump detector dates the event at the middle of its bracket, noon on the 10th, against 05:30.
     expect(alpha.timingErrorMinutes).toBe(390);
     expect(alpha.confirmedAt).toBeNull();
@@ -172,6 +175,31 @@ describe("the scorecard on the synthetic year", () => {
     expect(beta.alertAt).toBe(at(3, 12, 4));
     expect(beta.leadHours).toBeLessThan(0);
     expect(beta.latencyHours).toBe((at(3, 12, 4) - at(3, 5)) / HOUR);
+    expect(beta.piecesWithin90Days).toBe(1);
+  });
+
+  test("a false alarm on the parent of a reported event within the month after it is noted as near that event", () => {
+    // The jump detector raises the ALPHA parent's step on 11 February (the detection) and nothing later on it, so the synthetic false alarm (GAMMA R/B) is near no event; a verdict placed on ALPHA three weeks after its event would be.
+    const gamma = alerts.find((a) => a.number === 40003)!;
+    expect(gamma.nearEvent).toBeNull();
+    const late: Verdict = { kind: "object", state: "suspected", number: 40001, launch: "2010-001", raisedAt: at(3, 4, 4), step: { beforeEpoch: at(3, 2), afterEpoch: at(3, 3), deltaKm: -2, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 1, z: null }, event: null, evidence: {}, reasons: [] };
+    const scored = scoreYear(archive, YEAR, truth, { detector: (input) => ({ ...stub(input), verdicts: input.now === late.raisedAt ? [late] : [] }), detectorName: "jump" });
+    const landed = scored.score.alerts.find((a) => a.number === 40001)!;
+    expect(landed.outcome).toBe("false-alarm");
+    expect(landed.nearEvent).toBe("40001:2013-02-10");
+    expect(landed.note).toContain("whose window ended within the month before the step");
+  });
+
+  test("the catalogue's mark follows the publication order, not a late body's back-dated epoch", () => {
+    // A body numbered above ALPHA's fragments, catalogued last (the highest rank) but with a set epoch of 1 January: by its epoch it would raise the mark above the fragments and hide them; by the clock it appeared in March.
+    const rows = [...sets.rows.map((row) => [...row]), [40900, "2013-01-01T00:00:00.000Z", 14.2, 0.001, 98, 100, 0, 0, 1e-4, 1e-6, 0, 1, 1]];
+    const late = [...bodies, { number: 40900, designator: "1999-001AB", name: "OLD DEB", bodyClass: "debris" as const, launch: "1999-01-01", decay: null }];
+    writeYear(join(work, "backdated"), yearOf(rows, late));
+    const scored = scoreYear(join(work, "backdated"), YEAR, truth, { detector: stub, detectorName: "jump" });
+    const alpha = scored.score.events.find((e) => e.name === "ALPHA")!;
+    expect(alpha.catalogueBody).toBe(40101);
+    expect(alpha.catalogueAt).toBe(at(2, 13));
+    expect(alpha.status).toBe("detected");
   });
 
   test("a parent with too few sets before the event is undetectable, out of the denominator", () => {
@@ -212,7 +240,8 @@ describe("the scorecard on the synthetic year", () => {
     // The tiers: as raised, the detection, the late alert and the false alarm are the three counted; the trivial detector logs no alert row, so no later tier is reached.
     expect(cells.tiers[0]).toEqual({ tier: "2", raised: 3, detections: 1, falseAlarms: 1, precision: 0.5, detectionShare: 1, leadHours: { median: 44, tail: 44, count: 1 } });
     expect(cells.tiers.slice(1).every((t) => t.raised === 0 && t.detections === 0 && t.precision === null && t.detectionShare === 0)).toBe(true);
-    expect(cells.confirmed).toEqual({ confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, daysToConfirmation: null });
+    // The confirmed line: two targets the catalogue reported (ALPHA's and BETA's fragments), both alerted, neither confirmed by the trivial detector; the truth carries no agency statement.
+    expect(cells.confirmed).toEqual({ confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 2, reportedAlerted: 2, reportedConfirmed: 0, confirmedRate: 0, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 });
     expect(cells.leadHours).toEqual({ median: 44, tail: 44, count: 1 });
     expect(cells.latencyHours).toEqual({ median: 22.5, tail: 22.5, count: 1 });
     expect(cells.falseAlarmsPer10kBodyYears).toBeCloseTo(10_000 / file.bodyYears, 6);
@@ -234,8 +263,13 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [lines, alertsTable, tiers] = readmeTables(latest);
+    const [lines, alertsTable, tiers, confirmed] = readmeTables(latest);
     expect(tiers).toContain("| 2 post sets over 18 h, or 3 (as raised) | 3 | 1 | 1 | 50% | 100% | 44.0 (44.0) |");
+    expect(confirmed).toContain("| Events the catalogue reported (new bodies under the launch within 90 days) | 2 |");
+    expect(confirmed).toContain("| Of which alerted on the parent (detected or late) | 2 |");
+    expect(confirmed).toContain("| Confirmed share of the reported events | 0% |");
+    expect(confirmed).toContain("| Precision of the confirmed alerts, on the step | – |");
+    expect(confirmed).toContain("| Targets with an agency's statement dated in the truth (the notices) | 0 |");
     expect(tiers).toContain("| 7 days of post sets | 0 | 0 | 0 | – | 0% | – |");
     expect(lines).toContain("| Breakups, confidence A and B (the target is 90%) | 2 | 1 | 1 | 1 | 0 | 50% |");
     expect(lines).toContain("| Breakups, confidence C | 0 | 0 | 0 | 0 | 0 | – |");
@@ -243,10 +277,16 @@ describe("the scorecard on the synthetic year", () => {
     expect(alertsTable).toContain("| False-alarm rate (the target is under 10%) | 50% |");
     expect(alertsTable).toContain("| Lead over the catalogue, hours: median (10th percentile) | 44.0 (44.0) |");
     expect(alertsTable).toContain("| Cloud verdicts, for review (a burst with no parent step) | 1 |");
-    expect(alertsTable).toContain("| Alerts confirmed by the fragments or a notice | 0 |");
     const markdown = readFileSync(join(dir, "latest.md"), "utf8");
     expect(markdown).toBe(renderLatest(latest));
     expect(markdown).toContain(lines);
+    expect(markdown).toContain(confirmed);
+    // The dissection is written beside the aggregate (under `docs/detector/` for the committed one), one row per scoreable event with its cause.
+    const events = readFileSync(join(dir, "events.md"), "utf8");
+    expect(events).toContain("| 2013 | ALPHA (40001, 2010-001), 2013-02-10 | LEO | detected | raised |");
+    expect(events).toContain("| 2013 | BETA (40002, 2010-002), 2013-03-05 to 2013-03-06 | LEO | late | no post set before the catalogue |");
+    expect(events).toContain("| 2013 | EPSILON (40005, 2010-005), 2013-03-20 | LEO | undetectable | no public sets |");
+    expect(events).toContain("| no public sets | 1 | 1 | 1 |");
     expect(markdown).toContain("| 2013 | bundle | 2026-01-01 | 575 | 9 | epoch (a lower bound) |");
   });
 });

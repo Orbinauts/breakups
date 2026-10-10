@@ -64,6 +64,35 @@ export interface PieceCounts {
   afterStep: number;
 }
 
+/**
+ * What the confirmation rules read when pieces in the parent's plane came
+ * under the launch after the step, kept on the alert so its row and its
+ * verdict carry the numbers: the pieces and their cloud velocity, the
+ * parent's standing under the launch, the launch's background and its
+ * remembered cloud, and how the pieces stood against that cloud.
+ */
+export interface ConfirmationReading {
+  /** The pieces in the parent's plane, new by numbering and first published after the step, and the median tangential impulse they imply from the parent, in metres a second. */
+  pieces: number;
+  deltaVMps: number;
+  /** The parent's age in days from its first set under the launch to its step (infinite where the launch has no record of it), and whether the catalogue classes it as a fragment is. */
+  parentAgeDays: number;
+  parentFragment: boolean;
+  /** The launch's new bodies in the year before the window, every class; the bodies of its earlier cloud (fragment-classed, first seen in the year before and in the window, the parent and the pieces left out); and how many other bodies the window brought. */
+  backgroundBodies: number;
+  cloudPieces: number;
+  windowBodies: number;
+  /** The days since the launch's last remembered cloud (a burst with consistent pieces or a confirmation), infinite where none. */
+  daysSinceCloud: number;
+  /** The parent's nearest plane distance to the earlier cloud's bodies, infinite with none. */
+  parentCloudDistance: number;
+  /** How many of the pieces lie out of the earlier cloud's plane, and how many lie nearer the parent's plane than the cloud's nearest body does. */
+  piecesOutOfCloud: number;
+  piecesNearerThanCloud: number;
+  /** Whether the rules refused the confirmation. */
+  refused: boolean;
+}
+
 export interface OpenAlert {
   origin: AlertOrigin;
   /** When the alert was raised, the run's instant. */
@@ -89,6 +118,8 @@ export interface OpenAlert {
   cadenceBefore: number;
   pieces: PieceCounts;
   noticed: boolean;
+  /** The last confirmation reading, where pieces in the parent's plane were judged; null where none came. */
+  confirmation: ConfirmationReading | null;
 }
 
 /** Whether the persistence gates pass on an estimate: the size (the level or the mean, by the parameter), the ratio's band and the evidence. */
@@ -134,6 +165,7 @@ export function openAlert(state: SeriesState, input: OpenAlertInput, params: Det
     cadenceBefore: input.cadenceBefore,
     pieces: { new: 0, aboveMark: 0, inPlane: 0, afterStep: 0 },
     noticed: false,
+    confirmation: null,
   };
   recordTiers(alert, input.estimate, input.now, params);
   state.alert = alert;
@@ -201,6 +233,21 @@ export function alertSignals(alert: OpenAlert, now: number, params: DetectorPara
     piecesAfterStep: alert.pieces.afterStep,
     noticed: alert.noticed ? 1 : 0,
   };
+  const reading = alert.confirmation;
+  if (reading !== null) {
+    signals.confirmPieces = reading.pieces;
+    signals.confirmDeltaVMps = reading.deltaVMps;
+    signals.parentAgeDays = reading.parentAgeDays;
+    signals.parentFragment = reading.parentFragment ? 1 : 0;
+    signals.backgroundBodies = reading.backgroundBodies;
+    signals.cloudPieces = reading.cloudPieces;
+    signals.windowBodies = reading.windowBodies;
+    signals.daysSinceCloud = reading.daysSinceCloud;
+    signals.parentCloudDistance = reading.parentCloudDistance;
+    signals.piecesOutOfCloud = reading.piecesOutOfCloud;
+    signals.piecesNearerThanCloud = reading.piecesNearerThanCloud;
+    signals.confirmRefused = reading.refused ? 1 : 0;
+  }
   for (const [key, point] of Object.entries(alert.tiers) as [TierKey, TierPoint][]) {
     const name = `tier${key}` as const;
     signals[`${name}Held`] = point.held ? 1 : 0;

@@ -158,6 +158,18 @@ export const SIGNALS = {
   piecesInPlane: "count",
   piecesAfterStep: "count",
   noticed: "flag",
+  /** The alert row's confirmation reading, written when pieces in the parent's plane were judged for the confirmation (whether they confirmed or the rules refused them): how many pieces, their cloud velocity in metres a second, the parent's age in days from its first set under the launch and whether it is classed as a fragment is, the launch's new bodies in the year before the window, the bodies of the launch's earlier cloud the pieces were told apart from, the days since the launch's last remembered cloud, the parent's nearest plane distance to that cloud, how many of the pieces lie out of the cloud's plane and how many nearer the parent's plane than the cloud is, and whether the rules refused the confirmation (1) or it stood (0). */
+  confirmPieces: "count",
+  confirmDeltaVMps: "m/s",
+  parentAgeDays: "days",
+  parentFragment: "flag",
+  backgroundBodies: "count",
+  cloudPieces: "count",
+  daysSinceCloud: "days",
+  parentCloudDistance: "ratio",
+  piecesOutOfCloud: "count",
+  piecesNearerThanCloud: "count",
+  confirmRefused: "flag",
   /** The cloud row: the launch as a number (the year times a thousand plus the launch number; 80000 or 270000 for the analyst ranges), its age in days from its first body's first set, the new bodies the run brought, the window's count of new bodies, the background rate per window, the Poisson tail probability, how many candidate parents the launch has, the pieces numbered above the mark, those within plane distance one, three, five and ten of some parent, those classed debris, those classed payload, the cloud velocity in metres a second, the Gabbard spread (the range of the consistent pieces' semi-major axes) in kilometres, whether an alert was open on a parent, and what the launch pass decided (0 nothing, 1 confirmed an alert, 2 listed for review, 3 a burst with no consistent piece, 4 a deployment, 5 an old cloud's background). */
   launch: "code",
   launchAgeDays: "days",
