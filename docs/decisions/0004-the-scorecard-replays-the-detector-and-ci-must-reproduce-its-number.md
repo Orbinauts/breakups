@@ -173,3 +173,31 @@ open:
   the cause read off the detector's own log for the parent around the
   window, by the rules the first three phases' dissections established by
   hand, so a change to the detector shows, event by event, what it moved.
+- The replay's speed is the tooling's, never the record's. A year's
+  columns are kept unpacked after their first read
+  (`<archive>/.decoded/<year>/`, each keyed by the year's build time and
+  the column's hash, so a rebuilt year is unpacked afresh), which changes
+  no byte a replay reads: the sequential replay made `kpi/latest.json`,
+  `kpi/latest.md` and the dissection again to the byte with the cache, in
+  twenty-one minutes against twenty-two and a half without. The parallel
+  exploration mode (`npm run kpi -- --all --parallel N --out <dir>`)
+  splits the years into contiguous chunks replayed at once, each after the
+  first starting from the states a full sequential replay left at its
+  boundary (`kpi/work/states/`, or `--from-states <dir>`). That is the
+  rule above for a year replayed alone, applied to files an earlier run
+  wrote: with the detector that wrote them it makes the sequential
+  aggregate again to the cell (measured in four, six and eight chunks),
+  but with a changed detector it is exact only where the change leaves the
+  states at the boundaries untouched. A change that moves them (an
+  object's record of steps, a launch's remembered cloud) reaches each
+  chunk's first years through the old detector's states, much as a
+  warm-up does: with the persistence threshold raised
+  (`--param zPersist=12`), four chunks against the sequence with the same
+  change left every detection and the Confirmed line as they were, but
+  138 cells of the step alerts' counts off, the validation split's false
+  alarms 2076 against the sequence's 2086 where the change itself had
+  moved them from 2503. The mode therefore marks its aggregate
+  `exact: false` with where its states came from, refuses to write to
+  `kpi/`, and the committed results and the KPI workflow keep the
+  sequential replay: a change found by exploring is replayed in order
+  before it is committed.

@@ -61,7 +61,7 @@ export function firstSets(archive: string, years: number[]): FirstSeen[] {
   for (const year of years) {
     const manifest = readManifest(archive, year);
     const bodies = readBodies(archive, year);
-    const epoch = readColumn(yearDir(archive, year), "epoch", manifest.sets) as Float64Array;
+    const epoch = readColumn(yearDir(archive, year), "epoch", manifest.sets, manifest) as Float64Array;
     const yearStart = Date.UTC(year, 0, 1) - YEAR_SLACK_DAYS * DAY_MS;
     for (const body of bodies) {
       if (first.has(body.number)) continue;

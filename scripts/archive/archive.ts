@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
@@ -18,6 +19,8 @@ import { gunzipSync, gzipSync } from "node:zlib";
  *   <archive>/<year>/<column>.bin.gz       one gzipped typed-array column per field, the year's sets sorted by object then rank
  *   <archive>/<year>/bodies.json           the body table
  *   <archive>/<year>/manifest.json         where the year came from and what it holds
+ *   <archive>/.decoded/<year>/<column>.bin a column's unpacked bytes, kept on its first read (`readColumn`)
+ *   <archive>/.decoded/<year>/<column>.key the key they were unpacked under: the year's build time and the column's hash
  *
  * A column file is the typed array's bytes, little endian, gzipped; its
  * unpacked length is the year's set count times the type's width.
@@ -217,13 +220,87 @@ export const yearDir = (archive: string, year: number): string => join(archive, 
 
 const columnPath = (dir: string, name: string): string => join(dir, `${name}.bin.gz`);
 
-/** A column file read back and unpacked, checked to hold `length` values. */
-export function readColumn(dir: string, name: ColumnName, length: number): ColumnArray {
+/**
+ * The decoded-column cache: a column unpacked once is kept beside the
+ * Archive's years, under `.decoded/<year>/`, as the typed array's raw
+ * bytes, and read back with a plain file read on every later replay
+ * instead of being unpacked again (the unpacking is most of what reading
+ * a year costs, a few seconds for the largest). Each kept column carries
+ * the key it was unpacked under, the year's build time and the column's
+ * hash from the manifest, so a year rebuilt or pulled again is unpacked
+ * afresh on its next read; a column is kept only once its unpacked bytes
+ * match the manifest's hash. The cache is a working copy, never part of
+ * the Archive's release, and may be deleted at any time; setting
+ * `BREAKUPS_DECODED=off` reads every column from its gzipped file and
+ * keeps nothing.
+ */
+export const decodedDir = (archive: string, year: number): string => join(archive, ".decoded", String(year));
+
+/** Whether the decoded-column cache is in use: unless the environment turns it off. */
+export const decodedCacheOn = (): boolean => process.env.BREAKUPS_DECODED !== "off";
+
+/** The key a column is kept under: the year's build time, the column's hash and its length. */
+export const decodedKey = (manifest: Pick<Manifest, "builtAt" | "columnSha256">, name: ColumnName, length: number): string | null => {
+  const sha256 = manifest.columnSha256[name];
+  return sha256 === undefined ? null : `${manifest.builtAt} ${sha256} ${length}\n`;
+};
+
+/** The typed array over bytes of the right length, copied first where they are not aligned to the type's width. */
+function typedOf(name: ColumnName, bytes: Uint8Array, length: number): ColumnArray {
   const type = COLUMN_TYPES[name];
-  const bytes = gunzipSync(readFileSync(columnPath(dir, name)));
-  if (bytes.byteLength !== length * type.BYTES_PER_ELEMENT) throw new Error(`${columnPath(dir, name)} holds ${bytes.byteLength} bytes, not ${length} values`);
   const aligned = bytes.byteOffset % type.BYTES_PER_ELEMENT === 0 ? bytes : Uint8Array.prototype.slice.call(bytes);
   return new type(aligned.buffer as ArrayBuffer, aligned.byteOffset, length);
+}
+
+/** The kept bytes of a column, where they are kept under the key and hold the right length; null otherwise. */
+function readDecoded(cache: string, name: ColumnName, key: string, byteLength: number): Uint8Array | null {
+  const keyPath = join(cache, `${name}.key`);
+  const binPath = join(cache, `${name}.bin`);
+  if (!existsSync(keyPath) || !existsSync(binPath) || readFileSync(keyPath, "utf8") !== key) return null;
+  const bytes = readFileSync(binPath);
+  return bytes.byteLength === byteLength ? bytes : null;
+}
+
+let warnedUnwritable = false;
+
+/** Keeps a column's unpacked bytes under its key: each file written beside itself and renamed into place, the bytes before the key, so a reader never finds a key over bytes it does not describe, and processes writing the same column at once leave one whole copy. */
+function writeDecoded(cache: string, name: ColumnName, key: string, bytes: Uint8Array): void {
+  const unique = `${process.pid}.${Date.now()}`;
+  try {
+    mkdirSync(cache, { recursive: true });
+    rmSync(join(cache, `${name}.key`), { force: true });
+    writeFileSync(join(cache, `${name}.bin.${unique}`), bytes);
+    renameSync(join(cache, `${name}.bin.${unique}`), join(cache, `${name}.bin`));
+    writeFileSync(join(cache, `${name}.key.${unique}`), key);
+    renameSync(join(cache, `${name}.key.${unique}`), join(cache, `${name}.key`));
+  } catch (error) {
+    // A cache that cannot be written costs speed, not results.
+    if (!warnedUnwritable) console.error(`the decoded-column cache under ${cache} cannot be written (${(error as Error).message}): reading the gzipped columns`);
+    warnedUnwritable = true;
+  }
+}
+
+/**
+ * A column file read back and unpacked, checked to hold `length` values:
+ * from the decoded-column cache where it holds the column under the
+ * manifest's key, else from the gzipped file, then kept. The manifest is
+ * the year's own, read from the directory where not given; a directory
+ * with none (a column written alone) is never cached.
+ */
+export function readColumn(dir: string, name: ColumnName, length: number, manifest?: Pick<Manifest, "builtAt" | "columnSha256">): ColumnArray {
+  const type = COLUMN_TYPES[name];
+  const byteLength = length * type.BYTES_PER_ELEMENT;
+  const known = manifest ?? (decodedCacheOn() && existsSync(join(dir, "manifest.json")) ? (JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as Manifest) : undefined);
+  const key = known === undefined || !decodedCacheOn() ? null : decodedKey(known, name, length);
+  const cache = join(dirname(dir), ".decoded", basename(dir));
+  if (key !== null) {
+    const kept = readDecoded(cache, name, key, byteLength);
+    if (kept !== null) return typedOf(name, kept, length);
+  }
+  const bytes = gunzipSync(readFileSync(columnPath(dir, name)));
+  if (bytes.byteLength !== byteLength) throw new Error(`${columnPath(dir, name)} holds ${bytes.byteLength} bytes, not ${length} values`);
+  if (key !== null && createHash("sha256").update(bytes).digest("hex") === known!.columnSha256[name]) writeDecoded(cache, name, key, bytes);
+  return typedOf(name, bytes, length);
 }
 
 export function writeColumn(dir: string, name: ColumnName, column: ColumnArray): void {
@@ -255,7 +332,7 @@ export function readYear(archive: string, year: number, only?: readonly ColumnNa
   const manifest = readManifest(archive, year);
   const bodies = readBodies(archive, year);
   const columns = {} as Record<ColumnName, ColumnArray>;
-  for (const name of manifest.columns) if (only === undefined || only.includes(name)) columns[name] = readColumn(dir, name, manifest.sets);
+  for (const name of manifest.columns) if (only === undefined || only.includes(name)) columns[name] = readColumn(dir, name, manifest.sets, manifest);
   return { manifest, bodies, columns: columns as unknown as Columns };
 }
 

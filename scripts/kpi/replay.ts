@@ -96,7 +96,7 @@ export function loadYear(archive: string, year: number): LoadedYear {
   const manifest = readManifest(archive, year);
   const bodies = readBodies(archive, year);
   const columns = {} as Record<ColumnName, Columns[ColumnName]>;
-  for (const name of manifest.columns) if (READ_COLUMNS.includes(name)) columns[name] = readColumn(dir, name, manifest.sets);
+  for (const name of manifest.columns) if (READ_COLUMNS.includes(name)) columns[name] = readColumn(dir, name, manifest.sets, manifest);
   // Ranks are the file's ordinals, rejects counted, so they may have gaps: the order lists the sets that exist, by rank.
   const order = orderOf(columns.rank as Uint32Array, year);
   const byNumber = new Map<number, ArchivedBody>();
@@ -376,10 +376,11 @@ export function loadSlice(archive: string, year: number): YearSlice {
   const dir = yearDir(archive, year);
   const manifest = readManifest(archive, year);
   const bodies = readBodies(archive, year);
-  const epoch = readColumn(dir, "epoch", manifest.sets) as Float64Array;
-  const published = manifest.columns.includes("created") ? (readColumn(dir, "created", manifest.sets) as Float64Array) : epoch;
-  const order = orderOf(readColumn(dir, "rank", manifest.sets) as Uint32Array, year);
-  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published, clock: clockOf(order, published), meanMotion: readColumn(dir, "meanMotion", manifest.sets), eccentricity: readColumn(dir, "eccentricity", manifest.sets), bstar: readColumn(dir, "bstar", manifest.sets) };
+  const column = (name: ColumnName) => readColumn(dir, name, manifest.sets, manifest);
+  const epoch = column("epoch") as Float64Array;
+  const published = manifest.columns.includes("created") ? (column("created") as Float64Array) : epoch;
+  const order = orderOf(column("rank") as Uint32Array, year);
+  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published, clock: clockOf(order, published), meanMotion: column("meanMotion"), eccentricity: column("eccentricity"), bstar: column("bstar") };
 }
 
 /** The matcher's index over a year's slice and the previous year's, where there is one. */

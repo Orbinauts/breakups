@@ -40,6 +40,8 @@ permissions:
 
 env:
   ARCHIVE_MANIFEST_URL: https://github.com/Orbinauts/breakups/releases/download/archive-v1/manifest.json
+  # The decoded-column cache keeps each year's columns unpacked beside the Archive, over a gigabyte for a recent year, for replays to come; this job reads each year once or twice and keeps two years on disk, so it keeps nothing.
+  BREAKUPS_DECODED: "off"
 
 jobs:
   years:
