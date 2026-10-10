@@ -51,6 +51,7 @@
     "archive:satcat": "node --experimental-strip-types scripts/archive/satcat.ts",
     "archive:gcat": "node --experimental-strip-types scripts/archive/gcat.ts",
     "archive:annotate": "node --experimental-strip-types scripts/archive/annotate.ts",
+    "archive:visiting": "node --experimental-strip-types scripts/archive/visiting.ts",
     "archive:space": "node --experimental-strip-types scripts/archive/space-weather.ts",
     "archive:upload": "node --experimental-strip-types scripts/archive/release.ts upload",
     "archive:download": "node --experimental-strip-types scripts/archive/release.ts download",

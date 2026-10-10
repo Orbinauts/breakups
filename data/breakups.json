@@ -27,9 +27,9 @@
    "version": "as seen on 2026-09-17"
   },
   "analyst": {
-   "citation": "Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07",
-   "licence": "cited report",
-   "version": "2026-10-07"
+   "citation": "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report",
+   "licence": "cited reports",
+   "version": "to 2026-10-10"
   },
   "news": {
    "citation": "LeoLabs' public notifications and the news reports cited on each statement",
@@ -49253,6 +49253,88 @@
    }
   },
   {
+   "id": "34839:2014-06-01",
+   "parent": {
+    "catalogueNumber": 34839,
+    "designator": "2009-021A",
+    "name": "Yaogan-6",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "anomalous",
+   "event": {
+    "stated": "2014 Jul? (the separation date GCAT gives the four pieces)",
+    "at": null,
+    "from": "2014-06-01T00:00Z",
+    "to": "2014-09-01T00:00Z",
+    "precision": "month"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 4,
+   "confidence": "C",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "analyst",
+    "orbit": null,
+    "cause": null,
+    "pieces": "analyst",
+    "kind": "analyst"
+   },
+   "statements": [
+    {
+     "source": "analyst",
+     "ref": "J. McDowell, GCAT satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv (file headed 'Updated 2026 Oct 9', read 2026-10-10), rows 40065 to 40068 (2009-021G, H, J, K): type 'D J', name 'deb Yaogan 6', parent 'S34839', separation date '2014 Jul?'",
+     "kind": "anomalous",
+     "parent": {
+      "catalogueNumber": 34839,
+      "designator": "2009-021A",
+      "name": "Yaogan-6"
+     },
+     "event": {
+      "stated": "2014 Jul? (the separation date GCAT gives the four pieces)",
+      "at": null,
+      "from": "2014-06-01T00:00Z",
+      "to": "2014-09-01T00:00Z",
+      "precision": "month"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "GCAT's type DJ: anomalous debris (insulation, soft material, ablated material)",
+     "piecesCatalogued": 4,
+     "piecesStatedOn": "2026-10",
+     "preEventElements": null,
+     "note": "GCAT attributes four pieces to Yaogan-6, separated about July 2014 (GCAT's '?' widens the month by one either side). No narrative report was found: NASA's history (16th edition), the quarterly news of 2012 to 2015 and Jonathan's Space Report are silent. Entered under the owner's rule of the eleventh phase: a tight-origin false confirmation enters the truth only with an independent source.",
+     "statedOn": {
+      "on": "2026-10-10",
+      "precision": "day",
+      "ref": "J. McDowell, GCAT satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv (file headed 'Updated 2026 Oct 9', read 2026-10-10), rows 40065 to 40068 (2009-021G, H, J, K): type 'D J', name 'deb Yaogan 6', parent 'S34839', separation date '2014 Jul?'"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2026-10-10",
+    "precision": "day",
+    "ref": "J. McDowell, GCAT satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv (file headed 'Updated 2026 Oct 9', read 2026-10-10), rows 40065 to 40068 (2009-021G, H, J, K): type 'D J', name 'deb Yaogan 6', parent 'S34839', separation date '2014 Jul?'",
+    "source": "analyst"
+   }
+  },
+  {
    "id": "23402:2014-06-07",
    "parent": {
     "catalogueNumber": 23402,
@@ -58637,7 +58719,7 @@
     "owner": null,
     "launchedOn": null
    },
-   "kind": "breakup",
+   "kind": "release",
    "event": {
     "stated": "before the first piece's first set, 2021-09-24T09:00Z",
     "at": null,
@@ -58655,8 +58737,8 @@
    "cause": "unknown",
    "piecesCatalogued": 5,
    "confidence": "D",
-   "scoreable": true,
-   "exemptReason": null,
+   "scoreable": false,
+   "exemptReason": "objects released from a crewed spacecraft on purpose, not a breakup",
    "resolvedFrom": {
     "event": "catalogue",
     "orbit": null,
@@ -58697,7 +58779,9 @@
     }
    ],
    "conflicts": [],
-   "overrides": [],
+   "overrides": [
+    "shenzhou-12-releases"
+   ],
    "firstStatement": null
   },
   {
@@ -60138,7 +60222,7 @@
     "owner": null,
     "launchedOn": null
    },
-   "kind": "breakup",
+   "kind": "release",
    "event": {
     "stated": "before the first piece's first set, 2022-12-12T16:47Z",
     "at": null,
@@ -60156,8 +60240,8 @@
    "cause": "unknown",
    "piecesCatalogued": 7,
    "confidence": "D",
-   "scoreable": true,
-   "exemptReason": null,
+   "scoreable": false,
+   "exemptReason": "objects released from a crewed spacecraft on purpose, not a breakup",
    "resolvedFrom": {
     "event": "catalogue",
     "orbit": null,
@@ -60198,7 +60282,9 @@
     }
    ],
    "conflicts": [],
-   "overrides": [],
+   "overrides": [
+    "shenzhou-14-releases"
+   ],
    "firstStatement": null
   },
   {
@@ -62901,6 +62987,122 @@
     "on": "2025-12-18",
     "precision": "day",
     "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
+    "source": "news"
+   }
+  },
+  {
+   "id": "40258:2026-01-30",
+   "parent": {
+    "catalogueNumber": 40258,
+    "designator": "2014-058A",
+    "name": "Luch (Olymp-K 1)",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "2026-01-30 from 06:09:03.486 UTC",
+    "at": "2026-01-30T06:09Z",
+    "from": "2026-01-30T06:09Z",
+    "to": "2026-01-30T06:10Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "D",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "news",
+    "orbit": null,
+    "cause": "news",
+    "pieces": null,
+    "kind": "analyst"
+   },
+   "statements": [
+    {
+     "source": "analyst",
+     "ref": "J. McDowell, Jonathan's Space Report No. 853, 2026-02-15 (https://planet4589.org/space/jsr/back/news.853.txt): 'On Jan 30 the retired Olimp satellite, in the GEO graveyard, underwent a breakup event, according to optical monitoring by the Swiss company s2a Systems.'",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 40258,
+      "designator": "2014-058A",
+      "name": "Luch (Olymp-K 1)"
+     },
+     "event": {
+      "stated": "Jan 30 (2026)",
+      "at": null,
+      "from": "2026-01-30T00:00Z",
+      "to": "2026-01-31T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": null,
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "GCAT's satellite catalogue gives one piece, 67745 (2014-058D, 'deb Luch', parent S40258, separation date '2026 Feb  1?').",
+     "statedOn": {
+      "on": "2026-02-15",
+      "precision": "day",
+      "ref": "J. McDowell, Jonathan's Space Report No. 853, 2026-02-15 (https://planet4589.org/space/jsr/back/news.853.txt): 'On Jan 30 the retired Olimp satellite, in the GEO graveyard, underwent a breakup event, according to optical monitoring by the Swiss company s2a Systems.'"
+     }
+    },
+    {
+     "source": "news",
+     "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 40258,
+      "designator": "2014-058A",
+      "name": "Luch (Olymp-K 1)"
+     },
+     "event": {
+      "stated": "2026-01-30 from 06:09:03.486 UTC",
+      "at": "2026-01-30T06:09Z",
+      "from": "2026-01-30T06:09Z",
+      "to": "2026-01-30T06:10Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "unknown",
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "The retired Russian inspector satellite in the geosynchronous graveyard. Also reported by DLR (IAC-26 paper 'Analysis of initial Observations of 2014-058A after the Fragmentation Event of 2026-01-30', https://iafastro.directory/iac/paper/id/107856/summary/) and in Jonathan's Space Report (below).",
+     "statedOn": {
+      "on": "2026-02-02",
+      "precision": "day",
+      "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2026-02-02",
+    "precision": "day",
+    "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'",
     "source": "news"
    }
   },

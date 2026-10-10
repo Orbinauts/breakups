@@ -184,6 +184,8 @@ export type MatchTwinsAtLaunch = boolean;
 
 /** The crewed stations' launches, whose confirmed verdicts are exempt on the Confirmed line: what a station sheds is released on purpose, as the truth exempts the station's bursts. The scorecard's methodology, read from the detector's default list so a trial replay that changes the detector's cannot change the scoring. */
 export const STATION_LAUNCHES: readonly string[] = DETECTOR_PARAMETERS.stationLaunches;
+/** The launches of the crewed spacecraft and the stations' cargo craft, whose confirmed verdicts are exempt on the Confirmed line unless they name the launch's rocket body: what the craft leaves in orbit is released on purpose, its stage is an ordinary stage. The owner's decision for the eleventh phase, read from the detector's default list as the stations' is. */
+export const VISITING_LAUNCHES: readonly string[] = DETECTOR_PARAMETERS.visitingLaunches;
 
 /** One counted verdict of the year, with where it landed. */
 export interface ScoredAlert {
@@ -355,10 +357,10 @@ export function subjectAt(parent: number, at: number, regime: Regime, index: Set
  * at the launch's level (`twin`): a detection of the reported event on any
  * candidate within the window, the one nearest the verdict's instant.
  */
-export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence" | "candidates">, i: number, rows: readonly Row[], stations: readonly string[] = STATION_LAUNCHES): ConfirmedLanding {
-  const landing = landOnBody(verdict, i, rows, stations);
+export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence" | "candidates">, i: number, rows: readonly Row[], stations: readonly string[] = STATION_LAUNCHES, visiting: readonly string[] = VISITING_LAUNCHES): ConfirmedLanding {
+  const landing = landOnBody(verdict, i, rows, stations, visiting);
   const candidates = verdict.candidates;
-  if (candidates === undefined || candidates.length < 2 || landing.outcome === "exempt" && landing.note.startsWith("a crewed station")) return landing;
+  if (candidates === undefined || candidates.length < 2 || (landing.outcome === "exempt" && landing.note.startsWith("a crewed"))) return landing;
   // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant where it gave one (twins may each break up within the half year), else the latest.
   const after = FRAGMENTS_DAYS * DAY_MS;
   const onCandidates = rows.filter((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber !== null && candidates.includes(row.breakup.parent.catalogueNumber) && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after);
@@ -369,10 +371,11 @@ export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "rais
 }
 
 /** Where a confirmed verdict lands on the body it names. */
-function landOnBody(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence">, i: number, rows: readonly Row[], stations: readonly string[]): ConfirmedLanding {
+function landOnBody(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence">, i: number, rows: readonly Row[], stations: readonly string[], visiting: readonly string[]): ConfirmedLanding {
   const number = verdict.number!;
   const base = { verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, attributed: verdict.step === null, eventAt: verdict.event?.at ?? null, sigmaMinutes: verdict.evidence.sigmaMinutes ?? null, bodyClass: BODY_CLASSES[verdict.evidence.bodyClass ?? -1] ?? "unknown" };
   if (verdict.launch !== null && stations.includes(verdict.launch)) return { ...base, outcome: "exempt", event: null, note: "a crewed station's launch: what it sheds is released on purpose" };
+  if (verdict.launch !== null && visiting.includes(verdict.launch) && base.bodyClass !== "rocket body") return { ...base, outcome: "exempt", event: null, note: "a crewed spacecraft's or a station's cargo craft's launch, not on its rocket body: what the craft leaves in orbit is released on purpose" };
   const after = FRAGMENTS_DAYS * DAY_MS;
   const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after).sort((a, b) => b.from - a.from);
   const scoreable = onParent.find((row) => row.breakup.scoreable);

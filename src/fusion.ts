@@ -218,6 +218,8 @@ export interface ConfirmationReading {
   /** How many of the pieces lie out of the earlier cloud's plane, and how many lie nearer the parent's plane than the cloud's nearest body does. */
   piecesOutOfCloud: number;
   piecesNearerThanCloud: number;
+  /** The days from the pieces' earliest first set to the parent's reentry, where the catalogue had published it by the run (negative where the parent fell before its pieces were seen); NaN where it had not. */
+  decayDays: number;
   /** Whether the rules refused the confirmation. */
   refused: boolean;
 }

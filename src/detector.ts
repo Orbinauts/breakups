@@ -176,6 +176,8 @@ export interface DetectorInput {
   notices?: Notice[];
   /** Every threshold the detector decides by, where the caller overrides the defaults. */
   parameters?: Partial<DetectorParameters>;
+  /** The reentries the catalogue has published, where the caller has them: each object's decay day, as the midnight that starts it in milliseconds since 1970, by catalogue number. The detector reads a reentry only from its day on, so a map holding later ones (a backtest's catalogue) gives it nothing a live run would not have had. */
+  decays?: ReadonlyMap<number, number>;
 }
 
 export interface DetectorOutput {

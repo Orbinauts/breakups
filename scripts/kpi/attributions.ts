@@ -1,4 +1,4 @@
-import { ATTRIBUTION_PATHS, BODY_CLASSES, DETECTOR_PARAMETERS, PHASES, REFUSALS, type DetectorParameters, type LogRow } from "../../src/index.ts";
+import { ATTRIBUTION_PATHS, BODY_CLASSES, DETECTOR_PARAMETERS, PHASES, REFUSALS, type BodyClass, type DetectorParameters, type LogRow } from "../../src/index.ts";
 import type { Catalogue } from "./catalogue.ts";
 import { isConfirmedTarget, readingOf, splitYears, type YearFile } from "./kpi.ts";
 import { catalogueRowsOf, landConfirmed, type ConfirmedLanding, type Line, type Row } from "./match.ts";
@@ -24,17 +24,50 @@ import type { Truth } from "./run.ts";
  */
 
 /** The rules the sweep re-applies, by the detector's parameter names. */
-export type AttributionRules = Pick<DetectorParameters, "attributionEnabled" | "confirmDeltaVMinMps" | "freshPieceDays" | "cloudMemoryDays" | "debrisParentNeedsNearerThanCloud" | "singlePieceNeedsQuietLaunch" | "confirmBackgroundMax" | "youngLaunchDays" | "youngLaunchDeltaVMps" | "attributionYoungLaunch" | "attributionDebrisParentsMax" | "attributionBatchLaunchesMax" | "attributionStepBreaksTies" | "attributionMinPieces" | "attributionMissKmMax" | "attributionAmbiguityRatio" | "attributionCentreRatio" | "attributionCentreFloorKm" | "analystAttributes" | "planeDistanceMax" | "attributionTwins" | "attributionTwinsUnresolved" | "originHoursBase" | "originHoursPerDay" | "originShareMin" | "originMinPieces" | "originPhaseMax" | "originOverrideHours" | "originOverrideMinPieces" | "originLaunchMarginDays" | "originStepHoursMax" | "stationLaunches">;
+export type AttributionRules = Pick<DetectorParameters, "attributionEnabled" | "confirmDeltaVMinMps" | "freshPieceDays" | "cloudMemoryDays" | "debrisParentNeedsNearerThanCloud" | "singlePieceNeedsQuietLaunch" | "confirmBackgroundMax" | "youngLaunchDays" | "youngLaunchDeltaVMps" | "attributionYoungLaunch" | "attributionDebrisParentsMax" | "attributionBatchLaunchesMax" | "attributionStepBreaksTies" | "attributionMinPieces" | "attributionMissKmMax" | "attributionAmbiguityRatio" | "attributionCentreRatio" | "attributionCentreFloorKm" | "analystAttributes" | "planeDistanceMax" | "attributionTwins" | "attributionTwinsUnresolved" | "originHoursBase" | "originHoursPerDay" | "originShareMin" | "originMinPieces" | "originPhaseMax" | "originOverrideHours" | "originOverrideMinPieces" | "originLaunchMarginDays" | "originStepHoursMax" | "stationLaunches" | "visitingLaunches" | "reentryRefuses" | "reentryAfterPiecesDays" | "attributionPrefersStage" | "attributionPreferCentreRatio" | "smallBatchMinPieces" | "smallBatchMaxPieces" | "smallBatchOriginShare" | "smallBatchOriginHours" | "smallBatchStepsToo">;
 
-export const rulesOf = (params: DetectorParameters): AttributionRules => ({ attributionTwins: params.attributionTwins, attributionTwinsUnresolved: params.attributionTwinsUnresolved, originHoursBase: params.originHoursBase, originHoursPerDay: params.originHoursPerDay, originShareMin: params.originShareMin, originMinPieces: params.originMinPieces, originPhaseMax: params.originPhaseMax, originOverrideHours: params.originOverrideHours, originOverrideMinPieces: params.originOverrideMinPieces, originLaunchMarginDays: params.originLaunchMarginDays, originStepHoursMax: params.originStepHoursMax, stationLaunches: params.stationLaunches, attributionEnabled: params.attributionEnabled, confirmDeltaVMinMps: params.confirmDeltaVMinMps, freshPieceDays: params.freshPieceDays, cloudMemoryDays: params.cloudMemoryDays, debrisParentNeedsNearerThanCloud: params.debrisParentNeedsNearerThanCloud, singlePieceNeedsQuietLaunch: params.singlePieceNeedsQuietLaunch, confirmBackgroundMax: params.confirmBackgroundMax, youngLaunchDays: params.youngLaunchDays, youngLaunchDeltaVMps: params.youngLaunchDeltaVMps, attributionYoungLaunch: params.attributionYoungLaunch, attributionDebrisParentsMax: params.attributionDebrisParentsMax, attributionBatchLaunchesMax: params.attributionBatchLaunchesMax, attributionStepBreaksTies: params.attributionStepBreaksTies, attributionMinPieces: params.attributionMinPieces, attributionMissKmMax: params.attributionMissKmMax, attributionAmbiguityRatio: params.attributionAmbiguityRatio, attributionCentreRatio: params.attributionCentreRatio, attributionCentreFloorKm: params.attributionCentreFloorKm, analystAttributes: params.analystAttributes, planeDistanceMax: params.planeDistanceMax });
+export const rulesOf = (params: DetectorParameters): AttributionRules => ({ attributionTwins: params.attributionTwins, attributionTwinsUnresolved: params.attributionTwinsUnresolved, originHoursBase: params.originHoursBase, originHoursPerDay: params.originHoursPerDay, originShareMin: params.originShareMin, originMinPieces: params.originMinPieces, originPhaseMax: params.originPhaseMax, originOverrideHours: params.originOverrideHours, originOverrideMinPieces: params.originOverrideMinPieces, originLaunchMarginDays: params.originLaunchMarginDays, originStepHoursMax: params.originStepHoursMax, stationLaunches: params.stationLaunches, visitingLaunches: params.visitingLaunches, reentryRefuses: params.reentryRefuses, reentryAfterPiecesDays: params.reentryAfterPiecesDays, attributionPrefersStage: params.attributionPrefersStage, attributionPreferCentreRatio: params.attributionPreferCentreRatio, smallBatchMinPieces: params.smallBatchMinPieces, smallBatchMaxPieces: params.smallBatchMaxPieces, smallBatchOriginShare: params.smallBatchOriginShare, smallBatchOriginHours: params.smallBatchOriginHours, smallBatchStepsToo: params.smallBatchStepsToo, attributionEnabled: params.attributionEnabled, confirmDeltaVMinMps: params.confirmDeltaVMinMps, freshPieceDays: params.freshPieceDays, cloudMemoryDays: params.cloudMemoryDays, debrisParentNeedsNearerThanCloud: params.debrisParentNeedsNearerThanCloud, singlePieceNeedsQuietLaunch: params.singlePieceNeedsQuietLaunch, confirmBackgroundMax: params.confirmBackgroundMax, youngLaunchDays: params.youngLaunchDays, youngLaunchDeltaVMps: params.youngLaunchDeltaVMps, attributionYoungLaunch: params.attributionYoungLaunch, attributionDebrisParentsMax: params.attributionDebrisParentsMax, attributionBatchLaunchesMax: params.attributionBatchLaunchesMax, attributionStepBreaksTies: params.attributionStepBreaksTies, attributionMinPieces: params.attributionMinPieces, attributionMissKmMax: params.attributionMissKmMax, attributionAmbiguityRatio: params.attributionAmbiguityRatio, attributionCentreRatio: params.attributionCentreRatio, attributionCentreFloorKm: params.attributionCentreFloorKm, analystAttributes: params.analystAttributes, planeDistanceMax: params.planeDistanceMax });
 
 /** Every rule off: what the logging replay is run with. */
-export const RULES_OFF: AttributionRules = { attributionTwins: true, attributionTwinsUnresolved: true, originHoursBase: 1e9, originHoursPerDay: 0, originShareMin: 0.5, originMinPieces: 2, originPhaseMax: 1e9, originOverrideHours: 1e9, originOverrideMinPieces: 3, originLaunchMarginDays: -1e9, originStepHoursMax: 1e9, stationLaunches: [], attributionEnabled: true, confirmDeltaVMinMps: 0, freshPieceDays: 0, cloudMemoryDays: 0, debrisParentNeedsNearerThanCloud: false, singlePieceNeedsQuietLaunch: false, confirmBackgroundMax: 1e9, youngLaunchDays: 0, youngLaunchDeltaVMps: DETECTOR_PARAMETERS.youngLaunchDeltaVMps, attributionYoungLaunch: true, attributionDebrisParentsMax: DETECTOR_PARAMETERS.attributionDebrisParentsMax, attributionBatchLaunchesMax: 1e9, attributionStepBreaksTies: true, attributionMinPieces: 1, attributionMissKmMax: 1e9, attributionAmbiguityRatio: 0, attributionCentreRatio: 0, attributionCentreFloorKm: DETECTOR_PARAMETERS.attributionCentreFloorKm, analystAttributes: true, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax };
+export const RULES_OFF: AttributionRules = { attributionTwins: true, attributionTwinsUnresolved: true, originHoursBase: 1e9, originHoursPerDay: 0, originShareMin: 0.5, originMinPieces: 2, originPhaseMax: 1e9, originOverrideHours: 1e9, originOverrideMinPieces: 3, originLaunchMarginDays: -1e9, originStepHoursMax: 1e9, stationLaunches: [], visitingLaunches: [], reentryRefuses: false, reentryAfterPiecesDays: 0, attributionPrefersStage: false, attributionPreferCentreRatio: DETECTOR_PARAMETERS.attributionPreferCentreRatio, smallBatchMinPieces: DETECTOR_PARAMETERS.smallBatchMinPieces, smallBatchMaxPieces: DETECTOR_PARAMETERS.smallBatchMaxPieces, smallBatchOriginShare: DETECTOR_PARAMETERS.smallBatchOriginShare, smallBatchOriginHours: 1e9, smallBatchStepsToo: DETECTOR_PARAMETERS.smallBatchStepsToo, attributionEnabled: true, confirmDeltaVMinMps: 0, freshPieceDays: 0, cloudMemoryDays: 0, debrisParentNeedsNearerThanCloud: false, singlePieceNeedsQuietLaunch: false, confirmBackgroundMax: 1e9, youngLaunchDays: 0, youngLaunchDeltaVMps: DETECTOR_PARAMETERS.youngLaunchDeltaVMps, attributionYoungLaunch: true, attributionDebrisParentsMax: DETECTOR_PARAMETERS.attributionDebrisParentsMax, attributionBatchLaunchesMax: 1e9, attributionStepBreaksTies: true, attributionMinPieces: 1, attributionMissKmMax: 1e9, attributionAmbiguityRatio: 0, attributionCentreRatio: 0, attributionCentreFloorKm: DETECTOR_PARAMETERS.attributionCentreFloorKm, analystAttributes: true, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax };
 
 const v = (row: LogRow, name: string): number => row.signals[name] ?? Number.NaN;
 
+/** The body a row's verdict names under the rules (the stage preference may name another than the row's), with its class and its reentry where the catalogue knows them. */
+export interface Named {
+  number: number;
+  bodyClass: BodyClass;
+  decayMs: number | null;
+}
+
+/** The facts the sweep reads of a body beside the row: its class and reentry, from the catalogue. */
+export type BodyFacts = ReadonlyMap<number, { bodyClass: BodyClass; decayMs: number | null }>;
+
+/** The facts of every body the catalogue holds, as the sweep reads them (`BodyFacts`). */
+const factsByCatalogue = new WeakMap<Catalogue, BodyFacts>();
+export function factsOf(catalogue: Catalogue): BodyFacts {
+  let facts = factsByCatalogue.get(catalogue);
+  if (facts === undefined) {
+    facts = new Map([...catalogue.bodies.values()].map((body) => [body.number, { bodyClass: body.bodyClass, decayMs: body.decayMs }]));
+    factsByCatalogue.set(catalogue, facts);
+  }
+  return facts;
+}
+
+/** The body the rules name for a row: the stage preference's alternative where the rule is on, its ratio within the bound and the named body did not alone step; else the row's own. */
+export function namedOf(row: LogRow, rules: AttributionRules, facts: BodyFacts = new Map()): Named {
+  const path = v(row, "attributionPath");
+  const alternative = v(row, "preferAlternative");
+  const switched = rules.attributionPrefersStage && path === ATTRIBUTION_PATHS.cloud && Number.isFinite(alternative) && v(row, "preferCentreRatio") <= rules.attributionPreferCentreRatio && v(row, "preferNamedStepped") !== 1;
+  // A row of the logging replay is written on the body its own rules named: where the preference was on there, the body before it is `preferredFrom`.
+  const number = switched ? alternative : row.number;
+  const fact = facts.get(number);
+  const rowClass = BODY_CLASSES[v(row, "bodyClass")] ?? "unknown";
+  return { number, bodyClass: switched ? (fact?.bodyClass ?? (v(row, "preferAlternativeRank") === 0 ? "rocket body" : "unknown")) : rowClass, decayMs: fact?.decayMs ?? null };
+}
+
 /** Whether the rules raise a confirmed verdict on an attribution row, and the refusals that apply, as `REFUSALS` bits. */
-export function decide(row: LogRow, rules: AttributionRules, namedDaysAgo = Number.NEGATIVE_INFINITY): { raised: boolean; refused: number; kept: number } {
+export function decide(row: LogRow, rules: AttributionRules, namedDaysAgo = Number.NEGATIVE_INFINITY, named: Named = namedOf(row, rules)): { raised: boolean; refused: number; kept: number } {
   // An attribution to a debris-classed body is an attribution as any other, where the parameter lets debris parents be tried at all.
   const raw = v(row, "attributionPath");
   const path = raw === ATTRIBUTION_PATHS.debris ? ATTRIBUTION_PATHS.cloud : raw;
@@ -55,6 +88,12 @@ export function decide(row: LogRow, rules: AttributionRules, namedDaysAgo = Numb
     if (v(row, "lambdaRate") > rules.confirmBackgroundMax && !made) refused |= REFUSALS.background;
     const launch = launchOfCode(v(row, "launch"));
     if (launch !== null && rules.stationLaunches.includes(launch)) refused |= REFUSALS.station;
+    if (launch !== null && rules.visitingLaunches.includes(launch) && named.bodyClass !== "rocket body") refused |= REFUSALS.visiting;
+  }
+  // The parent's reentry, published by the run, on or before the pieces' first set plus the days allowed: the catalogue's where the sweep has it, else the row's own reading.
+  if (rules.reentryRefuses) {
+    const decayDays = named.decayMs !== null && Number.isFinite(v(row, "piecesFirstAt")) ? (named.decayMs <= row.at ? (named.decayMs - v(row, "piecesFirstAt")) / DAY_MS : Number.NaN) : named.number === row.number ? v(row, "parentDecayDays") : Number.NaN;
+    if (decayDays <= rules.reentryAfterPiecesDays) refused |= REFUSALS.reentry;
   }
   if (rules.confirmDeltaVMinMps > 0 && !(v(row, "cloudDeltaVMps") >= rules.confirmDeltaVMinMps)) refused |= REFUSALS.velocity;
   if (rules.freshPieceDays > 0 && fragment && v(row, "parentAgeDays") < rules.freshPieceDays) refused |= REFUSALS.freshPiece;
@@ -80,11 +119,16 @@ export function decide(row: LogRow, rules: AttributionRules, namedDaysAgo = Numb
     if (!Number.isFinite(miss)) refused |= REFUSALS.untimed;
     else if (miss > rules.attributionMissKmMax) refused |= REFUSALS.miss;
     // Twins nothing tells apart are raised naming them all only where the parameter asks; else, as with the twins off, refused unless a step names one.
-    if (path === ATTRIBUTION_PATHS.cloud && rules.attributionTwins && !rules.attributionTwinsUnresolved && v(row, "attributionTwins") > 0 && !(rules.attributionStepBreaksTies && v(row, "attributionStepped") === 1)) refused |= REFUSALS.ambiguous;
+    if (path === ATTRIBUTION_PATHS.cloud && rules.attributionTwins && !rules.attributionTwinsUnresolved && v(row, "attributionTwins") > 0 && !(rules.attributionStepBreaksTies && v(row, "attributionStepped") === 1) && !(rules.attributionPrefersStage && v(row, "attributionPriorBreaks") === 1)) refused |= REFUSALS.ambiguous;
     // With the twins off, a group the pieces cannot tell from other bodies is refused unless a step names one.
     if (path === ATTRIBUTION_PATHS.cloud && !rules.attributionTwins && v(row, "attributionRivals") > 0 && !(v(row, "attributionRivalMissKm") >= rules.attributionAmbiguityRatio * miss) && !(v(row, "attributionRivalCentreKm") >= rules.attributionCentreRatio * Math.max(v(row, "attributionCentreKm"), rules.attributionCentreFloorKm)) && !(rules.attributionStepBreaksTies && v(row, "attributionStepped") === 1)) refused |= REFUSALS.ambiguous;
   }
   if (!passesOriginRow(row, rules)) refused |= REFUSALS.origin;
+  // A small batch of pieces must share a tight common origin.
+  if (path !== ATTRIBUTION_PATHS.analyst && (path !== ATTRIBUTION_PATHS.alert || rules.smallBatchStepsToo) && rules.smallBatchOriginHours < 1e8 && kept >= rules.smallBatchMinPieces && kept <= rules.smallBatchMaxPieces) {
+    const deviation = rules.smallBatchOriginShare <= 0.5 ? v(row, "originDev50Hours") : v(row, "originDev75Hours");
+    if (!(v(row, "originTimed") >= 2 && deviation <= rules.smallBatchOriginHours)) refused |= REFUSALS.smallBatch;
+  }
   // The pieces' common origin is the launch itself, or (on a step's confirmation) not the step's instant.
   if (v(row, "originTimed") >= 2 && (v(row, "launchAgeDays") - v(row, "originAgeDays") < rules.originLaunchMarginDays || (path === ATTRIBUTION_PATHS.alert && Math.abs(v(row, "originStepHours")) > rules.originStepHoursMax))) refused |= REFUSALS.origin;
   return { raised: refused === 0 && kept > 0, refused, kept };
@@ -121,7 +165,7 @@ export interface SimulatedConfirmation {
  * confirmed closes, so the alert path's later rows on the same object
  * within the alert's time to live are the same alert and raise nothing.
  */
-export function simulate(files: Pick<YearFile, "year" | "log">[], rules: AttributionRules, rows: readonly Row[]): SimulatedConfirmation[] {
+export function simulate(files: Pick<YearFile, "year" | "log">[], rules: AttributionRules, rows: readonly Row[], facts: BodyFacts = new Map()): SimulatedConfirmation[] {
   const out: SimulatedConfirmation[] = [];
   const closedAt = new Map<number, number>();
   const namedAt = new Map<number, number>();
@@ -134,11 +178,12 @@ export function simulate(files: Pick<YearFile, "year" | "log">[], rules: Attribu
         if (closed !== undefined && row.at - closed < DETECTOR_PARAMETERS.alertTtlDays * DAY_MS) continue;
       }
       const named = namedAt.get(v(row, "launch"));
-      if (!decide(row, rules, named === undefined ? Number.POSITIVE_INFINITY : (row.at - named) / DAY_MS).raised) continue;
+      const body = namedOf(row, rules, facts);
+      if (!decide(row, rules, named === undefined ? Number.POSITIVE_INFINITY : (row.at - named) / DAY_MS, body).raised) continue;
       namedAt.set(v(row, "launch"), row.at);
       if (path !== ATTRIBUTION_PATHS.cloud) closedAt.set(row.number, row.at);
       const candidates = rules.attributionTwins && path === ATTRIBUTION_PATHS.cloud && v(row, "attributionTwins") > 0 ? [row.number, ...[v(row, "candidate1"), v(row, "candidate2"), v(row, "candidate3")].filter((n) => Number.isFinite(n))] : undefined;
-      const verdict = { number: row.number, launch: launchOfCode(v(row, "launch")), raisedAt: row.at, step: path === ATTRIBUTION_PATHS.cloud ? null : { beforeEpoch: 0, afterEpoch: 0, deltaKm: 0, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 0, z: null }, event: Number.isFinite(v(row, "attributionEventAt")) ? { at: v(row, "attributionEventAt"), from: 0, to: 0 } : null, evidence: { bodyClass: v(row, "bodyClass") }, ...(candidates === undefined ? {} : { candidates }) };
+      const verdict = { number: body.number, launch: launchOfCode(v(row, "launch")), raisedAt: row.at, step: path === ATTRIBUTION_PATHS.cloud ? null : { beforeEpoch: 0, afterEpoch: 0, deltaKm: 0, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 0, z: null }, event: Number.isFinite(v(row, "attributionEventAt")) ? { at: v(row, "attributionEventAt"), from: 0, to: 0 } : null, evidence: { bodyClass: BODY_CLASSES.indexOf(body.bodyClass) }, ...(candidates === undefined ? {} : { candidates: body.number === row.number ? candidates : [body.number, ...candidates.filter((n) => n !== body.number)] }) };
       out.push({ year: file.year, row, landing: landConfirmed(verdict, out.length, rows) });
     }
   }
@@ -198,7 +243,7 @@ export function sweepLines(files: YearFile[], truth: Truth, catalogue: Catalogue
   const years = splitYears(files.map((f) => f.year), split);
   const out = ["| rule | targets | confirmed | recall | events confirmed, every line | false confirmations | false-alarm rate | duplicates | exempt |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"];
   for (const [label, change] of [["the detector's values", {}] as [string, Partial<AttributionRules>], ...grid, ["every rule off", RULES_OFF] as [string, Partial<AttributionRules>]]) {
-    const s = scoreOf(files, simulate(files, { ...base, ...change }, rows), years);
+    const s = scoreOf(files, simulate(files, { ...base, ...change }, rows, factsOf(catalogue)), years);
     out.push(`| ${label} | ${s.targets} | ${s.detected} | ${pct(s.recall)} | ${s.detectedAllLines} | ${s.falseAlarms} | ${pct(s.falseAlarmRate)} | ${s.duplicates} | ${s.exempt} |`);
   }
   return out;
@@ -208,7 +253,7 @@ export function sweepLines(files: YearFile[], truth: Truth, catalogue: Catalogue
 export function detailLines(files: YearFile[], truth: Truth, catalogue: Catalogue, rules: AttributionRules, split: "train" | "validation" = "train"): string[] {
   const rows = catalogueRowsOf(truth.breakups, catalogue);
   const years = splitYears(files.map((f) => f.year), split);
-  const simulated = simulate(files, rules, rows);
+  const simulated = simulate(files, rules, rows, factsOf(catalogue));
   const s = scoreOf(files, simulated, years);
   const events = new Map(files.flatMap((f) => f.score.events.map((e) => [e.id, e] as const)));
   const out = ["| missed target | parent | launch | pieces in plane | judgements for the parent: refusals | judgements for other bodies |", "| --- | --- | --- | --- | --- | --- |"];
@@ -258,7 +303,7 @@ export function originGrid(files: YearFile[], truth: Truth, catalogue: Catalogue
   const walk = (i: number, change: Partial<AttributionRules>): void => {
     if (i === names.length) {
       const rules = { ...base, ...change } as AttributionRules;
-      const simulated = simulate(files, rules, rows);
+      const simulated = simulate(files, rules, rows, factsOf(catalogue));
       points.push({ label: names.map((n) => `${n}=${JSON.stringify(rules[n])}`).join(" "), rules, score: scoreOf(files, simulated, years), twins: scoreOf(files, simulated, years, "breakups A-B", true) });
       return;
     }
@@ -272,7 +317,7 @@ export function originGrid(files: YearFile[], truth: Truth, catalogue: Catalogue
 export function originDetail(files: YearFile[], truth: Truth, catalogue: Catalogue, rules: AttributionRules, split: "train" | "validation" = "train", twins = false): string[] {
   const rows = catalogueRowsOf(truth.breakups, catalogue);
   const years = splitYears(files.map((f) => f.year), split);
-  const simulated = simulate(files, rules, rows);
+  const simulated = simulate(files, rules, rows, factsOf(catalogue));
   const s = scoreOf(files, simulated, years, "breakups A-B", twins);
   const events = new Map(files.flatMap((f) => f.score.events.map((e) => [e.id, e] as const)));
   const cell = (x: number | undefined, digits = 1): string => (x === undefined || !Number.isFinite(x) ? "–" : x.toFixed(digits));
@@ -299,7 +344,7 @@ export function originDetail(files: YearFile[], truth: Truth, catalogue: Catalog
 export function originSeparation(files: YearFile[], truth: Truth, catalogue: Catalogue, rules: AttributionRules, split: "train" | "validation" = "train"): string[] {
   const rows = catalogueRowsOf(truth.breakups, catalogue);
   const years = splitYears(files.map((f) => f.year), split);
-  const simulated = simulate(files, rules, rows).filter((s) => years.includes(s.year));
+  const simulated = simulate(files, rules, rows, factsOf(catalogue)).filter((s) => years.includes(s.year));
   const seen = new Set<string>();
   const truths: LogRow[] = [];
   const falses: LogRow[] = [];

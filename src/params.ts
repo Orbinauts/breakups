@@ -1,5 +1,6 @@
 import { OPEN_GATES, WHOLE_CATALOGUE, type ScopeParameters } from "./scope.ts";
 import type { Regime } from "./truth.ts";
+import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
  * Every threshold the detector decides by, in one typed object, so a score
@@ -249,6 +250,38 @@ export interface DetectorParameters {
   originEventTime: boolean;
   /** The launches of the crewed stations, by designator: what a station sheds (tools, covers, tanks, bags) is released on purpose and catalogued as debris under its launch, so its pieces confirm nothing and attribute nothing. Policy, from the satellite catalogue's names: the stations in orbit since the Archive's first year, the bodies it names ISS, TIANGONG and CSS, each by the launch of its own designator (the International Space Station's Zarya, Unity, Zvezda, Destiny, Poisk and Nauka; Tiangong-1 and -2; the Chinese station's Tianhe, Wentian and Mengtian). */
   stationLaunches: string[];
+  /** The launches of the crewed spacecraft and of the stations' cargo craft in orbit since 2005, by designator (`src/visiting.ts`, generated from the satellite catalogue's names by `npm run archive:visiting`): Soyuz, Shenzhou, the Space Shuttle, the crewed Dragons, Starliner, Progress, Tianzhou, the cargo Dragons, Cygnus, HTV and the ATV. What such a craft leaves in orbit (an orbital module and covers at the end of a mission, a trunk, lost tools, jettisoned items) is released on purpose and catalogued as debris under its launch, so its pieces confirm and attribute nothing, as a station's; the launch's rocket body is an ordinary stage, and its pieces are judged as any stage's. Policy: the owner's decision for the eleventh phase. */
+  visitingLaunches: string[];
+  /** Whether pieces first seen after their parent reentered (its decay day, as the catalogue publishes it, on or before the pieces' earliest first set plus `reentryAfterPiecesDays`, and already published by the run) confirm and attribute nothing: they are the reentry's debris, a capsule or an aerodynamic breakup's, not a breakup in orbit. The decay is read only once its day has come, so the rule needs nothing a live run would not have. Physical; the days are fitted on the training split (`d11-confirmed.md`). */
+  reentryRefuses: boolean;
+  reentryAfterPiecesDays: number;
+  /**
+   * The stage preferred over its payload: where the pieces of an
+   * attribution share the plane of a body of the launch of a better rank
+   * than the one the centre of their semi-major axes named (a rocket body
+   * before any other; a body not operating at the time before a payload
+   * operating at it) and its offset from their centre is within this
+   * factor of the named body's (floored at `attributionCentreFloorKm`), the
+   * pieces' plane and period cannot tell the two apart, and the body of the
+   * better rank is named, unless the named body alone made a persistent
+   * step in the search window. The same rank breaks a tie between twins
+   * no step tells apart, where one has a better rank than every other. A
+   * rocket body in orbit since 2005 has had a reported breakup three to six
+   * times as often as a payload (`d11-confirmed.md`). Off where
+   * `attributionPrefersStage` is false; the factor is fitted on the
+   * training split.
+   */
+  attributionPrefersStage: boolean;
+  attributionPreferCentreRatio: number;
+  /** Whether the body an attribution names is the one the pieces converge on, propagated back, where they converge on it better by `attributionAmbiguityRatio` than on the body the centre of their semi-major axes names: a breakup's pieces left their parent's place at one instant, and the centre of their axes is the weaker cue where two bodies of the launch share their plane (a twin ullage motor named for its sibling's pieces). Fitted on the training split (`d11-confirmed.md`). */
+  attributionConvergenceNames: boolean;
+  /** A small batch: an attribution, or a confirmation of an alert on the parent's step, resting on at least `smallBatchMinPieces` and at most `smallBatchMaxPieces` pieces needs them to share a tight common origin: at least two of them crossing the parent in the window, and `smallBatchOriginShare` of them (a half or three quarters) within `smallBatchOriginHours` of their median crossing. A handful of pieces under an old launch is as often the cataloguing of an old cloud as a new event, and a new event's pieces were made at one instant. A value of the hours beyond reach turns the rule off. Fitted on the training split (`d11-confirmed.md`). */
+  smallBatchMinPieces: number;
+  smallBatchMaxPieces: number;
+  smallBatchOriginShare: number;
+  smallBatchOriginHours: number;
+  /** Whether the small-batch rule reads the confirmations of an alert on the parent's step too, or the attributions alone: a step seen on the parent dates an event of its own, which an attribution, resting on the pieces alone, has not. Fitted on the training split (`d11-confirmed.md`). */
+  smallBatchStepsToo: boolean;
   /** Whether a burst in an analyst range (no designator, numbers reused) may confirm an open alert where the plane test names that alert's parent alone among the open alerts and the pieces converge on it. Fitted on the training split. */
   analystAttributes: boolean;
   /** The tolerance by which a step's post-step level may miss a range the object held in the last year and still be a return to a held altitude (orbit maintenance): the larger of this many times the object's own scatter and this many kilometres; a negative floor turns the test off. Fitted on the training split by sweeping the log. */
@@ -405,6 +438,17 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   originStepHoursMax: 1e9,
   originEventTime: true,
   stationLaunches: ["1998-067", "1998-069", "2000-037", "2001-006", "2009-060", "2021-066", "2011-053", "2016-057", "2021-035", "2022-085", "2022-143"],
+  visitingLaunches: [...VISITING_LAUNCHES],
+  reentryRefuses: true,
+  reentryAfterPiecesDays: 0,
+  attributionPrefersStage: false,
+  attributionPreferCentreRatio: 3,
+  attributionConvergenceNames: false,
+  smallBatchMinPieces: 3,
+  smallBatchMaxPieces: 4,
+  smallBatchOriginShare: 0.75,
+  smallBatchOriginHours: 48,
+  smallBatchStepsToo: false,
   maintenanceToleranceSigmas: 3,
   maintenanceToleranceKm: 1,
   maintenanceMonths: 12,
@@ -562,6 +606,17 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   originStepHoursMax: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
   originEventTime: { kind: "policy", source: "the median crossing times the event where it is the finer estimate" },
   stationLaunches: { kind: "policy", source: "the tenth phase's methodology: a crewed station's releases are on purpose, as the truth exempts its bursts; the stations the satellite catalogue names" },
+  visitingLaunches: { kind: "policy", source: "the owner's decision for the eleventh phase: a crewed spacecraft's and a station's cargo craft's releases are on purpose, as a station's; the craft the satellite catalogue names, generated by npm run archive:visiting" },
+  reentryRefuses: { kind: "physical", source: "d11-confirmed.md: pieces first seen after their parent reentered are the reentry's, not a breakup's in orbit" },
+  reentryAfterPiecesDays: { kind: "fitted", source: "d11-confirmed.md, the reentry rule on the training split" },
+  attributionPrefersStage: { kind: "fitted", source: "d11-confirmed.md, the stage preference on the training split" },
+  attributionPreferCentreRatio: { kind: "fitted", source: "d11-confirmed.md, the stage preference on the training split" },
+  attributionConvergenceNames: { kind: "fitted", source: "d11-confirmed.md, the replays of the training split" },
+  smallBatchMinPieces: { kind: "policy", source: "d11-confirmed.md: the small batches of three and four pieces the coordinator named; one and two pieces are the single-piece rule's" },
+  smallBatchMaxPieces: { kind: "policy", source: "as smallBatchMinPieces" },
+  smallBatchOriginShare: { kind: "fitted", source: "d11-confirmed.md, the small-batch sweep on the training split" },
+  smallBatchOriginHours: { kind: "fitted", source: "d11-confirmed.md, the small-batch sweep on the training split" },
+  smallBatchStepsToo: { kind: "fitted", source: "d11-confirmed.md, the small-batch sweep on the training split: on the step's confirmations it costs a headline confirmation at every bound" },
   maintenanceToleranceSigmas: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat from 0 to 10" },
   maintenanceToleranceKm: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: the knee at a kilometre" },
   maintenanceMonths: { kind: "policy", source: "a year of held altitudes, the envelope's reach" },

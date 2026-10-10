@@ -1,5 +1,5 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
-import { regimeOf, semiMajorAxisOf, type ElementSet } from "./elements.ts";
+import { regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
 import type { OpenAlert } from "./fusion.ts";
 import { newEnvelope, snapshotEnvelope, type AltitudeEnvelope } from "./maintenance.ts";
 import type { StepRecord } from "./manoeuvre.ts";
@@ -152,6 +152,10 @@ export interface SeriesState {
   noted: boolean;
   /** The lowest and highest semi-major axis seen in each of the last twelve calendar months, for the maintenance test: a step back to a held altitude. */
   envelope: AltitudeEnvelope;
+  /** What the caller's latest set said of the object's operational status and its dated end of contact, so the status of a body that is not the one being judged can be read as of an instant (the stage preference); absent until a set says it. */
+  opsStatus?: OpsStatus;
+  endedByMs?: number | null;
+  endedFromMs?: number | null;
 }
 
 /** How many days of set counts the state keeps for the cadence. */

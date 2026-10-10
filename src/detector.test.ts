@@ -6,6 +6,9 @@ import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
+import type { PiecesEventTime } from "./event-time.ts";
+import { passesSmallBatch } from "./run.ts";
+import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
  * The detector end to end on synthetic series, each the shape of one
@@ -490,9 +493,10 @@ describe("the fusion with the fragments", () => {
     const gauss = noise(61);
     const series: SyntheticSet[] = [];
     for (let i = 0; i < 200; i++) series.push({ epochMs: T0 + i * 6 * HOUR, aKm: (i >= 160 ? 6905 : 6900) + 0.005 * gauss(), bstar: 1e-4 });
-    const parent = series.map((s) => setOf(3, s, "payload"));
+    // Launch 2010-005: the default designator of object 3, 2010-003, is a cargo craft's launch, under which nothing is confirmed.
+    const parent = series.map((s) => ({ ...setOf(3, s, "payload"), designator: "2010-005A" }));
     const stepEpoch = series[160]!.epochMs;
-    const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50031 + i, { epochMs: stepEpoch + HOUR, aKm: 6905 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-003${"CDEFGH"[i]}` }));
+    const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50031 + i, { epochMs: stepEpoch + HOUR, aKm: 6905 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-005${"CDEFGH"[i]}` }));
     const fed = feed([...one(parent.slice(0, 170)), cloudPieces, ...one(parent.slice(170))], { parameters: PLANE_ONLY });
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toHaveLength(1);
@@ -767,6 +771,24 @@ describe("the Confirmed channel's attribution", () => {
     expect(attributed(feed(runs([...payload.filter((s) => s.epochMs <= T0 + 140 * DAY), ...fairing], [pieces]), { parameters: { attributionDebrisParentsMax: 0 } }))).toEqual([]);
   });
 
+  test("of two bodies of one plane, the pieces are named for the one they converge on, propagated back, where their centre names the other", () => {
+    // Body 2 half a revolution from body 1 and eight kilometres below it; its pieces lie mostly above it, so their axes centre on body 1.
+    const first = decaying(7208, 0.02, 0.004, 80, 8, 1).map((s) => ({ ...withNode(setOf(1, s, "rocket body")), designator: "2010-001A" }));
+    const second = quietBody(2, "2010-001B").map((s) => ({ ...s, meanAnomalyDeg: 180 }));
+    const epoch = EVENT + 3 * DAY;
+    const parentSet = second.filter((s) => s.epochMs <= epoch).at(-1)!;
+    const pieces = [-4, 4, 8, 12, 16, 20].map((d, i) => pieceOf(parentSet, EVENT, d, epoch, 50001 + i, `2010-001${"CDEFGH"[i]}`));
+    const on = feed(runs([...first, ...second], [pieces]), { parameters: { attributionConvergenceNames: true } });
+    expect(attributed(on).map((v) => v.number)).toEqual([2]);
+    expect(attributed(on)[0]!.evidence.convergedFrom).toBe(1);
+    expect(attributed(on)[0]!.reasons.join(" ")).toContain("they converge on 2");
+    const row = on.log.find((r) => r.signals.phase === PHASES.attribution && r.number === 2)!;
+    expect(row.signals.convergedFrom).toBe(1);
+    expect(row.signals.convergedRatio).toBeGreaterThan(params.attributionAmbiguityRatio);
+    // Off, as fitted, the centre names body 1, which the pieces cannot be told from body 2 by: the cloud is left for review.
+    expect(attributed(feed(runs([...first, ...second], [pieces]))).map((v) => v.number)).not.toContain(2);
+  });
+
   test("off, the channel attributes nothing and the burst is listed for review as before", () => {
     const body = quietBody(1, "2010-001A");
     const fed = feed(runs(body, [cloudOf(body, 50001)]), { parameters: { attributionEnabled: false } });
@@ -1005,5 +1027,124 @@ describe("the scoped line", () => {
     expect(scopedOf(gated)).toEqual([]);
     // The whole catalogue as the scope raises every suspected step on the scoped line too.
     expect(scopedOf(feed(one(young), { parameters: scope({ policy: WHOLE_CATALOGUE }) }))).toHaveLength(1);
+  });
+});
+
+/**
+ * The eleventh phase's rules on the Confirmed channel: the crewed and
+ * cargo craft's launches, whose pieces are released on purpose; pieces
+ * first seen after their parent reentered; the small batches, which must
+ * share a tight common origin; and the stage preferred over a payload the
+ * pieces cannot tell it from.
+ */
+describe("the eleventh phase's rules", () => {
+  /** The node's J2 rate at the test orbit, so the parent's sets and its pieces' first sets precess as real ones do. */
+  const RATE = nodePrecessionDegPerDay(7200, 0.001, 98, meanMotionOf(7200));
+  const nodeAt = (epochMs: number): number => 100 + RATE * ((epochMs - T0) / DAY);
+
+  /** A quiet decaying parent, number 1 of launch 2010-001, over `days`, stepping down 0.3 km at `stepAt` sets in, its node precessing. */
+  function parentSeries(days: number, stepAt: number, bodyClass: ElementSet["bodyClass"] = "rocket body"): ElementSet[] {
+    const series = decaying(7200, 0.02, 0.004, days);
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
+    return series.map((s) => ({ ...setOf(1, s, bodyClass), raanDeg: nodeAt(s.epochMs) }));
+  }
+
+  /** Debris bodies under launch 2010-001 numbered from `from`, at the epoch, in the parent's precessing plane, spread three kilometres apart about 7,200 km. */
+  const debris = (from: number, count: number, epochMs: number): ElementSet[] => Array.from({ length: count }, (_, i) => ({ ...setOf(from + i, { epochMs, aKm: 7200 + (i - (count - 1) / 2) * 3, raanDeg: nodeAt(epochMs) }, "debris"), designator: `2010-001${"CDEFGHJKLMNP"[i]}` }));
+
+  /** The parent's sets in runs of one, with the batch of pieces slotted in after the last set before its epoch. */
+  function runsWith(parent: ElementSet[], batch: ElementSet[]): ElementSet[][] {
+    const runs = one(parent);
+    const at = runs.findIndex((r) => r[0]!.epochMs > batch[0]!.epochMs);
+    runs.splice(at === -1 ? runs.length : at, 0, batch);
+    return runs;
+  }
+
+  const confirmedOn = (fed: ReturnType<typeof feed>, number: number) => fed.verdicts.filter((v) => v.state === "confirmed" && v.number === number);
+  const rowsOn = (fed: ReturnType<typeof feed>, number: number) => fed.log.filter((r) => r.signals.phase === PHASES.attribution && r.number === number);
+  const refusedBy = (fed: ReturnType<typeof feed>, number: number, bit: number): boolean => rowsOn(fed, number).some((r) => (r.signals.attributionRefused! & bit) !== 0);
+
+  /** The scene of a step on parent 1 confirmed by six pieces five days later, with the parent of the class given. */
+  const scene = (bodyClass: ElementSet["bodyClass"] = "rocket body", count = 6) => {
+    const parent = parentSeries(48, 105, bodyClass);
+    const stepEpoch = parent[105]!.epochMs;
+    return { runs: runsWith(parent, debris(50001, count, stepEpoch + 5 * DAY)), stepEpoch, piecesAt: stepEpoch + 5 * DAY };
+  };
+
+  test("the default list of the crewed and cargo craft's launches is the satellite catalogue's craft, by launch, none a station's", () => {
+    for (const launch of ["2005-026", "2015-024", "2012-054", "2022-060", "2025-241"]) expect(VISITING_LAUNCHES).toContain(launch);
+    expect([...VISITING_LAUNCHES].sort()).toEqual([...VISITING_LAUNCHES]);
+    expect(new Set(VISITING_LAUNCHES).size).toBe(VISITING_LAUNCHES.length);
+    expect(VISITING_LAUNCHES.filter((launch) => params.stationLaunches.includes(launch))).toEqual([]);
+    expect(params.visitingLaunches).toEqual([...VISITING_LAUNCHES]);
+  });
+
+  test("pieces under a crewed or cargo craft's launch confirm nothing on the craft, and confirm the launch's rocket body as any stage's", () => {
+    const craft = scene("payload");
+    const onCraft = feed(craft.runs, { parameters: { ...PLANE_ONLY, visitingLaunches: ["2010-001"] }, until: craft.stepEpoch + 33 * DAY });
+    expect(suspected(onCraft)).toHaveLength(1);
+    expect(confirmedOn(onCraft, 1)).toEqual([]);
+    expect(refusedBy(onCraft, 1, REFUSALS.visiting)).toBe(true);
+    const stage = scene("rocket body");
+    expect(confirmedOn(feed(stage.runs, { parameters: { ...PLANE_ONLY, visitingLaunches: ["2010-001"] }, until: stage.stepEpoch + 33 * DAY }), 1)).toHaveLength(1);
+  });
+
+  test("pieces first seen after their parent reentered confirm nothing; a reentry the catalogue has not published by the run is not read", () => {
+    const { runs, stepEpoch, piecesAt } = scene();
+    const dayBefore = Math.floor(piecesAt / DAY) * DAY - DAY;
+    const fell = feed(runs, { parameters: PLANE_ONLY, decays: new Map([[1, dayBefore]]), until: stepEpoch + 33 * DAY });
+    expect(confirmedOn(fell, 1)).toEqual([]);
+    expect(refusedBy(fell, 1, REFUSALS.reentry)).toBe(true);
+    expect(rowsOn(fell, 1)[0]!.signals.parentDecayDays).toBeLessThan(0);
+    expect(confirmedOn(feed(runs, { parameters: { ...PLANE_ONLY, reentryRefuses: false }, decays: new Map([[1, dayBefore]]), until: stepEpoch + 33 * DAY }), 1)).toHaveLength(1);
+    // A reentry forty days later is in the caller's map but not yet published when the pieces come: the confirmation stands, and the row reads no reentry.
+    const later = feed(runs, { parameters: { ...PLANE_ONLY, reentryAfterPiecesDays: 60 }, decays: new Map([[1, piecesAt + 40 * DAY]]), until: stepEpoch + 33 * DAY });
+    expect(confirmedOn(later, 1)).toHaveLength(1);
+    expect(Number.isFinite(rowsOn(later, 1)[0]!.signals.parentDecayDays)).toBe(false);
+  });
+
+  test("a small batch of three or four pieces needs them to share a tight common origin; a larger one, or the rule off, does not", () => {
+    const origin = (timed: number, dev50Hours: number, dev75Hours = dev50Hours) => ({ origin: { timed, dev50Hours, dev75Hours } as PiecesEventTime["origin"] });
+    const rule = { smallBatchMinPieces: 3, smallBatchMaxPieces: 4, smallBatchOriginShare: 0.5, smallBatchOriginHours: 2 };
+    expect(passesSmallBatch(3, origin(3, 0.5), rule)).toBe(true);
+    expect(passesSmallBatch(4, origin(4, 5), rule)).toBe(false);
+    expect(passesSmallBatch(4, origin(4, 1, 5), { ...rule, smallBatchOriginShare: 0.75 })).toBe(false);
+    expect(passesSmallBatch(3, origin(1, 0), rule)).toBe(false);
+    expect(passesSmallBatch(3, null, rule)).toBe(false);
+    expect(passesSmallBatch(5, origin(5, 50), rule)).toBe(true);
+    expect(passesSmallBatch(2, null, rule)).toBe(true);
+    expect(passesSmallBatch(3, null, { ...rule, smallBatchOriginHours: 1e9 })).toBe(true);
+    // Three pieces built with no common instant, confirming a step: refused under a tight bound where the rule reads the steps' confirmations too; as fitted it reads the attributions alone, a step dating an event of its own.
+    const { runs, stepEpoch } = scene("rocket body", 3);
+    const tight = feed(runs, { parameters: { ...PLANE_ONLY, smallBatchOriginHours: 1e-6, smallBatchStepsToo: true }, until: stepEpoch + 33 * DAY });
+    expect(confirmedOn(tight, 1)).toEqual([]);
+    expect(refusedBy(tight, 1, REFUSALS.smallBatch)).toBe(true);
+    expect(confirmedOn(feed(runs, { parameters: { ...PLANE_ONLY, smallBatchOriginHours: 1e-6 }, until: stepEpoch + 33 * DAY }), 1)).toHaveLength(1);
+  });
+
+  test("a rocket body the pieces' plane and period cannot tell from the payload their centre named is preferred, and names the launch with the payload beside it", () => {
+    // Payload 2 at 7,200 km and its stage 7 ten kilometres above, in one plane; a burst of pieces centred on the payload's axis, with no step on either.
+    const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload"));
+    const stage = decaying(7210, 0.02, 0.004, 48, 8, 3).map((s) => ({ ...setOf(7, s, "rocket body"), designator: "2010-002B" }));
+    const at = quiet[110]!.epochMs;
+    const pieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50011 + i, { epochMs: at + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
+    const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, stage[from + i]!]));
+    const runs = [...both(0, 115), pieces, ...both(115, quiet.length)];
+    // The centre tells them apart by more than the factor: the payload is named, and the row says what the preference would have named.
+    const byCentre = feed(runs, { parameters: { ...PLANE_ONLY, attributionPrefersStage: true } });
+    expect(byCentre.verdicts.filter((v) => v.state === "confirmed").map((v) => v.number)).toEqual([2]);
+    const row = byCentre.log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
+    expect(row.signals.preferAlternative).toBe(7);
+    expect(row.signals.preferAlternativeRank).toBe(0);
+    expect(row.signals.preferNamedRank).toBe(1);
+    expect(row.signals.preferCentreRatio).toBeGreaterThan(3);
+    // Within a looser factor the stage is named, with the payload beside it as a twin the rank breaks the tie with.
+    const preferred = feed(runs, { parameters: { ...PLANE_ONLY, attributionPrefersStage: true, attributionPreferCentreRatio: 6 } }).verdicts.filter((v) => v.state === "confirmed");
+    expect(preferred.map((v) => v.number)).toEqual([7]);
+    expect(preferred[0]!.candidates).toEqual([7, 2]);
+    expect(preferred[0]!.evidence.preferredFrom).toBe(2);
+    expect(preferred[0]!.reasons.join(" ")).toContain("the likelier parent");
+    // The rule off, the same factor names the payload.
+    expect(feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6 } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number)).toEqual([2]);
   });
 });

@@ -55,7 +55,7 @@ const SOURCES: Partial<Record<SourceId, SourceRecord>> = {
   gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects, Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html", licence: "CC-BY-4.0", version: "data last updated 2025 Jun 22" },
   "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025, Table 3.7", licence: "ESA", version: "2025 edition, events of 2024" },
   "s4s-notice": { citation: "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page", licence: "public announcement", version: "as seen on 2026-09-17" },
-  analyst: { citation: "Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07", licence: "cited report", version: "2026-10-07" },
+  analyst: { citation: "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report", licence: "cited reports", version: "to 2026-10-10" },
   news: { citation: "LeoLabs' public notifications and the news reports cited on each statement", licence: "cited reports", version: "to 2026-10-09" },
   catalogue: { citation: "The public catalogue's own listing of new objects under a parent's launch", licence: "public catalogue", version: "as seen on 2026-10-09" },
 };

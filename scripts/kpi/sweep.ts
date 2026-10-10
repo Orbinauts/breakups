@@ -603,7 +603,7 @@ function confirmationLine(label: string, rows: SweptConfirmation[], rules: Param
   return `| ${label} | ${kept.length} | ${count("detection") + count("late")} | ${count("near")} | ${count("false-alarm")} | ${count("other")} |`;
 }
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean; attributions: boolean; origin: boolean; twins: boolean; relax: boolean; set: Partial<AttributionRules> } {
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean; attributions: boolean; origin: boolean; twins: boolean; relax: boolean; set: Partial<AttributionRules>; ruleGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> } {
   let years: number[] | null = null;
   let show = false;
   let clouds = false;
@@ -615,6 +615,7 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
   let twins = false;
   let relax = false;
   const set: Partial<AttributionRules> = {};
+  const ruleGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = {};
   const grid: Partial<Record<keyof Gates, number[]>> = {};
   const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
   for (let i = 0; i < args.length; i++) {
@@ -633,12 +634,16 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg === "--set") {
       const [name, value] = args[++i]!.split("=");
       (set as Record<string, unknown>)[name!] = JSON.parse(value!) as unknown;
+    } else if (arg === "--grid") {
+      // An axis of the attribution rules: --grid name=v1,v2 (each value read as JSON), with --origin.
+      const [name, values] = args[++i]!.split("=");
+      (ruleGrid as Record<string, unknown>)[name!] = values!.split(",").map((value) => JSON.parse(value) as unknown);
     }
     else if (arg.startsWith("--") && arg.slice(2) in CLOUD_GRID) cloudGrid[arg.slice(2) as keyof CloudGates] = args[++i]!.split(",").map(Number);
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
     else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--separation] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set };
+  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set, ruleGrid };
 }
 
 const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "against-drag", "nonoperational", "occasional-raised"];
@@ -700,7 +705,7 @@ function separationTable(files: YearFile[]): string[] {
 }
 
 function main(): void {
-  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set } = parseArgs(process.argv.slice(2));
+  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, origin, twins, relax, set, ruleGrid } = parseArgs(process.argv.slice(2));
   const all = readYearFiles(process.env.KPI_DIR === undefined ? KPI_DIR : resolve(process.env.KPI_DIR));
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
@@ -715,7 +720,8 @@ function main(): void {
       const off = (name: keyof AttributionRules): AttributionRules[keyof AttributionRules] => RULES_OFF[name];
       // With --twins-grid, the twins' two switches against the origin's override and launch margin.
       const twinsGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = { attributionTwins: [false, true], attributionTwinsUnresolved: [false, true], originOverrideHours: [1e9, 1], originLaunchMarginDays: [-1e9, 0] };
-      const axes: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = process.argv.includes("--twins-grid") ? twinsGrid : {
+      // With --grid, the axes given (the eleventh phase's rules) instead of the common origin's.
+      const axes: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = Object.keys(ruleGrid).length > 0 ? ruleGrid : process.argv.includes("--twins-grid") ? twinsGrid : {
         originOverrideHours: [1e9, 1, 6, 24],
         originLaunchMarginDays: [-1e9, 0, 30],
         originStepHoursMax: [1e9, 48],

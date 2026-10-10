@@ -28,10 +28,15 @@ export const PHASES = { open: 0, post: 1, close: 2, alert: 3, cloud: 4, attribut
  * the timing could not propagate; and a run in which the catalogue listed
  * new bodies under many old launches at once, a cataloguing campaign
  * rather than a breakup; pieces whose closest approaches to the parent,
- * propagated back, do not share an instant (the common-origin test); and a
- * crewed station's launch, whose pieces are released on purpose.
+ * propagated back, do not share an instant (the common-origin test); a
+ * crewed station's launch, whose pieces are released on purpose; the
+ * launch of a crewed spacecraft or a station's cargo craft, whose pieces
+ * are released on purpose too, unless the parent is the launch's rocket
+ * body; a parent that had reentered by the time its pieces were first
+ * seen, whose pieces are reentry debris; and a small batch of pieces that
+ * do not share a tight common origin.
  */
-export const REFUSALS = { velocity: 1, freshPiece: 2, parentInCloud: 4, piecesInCloud: 8, nearerThanCloud: 16, singlePiece: 32, youngLaunch: 64, background: 128, ambiguous: 256, miss: 512, minPieces: 1024, analyst: 2048, untimed: 4096, batch: 8192, origin: 16384, station: 32768 } as const;
+export const REFUSALS = { velocity: 1, freshPiece: 2, parentInCloud: 4, piecesInCloud: 8, nearerThanCloud: 16, singlePiece: 32, youngLaunch: 64, background: 128, ambiguous: 256, miss: 512, minPieces: 1024, analyst: 2048, untimed: 4096, batch: 8192, origin: 16384, station: 32768, visiting: 65536, reentry: 131072, smallBatch: 262144 } as const;
 
 /** The path an attribution row was written on: the confirmation of an open alert on the parent's step, an attribution to a body with no open alert, an analyst range's burst against the open alerts, or an attribution to a debris-classed body of a launch with few of them, for pieces in the plane of no other body. */
 /** The refusals a common origin overrides (`originOverrideHours`): the rules that read a launch's history as an old cloud. Not the young launch: a launch's own objects leave it at one instant too, its separations. */
@@ -281,6 +286,22 @@ export const SIGNALS = {
   originMissKm: "km",
   /** On the confirmation of an alert on the parent's step: the pieces' median closest approach less the step's instant, in hours. */
   originStepHours: "h",
+  /** On an attribution row: the days from the earliest first set of the pieces judged to the parent's reentry, where the catalogue had published the reentry by the run (negative where the parent reentered before its pieces were first seen); absent where it had not. */
+  parentDecayDays: "days",
+  /** On an attribution row: the earliest first set's epoch of the pieces judged, in milliseconds since 1970. */
+  piecesFirstAt: "ms",
+  /** On an attribution row of the cloud path, the stage preference (`attributionPrefersStage`): the rank of the body the centre of the pieces named (0 a rocket body, 1 a body not operating at the time, 2 a payload operating at it), the body of a better rank whose plane the pieces share and whose offset from their centre is the least, its rank, that offset over the named body's (floored), whether the named body alone made a persistent step in the search window, the body named before the preference where it changed the name, and whether the named body's rank is better than every twin's, so the prior breaks a tie the pieces cannot. */
+  preferNamedRank: "code",
+  preferAlternative: "number",
+  preferAlternativeRank: "code",
+  preferCentreRatio: "ratio",
+  preferNamedStepped: "flag",
+  preferredFrom: "number",
+  attributionPriorBreaks: "flag",
+  /** On an attribution row where the convergence was read over the bodies of the pieces' plane (`attributionConvergenceNames`): the body the pieces converge on best other than the one their centre named, the named body's miss over that body's, and the body the centre named where the convergence changed the name. */
+  convergedAlternative: "number",
+  convergedRatio: "ratio",
+  convergedFrom: "number",
 } as const;
 
 export type SignalName = keyof typeof SIGNALS;
@@ -297,12 +318,15 @@ export function regimeIndex(regime: Regime): number {
   return REGIMES.indexOf(regime);
 }
 
+/** The signals kept whole rather than to four digits: catalogue numbers, and the refusals' bits, which rounding would turn into other bits (16384 to 16380). */
+const WHOLE = new Set<string>(["preferAlternative", "preferredFrom", "attributionRefused", "convergedAlternative", "convergedFrom"]);
+
 /** A row of the log, the signals rounded; a missing signal is left out. */
 export function logRow(at: number, number: number, signals: Partial<Record<SignalName, number>>): LogRow {
   const rounded: Record<string, number> = {};
   for (const [name, value] of Object.entries(signals)) {
     if (value === undefined) continue;
-    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") || name.startsWith("candidate") ? Math.round(value) : round5(value);
+    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") || name.startsWith("candidate") || WHOLE.has(name) ? Math.round(value) : round5(value);
   }
   return { at, number, signals: rounded };
 }

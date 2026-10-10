@@ -259,6 +259,8 @@ export interface ReplayOptions {
   parameters?: Partial<DetectorParameters>;
   /** The notices the caller knows of, handed to each run as far as published by its instant. */
   notices?: Notice[];
+  /** The reentries the catalogue published, each object's decay day by catalogue number, handed to every run whole: the detector reads one only from its day on. */
+  decays?: ReadonlyMap<number, number>;
   runHours?: number;
   warmupDays?: number;
   /** The states the previous year's replay ended with; given, no warm-up is run. */
@@ -499,7 +501,7 @@ export function replayYear(archive: string, year: number, options: ReplayOptions
     let runs = 0;
     let sets = 0;
     for (const run of runsOf(loaded, from, runHours)) {
-      const output = detector({ states, launches, sets: run.sets, now: run.now, space: spaceFor(space, run.now), notices: notices.filter((n) => n.at <= run.now), parameters: options.parameters });
+      const output = detector({ states, launches, sets: run.sets, now: run.now, space: spaceFor(space, run.now), notices: notices.filter((n) => n.at <= run.now), parameters: options.parameters, decays: options.decays });
       states = output.states;
       launches = output.launches;
       collect?.push(...output.verdicts);

@@ -3,11 +3,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
-import { DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, PHASES, REFUSALS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { decide, namedOf, rulesOf } from "../scripts/kpi/attributions.ts";
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
 import { SCORED_FROM_YEAR, alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readingOf, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
-import { STATION_LAUNCHES, brackets, landConfirmed, lineOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
+import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, landConfirmed, lineOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
 import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
 import { readStates, writeStates } from "../scripts/kpi/states.ts";
@@ -508,7 +509,7 @@ describe("the scoped line", () => {
   });
 });
 
-describe("the Confirmed line's landings: the stations and the twins", () => {
+describe("the Confirmed line's landings: the stations, the crewed and cargo craft and the twins", () => {
   const T = Date.UTC(2016, 5, 1);
   const rowOn = (parent: number, from: number, launch: string): Row => ({ breakup: { id: `${parent}:${new Date(from).toISOString().slice(0, 10)}`, parent: { catalogueNumber: parent, designator: `${launch}A`, name: "TWIN" }, kind: "breakup", scoreable: true, exemptReason: null } as unknown as Breakup, from, to: from, margin: DAY, launch, fragments: new Set(), scored: null });
   // Two ullage motors of one launch, the second breaking up in June; the first in March.
@@ -548,6 +549,14 @@ describe("the Confirmed line's landings: the stations and the twins", () => {
     expect(readingOf(landConfirmed(verdict(25544, [25544, 33473], "1998-067"), 0, rows), true).outcome).toBe("exempt");
   });
 
+  test("a confirmed verdict under a crewed or cargo craft's launch is exempt unless it names the launch's rocket body", () => {
+    expect(VISITING_LAUNCHES).toContain("2022-060");
+    const craft = landConfirmed({ ...verdict(52797, undefined, "2022-060"), evidence: { bodyClass: 0 } }, 0, rows);
+    expect(craft.outcome).toBe("exempt");
+    expect(craft.note).toContain("released on purpose");
+    expect(landConfirmed({ ...verdict(52798, undefined, "2022-060"), evidence: { bodyClass: 1 } }, 0, rows).outcome).toBe("false-alarm");
+  });
+
   test("the Confirmed cells read the twins both ways, and the warm-up year scores on no split", () => {
     const files = [2005, 2016].map((year) => ({ year, score: { year, timeBasis: "created" as const, events: [], alerts: [], review: [], confirmations: [{ ...landConfirmed(verdict(99999, [99999, 33473], "2008-067", T + 2 * DAY), 0, rows), raisedAt: Date.UTC(year, 6, 1) }] } }));
     expect(confirmedCellsOf(files.filter((f) => splitYears([2005, 2016], "all").includes(f.year))).falseAlarms).toBe(1);
@@ -555,5 +564,40 @@ describe("the Confirmed line's landings: the stations and the twins", () => {
     expect(on.falseAlarms).toBe(0);
     expect(on.twins).toBe(1);
     expect(firstConfirmationsOf(files).size).toBe(0);
+  });
+});
+
+describe("the sweep's re-application of the eleventh phase's rules", () => {
+  const T = Date.UTC(2014, 6, 10);
+  /** An attribution row of the cloud path for body 34839 of launch 2009-021, with the signals given over a passing base. */
+  const row = (signals: Record<string, number>): LogRow => ({ at: T, number: 34839, signals: { phase: PHASES.attribution, attributionPath: ATTRIBUTION_PATHS.cloud, launch: 2009021, bodyClass: 0, attributionPieces: 3, launchAgeDays: 1900, cloudDeltaVMps: 1.3, attributionMissKm: 10, originTried: 3, originTimed: 3, originDev50Hours: 0.2, originDev75Hours: 0.3, launchesInRun: 0, piecesFirstAt: T - DAY, ...signals } });
+  const base = { ...rulesOf(DETECTOR_PARAMETERS), attributionMinPieces: 3 };
+
+  test("the reentry rule reads the catalogue's decay as published by the row's run, against the pieces' first set", () => {
+    const facts = (decayMs: number) => new Map([[34839, { bodyClass: "payload" as const, decayMs }]]);
+    expect(decide(row({}), base, Number.NEGATIVE_INFINITY, namedOf(row({}), base, facts(T - 3 * DAY))).refused & REFUSALS.reentry).toBe(REFUSALS.reentry);
+    expect(decide(row({}), base, Number.NEGATIVE_INFINITY, namedOf(row({}), base, facts(T + 30 * DAY))).raised).toBe(true);
+    expect(decide(row({}), { ...base, reentryRefuses: false }, Number.NEGATIVE_INFINITY, namedOf(row({}), base, facts(T - 3 * DAY))).raised).toBe(true);
+  });
+
+  test("a small batch is refused where its crossings spread beyond the bound, and a crewed or cargo craft's launch on its craft", () => {
+    expect(decide(row({ originDev50Hours: 5 }), { ...base, smallBatchOriginShare: 0.5, smallBatchOriginHours: 1 }).refused & REFUSALS.smallBatch).toBe(REFUSALS.smallBatch);
+    expect(decide(row({ originDev75Hours: 60 }), { ...base, smallBatchOriginShare: 0.75, smallBatchOriginHours: 48 }).refused & REFUSALS.smallBatch).toBe(REFUSALS.smallBatch);
+    // On the confirmation of a step, only where the rule reads steps too.
+    const step = row({ attributionPath: ATTRIBUTION_PATHS.alert, originDev75Hours: 60 });
+    expect(decide(step, { ...base, smallBatchOriginHours: 48 }).raised).toBe(true);
+    expect(decide(step, { ...base, smallBatchOriginHours: 48, smallBatchStepsToo: true }).refused & REFUSALS.smallBatch).toBe(REFUSALS.smallBatch);
+    expect(decide(row({}), { ...base, smallBatchOriginHours: 1 }).raised).toBe(true);
+    expect(decide(row({ attributionPieces: 5, originDev50Hours: 5 }), { ...base, smallBatchOriginShare: 0.5, smallBatchOriginHours: 1 }).raised).toBe(true);
+    expect(decide(row({}), { ...base, visitingLaunches: ["2009-021"] }).refused & REFUSALS.visiting).toBe(REFUSALS.visiting);
+  });
+
+  test("the stage preference names the row's alternative within the factor, unless the named body alone stepped", () => {
+    const preferring = { ...base, attributionPrefersStage: true, attributionPreferCentreRatio: 3 };
+    const facts = new Map([[34840, { bodyClass: "rocket body" as const, decayMs: null }]]);
+    expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 2, preferNamedStepped: 0 }), preferring, facts)).toEqual({ number: 34840, bodyClass: "rocket body", decayMs: null });
+    expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 4, preferNamedStepped: 0 }), preferring, facts).number).toBe(34839);
+    expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 2, preferNamedStepped: 1 }), preferring, facts).number).toBe(34839);
+    expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 2 }), base, facts).number).toBe(34839);
   });
 });

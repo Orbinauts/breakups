@@ -77,11 +77,25 @@ export function catalogueOf(archive: string, truth: Truth): Catalogue {
   return catalogue;
 }
 
+const decaysByCatalogue = new WeakMap<Catalogue, Map<number, number>>();
+
+/** The reentries the catalogue records, each body's decay day by catalogue number, as the detector takes them (`DetectorInput.decays`): it reads one only from its day on. */
+export function decaysOf(catalogue: Catalogue): Map<number, number> {
+  let decays = decaysByCatalogue.get(catalogue);
+  if (decays === undefined) {
+    decays = new Map();
+    for (const body of catalogue.bodies.values()) if (body.decayMs !== null) decays.set(body.number, body.decayMs);
+    decaysByCatalogue.set(catalogue, decays);
+  }
+  return decays;
+}
+
 /** One year replayed and matched: the file as it is written, and the replay's result for the next year to carry. */
 export function replayAndScore(archive: string, year: number, truth: Truth, options: ScoreYearOptions = {}): { file: YearFile; result: ReplayResult } {
   const notices = options.notices ?? noticesOf(truth.breakups);
-  const result = replayYear(archive, year, { ...options, notices });
-  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters }, options.catalogue ?? catalogueOf(archive, truth));
+  const catalogue = options.catalogue ?? catalogueOf(archive, truth);
+  const result = replayYear(archive, year, { ...options, notices, decays: options.decays ?? decaysOf(catalogue) });
+  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters }, catalogue);
   const file: YearFile = {
     format: 1,
     year,

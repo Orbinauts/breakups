@@ -1,6 +1,6 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step, Verdict } from "./detector.ts";
-import { OPS_STATUSES, operationalAt, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
+import { OPS_STATUSES, isWorkingStatus, operationalAt, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
 import { eventFromPieces, eventTimeOf, originTested, overridesHistory, passesOrigin, type PiecesEventTime } from "./event-time.ts";
 import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeDistance, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
@@ -73,7 +73,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "confirmed-v8";
+export const DETECTOR_NAME = "confirmed-v9";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -112,6 +112,8 @@ interface RunContext {
   /** The launches the run brought new bodies to, with how many. */
   newBodies: Map<string, number>;
   notices: Notice[];
+  /** The reentries the caller passed, by catalogue number (`DetectorInput.decays`). */
+  decays: ReadonlyMap<number, number>;
 }
 
 const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
@@ -120,6 +122,8 @@ const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "u
 function measure(state: SeriesState, set: ElementSet, context: RunContext, pending: Pending[]): void {
   const { params, weather } = context;
   const firstEpochBefore = state.firstEpoch;
+  // What the set says of the object's status, kept so it can be read as of an instant when the object is not the one being judged.
+  [state.opsStatus, state.endedByMs, state.endedFromMs] = [set.opsStatus, set.endedByMs, set.endedFromMs];
   for (const accepted of screenSet(state, set, params)) {
     const aKm = semiMajorAxisOf(accepted);
     const regime = state.epochs.length === 0 ? regimeOf(accepted) : state.regime;
@@ -840,12 +844,17 @@ function judgePieces(subject: PieceSubject, launch: LaunchRecord, verdict: Cloud
   const outOfCloud = cloud.length === 0 ? judged : judged.filter((piece) => nearestCloudDistance(orbitOf(piece), cloud, cloudEventMs, params) > params.planeDistanceMax);
   const nearerThanCloud = judged.filter((piece) => piece.distance < parentCloudDistance);
   const deltaVMps = median(judged.map((p) => p.deltaVMps));
+  // The parent's reentry, where the catalogue had published it by the run, against the pieces' earliest first set.
+  const decayed = context.decays.get(subject.number);
+  const firstEpoch = judged.length === 0 ? Number.NaN : Math.min(...judged.map((p) => p.firstEpoch));
+  const decayDays = decayed !== undefined && decayed <= now ? (decayed - firstEpoch) / DAY_MS : Number.NaN;
   let kept = judged;
   const refuse = (bit: number, why: string): void => {
     reasons.push(why);
     refused |= bit;
     kept = [];
   };
+  if (params.reentryRefuses && decayDays <= params.reentryAfterPiecesDays) refuse(REFUSALS.reentry, `the parent reentered on ${new Date(decayed!).toISOString().slice(0, 10)}, ${Math.abs(decayDays).toFixed(1)} days ${decayDays < 0 ? "before" : "after"} its pieces' first set: they are the reentry's debris, a capsule or an aerodynamic breakup's, not a breakup in orbit`);
   if (params.confirmDeltaVMinMps > 0 && !(deltaVMps >= params.confirmDeltaVMinMps)) refuse(REFUSALS.velocity, `the pieces move ${deltaVMps.toFixed(2)} m/s from the parent, under the floor of ${params.confirmDeltaVMinMps}: bodies in the parent's own orbit, not fragments of it`);
   if (params.freshPieceDays > 0 && parentFragment && parentAgeDays < params.freshPieceDays) refuse(REFUSALS.freshPiece, `the parent is classed debris and was first catalogued ${parentAgeDays.toFixed(0)} days before its step: a fresh piece of the launch's own cloud, not a parent`);
   if (params.cloudMemoryDays > 0 && daysSinceCloud <= params.cloudMemoryDays && cloud.length > 0) {
@@ -868,7 +877,7 @@ function judgePieces(subject: PieceSubject, launch: LaunchRecord, verdict: Cloud
     else if (verdict.backgroundBodies > 0) refuse(REFUSALS.singlePiece, `a single piece under a launch that gained ${verdict.backgroundBodies} new bod${verdict.backgroundBodies === 1 ? "y" : "ies"} in the year before confirms nothing`);
     else if (verdict.windowBodies > 1) refuse(REFUSALS.singlePiece, `a single piece in the parent's plane among ${verdict.windowBodies} new bodies under the launch in the window confirms nothing: the stray of a cloud the plane test attached elsewhere`);
   }
-  const reading: ConfirmationReading = { pieces: judged.length, deltaVMps, parentAgeDays, parentFragment, backgroundBodies: verdict.backgroundBodies, cloudPieces: cloud.length, windowBodies: verdict.windowBodies, daysSinceCloud, parentCloudDistance, piecesOutOfCloud: outOfCloud.length, piecesNearerThanCloud: nearerThanCloud.length, refused: kept.length === 0 };
+  const reading: ConfirmationReading = { pieces: judged.length, deltaVMps, parentAgeDays, parentFragment, backgroundBodies: verdict.backgroundBodies, cloudPieces: cloud.length, windowBodies: verdict.windowBodies, daysSinceCloud, parentCloudDistance, piecesOutOfCloud: outOfCloud.length, piecesNearerThanCloud: nearerThanCloud.length, decayDays, refused: kept.length === 0 };
   return { pieces: kept, reading, reasons, refused };
 }
 
@@ -985,6 +994,40 @@ function piecesEvent(timed: PiecesEventTime, params: DetectorParameters): { at: 
   return { at: timed.at, from: timed.from, to: timed.to, sigmaMinutes: timed.sigmaMinutes, byOrigin: false };
 }
 
+/** Whether a launch is a crewed spacecraft's or a station's cargo craft's and the parent is not its rocket body: what such a craft leaves in orbit is released on purpose (`visitingLaunches`). */
+const visitingRelease = (key: string, bodyClass: BodyClass, params: DetectorParameters): boolean => params.visitingLaunches.includes(key) && bodyClass !== "rocket body";
+
+/** Whether a batch of pieces passes the small-batch rule (`smallBatchOriginHours`): a batch outside the rule's sizes, or the rule off, passes; a small one needs at least two pieces crossing the parent in the window, the share asked of them within the bound of their median crossing. */
+export function passesSmallBatch(pieces: number, timed: Pick<PiecesEventTime, "origin"> | null, params: Pick<DetectorParameters, "smallBatchMinPieces" | "smallBatchMaxPieces" | "smallBatchOriginShare" | "smallBatchOriginHours">): boolean {
+  if (!(params.smallBatchOriginHours < 1e8) || pieces < params.smallBatchMinPieces || pieces > params.smallBatchMaxPieces) return true;
+  if (timed === null || !(timed.origin.timed >= 2)) return false;
+  const deviation = params.smallBatchOriginShare <= 0.5 ? timed.origin.dev50Hours : timed.origin.dev75Hours;
+  return deviation <= params.smallBatchOriginHours;
+}
+
+/** The words for a small batch the rule refused. */
+const smallBatchReason = (pieces: number, timed: PiecesEventTime | null, parent: number, params: DetectorParameters): string => `a small batch of ${pieces} pieces needs them to share a tight common origin, ${params.smallBatchOriginShare <= 0.5 ? "half" : "three quarters"} of them crossing ${parent} within ${params.smallBatchOriginHours} h of their median, and ${timed === null || !(timed.origin.timed >= 2) ? "too few of them cross it in the window" : `they cross it within ${(params.smallBatchOriginShare <= 0.5 ? timed.origin.dev50Hours : timed.origin.dev75Hours).toFixed(1)} h`}: an old cloud's cataloguing as likely as a new event`;
+
+/**
+ * The rank the stage preference reads a body by (`attributionPrefersStage`):
+ * 0 for a rocket body, 2 for a payload operating at the instant (its dated
+ * status as its latest set gave it), 1 for any other body. A rocket body
+ * in orbit since 2005 has had a reported breakup three to six times as
+ * often as a payload, and a payload breaks up dead far more often than
+ * working, so where the pieces cannot tell two bodies apart the lower rank
+ * is the likelier parent.
+ */
+function rankOf(context: RunContext, launch: LaunchRecord, number: number): number {
+  const body = launch.bodies.find((b) => b.number === number);
+  if (body?.bodyClass === "rocket body") return 0;
+  if (body?.bodyClass !== "payload") return 1;
+  const state = context.states.get(number);
+  const status = operationalAt({ opsStatus: state?.opsStatus, endedByMs: state?.endedByMs ?? null, endedFromMs: state?.endedFromMs ?? null }, context.now, { ...context.params, opsStatusDated: true });
+  return isWorkingStatus(status) ? 2 : 1;
+}
+
+const RANK_WORDS = ["a rocket body", "a body not operating at the time", "a payload operating at the time"] as const;
+
 /** The attribution row's signals. */
 function attributionSignals(launch: LaunchRecord, verdict: CloudVerdict, path: number, parentClass: BodyClass, judged: readonly PieceReading[], judgement: PieceJudgement | null, rivals: number, timed: PiecesEventTime | null, rival: number, refused: number, raised: boolean): Partial<Record<SignalName, number>> {
   const reading = judgement?.reading;
@@ -1010,6 +1053,8 @@ function attributionSignals(launch: LaunchRecord, verdict: CloudVerdict, path: n
     parentCloudDistance: reading?.parentCloudDistance,
     piecesOutOfCloud: reading?.piecesOutOfCloud,
     piecesNearerThanCloud: reading?.piecesNearerThanCloud,
+    parentDecayDays: reading?.decayDays,
+    piecesFirstAt: judged.length === 0 ? undefined : Math.min(...judged.map((p) => p.firstEpoch)),
     attributionMissKm: timed?.missKm,
     attributionRivalMissKm: rival,
     attributionSigmaMinutes: timed?.sigmaMinutes,
@@ -1055,7 +1100,28 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
       return orbit === undefined ? Number.POSITIVE_INFINITY : Math.abs(median(judged.map((piece) => axisOf(piece) - orbit.aKm)));
     };
     const sharing = [nearest, ...new Set(judged.flatMap((p) => p.within))].filter((n, i, all) => all.indexOf(n) === i && !alerted.has(n) && parents.some((p) => p.number === n));
-    const number = sharing.reduce((best, n) => (centreOf(n) < centreOf(best) ? n : best), nearest);
+    const centred = sharing.reduce((best, n) => (centreOf(n) < centreOf(best) ? n : best), nearest);
+    // The convergence over the centre: where the pieces, propagated back, converge on another body of their plane better than on the one their centre names by the ambiguity ratio, that body is their parent.
+    let converged: { number: number; ratio: number } | null = null;
+    if (params.attributionConvergenceNames && sharing.length > 1) {
+      const misses = new Map<number, number>();
+      for (const n of sharing.slice(0, params.attributionMaxCandidates)) {
+        const timed = timePieces(context, n, judged);
+        if (timed !== null) misses.set(n, timed.missKm);
+      }
+      const best = [...misses].reduce<[number, number] | null>((least, entry) => (least === null || entry[1] < least[1] ? entry : least), null);
+      const own = misses.get(centred);
+      if (best !== null && own !== undefined && best[0] !== centred) converged = { number: best[0], ratio: own / Math.max(best[1], 1e-9) };
+    }
+    const byCentre = converged !== null && converged.ratio > params.attributionAmbiguityRatio ? converged.number : centred;
+    // The stage preference: a body of a better rank in the pieces' plane whose offset from their centre the pieces cannot tell from the named body's is named instead, unless the named body alone made a persistent step in the window.
+    const rank = (n: number): number => rankOf(context, launch, n);
+    const alternative = sharing.filter((n) => n !== byCentre && rank(n) < rank(byCentre)).reduce<number | null>((best, n) => (best === null || centreOf(n) < centreOf(best) ? n : best), null);
+    const preferRatio = alternative === null ? Number.NaN : centreOf(alternative) / Math.max(centreOf(byCentre), params.attributionCentreFloorKm);
+    const searchFrom = now - params.attributionSearchDays * DAY_MS;
+    const namedStepped = alternative !== null && steppedWithin(context, byCentre, searchFrom, now) && !steppedWithin(context, alternative, searchFrom, now);
+    const preferred = params.attributionPrefersStage && alternative !== null && preferRatio <= params.attributionPreferCentreRatio && !namedStepped;
+    const number = preferred ? alternative : byCentre;
     if (named.has(number)) continue;
     const centre = centreOf(number);
     const candidate = parents.find((p) => p.number === number);
@@ -1080,6 +1146,12 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
       refused |= REFUSALS.station;
       reasons.push(`launch ${launch.key} is a crewed station's: what it sheds is released on purpose`);
     }
+    if (visitingRelease(launch.key, own.bodyClass, params)) {
+      refused |= REFUSALS.visiting;
+      reasons.push(`launch ${launch.key} is a crewed spacecraft's or a station's cargo craft's, and ${number} is not its rocket body: what the craft leaves in orbit is released on purpose`);
+    }
+    if (byCentre !== centred) reasons.push(`the pieces' axes centre on ${centred}, but propagated back they converge on ${byCentre} ${converged!.ratio.toFixed(1)} times better: it is their parent`);
+    if (preferred) reasons.push(`the pieces' axes centre ${centreOf(byCentre).toFixed(1)} km from ${byCentre}'s and ${centreOf(number).toFixed(1)} km from ${number}'s, which their plane and period cannot tell apart, and ${number} is ${RANK_WORDS[rank(number)]} where ${byCentre} is ${RANK_WORDS[rank(byCentre)]}: the likelier parent is named`);
     const judgement = judgePieces(subject, launch, verdict, judged, memory, context, memory.at);
     refused |= judgement.refused;
     reasons.push(...judgement.reasons);
@@ -1104,6 +1176,7 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
     let rival = Number.NaN;
     let stepped = 0;
     let twins: number[] = [];
+    let priorBreaks = 0;
     // The pieces are timed, and the common-origin test read, where the other rules refused nothing: a refused group costs no propagation.
     if (refused === 0) timed = overridden ?? timePieces(context, number, kept);
     if (refused === 0) {
@@ -1124,6 +1197,10 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
           refused |= REFUSALS.origin;
           reasons.push(`the pieces' own closest approaches to ${number} do not share an instant: half of them cross it within ${timed.origin.dev50Hours.toFixed(1)} h of their median, three quarters within ${timed.origin.dev75Hours.toFixed(1)} h, ${timed.origin.timed} of ${timed.origin.tried} in the window, at ${timed.origin.ageDays.toFixed(1)} days' age: the late pieces of an old cloud, not a breakup`);
         }
+        if (!passesSmallBatch(kept.length, timed, params)) {
+          refused |= REFUSALS.smallBatch;
+          reasons.push(smallBatchReason(kept.length, timed, number, params));
+        }
         // With the twins on, a launch with few debris-classed bodies offers its older ones as twins too: a fairing cover and its siblings, a tank beside its stage, share the pieces' plane and orbit as a payload's stage does.
         const debrisTwins = path === ATTRIBUTION_PATHS.cloud && params.attributionTwins ? debrisSharing(context, launch, kept, verdict.eventMs, alerted, debrisOrbits) : [];
         if (rivals.length + debrisTwins.length > 0) {
@@ -1136,8 +1213,12 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
           twins = [...rivals, ...debrisTwins].filter((r) => centreOf(r) < centreBound && misses.has(r) && misses.get(r)! < params.attributionAmbiguityRatio * timed!.missKm);
           if (twins.length > 0) {
             const stepNames = params.attributionStepBreaksTies && stepped === 1;
-            if (params.attributionTwins && (stepNames || params.attributionTwinsUnresolved)) reasons.push(`the pieces cannot be told from ${twins.length} other bod${twins.length === 1 ? "y" : "ies"} of the launch (${twins.join(", ")}): their axes centre ${centre.toFixed(1)} km from ${number}'s and ${twins.map((r) => centreOf(r).toFixed(1)).join(", ")} km from theirs, and they converge on them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${twins.map((r) => misses.get(r)!.toFixed(1)).join(", ")} km against ${timed.missKm.toFixed(1)}): the launch is named with its candidates, ${number} first${stepNames ? `, which alone made a persistent step in the window` : ", on the centre"}`);
-            else if (stepNames) reasons.push(`the pieces converge on ${number} and on another body of the launch alike, and ${number} alone made a persistent step in the window: it is named`);
+            // The rank breaks a tie no step does: a rocket body among payloads, a dead payload among working ones.
+            priorBreaks = twins.every((t) => rank(number) < rank(t)) ? 1 : 0;
+            const priorNames = !stepNames && params.attributionPrefersStage && priorBreaks === 1;
+            const why = stepNames ? `, which alone made a persistent step in the window` : priorNames ? `, ${RANK_WORDS[rank(number)]}, the likelier parent of the ${twins.length + 1}` : ", on the centre";
+            if (params.attributionTwins && (stepNames || priorNames || params.attributionTwinsUnresolved)) reasons.push(`the pieces cannot be told from ${twins.length} other bod${twins.length === 1 ? "y" : "ies"} of the launch (${twins.join(", ")}): their axes centre ${centre.toFixed(1)} km from ${number}'s and ${twins.map((r) => centreOf(r).toFixed(1)).join(", ")} km from theirs, and they converge on them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${twins.map((r) => misses.get(r)!.toFixed(1)).join(", ")} km against ${timed.missKm.toFixed(1)}): the launch is named with its candidates, ${number} first${why}`);
+            else if (stepNames || priorNames) reasons.push(`the pieces converge on ${number} and on another body of the launch alike, and ${number}${why}: it is named`);
             else {
               refused |= REFUSALS.ambiguous;
               reasons.push(`the pieces lie in the plane of ${rivals.length} other bod${rivals.length === 1 ? "y" : "ies"} of the launch too, and converge on one of them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${rival.toFixed(1)} km against ${timed.missKm.toFixed(1)}): the parent cannot be named, the cloud stays for review`);
@@ -1148,8 +1229,9 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
       }
     }
     const ok = refused === 0 && timed !== null;
-    const twinSignals: Partial<Record<SignalName, number>> = { attributionTwins: twins.length, candidate1: twins[0], candidate2: twins[1], candidate3: twins[2] };
-    context.log.push(logRow(now, number, { ...attributionSignals(launch, verdict, path, own.bodyClass, judged, judgement, rivals.length, timed, rival, refused, ok), ...originSignals(timed, Math.min(kept.length, params.attributionMaxPieces)), ...twinSignals, launchesInRun, attributionStepped: stepped, attributionCentreKm: centre, attributionRivalCentreKm: rivalCentre }));
+    const twinSignals: Partial<Record<SignalName, number>> = { attributionTwins: twins.length, candidate1: twins[0], candidate2: twins[1], candidate3: twins[2], attributionPriorBreaks: priorBreaks };
+    const preferSignals: Partial<Record<SignalName, number>> = { preferNamedRank: rank(byCentre), ...(alternative === null ? {} : { preferAlternative: alternative, preferAlternativeRank: rank(alternative), preferCentreRatio: preferRatio, preferNamedStepped: namedStepped ? 1 : 0 }), ...(preferred ? { preferredFrom: byCentre } : {}), ...(converged === null ? {} : { convergedAlternative: converged.number, convergedRatio: converged.ratio }), ...(byCentre !== centred ? { convergedFrom: centred } : {}) };
+    context.log.push(logRow(now, number, { ...attributionSignals(launch, verdict, path, own.bodyClass, judged, judgement, rivals.length, timed, rival, refused, ok), ...originSignals(timed, Math.min(kept.length, params.attributionMaxPieces)), ...twinSignals, ...preferSignals, launchesInRun, attributionStepped: stepped, attributionCentreKm: centre, attributionRivalCentreKm: rivalCentre }));
     if (!ok) continue;
     raised++;
     named.add(number);
@@ -1161,6 +1243,8 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
     for (const [name, value] of [["originTried", o.tried], ["originTimed", o.timed], ["originDev50Hours", o.dev50Hours], ["originDev75Hours", o.dev75Hours], ["originSpreadHours", o.spreadHours], ["originAgeDays", o.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round5(value);
     if (event.byOrigin) [evidence.sigmaMinutes, evidence.eventByOrigin] = [round5(event.sigmaMinutes), 1];
     if (twins.length > 0) evidence.twins = twins.length;
+    if (preferred) evidence.preferredFrom = byCentre;
+    if (byCentre !== centred) evidence.convergedFrom = centred;
     const words = [
       `${kept.length} fresh piece${kept.length === 1 ? "" : "s"} under launch ${launch.key} (${kept.map((p) => p.number).join(", ")}), numbered above the catalogue's mark and first published after the cloud's first set, in the plane of ${number} (distance ${kept.map((p) => p.distance.toFixed(1)).join(", ")} to the nearest plane of the launch's bodies), their semi-major axes centred ${centre.toFixed(1)} km from its, moving ${judgement.reading.deltaVMps.toFixed(1)} m/s from it: a breakup of ${number}, attributed from the pieces with no step seen on it`,
       timingReason(timed!, number),
@@ -1236,8 +1320,9 @@ function judgeLaunches(context: RunContext): void {
         // The launch must be old enough for its new bodies not to be its own, and quiet enough in the year before for them not to be an old cloud's backlog.
         if (verdict.launchAgeDays < params.youngLaunchDays) refused |= REFUSALS.youngLaunch;
         if (verdict.rate > params.confirmBackgroundMax) refused |= REFUSALS.background;
-        // A crewed station's pieces are released on purpose: they confirm nothing, its reboosts least of all.
+        // A crewed station's pieces are released on purpose: they confirm nothing, its reboosts least of all; and so are a crewed or cargo craft's, but for its rocket body's.
         if (params.stationLaunches.includes(key)) refused |= REFUSALS.station;
+        if (visitingRelease(key, alert.bodyClass, params)) refused |= REFUSALS.visiting;
       }
       // On an analyst range, the pieces that lie within the plane bound of another open alert's parent too: the plane test does not name this one alone.
       const shared = analyst ? confirming.filter((piece) => piece.within.length > 1).length : 0;
@@ -1266,6 +1351,10 @@ function judgeLaunches(context: RunContext): void {
         if (originOn(params) && Math.min(pieces.length, params.attributionMaxPieces) >= params.originMinPieces && (timed === null || !passesOrigin(timed.origin, params))) {
           refused |= REFUSALS.origin;
           extra.push(`the pieces' crossings of ${state.number} do not share an instant: the late pieces of an old cloud, not this step's`);
+        }
+        if (!analyst && params.smallBatchStepsToo && !passesSmallBatch(pieces.length, timed, params)) {
+          refused |= REFUSALS.smallBatch;
+          extra.push(smallBatchReason(pieces.length, timed, state.number, params));
         }
         if (timed !== null && timed.origin.timed >= 2 && (verdict.launchAgeDays - timed.origin.ageDays < params.originLaunchMarginDays || Math.abs(timed.origin.medianAt - alert.candidate.tStep) / HOUR_MS > params.originStepHoursMax)) {
           refused |= REFUSALS.origin;
@@ -1363,7 +1452,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
   const launches = input.launches as Map<string, unknown>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [] };
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
   if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {

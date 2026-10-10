@@ -77,6 +77,8 @@
       "exemptLaunch": "1998-067",
       "exempt": "objects released from the station on purpose, not a breakup",
       "note": "The catalogue lists what the station jettisons (tanks, tools, covers) as debris; a burst of them is a release, not a breakup."
-    }
+    },
+    { "name": "shenzhou-12-releases", "exemptLaunch": "2021-053", "exempt": "objects released from a crewed spacecraft on purpose, not a breakup", "note": "The owner's decision of the eleventh phase: a crewed spacecraft's or a station's cargo craft's pieces are released on purpose, as a station's; the catalogue's burst under Shenzhou-12's launch (its orbital module's) is exempt as the station's are. NASA's own reports of a Shenzhou module's debris stay scoreable." },
+    { "name": "shenzhou-14-releases", "exemptLaunch": "2022-060", "exempt": "objects released from a crewed spacecraft on purpose, not a breakup", "note": "As shenzhou-12-releases, for the burst under Shenzhou-14's launch." }
   ]
 }
