@@ -1,4 +1,5 @@
-import { ALERT_STATES, launchOf, yearOf, type Breakup, type BreakupKind, type Confidence, type Notice, type Regime, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, DETECTOR_PARAMETERS, dayOf, endedByOf, inScope, launchOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf, yearOf, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type Notice, type Regime, type ScopeSubject, type Step, type Verdict } from "../../src/index.ts";
+import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.ts";
 
 /**
@@ -121,6 +122,9 @@ export interface ScoredEvent {
   daysToConfirmation: number | null;
   /** The detector's estimate of the instant against the truth's, in minutes, where both state one. */
   timingErrorMinutes: number | null;
+  /** The parent at the event's lower edge as the scope reads it (`scope.ts`): its class, its status as of the event, its last set's orbit before the event, its age from launch and the days since its last persistent step in the year; and whether it is in the detector's scope. Absent on a year file scored before the scope existed. */
+  subject?: ScopeSubject;
+  scopeIn?: boolean;
 }
 
 /** One counted verdict of the year, with where it landed. */
@@ -141,6 +145,8 @@ export interface ScoredAlert {
   daysToConfirmation: number | null;
   /** The step's second edge, by which the alert's row in the log is found; null for a verdict with no step. */
   afterEpoch: number | null;
+  /** Whether the detector read the step's parent as in its scope and the step as through the scope's gates (the verdict's evidence); absent on a year file scored before the scope existed. */
+  scoped?: boolean;
 }
 
 /** A cloud verdict, for the review list. */
@@ -223,7 +229,37 @@ const hours = (ms: number): number => ms / 3_600_000;
  * truth: the year's rows are its targets, and the rows of the year before
  * and after lend their exempt windows and fragments across the boundary.
  */
-export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[], index: SetIndex, timeBasis: TimeBasis, notices: Notice[] = noticesOf(breakups)): YearScore {
+/** The days back the record of persistent steps is read for an event's parent: the record's own reach. */
+const RECORD_DAYS = 730;
+
+/**
+ * The parent of an event at the event's lower edge, as the scope reads it:
+ * the class and launch the body tables give, the status as of the event
+ * (dated, as the detector reads it for the scope), the orbit of its last
+ * set before the event (the truth's regime where it had none), and the
+ * days since the last persistent step the detector made on it in the year
+ * before the event, read from the year's verdicts (a step in the year
+ * before is not in them, so a parent quiet in this year reads quiet).
+ */
+export function subjectAt(parent: number, at: number, regime: Regime, index: SetIndex, verdicts: Verdict[], params: DetectorParameters): ScopeSubject {
+  const body = index.bodyOf(parent);
+  const orbit = index.orbitBefore(parent, at);
+  const launched = dayOf(body?.launch);
+  let last = Number.NEGATIVE_INFINITY;
+  for (const v of verdicts) if (v.number === parent && (v.state === "suspected" || v.state === "manoeuvre") && v.step !== null && v.step.afterEpoch < at - 3_600_000 && v.step.afterEpoch > at - RECORD_DAYS * DAY_MS) last = Math.max(last, v.step.afterEpoch);
+  const aKm = orbit === null ? Number.NaN : semiMajorAxisOf(orbit);
+  return {
+    bodyClass: body?.bodyClass ?? "unknown",
+    status: operationalAt({ opsStatus: opsStatusOf(body?.opsStatus), endedByMs: endedByOf(body?.endedOn), endedFromMs: dayOf(body?.endedFrom) }, at, { ...params, opsStatusDated: true }),
+    regime: orbit === null ? regime : regimeOf(orbit),
+    perigeeKm: orbit === null ? Number.NaN : aKm * (1 - orbit.eccentricity) - WGS84_EQUATORIAL_KM,
+    bstar: orbit === null ? Number.NaN : orbit.bstar,
+    ageDays: launched === null ? Number.NaN : (at - launched) / DAY_MS,
+    daysSinceStep: Number.isFinite(last) ? (at - last) / DAY_MS : Number.POSITIVE_INFINITY,
+  };
+}
+
+export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[], index: SetIndex, timeBasis: TimeBasis, notices: Notice[] = noticesOf(breakups), params: DetectorParameters = DETECTOR_PARAMETERS): YearScore {
   const rows = breakups.filter((b) => Math.abs(yearOf(b) - year) <= 1).map((b) => rowOf(b, index));
   const events: ScoredEvent[] = [];
   for (const row of rows) {
@@ -271,6 +307,9 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       daysToConfirmation: null,
       timingErrorMinutes: null,
     };
+    const subject = subjectAt(parent, row.from, breakup.orbit.regime, index, verdicts, params);
+    row.scored.subject = subject;
+    row.scored.scopeIn = inScope(subject, params.scope.policy);
     events.push(row.scored);
   }
   const alerts: ScoredAlert[] = [];
@@ -287,7 +326,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     // A confirmed verdict that lands as an alert of its own (a step the record read as a manoeuvre, promoted by the pieces, which raised no counted alert before) is confirmed as it lands.
     const land = (outcome: AlertOutcome, event: string | null, note: string, nearEvent: string | null = null): void => {
       const promoted = verdict.state === "confirmed" && outcome !== "confirmation";
-      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, nearEvent, note, confirmedAt: promoted ? verdict.raisedAt : null, daysToConfirmation: promoted ? 0 : null, afterEpoch: verdict.step?.afterEpoch ?? null });
+      alerts.push({ verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, state: verdict.state, outcome, event, nearEvent, note, confirmedAt: promoted ? verdict.raisedAt : null, daysToConfirmation: promoted ? 0 : null, afterEpoch: verdict.step?.afterEpoch ?? null, scoped: verdict.evidence.scoped === 1 });
     };
     // A confirmed verdict on a step already alerted: the confirmation of that alert.
     if (verdict.state === "confirmed" && verdict.step !== null) {

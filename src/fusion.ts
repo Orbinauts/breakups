@@ -145,7 +145,7 @@ export function judgeStep(evidence: StepEvidence, params: DetectorParameters): S
     const alike = siblings.launch + siblings.orbit;
     if (alike >= params.siblingsMin) explain(EXPLANATION_BITS.siblings, `${alike} other object${alike === 1 ? "" : "s"} (${siblings.launch} of the launch, ${siblings.orbit} of the shell) made a like step in the ${params.siblingWindowDays} days before: a coordinated manoeuvre`);
     if (deltaKm > 0 && isDeploying(evidence.ageDays, evidence.towardsMates, mates, params)) explain(EXPLANATION_BITS.deployment, `an object ${evidence.ageDays.toFixed(0)} days old climbing towards the altitude where the launch's ${mates.count} other payload${mates.count === 1 ? " flies" : "s fly"} (a semi-major axis of ${mates.medianAKm.toFixed(1)} km): deploying`);
-    if (params.opsStatusEvidence && isWorkingStatus(opsStatus)) explain(EXPLANATION_BITS.workingStatus, `the catalogue lists the object as ${opsStatus}, so it could have burned; the status is the catalogue's today`);
+    if (params.opsStatusEvidence && isWorkingStatus(opsStatus)) explain(EXPLANATION_BITS.workingStatus, params.opsStatusDated ? `the object was ${opsStatus} at the step (its end of contact came after it, or it works today), so it could have burned` : `the catalogue lists the object as ${opsStatus}, so it could have burned; the status is the catalogue's today`);
   }
   const signatures: string[] = [];
   let signatureBits = 0;
@@ -159,7 +159,7 @@ export function judgeStep(evidence: StepEvidence, params: DetectorParameters): S
   if (tests.dragTerm !== null) sign(SIGNATURE_BITS.dragTerm, tests.dragTerm);
   if (deltaKm < 0 && !evidence.disposalLike && evidence.n730 >= params.againstDragMinRaises && evidence.pastRaises === evidence.n730) sign(SIGNATURE_BITS.againstDrag, evidence.n730 === 0 ? `a lowering on an object with no step in its record: a move against drag` : `a lowering on an object whose ${evidence.n730} past step${evidence.n730 === 1 ? " was a raise" : "s were all raises"}: a move against drag that no make-up burn makes`);
   const recordSignatures = signatures.length;
-  if (params.opsStatusEvidence && params.nonoperationalOverrides && opsStatus === "nonoperational" && manoeuvreClass === "unique") sign(SIGNATURE_BITS.nonoperational, `the catalogue lists the object as nonoperational, so no manoeuvre explanation is owed; the status is the catalogue's today`);
+  if (params.opsStatusEvidence && params.nonoperationalOverrides && opsStatus === "nonoperational" && manoeuvreClass === "unique") sign(SIGNATURE_BITS.nonoperational, params.opsStatusDated ? `the object fell silent more than ${params.endedUnknownDays} days before the step, so no manoeuvre explanation is owed` : `the catalogue lists the object as nonoperational, so no manoeuvre explanation is owed; the status is the catalogue's today`);
   const nonoperational = (signatureBits & SIGNATURE_BITS.nonoperational) !== 0;
   const outweighed = independent >= params.independentOutweighs;
   const occasionalNonPayload = params.occasionalRaisesNonPayload && manoeuvreClass === "occasional" && !payload;
@@ -249,6 +249,8 @@ export interface OpenAlert {
   noticed: boolean;
   /** The last confirmation reading, where pieces in the parent's plane were judged; null where none came. */
   confirmation: ConfirmationReading | null;
+  /** Whether the scoped line has raised the step (a `scoped` verdict); absent on an alert written before the scope existed. */
+  scopedRaised?: boolean;
   /** The object's one-step-ahead residuals in the damage window after the step, by the epoch each belongs to, as the alert collected them from the ring; bounded. Absent on an alert written before the reading existed. */
   damage?: { epochs: number[]; residuals: number[] };
 }

@@ -157,6 +157,10 @@ export interface ArchivedBody {
   decay: string | null;
   /** The operational status code from the snapshot (`+`, `P`, `B`, `S`, `X`, `D`, `-`); null where blank or where the snapshot has no row; absent in a body table written before the status was carried (`annotate.ts` adds it). The status is the snapshot's, today's, not the year's. */
   opsStatus?: string | null;
+  /** The last day GCAT's stated end of transmission of the payload (its owners' last contact) may fall on, as an ISO day (`gcat.ts`); null where GCAT believes the payload still transmitting, states no date, or has no payload row (every rocket body and piece of debris); absent in a body table written before the end dates were carried (`annotate.ts` adds it). Unlike the status, it is dated: it says when, so a replay can read it as of the step. */
+  endedOn?: string | null;
+  /** The first day that end may fall on (GCAT's dates are vague: `1998?` spans 1997 to 1999); null with `endedOn`. */
+  endedFrom?: string | null;
 }
 
 export interface BundleSource {

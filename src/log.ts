@@ -123,6 +123,10 @@ export const SIGNALS = {
   signatures: "count",
   explanationBits: "code",
   signatureBits: "code",
+  /** The scoped line, on a close row of a persistent step: the parent's age from its launch in days (NaN where the launch is not known), whether the parent was in the scope at the step (1) and whether the step also passed the scope's gates (1), by `DETECTOR_PARAMETERS.scope`. */
+  ageFromLaunchDays: "days",
+  scopeIn: "flag",
+  scoped: "flag",
   /** The fitted line's value at the centroid of the post sets in units of its sigma (the weighted mean step), at the second and third post set and at the close; the level at the first post set under-reads a step the catalogue's fit converged on over several sets. */
   zMean: "sigma",
   zMean2: "sigma",

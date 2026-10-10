@@ -52,7 +52,7 @@ export interface ScoreYearOptions extends ReplayOptions {
 export function replayAndScore(archive: string, year: number, truth: Truth, options: ScoreYearOptions = {}): { file: YearFile; result: ReplayResult } {
   const notices = options.notices ?? noticesOf(truth.breakups);
   const result = replayYear(archive, year, { ...options, notices });
-  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices);
+  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters });
   const file: YearFile = {
     format: 1,
     year,
@@ -77,7 +77,7 @@ export function rematch(archive: string, file: YearFile, truth: Truth): YearFile
   const notices = noticesOf(truth.breakups);
   const previous = existsSync(join(yearDir(archive, file.year - 1), "manifest.json")) ? loadSlice(archive, file.year - 1) : null;
   const index = indexOf(loadSlice(archive, file.year), previous);
-  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices) };
+  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...file.detector.parameters }) };
 }
 
 /** One year replayed and matched: the file as it is written. */
@@ -160,9 +160,10 @@ function summary(file: YearFile): string {
   const count = (status: string): number => events.filter((e) => e.status === status).length;
   const alerts = (outcome: string): number => file.score.alerts.filter((a) => a.outcome === outcome).length;
   const manoeuvres = file.verdicts.filter((v) => v.state === "manoeuvre").length;
+  const scoped = file.verdicts.filter((v) => v.state === "scoped").length;
   const confirmed = file.score.alerts.filter((a) => a.confirmedAt !== null);
   const start = file.carried ? "from the carried states" : file.warmup === null ? "cold" : `after ${file.warmup.runs} runs of ${file.warmup.year}`;
-  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length - alerts("confirmation")}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; confirmed ${confirmed.length} (${confirmed.filter((a) => a.outcome === "detection" || a.outcome === "late").length} on events); manoeuvres ${manoeuvres}; review ${file.score.review.length}`;
+  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length - alerts("confirmation")}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; confirmed ${confirmed.length} (${confirmed.filter((a) => a.outcome === "detection" || a.outcome === "late").length} on events); manoeuvres ${manoeuvres}; scoped ${scoped}; review ${file.score.review.length}`;
 }
 
 async function main(): Promise<void> {

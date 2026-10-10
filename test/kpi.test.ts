@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
-import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type Verdict } from "../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
-import { cellsOf, percentile, readmeTables, renderLatest, splitYears, type Latest } from "../scripts/kpi/kpi.ts";
-import { brackets, lineOf, marginDaysOf, noticesOf } from "../scripts/kpi/match.ts";
+import { alertKey, cellsOf, percentile, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
+import { brackets, lineOf, marginDaysOf, noticesOf, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
 import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
 import { readStates, writeStates } from "../scripts/kpi/states.ts";
@@ -263,7 +263,10 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [lines, alertsTable, tiers, confirmed] = readmeTables(latest);
+    const [lines, scoped, alertsTable, tiers, confirmed] = readmeTables(latest);
+    // The scoped line: the synthetic bodies carry no launch day, so no parent is known to be five years old and the scope leaves every headline event out, which the table says.
+    expect(scoped).toContain("| The whole catalogue | 2 | 1 | 1 | 1 | 0 |");
+    expect(scoped).toContain("| Scoped | 0 | 0 | 0 | 0 | 0 | – | 0 | – | 3 of 3 |");
     expect(tiers).toContain("| 2 post sets over 18 h, or 3 (as raised) | 3 | 1 | 1 | 50% | 100% | 44.0 (44.0) |");
     expect(confirmed).toContain("| Events the catalogue reported (new bodies under the launch within 90 days) | 2 |");
     expect(confirmed).toContain("| Of which alerted on the parent (detected or late) | 2 |");
@@ -313,7 +316,7 @@ describe("the replay's runs", () => {
     const rows = sets.rows.filter((row) => row[0] === 40006).slice(0, 5).map((row) => [...row]);
     rows[1]![1] = "2020-06-01T00:00:00.000Z";
     const year = yearOf(rows, bodies);
-    const loaded: LoadedYear = { year: YEAR, manifest: year.manifest, bodies: year.bodies, byNumber: new Map(year.bodies.map((b) => [b.number, b])), statusByNumber: new Map(), columns: year.columns, order: Uint32Array.from(year.columns.rank.map((_, i) => i)), timeBasis: "epoch" };
+    const loaded: LoadedYear = { year: YEAR, manifest: year.manifest, bodies: year.bodies, byNumber: new Map(year.bodies.map((b) => [b.number, b])), statusByNumber: new Map(), endedByNumber: new Map(), endedFromByNumber: new Map(), launchedByNumber: new Map(), columns: year.columns, order: Uint32Array.from(year.columns.rank.map((_, i) => i)), timeBasis: "epoch" };
     const runs = [...runsOf(loaded)].filter((run) => run.sets.length > 0);
     // The wild set moves the clock a day past the set before it, not seven years, and the sets after it run on their own days.
     expect(runs.map((run) => [new Date(run.now).toISOString().slice(0, 13), run.sets.map((s) => new Date(s.epochMs).toISOString().slice(0, 10))])).toEqual([
@@ -327,7 +330,7 @@ describe("the replay's runs", () => {
 
   test("an Archive set becomes the light row the detector reads", () => {
     const row = fromArchivedSet({ number: 25544, epoch: at(1, 1), meanMotion: 15.5, eccentricity: 0.0007, inclination: 51.6, raan: 100, argOfPerigee: 200, meanAnomaly: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, revAtEpoch: 1, rank: 1, created: at(1, 1, 3) }, { designator: "1998-067A", bodyClass: "payload" });
-    expect(row).toEqual({ number: 25544, designator: "1998-067A", epochMs: at(1, 1), createdMs: at(1, 1, 3), meanMotion: 15.5, eccentricity: 0.0007, inclinationDeg: 51.6, raanDeg: 100, argpDeg: 200, meanAnomalyDeg: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, bodyClass: "payload", opsStatus: "unknown" });
+    expect(row).toEqual({ number: 25544, designator: "1998-067A", epochMs: at(1, 1), createdMs: at(1, 1, 3), meanMotion: 15.5, eccentricity: 0.0007, inclinationDeg: 51.6, raanDeg: 100, argpDeg: 200, meanAnomalyDeg: 300, bstar: 1e-4, meanMotionDot: 1e-5, meanMotionDdot: 0, elementSetNumber: 999, bodyClass: "payload", opsStatus: "unknown", endedByMs: null, endedFromMs: null, launchedMs: null });
     expect(fromArchivedSet({ ...row, epoch: 0, inclination: 0, raan: 0, argOfPerigee: 0, meanAnomaly: 0, revAtEpoch: 0, rank: 2 }, undefined)).toMatchObject({ designator: null, createdMs: null, bodyClass: "unknown" });
   });
 });
@@ -402,5 +405,51 @@ describe("the matching rule's pieces", () => {
     expect(percentile([5, 1, 3], 50)).toBe(3);
     expect(percentile([5, 1, 3, 4], 10)).toBe(1);
     expect(percentile([5, 1, 3, 4], 90)).toBe(5);
+  });
+});
+
+describe("the scoped line", () => {
+  const DAY = 86_400_000;
+  const event = (id: string, parent: number, scopeIn: boolean, status: ScoredEvent["status"], line: ScoredEvent["line"] = "breakups A-B"): ScoredEvent => ({ id, name: id, kind: "breakup", confidence: "A", regime: "LEO", line, parent, launch: null, from: 0, to: 0, at: null, parentSetsBefore: 9, parentSetsAfter: 9, status, piecesWithin90Days: 0, catalogueAt: 10 * DAY, catalogueBody: null, catalogueBasis: "created", noticeAt: null, alert: null, alertAt: null, step: null, leadHours: null, latencyHours: null, confirmedAt: null, daysToConfirmation: null, timingErrorMinutes: null, scopeIn });
+  const alert = (number: number, outcome: ScoredAlert["outcome"], eventId: string | null, raisedAt: number, scoped: boolean): ScoredAlert => ({ verdict: 0, number, launch: null, raisedAt, state: "suspected", outcome, event: eventId, nearEvent: null, note: "", confirmedAt: null, daysToConfirmation: null, afterEpoch: raisedAt - DAY, scoped });
+  const score: YearScore = {
+    year: 2013,
+    timeBasis: "created",
+    events: [event("in, raised", 1, true, "detected"), event("in, gated out", 2, true, "detected"), event("in, held late", 3, true, "detected"), event("out", 4, false, "detected"), event("in, no sets", 5, true, "undetectable"), event("in, another line", 6, true, "detected", "breakups C")],
+    alerts: [alert(1, "detection", "in, raised", DAY, true), alert(2, "detection", "in, gated out", DAY, false), alert(3, "detection", "in, held late", 2 * DAY, true), alert(4, "detection", "out", DAY, true), alert(6, "detection", "in, another line", DAY, true), alert(7, "false-alarm", null, DAY, true), alert(8, "false-alarm", null, DAY, false), alert(9, "false-alarm", null, 3 * DAY, true)],
+    review: [],
+  };
+  const rows = new Map<string, LogRow>([
+    // The third target's step held to three days only after the catalogue's first fragment; the last false alarm's never held to three days.
+    [alertKey(3, DAY), { at: 0, number: 3, signals: { tierD3Held: 1, tierD3At: 11 * DAY } }],
+    [alertKey(1, 0), { at: 0, number: 1, signals: { tierD3Held: 1, tierD3At: 3 * DAY } }],
+    [alertKey(6, 0), { at: 0, number: 6, signals: { tierD3Held: 1, tierD3At: 3 * DAY } }],
+    [alertKey(7, 0), { at: 0, number: 7, signals: { tierD3Held: 1, tierD3At: 3 * DAY } }],
+    [alertKey(9, 2 * DAY), { at: 0, number: 9, signals: { tierD3Held: 0 } }],
+  ]);
+
+  test("counts the targets and the alerts in the scope alike, the excluded headline events stated, and the rates with their intervals", () => {
+    const c = scopedCellsOf([{ score }], rows, { ...DETECTOR_PARAMETERS.scope, tier: "raised" });
+    expect(c).toMatchObject({ targets: 3, undetectable: 1, detected: 2, late: 0, missed: 1, excluded: 1, headlineEvents: 5, detectedAllLines: 3, falseAlarms: 2 });
+    expect(c.detectionRate).toBeCloseTo(2 / 3, 9);
+    expect(c.falseAlarmRate).toBeCloseTo(2 / 5, 9);
+    expect(c.falseAlarmInterval![0]).toBeLessThan(0.4);
+    expect(c.falseAlarmInterval![1]).toBeGreaterThan(0.4);
+  });
+
+  test("at a tier, an alert is raised when its step held there: after the catalogue it is late, and a step that never held raises nothing", () => {
+    const c = scopedCellsOf([{ score }], rows, { ...DETECTOR_PARAMETERS.scope, tier: "D3" });
+    expect(c).toMatchObject({ targets: 3, detected: 1, late: 1, missed: 1, detectedAllLines: 2, falseAlarms: 1 });
+  });
+
+  test("the Wilson interval brackets the proportion and stays in the unit interval", () => {
+    expect(wilson(0, 0)).toBeNull();
+    const [low, high] = wilson(0, 2)!;
+    expect(low).toBe(0);
+    expect(high).toBeCloseTo(0.658, 3);
+    const [l, h] = wilson(9, 10)!;
+    expect(l).toBeLessThan(0.9);
+    expect(h).toBeGreaterThan(0.9);
+    expect(h).toBeLessThanOrEqual(1);
   });
 });

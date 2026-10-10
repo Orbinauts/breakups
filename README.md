@@ -55,40 +55,45 @@ by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 
 The scorecard replays the detector over the Archive, every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the ground truth. A target is a reported event whose parent had at least five public element sets in the sixty days before it; one with fewer is undetectable from public elements and listed apart. A detection is an alert on the parent's own orbit, raised before the first fragment's element set was published and before any notice; the same alert after that is late; an alert matching no reported event is a false alarm. The headline line is breakups reported to the day or better, scored on the odd years, held out from the even years the thresholds are fitted on; the other lines are shown so nothing is mixed into it. The targets are nine in ten detected and fewer than one false alarm in ten. [kpi/latest.md](kpi/latest.md) carries every split, and [docs/decisions/0004](docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) the rule. The per-year files under `kpi/years/` (every verdict and every logged candidate, tens of megabytes a run) are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and are not committed; the aggregate is.
 
-**This is the sixth phase of the detector**, the parent-step channel read against the object's own record and, since this phase, against what else is public about the object and its company: whether the step returns it to an altitude it held in the last year (orbit maintenance), whether its launch-mates or shell-mates stepped alike in the fortnight before (a campaign), whether a young object is climbing towards where its launch-mates fly (deployment), and what the satellite catalogue says of its operational status. One explanation from outside the record outweighs the record's own breakup signatures; a satellite nonoperational today owes no manoeuvre explanation. The status is today's, so the backtest carries hindsight (a satellite that broke up is usually nonoperational today); the tables below are with the status read, and [docs/detector/d6-fitting.md](docs/detector/d6-fitting.md) gives the same with it off (8,278 validation false alarms instead of 4,764, the headline line unchanged) and what each discriminator removed and cost. A suspected step stays open for thirty days: pieces new by numbering, in the parent's plane and first published after it confirm it, a public notice confirms it, nothing expires it. The detection rate and the false alarms are the parent-step channel's: the fragments confirm, they do not detect, and the owner's definition scores the alert before them. The discriminators removed seven false alarms in ten; the false-alarm rate stays above 99%, since it is a ratio against sixteen detections. The tier table reads every alert's later sets, so the trade between waiting longer and false alarms is shown with the numbers in hand. The confirmed table is the product's second line: of the events the catalogue itself reported (new bodies under the launch within ninety days), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing, under the fifth phase's confirmation rules ([docs/detector/d5-fitting.md](docs/detector/d5-fitting.md)). [docs/detector/events.md](docs/detector/events.md) lists every reported event with the cause of its outcome. The odd years below were not looked at while choosing the thresholds.
+**This is the seventh phase of the detector.** The parent-step channel is read against the object's own record and against what else is public about the object and its company (a return to an altitude it held, launch-mates or shell-mates stepping alike, a young object climbing towards its launch-mates, whether it could have burned), and a suspected step stays open for thirty days for the pieces or a notice to confirm it. Since this phase the operational status is read as of the step, from the date GCAT gives for each payload's end of transmission, so the backtest no longer carries the hindsight of today's status; the false alarms on the held-out years fall from 4,764 to 3,155 with the headline line unchanged. The owner's target is nine breakups in ten detected and fewer than one false alarm in ten alerts. On the whole catalogue the detection rate is a third and the false-alarm rate above 99%. [docs/detector/d7-scope.md](docs/detector/d7-scope.md) tested thirty scopes (dead satellites, rocket bodies, low orbit, old objects, quiet records, low drag and their combinations), each applied alike to the reported events and the alerts, with every strict gate the log allows swept on the even years: none reaches the target at any operating point, and none comes near, because the steps left after the strictest gates look like the breakups' in every number the parent's data and its catalogue entry give. The second table below is the scoped line the sixth decision record set, the point nearest the target by a rule fixed before the odd years were read (parents launched five years or more before the step, a step of twenty sigma with a kick, held seven days): it cuts the false alarms fifty-fold and detects about one in eight of the headline breakups in its scope, at a false-alarm rate still near nine in ten, with the headline events it leaves out counted. The tier table reads every alert's later sets, so the trade between waiting and false alarms is shown with the numbers in hand. The confirmed table is the product's second line: of the events the catalogue itself reported (new bodies under the launch within ninety days), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing ([docs/detector/d5-fitting.md](docs/detector/d5-fitting.md)). [docs/detector/events.md](docs/detector/events.md) lists every reported event with the cause of its outcome. The odd years below were not looked at while choosing the thresholds or the scope.
 
 | Validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the target is 90%) | 32 | 6 | 11 | 2 | 19 | 34% |
-| Breakups, confidence C | 8 | 9 | 2 | 0 | 6 | 25% |
+| Breakups, confidence C | 8 | 9 | 1 | 0 | 7 | 13% |
 | Breakups, confidence D | 8 | 1 | 0 | 0 | 8 | 0% |
-| Anomalous events, confidence A and B | 9 | 1 | 1 | 2 | 6 | 11% |
-| Anomalous events, confidence C and D | 4 | 0 | 2 | 0 | 2 | 50% |
+| Anomalous events, confidence A and B | 9 | 1 | 0 | 2 | 7 | 0% |
+| Anomalous events, confidence C and D | 4 | 0 | 1 | 0 | 3 | 25% |
+
+| Breakups A and B, scoped, validation: the odd years (2005 to 2025, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| The whole catalogue | 32 | 6 | 11 | 2 | 19 | 34% (20% to 52%) | 3155 | 100% (99% to 100%) | 0 |
+| Scoped | 24 | 0 | 3 | 0 | 21 | 13% (4% to 31%) | 56 | 95% (86% to 98%) | 14 of 38 |
 
 | Alerts, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 4908 |
+| Alerts (object verdicts, suspected or confirmed) | 3296 |
 | Duplicates | 111 |
 | Exempt | 13 |
-| False alarms | 4764 |
+| False alarms | 3155 |
 | False-alarm rate (the target is under 10%) | 100% |
-| False alarms per 10,000 body-years | 256.7 |
+| False alarms per 10,000 body-years | 170.0 |
 | Lead over the catalogue, hours: median (10th percentile) | 479.0 (23.2) |
 | Latency from the event, hours: median (90th percentile) | 129.5 (1153.4) |
-| Confirmed share of the detections | 25% |
+| Confirmed share of the detections | 31% |
 | Days to confirmation, median | 4.0 |
 | Timing error, minutes, median | 34.6 |
 | Cloud verdicts, for review (a burst with no parent step) | 88 |
 
 | Precision per persistence tier, validation: the odd years (2005 to 2025, 11 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 post sets over 18 h, or 3 (as raised) | 4784 | 16 | 4764 | 0% | 100% | 479.0 (23.2) |
-| 3 post sets | 4248 | 16 | 4228 | 0% | 100% | 479.0 (23.2) |
-| 5 post sets | 3383 | 13 | 3366 | 0% | 81% | 576.1 (94.0) |
-| 1 day of post sets | 3789 | 13 | 3772 | 0% | 81% | 576.1 (94.0) |
-| 3 days of post sets | 3035 | 13 | 3018 | 0% | 81% | 564.1 (54.0) |
-| 5 days of post sets | 2607 | 11 | 2590 | 0% | 69% | 557.0 (156.0) |
-| 7 days of post sets | 2288 | 10 | 2274 | 0% | 63% | 529.0 (88.0) |
+| 2 post sets over 18 h, or 3 (as raised) | 3172 | 13 | 3155 | 0% | 100% | 479.0 (23.2) |
+| 3 post sets | 2678 | 13 | 2661 | 0% | 100% | 479.0 (23.2) |
+| 5 post sets | 2042 | 11 | 2027 | 1% | 85% | 576.1 (94.0) |
+| 1 day of post sets | 2301 | 11 | 2286 | 0% | 85% | 576.1 (94.0) |
+| 3 days of post sets | 1835 | 11 | 1820 | 1% | 85% | 564.1 (54.0) |
+| 5 days of post sets | 1598 | 9 | 1583 | 1% | 69% | 557.0 (156.0) |
+| 7 days of post sets | 1435 | 8 | 1423 | 1% | 62% | 529.0 (88.0) |
 
 | The confirmed line, validation: the odd years (2005 to 2025, 11 years) | Count |
 | --- | --- |
@@ -138,7 +143,7 @@ Where sources disagree, the time comes from the source that states it most finel
 
 ## The Archive
 
-The detector is backtested over the Archive: every catalogued object's element sets from 2005 to today, stripped to the fields the detector reads (the six mean elements, the drag terms, the element set number, the publication order) and stored one year at a time as compressed columns beside a table of the objects, joined to a snapshot of the satellite catalogue (CelesTrak) and to the space-weather indices of each day (GFZ Potsdam's Kp, ap and F10.7, CC BY 4.0; NASA OMNI2's Dst). It is built on a maintainer's machine from the public catalogue's yearly bundles of two-line sets and from its history class for the current year, by the scripts under `scripts/archive/`, and published as assets of this repository's `archive-v1` release with a manifest of hashes; `npm run archive:download -- 2024 2025` fetches years into `../breakups-archive`, verifying each. Neither the bundles nor the Archive are ever committed. [docs/decisions/0003](docs/decisions/0003-the-archive-is-a-release-asset-never-in-git.md) says why.
+The detector is backtested over the Archive: every catalogued object's element sets from 2005 to today, stripped to the fields the detector reads (the six mean elements, the drag terms, the element set number, the publication order) and stored one year at a time as compressed columns beside a table of the objects, joined to a snapshot of the satellite catalogue (CelesTrak), to the dates GCAT's payload catalogue gives for each payload's end of transmission (J. McDowell, planet4589.org, CC-BY-4.0), and to the space-weather indices of each day (GFZ Potsdam's Kp, ap and F10.7, CC BY 4.0; NASA OMNI2's Dst). It is built on a maintainer's machine from the public catalogue's yearly bundles of two-line sets and from its history class for the current year, by the scripts under `scripts/archive/`, and published as assets of this repository's `archive-v1` release with a manifest of hashes; `npm run archive:download -- 2024 2025` fetches years into `../breakups-archive`, verifying each. Neither the bundles nor the Archive are ever committed. [docs/decisions/0003](docs/decisions/0003-the-archive-is-a-release-asset-never-in-git.md) says why.
 
 ## Runtimes
 

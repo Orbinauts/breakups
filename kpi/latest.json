@@ -6,7 +6,7 @@
   },
   "truthSha256": "39adb42981417b688d4c67f2f73a7b20af9789fdffeadbf4f04fbfcd5618e68f",
   "detector": {
-    "name": "fusion-v5",
+    "name": "scoped-v6",
     "parameters": {
       "ringSize": 32,
       "windowSets": {
@@ -136,6 +136,8 @@
       "siblingOrbitAltitudeKm": 50,
       "deployAgeDays": 180,
       "opsStatusEvidence": true,
+      "opsStatusDated": true,
+      "endedUnknownDays": 30,
       "nonoperationalOverrides": true,
       "againstDragMinRaises": 1000000,
       "geometryKickMinMps": 0,
@@ -143,6 +145,28 @@
       "explanationsForNonPayloads": true,
       "damageFromDays": 14,
       "damageToDays": 28,
+      "scope": {
+        "policy": {
+          "classes": [],
+          "payloadsNotWorking": false,
+          "unknownPayloads": false,
+          "regimes": [],
+          "perigeeMinKm": null,
+          "perigeeMaxKm": null,
+          "minAgeDays": 1825,
+          "quietDays": 0,
+          "bstarMax": null
+        },
+        "gates": {
+          "zMin": 20,
+          "deltaMinKm": 0,
+          "deltaVMinMps": 0.03,
+          "bstarRatioMin": 2,
+          "consistencyMin": 100,
+          "unexplainedOnly": false
+        },
+        "tier": "D7"
+      },
       "eventGridSeconds": 60,
       "eventLeadHours": 6,
       "eventSigmaPositionKm": 1,
@@ -356,10 +380,10 @@
         "breakups C": {
           "targets": 8,
           "undetectable": 9,
-          "detected": 2,
+          "detected": 1,
           "late": 0,
-          "missed": 6,
-          "detectionRate": 0.25
+          "missed": 7,
+          "detectionRate": 0.125
         },
         "breakups D": {
           "targets": 8,
@@ -372,32 +396,32 @@
         "anomalous A-B": {
           "targets": 9,
           "undetectable": 1,
-          "detected": 1,
+          "detected": 0,
           "late": 2,
-          "missed": 6,
-          "detectionRate": 0.1111111111111111
+          "missed": 7,
+          "detectionRate": 0
         },
         "anomalous C-D": {
           "targets": 4,
           "undetectable": 0,
-          "detected": 2,
+          "detected": 1,
           "late": 0,
-          "missed": 2,
-          "detectionRate": 0.5
+          "missed": 3,
+          "detectionRate": 0.25
         }
       },
-      "alerts": 4908,
+      "alerts": 3296,
       "duplicates": 111,
       "exempt": 13,
-      "falseAlarms": 4764,
+      "falseAlarms": 3155,
       "review": 88,
       "tiers": [
         {
           "tier": "2",
-          "raised": 4784,
-          "detections": 16,
-          "falseAlarms": 4764,
-          "precision": 0.0033472803347280333,
+          "raised": 3172,
+          "detections": 13,
+          "falseAlarms": 3155,
+          "precision": 0.004103535353535354,
           "detectionShare": 1,
           "leadHours": {
             "median": 479.0000000800239,
@@ -407,10 +431,10 @@
         },
         {
           "tier": "3",
-          "raised": 4248,
-          "detections": 16,
-          "falseAlarms": 4228,
-          "precision": 0.003770028275212064,
+          "raised": 2678,
+          "detections": 13,
+          "falseAlarms": 2661,
+          "precision": 0.0048616305160807775,
           "detectionShare": 1,
           "leadHours": {
             "median": 479.0000000800239,
@@ -420,11 +444,11 @@
         },
         {
           "tier": "5",
-          "raised": 3383,
-          "detections": 13,
-          "falseAlarms": 3366,
-          "precision": 0.0038472920982539215,
-          "detectionShare": 0.8125,
+          "raised": 2042,
+          "detections": 11,
+          "falseAlarms": 2027,
+          "precision": 0.005397448478900883,
+          "detectionShare": 0.8461538461538461,
           "leadHours": {
             "median": 576.1433076799859,
             "tail": 94,
@@ -433,11 +457,11 @@
         },
         {
           "tier": "D1",
-          "raised": 3789,
-          "detections": 13,
-          "falseAlarms": 3772,
-          "precision": 0.0034346103038309117,
-          "detectionShare": 0.8125,
+          "raised": 2301,
+          "detections": 11,
+          "falseAlarms": 2286,
+          "precision": 0.00478885502829778,
+          "detectionShare": 0.8461538461538461,
           "leadHours": {
             "median": 576.1433076799859,
             "tail": 94,
@@ -446,11 +470,11 @@
         },
         {
           "tier": "D3",
-          "raised": 3035,
-          "detections": 13,
-          "falseAlarms": 3018,
-          "precision": 0.004289013526888816,
-          "detectionShare": 0.8125,
+          "raised": 1835,
+          "detections": 11,
+          "falseAlarms": 1820,
+          "precision": 0.006007646095030038,
+          "detectionShare": 0.8461538461538461,
           "leadHours": {
             "median": 564.1433076799859,
             "tail": 54,
@@ -459,11 +483,11 @@
         },
         {
           "tier": "D5",
-          "raised": 2607,
-          "detections": 11,
-          "falseAlarms": 2590,
-          "precision": 0.004229142637447136,
-          "detectionShare": 0.6875,
+          "raised": 1598,
+          "detections": 9,
+          "falseAlarms": 1583,
+          "precision": 0.005653266331658292,
+          "detectionShare": 0.6923076923076923,
           "leadHours": {
             "median": 557.0000000800238,
             "tail": 156.00000008002388,
@@ -472,11 +496,11 @@
         },
         {
           "tier": "D7",
-          "raised": 2288,
-          "detections": 10,
-          "falseAlarms": 2274,
-          "precision": 0.0043782837127845885,
-          "detectionShare": 0.625,
+          "raised": 1435,
+          "detections": 8,
+          "falseAlarms": 1423,
+          "precision": 0.005590496156533892,
+          "detectionShare": 0.6153846153846154,
           "leadHours": {
             "median": 529.0000000800238,
             "tail": 88.00000008002387,
@@ -510,9 +534,9 @@
         "withStatement": 0,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9966527196652719,
+      "falseAlarmRate": 0.9958964646464646,
       "bodyYears": 185557.5221240725,
-      "falseAlarmsPer10kBodyYears": 256.73979397151925,
+      "falseAlarmsPer10kBodyYears": 170.02813811505945,
       "leadHours": {
         "median": 479.0000000800239,
         "tail": 23.15933480000814,
@@ -521,19 +545,19 @@
       "latencyHours": {
         "median": 129.5,
         "tail": 1153.3833333333334,
-        "count": 16
+        "count": 13
       },
-      "confirmedShare": 0.25,
+      "confirmedShare": 0.3076923076923077,
       "daysToConfirmation": 4,
       "timingErrorMinutes": 34.64925600179036,
       "byRegime": {
         "LEO": {
           "targets": 35,
           "undetectable": 10,
-          "detected": 11,
+          "detected": 10,
           "late": 4,
-          "missed": 20,
-          "detectionRate": 0.3142857142857143
+          "missed": 21,
+          "detectionRate": 0.2857142857142857
         },
         "MEO": {
           "targets": 3,
@@ -546,10 +570,10 @@
         "GEO": {
           "targets": 3,
           "undetectable": 0,
-          "detected": 3,
+          "detected": 1,
           "late": 0,
-          "missed": 0,
-          "detectionRate": 1
+          "missed": 2,
+          "detectionRate": 0.3333333333333333
         },
         "HEO": {
           "targets": 13,
@@ -572,18 +596,18 @@
         "breakup": {
           "targets": 48,
           "undetectable": 16,
-          "detected": 13,
+          "detected": 12,
           "late": 2,
-          "missed": 33,
-          "detectionRate": 0.2708333333333333
+          "missed": 34,
+          "detectionRate": 0.25
         },
         "anomalous": {
           "targets": 13,
           "undetectable": 1,
-          "detected": 3,
+          "detected": 1,
           "late": 2,
-          "missed": 8,
-          "detectionRate": 0.23076923076923078
+          "missed": 10,
+          "detectionRate": 0.07692307692307693
         },
         "aerodynamic": {
           "targets": 0,
@@ -609,6 +633,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 24,
+        "undetectable": 0,
+        "detected": 3,
+        "late": 0,
+        "missed": 21,
+        "excluded": 14,
+        "headlineEvents": 38,
+        "detectedAllLines": 3,
+        "falseAlarms": 56,
+        "detectionRate": 0.125,
+        "detectionInterval": [
+          0.04344255039315584,
+          0.3100428814785757
+        ],
+        "falseAlarmRate": 0.9491525423728814,
+        "falseAlarmInterval": [
+          0.8608327667771333,
+          0.9825575988405467
+        ]
       }
     },
     "train": {
@@ -667,18 +712,18 @@
           "detectionRate": 0
         }
       },
-      "alerts": 4659,
+      "alerts": 3161,
       "duplicates": 134,
-      "exempt": 40,
-      "falseAlarms": 4455,
+      "exempt": 32,
+      "falseAlarms": 2965,
       "review": 71,
       "tiers": [
         {
           "tier": "2",
-          "raised": 4485,
+          "raised": 2995,
           "detections": 23,
-          "falseAlarms": 4455,
-          "precision": 0.00513622152746762,
+          "falseAlarms": 2965,
+          "precision": 0.007697456492637216,
           "detectionShare": 1,
           "leadHours": {
             "median": 290.73937815999346,
@@ -688,10 +733,10 @@
         },
         {
           "tier": "3",
-          "raised": 4402,
+          "raised": 2912,
           "detections": 22,
-          "falseAlarms": 4373,
-          "precision": 0.005005688282138794,
+          "falseAlarms": 2883,
+          "precision": 0.007573149741824441,
           "detectionShare": 0.9565217391304348,
           "leadHours": {
             "median": 290.73937815999346,
@@ -701,10 +746,10 @@
         },
         {
           "tier": "5",
-          "raised": 3514,
+          "raised": 2242,
           "detections": 17,
-          "falseAlarms": 3491,
-          "precision": 0.004846066134549601,
+          "falseAlarms": 2219,
+          "precision": 0.007602862254025045,
           "detectionShare": 0.7391304347826086,
           "leadHours": {
             "median": 282.73937815999346,
@@ -714,10 +759,10 @@
         },
         {
           "tier": "D1",
-          "raised": 3894,
+          "raised": 2492,
           "detections": 21,
-          "falseAlarms": 3869,
-          "precision": 0.005398457583547558,
+          "falseAlarms": 2467,
+          "precision": 0.008440514469453377,
           "detectionShare": 0.9130434782608695,
           "leadHours": {
             "median": 290.73937815999346,
@@ -727,10 +772,10 @@
         },
         {
           "tier": "D3",
-          "raised": 3012,
+          "raised": 1926,
           "detections": 17,
-          "falseAlarms": 2990,
-          "precision": 0.005653475224476222,
+          "falseAlarms": 1904,
+          "precision": 0.008849557522123894,
           "detectionShare": 0.7391304347826086,
           "leadHours": {
             "median": 290.73937815999346,
@@ -740,10 +785,10 @@
         },
         {
           "tier": "D5",
-          "raised": 2637,
+          "raised": 1717,
           "detections": 11,
-          "falseAlarms": 2621,
-          "precision": 0.004179331306990881,
+          "falseAlarms": 1701,
+          "precision": 0.006425233644859813,
           "detectionShare": 0.4782608695652174,
           "leadHours": {
             "median": 290.73937815999346,
@@ -753,10 +798,10 @@
         },
         {
           "tier": "D7",
-          "raised": 2259,
+          "raised": 1482,
           "detections": 8,
-          "falseAlarms": 2246,
-          "precision": 0.00354924578527063,
+          "falseAlarms": 1469,
+          "precision": 0.005416384563303994,
           "detectionShare": 0.34782608695652173,
           "leadHours": {
             "median": 410.5288,
@@ -791,9 +836,9 @@
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9948637784725324,
+      "falseAlarmRate": 0.9923025435073628,
       "bodyYears": 190898.26758990643,
-      "falseAlarmsPer10kBodyYears": 233.3703734583055,
+      "falseAlarmsPer10kBodyYears": 155.31832936113935,
       "leadHours": {
         "median": 290.73937815999346,
         "tail": 81.60032655999078,
@@ -890,6 +935,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 25,
+        "undetectable": 0,
+        "detected": 4,
+        "late": 0,
+        "missed": 21,
+        "excluded": 25,
+        "headlineEvents": 50,
+        "detectedAllLines": 5,
+        "falseAlarms": 26,
+        "detectionRate": 0.16,
+        "detectionInterval": [
+          0.06403347608577989,
+          0.34654013980238163
+        ],
+        "falseAlarmRate": 0.8387096774193549,
+        "falseAlarmInterval": [
+          0.6736529727502113,
+          0.9290748009456007
+        ]
       }
     },
     "all": {
@@ -929,10 +995,10 @@
         "breakups C": {
           "targets": 18,
           "undetectable": 14,
-          "detected": 6,
+          "detected": 5,
           "late": 1,
-          "missed": 11,
-          "detectionRate": 0.3333333333333333
+          "missed": 12,
+          "detectionRate": 0.2777777777777778
         },
         "breakups D": {
           "targets": 23,
@@ -945,32 +1011,32 @@
         "anomalous A-B": {
           "targets": 14,
           "undetectable": 3,
-          "detected": 2,
+          "detected": 1,
           "late": 2,
-          "missed": 10,
-          "detectionRate": 0.14285714285714285
+          "missed": 11,
+          "detectionRate": 0.07142857142857142
         },
         "anomalous C-D": {
           "targets": 10,
           "undetectable": 1,
-          "detected": 2,
+          "detected": 1,
           "late": 2,
-          "missed": 6,
-          "detectionRate": 0.2
+          "missed": 7,
+          "detectionRate": 0.1
         }
       },
-      "alerts": 9567,
+      "alerts": 6457,
       "duplicates": 245,
-      "exempt": 53,
-      "falseAlarms": 9219,
+      "exempt": 45,
+      "falseAlarms": 6120,
       "review": 159,
       "tiers": [
         {
           "tier": "2",
-          "raised": 9269,
-          "detections": 39,
-          "falseAlarms": 9219,
-          "precision": 0.004212572909915748,
+          "raised": 6167,
+          "detections": 36,
+          "falseAlarms": 6120,
+          "precision": 0.005847953216374269,
           "detectionShare": 1,
           "leadHours": {
             "median": 296.8338755999756,
@@ -980,11 +1046,11 @@
         },
         {
           "tier": "3",
-          "raised": 8650,
-          "detections": 38,
-          "falseAlarms": 8601,
-          "precision": 0.004398657251996759,
-          "detectionShare": 0.9743589743589743,
+          "raised": 5590,
+          "detections": 35,
+          "falseAlarms": 5544,
+          "precision": 0.006273525721455458,
+          "detectionShare": 0.9722222222222222,
           "leadHours": {
             "median": 296.8338755999756,
             "tail": 81.60032655999078,
@@ -993,11 +1059,11 @@
         },
         {
           "tier": "5",
-          "raised": 6897,
-          "detections": 30,
-          "falseAlarms": 6857,
-          "precision": 0.004356033105851605,
-          "detectionShare": 0.7692307692307693,
+          "raised": 4284,
+          "detections": 28,
+          "falseAlarms": 4246,
+          "precision": 0.006551240056153486,
+          "detectionShare": 0.7777777777777778,
           "leadHours": {
             "median": 410.5288,
             "tail": 68.44429807996961,
@@ -1006,11 +1072,11 @@
         },
         {
           "tier": "D1",
-          "raised": 7683,
-          "detections": 34,
-          "falseAlarms": 7641,
-          "precision": 0.004429967426710098,
-          "detectionShare": 0.8717948717948718,
+          "raised": 4793,
+          "detections": 32,
+          "falseAlarms": 4753,
+          "precision": 0.006687565308254964,
+          "detectionShare": 0.8888888888888888,
           "leadHours": {
             "median": 576.1433076799859,
             "tail": 81.60032655999078,
@@ -1019,11 +1085,11 @@
         },
         {
           "tier": "D3",
-          "raised": 6047,
-          "detections": 30,
-          "falseAlarms": 6008,
-          "precision": 0.004968532626697582,
-          "detectionShare": 0.7692307692307693,
+          "raised": 3761,
+          "detections": 28,
+          "falseAlarms": 3724,
+          "precision": 0.007462686567164179,
+          "detectionShare": 0.7777777777777778,
           "leadHours": {
             "median": 564.1433076799859,
             "tail": 20.444298079969617,
@@ -1032,11 +1098,11 @@
         },
         {
           "tier": "D5",
-          "raised": 5244,
-          "detections": 22,
-          "falseAlarms": 5211,
-          "precision": 0.004204089432447927,
-          "detectionShare": 0.5641025641025641,
+          "raised": 3315,
+          "detections": 20,
+          "falseAlarms": 3284,
+          "precision": 0.006053268765133172,
+          "detectionShare": 0.5555555555555556,
           "leadHours": {
             "median": 512.1433076799859,
             "tail": 30.197930080023873,
@@ -1045,11 +1111,11 @@
         },
         {
           "tier": "D7",
-          "raised": 4547,
-          "detections": 18,
-          "falseAlarms": 4520,
-          "precision": 0.003966505068312032,
-          "detectionShare": 0.46153846153846156,
+          "raised": 2917,
+          "detections": 16,
+          "falseAlarms": 2892,
+          "precision": 0.005502063273727648,
+          "detectionShare": 0.4444444444444444,
           "leadHours": {
             "median": 529.0000000800238,
             "tail": 88.00000008002387,
@@ -1083,30 +1149,30 @@
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9957874270900843,
+      "falseAlarmRate": 0.9941520467836257,
       "bodyYears": 376455.78971397894,
-      "falseAlarmsPer10kBodyYears": 244.88931374928114,
+      "falseAlarmsPer10kBodyYears": 162.5688903509709,
       "leadHours": {
         "median": 296.8338755999756,
         "tail": 81.60032655999078,
         "count": 24
       },
       "latencyHours": {
-        "median": 132,
+        "median": 131.31666666666666,
         "tail": 622.65,
-        "count": 39
+        "count": 36
       },
-      "confirmedShare": 0.23076923076923078,
+      "confirmedShare": 0.25,
       "daysToConfirmation": 4,
       "timingErrorMinutes": 299.7406071777344,
       "byRegime": {
         "LEO": {
           "targets": 77,
           "undetectable": 23,
-          "detected": 24,
+          "detected": 23,
           "late": 8,
-          "missed": 45,
-          "detectionRate": 0.3116883116883117
+          "missed": 46,
+          "detectionRate": 0.2987012987012987
         },
         "MEO": {
           "targets": 7,
@@ -1119,10 +1185,10 @@
         "GEO": {
           "targets": 6,
           "undetectable": 0,
-          "detected": 6,
+          "detected": 4,
           "late": 0,
-          "missed": 0,
-          "detectionRate": 1
+          "missed": 2,
+          "detectionRate": 0.6666666666666666
         },
         "HEO": {
           "targets": 30,
@@ -1145,18 +1211,18 @@
         "breakup": {
           "targets": 116,
           "undetectable": 31,
-          "detected": 35,
+          "detected": 34,
           "late": 7,
-          "missed": 74,
-          "detectionRate": 0.3017241379310345
+          "missed": 75,
+          "detectionRate": 0.29310344827586204
         },
         "anomalous": {
           "targets": 24,
           "undetectable": 4,
-          "detected": 4,
+          "detected": 2,
           "late": 4,
-          "missed": 16,
-          "detectionRate": 0.16666666666666666
+          "missed": 18,
+          "detectionRate": 0.08333333333333333
         },
         "aerodynamic": {
           "targets": 0,
@@ -1182,6 +1248,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 49,
+        "undetectable": 0,
+        "detected": 7,
+        "late": 0,
+        "missed": 42,
+        "excluded": 39,
+        "headlineEvents": 88,
+        "detectedAllLines": 8,
+        "falseAlarms": 82,
+        "detectionRate": 0.14285714285714285,
+        "detectionInterval": [
+          0.07096333720544586,
+          0.2666797318916292
+        ],
+        "falseAlarmRate": 0.9111111111111111,
+        "falseAlarmInterval": [
+          0.8342928001780632,
+          0.9542700546752215
+        ]
       }
     },
     "recent": {
@@ -1232,18 +1319,18 @@
           "detectionRate": null
         }
       },
-      "alerts": 1141,
+      "alerts": 975,
       "duplicates": 11,
-      "exempt": 32,
-      "falseAlarms": 1092,
+      "exempt": 24,
+      "falseAlarms": 934,
       "review": 2,
       "tiers": [
         {
           "tier": "2",
-          "raised": 1098,
+          "raised": 940,
           "detections": 6,
-          "falseAlarms": 1092,
-          "precision": 0.00546448087431694,
+          "falseAlarms": 934,
+          "precision": 0.006382978723404255,
           "detectionShare": 1,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1253,10 +1340,10 @@
         },
         {
           "tier": "3",
-          "raised": 1059,
+          "raised": 897,
           "detections": 5,
-          "falseAlarms": 1054,
-          "precision": 0.004721435316336166,
+          "falseAlarms": 892,
+          "precision": 0.005574136008918618,
           "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1266,10 +1353,10 @@
         },
         {
           "tier": "5",
-          "raised": 788,
+          "raised": 643,
           "detections": 4,
-          "falseAlarms": 784,
-          "precision": 0.005076142131979695,
+          "falseAlarms": 639,
+          "precision": 0.006220839813374806,
           "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1279,10 +1366,10 @@
         },
         {
           "tier": "D1",
-          "raised": 854,
+          "raised": 694,
           "detections": 5,
-          "falseAlarms": 849,
-          "precision": 0.00585480093676815,
+          "falseAlarms": 689,
+          "precision": 0.007204610951008645,
           "detectionShare": 0.8333333333333334,
           "leadHours": {
             "median": 103.79803576002332,
@@ -1292,10 +1379,10 @@
         },
         {
           "tier": "D3",
-          "raised": 605,
+          "raised": 506,
           "detections": 4,
-          "falseAlarms": 601,
-          "precision": 0.006611570247933884,
+          "falseAlarms": 502,
+          "precision": 0.007905138339920948,
           "detectionShare": 0.6666666666666666,
           "leadHours": {
             "median": 71.79803576002332,
@@ -1305,10 +1392,10 @@
         },
         {
           "tier": "D5",
-          "raised": 518,
+          "raised": 433,
           "detections": 3,
-          "falseAlarms": 514,
-          "precision": 0.005802707930367505,
+          "falseAlarms": 429,
+          "precision": 0.006944444444444444,
           "detectionShare": 0.5,
           "leadHours": {
             "median": 290.73937815999346,
@@ -1318,10 +1405,10 @@
         },
         {
           "tier": "D7",
-          "raised": 429,
+          "raised": 355,
           "detections": 2,
-          "falseAlarms": 426,
-          "precision": 0.004672897196261682,
+          "falseAlarms": 352,
+          "precision": 0.005649717514124294,
           "detectionShare": 0.3333333333333333,
           "leadHours": {
             "median": 254.7393781599935,
@@ -1348,9 +1435,9 @@
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.994535519125683,
+      "falseAlarmRate": 0.9936170212765958,
       "bodyYears": 77551.85267166856,
-      "falseAlarmsPer10kBodyYears": 140.80901517894134,
+      "falseAlarmsPer10kBodyYears": 120.43554961275751,
       "leadHours": {
         "median": 103.79803576002332,
         "tail": 103.79803576002332,
@@ -1447,6 +1534,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 4,
+        "undetectable": 0,
+        "detected": 0,
+        "late": 0,
+        "missed": 4,
+        "excluded": 2,
+        "headlineEvents": 6,
+        "detectedAllLines": 1,
+        "falseAlarms": 8,
+        "detectionRate": 0,
+        "detectionInterval": [
+          0,
+          0.48990002040399916
+        ],
+        "falseAlarmRate": 0.8888888888888888,
+        "falseAlarmInterval": [
+          0.5649937852319399,
+          0.9801096286728694
+        ]
       }
     },
     "chronologicalTrain": {
@@ -1477,10 +1585,10 @@
         "breakups C": {
           "targets": 10,
           "undetectable": 12,
-          "detected": 2,
+          "detected": 1,
           "late": 0,
-          "missed": 8,
-          "detectionRate": 0.2
+          "missed": 9,
+          "detectionRate": 0.1
         },
         "breakups D": {
           "targets": 16,
@@ -1493,32 +1601,32 @@
         "anomalous A-B": {
           "targets": 12,
           "undetectable": 0,
-          "detected": 2,
+          "detected": 1,
           "late": 2,
-          "missed": 8,
-          "detectionRate": 0.16666666666666666
+          "missed": 9,
+          "detectionRate": 0.08333333333333333
         },
         "anomalous C-D": {
           "targets": 9,
           "undetectable": 1,
-          "detected": 2,
+          "detected": 1,
           "late": 2,
-          "missed": 5,
-          "detectionRate": 0.2222222222222222
+          "missed": 6,
+          "detectionRate": 0.1111111111111111
         }
       },
-      "alerts": 5211,
+      "alerts": 3398,
       "duplicates": 163,
       "exempt": 17,
-      "falseAlarms": 5001,
+      "falseAlarms": 3191,
       "review": 140,
       "tiers": [
         {
           "tier": "2",
-          "raised": 5031,
-          "detections": 22,
-          "falseAlarms": 5001,
-          "precision": 0.00437985267768266,
+          "raised": 3218,
+          "detections": 19,
+          "falseAlarms": 3191,
+          "precision": 0.005919003115264798,
           "detectionShare": 1,
           "leadHours": {
             "median": 248.00000008002388,
@@ -1528,10 +1636,10 @@
         },
         {
           "tier": "3",
-          "raised": 4473,
-          "detections": 22,
-          "falseAlarms": 4443,
-          "precision": 0.004927211646136618,
+          "raised": 2702,
+          "detections": 19,
+          "falseAlarms": 2675,
+          "precision": 0.007052709725315516,
           "detectionShare": 1,
           "leadHours": {
             "median": 248.00000008002388,
@@ -1541,11 +1649,11 @@
         },
         {
           "tier": "5",
-          "raised": 3612,
-          "detections": 15,
-          "falseAlarms": 3590,
-          "precision": 0.004160887656033287,
-          "detectionShare": 0.6818181818181818,
+          "raised": 2092,
+          "detections": 13,
+          "falseAlarms": 2072,
+          "precision": 0.006235011990407674,
+          "detectionShare": 0.6842105263157895,
           "leadHours": {
             "median": 187.5454985599772,
             "tail": 68.44429807996961,
@@ -1554,11 +1662,11 @@
         },
         {
           "tier": "D1",
-          "raised": 4104,
-          "detections": 18,
-          "falseAlarms": 4081,
-          "precision": 0.004391314954867041,
-          "detectionShare": 0.8181818181818182,
+          "raised": 2424,
+          "detections": 16,
+          "falseAlarms": 2403,
+          "precision": 0.006614303431169905,
+          "detectionShare": 0.8421052631578947,
           "leadHours": {
             "median": 187.5454985599772,
             "tail": 68.44429807996961,
@@ -1567,11 +1675,11 @@
         },
         {
           "tier": "D3",
-          "raised": 3386,
-          "detections": 15,
-          "falseAlarms": 3365,
-          "precision": 0.004437869822485207,
-          "detectionShare": 0.6818181818181818,
+          "raised": 1976,
+          "detections": 13,
+          "falseAlarms": 1957,
+          "precision": 0.006598984771573604,
+          "detectionShare": 0.6842105263157895,
           "leadHours": {
             "median": 156.00000008002388,
             "tail": 20.444298079969617,
@@ -1580,11 +1688,11 @@
         },
         {
           "tier": "D5",
-          "raised": 2957,
-          "detections": 10,
-          "falseAlarms": 2941,
-          "precision": 0.003388681802778719,
-          "detectionShare": 0.45454545454545453,
+          "raised": 1751,
+          "detections": 8,
+          "falseAlarms": 1737,
+          "precision": 0.004584527220630372,
+          "detectionShare": 0.42105263157894735,
           "leadHours": {
             "median": 156.00000008002388,
             "tail": 20.444298079969617,
@@ -1593,11 +1701,11 @@
         },
         {
           "tier": "D7",
-          "raised": 2593,
-          "detections": 8,
-          "falseAlarms": 2581,
-          "precision": 0.003089996137504828,
-          "detectionShare": 0.36363636363636365,
+          "raised": 1577,
+          "detections": 6,
+          "falseAlarms": 1567,
+          "precision": 0.003814367450731087,
+          "detectionShare": 0.3157894736842105,
           "leadHours": {
             "median": 529.0000000800238,
             "tail": 88.00000008002387,
@@ -1631,9 +1739,9 @@
         "withStatement": 0,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9956201473223173,
+      "falseAlarmRate": 0.9940809968847352,
       "bodyYears": 174084.31202902232,
-      "falseAlarmsPer10kBodyYears": 287.2745936558754,
+      "falseAlarmsPer10kBodyYears": 183.30198527412483,
       "leadHours": {
         "median": 248.00000008002388,
         "tail": 52.999999919976126,
@@ -1641,20 +1749,20 @@
       },
       "latencyHours": {
         "median": 123.8,
-        "tail": 504,
-        "count": 22
+        "tail": 1153.3833333333334,
+        "count": 19
       },
-      "confirmedShare": 0.3181818181818182,
+      "confirmedShare": 0.3684210526315789,
       "daysToConfirmation": 4,
-      "timingErrorMinutes": 328.29304799804686,
+      "timingErrorMinutes": 582.9541279988607,
       "byRegime": {
         "LEO": {
           "targets": 45,
           "undetectable": 13,
-          "detected": 13,
+          "detected": 12,
           "late": 6,
-          "missed": 26,
-          "detectionRate": 0.28888888888888886
+          "missed": 27,
+          "detectionRate": 0.26666666666666666
         },
         "MEO": {
           "targets": 5,
@@ -1667,10 +1775,10 @@
         "GEO": {
           "targets": 3,
           "undetectable": 0,
-          "detected": 3,
+          "detected": 1,
           "late": 0,
-          "missed": 0,
-          "detectionRate": 1
+          "missed": 2,
+          "detectionRate": 0.3333333333333333
         },
         "HEO": {
           "targets": 22,
@@ -1693,18 +1801,18 @@
         "breakup": {
           "targets": 70,
           "undetectable": 19,
-          "detected": 18,
+          "detected": 17,
           "late": 4,
-          "missed": 48,
-          "detectionRate": 0.2571428571428571
+          "missed": 49,
+          "detectionRate": 0.24285714285714285
         },
         "anomalous": {
           "targets": 21,
           "undetectable": 1,
-          "detected": 4,
+          "detected": 2,
           "late": 4,
-          "missed": 13,
-          "detectionRate": 0.19047619047619047
+          "missed": 15,
+          "detectionRate": 0.09523809523809523
         },
         "aerodynamic": {
           "targets": 0,
@@ -1730,6 +1838,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 26,
+        "undetectable": 0,
+        "detected": 4,
+        "late": 0,
+        "missed": 22,
+        "excluded": 25,
+        "headlineEvents": 51,
+        "detectedAllLines": 4,
+        "falseAlarms": 39,
+        "detectionRate": 0.15384615384615385,
+        "detectionInterval": [
+          0.06149933998929477,
+          0.33531584418313565
+        ],
+        "falseAlarmRate": 0.9069767441860465,
+        "falseAlarmInterval": [
+          0.7839701160146733,
+          0.9632289548966535
+        ]
       }
     },
     "chronologicalValidation": {
@@ -1786,18 +1915,18 @@
           "detectionRate": 0
         }
       },
-      "alerts": 4356,
+      "alerts": 3059,
       "duplicates": 82,
-      "exempt": 36,
-      "falseAlarms": 4218,
+      "exempt": 28,
+      "falseAlarms": 2929,
       "review": 19,
       "tiers": [
         {
           "tier": "2",
-          "raised": 4238,
+          "raised": 2949,
           "detections": 17,
-          "falseAlarms": 4218,
-          "precision": 0.004014167650531287,
+          "falseAlarms": 2929,
+          "precision": 0.005770536320434488,
           "detectionShare": 1,
           "leadHours": {
             "median": 718.5288,
@@ -1807,10 +1936,10 @@
         },
         {
           "tier": "3",
-          "raised": 4177,
+          "raised": 2888,
           "detections": 16,
-          "falseAlarms": 4158,
-          "precision": 0.003833253473885961,
+          "falseAlarms": 2869,
+          "precision": 0.005545927209705373,
           "detectionShare": 0.9411764705882353,
           "leadHours": {
             "median": 718.5288,
@@ -1820,10 +1949,10 @@
         },
         {
           "tier": "5",
-          "raised": 3285,
+          "raised": 2192,
           "detections": 15,
-          "falseAlarms": 3267,
-          "precision": 0.004570383912248629,
+          "falseAlarms": 2174,
+          "precision": 0.006852444038373686,
           "detectionShare": 0.8823529411764706,
           "leadHours": {
             "median": 576.1433076799859,
@@ -1833,10 +1962,10 @@
         },
         {
           "tier": "D1",
-          "raised": 3579,
+          "raised": 2369,
           "detections": 16,
-          "falseAlarms": 3560,
-          "precision": 0.0044742729306487695,
+          "falseAlarms": 2350,
+          "precision": 0.006762468300929839,
           "detectionShare": 0.9411764705882353,
           "leadHours": {
             "median": 718.5288,
@@ -1846,10 +1975,10 @@
         },
         {
           "tier": "D3",
-          "raised": 2661,
+          "raised": 1785,
           "detections": 15,
-          "falseAlarms": 2643,
-          "precision": 0.0056433408577878106,
+          "falseAlarms": 1767,
+          "precision": 0.008417508417508417,
           "detectionShare": 0.8823529411764706,
           "leadHours": {
             "median": 718.5288,
@@ -1859,10 +1988,10 @@
         },
         {
           "tier": "D5",
-          "raised": 2287,
+          "raised": 1564,
           "detections": 12,
-          "falseAlarms": 2270,
-          "precision": 0.0052585451358457495,
+          "falseAlarms": 1547,
+          "precision": 0.007697241821680564,
           "detectionShare": 0.7058823529411765,
           "leadHours": {
             "median": 512.1433076799859,
@@ -1872,10 +2001,10 @@
         },
         {
           "tier": "D7",
-          "raised": 1954,
+          "raised": 1340,
           "detections": 10,
-          "falseAlarms": 1939,
-          "precision": 0.00513083632632119,
+          "falseAlarms": 1325,
+          "precision": 0.00749063670411985,
           "detectionShare": 0.5882352941176471,
           "leadHours": {
             "median": 410.5288,
@@ -1890,7 +2019,7 @@
         "ofExempt": 1,
         "ofFalseAlarms": 3,
         "ofNearEvent": 1,
-        "daysToConfirmation": 1.5,
+        "daysToConfirmation": 0,
         "precision": 0.42857142857142855,
         "precisionByParent": 0.5714285714285714,
         "reported": 33,
@@ -1910,9 +2039,9 @@
         "withStatement": 1,
         "beforeStatement": 0
       },
-      "falseAlarmRate": 0.9959858323494687,
+      "falseAlarmRate": 0.9942294636795656,
       "bodyYears": 202371.4776849566,
-      "falseAlarmsPer10kBodyYears": 208.42858135208186,
+      "falseAlarmsPer10kBodyYears": 144.7338347037098,
       "leadHours": {
         "median": 718.5288,
         "tail": 81.60032655999078,
@@ -2009,6 +2138,27 @@
           "missed": 0,
           "detectionRate": null
         }
+      },
+      "scoped": {
+        "targets": 23,
+        "undetectable": 0,
+        "detected": 3,
+        "late": 0,
+        "missed": 20,
+        "excluded": 14,
+        "headlineEvents": 37,
+        "detectedAllLines": 4,
+        "falseAlarms": 43,
+        "detectionRate": 0.13043478260869565,
+        "detectionInterval": [
+          0.04537576514344702,
+          0.32127897973018194
+        ],
+        "falseAlarmRate": 0.9148936170212766,
+        "falseAlarmInterval": [
+          0.8006819480497736,
+          0.9664064205302869
+        ]
       }
     }
   }

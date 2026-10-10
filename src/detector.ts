@@ -26,7 +26,11 @@ export type VerdictKind = (typeof VERDICT_KINDS)[number];
  * quiet body, shown so a reader sees it the moment it appears, counted by
  * nothing. `suspected`: the step persists across the sets that follow and
  * no manoeuvre explains it; this is the detection the scorecard counts, and
- * it must come before the fragments' sets are published. `confirmed`: the
+ * it must come before the fragments' sets are published. `scoped`: a
+ * suspected step on a parent inside the scoped line's population, through
+ * its gates and held to its tier (`scope.ts`): the scoped line's alert,
+ * raised once per step beside the suspected verdict it narrows, and scored
+ * on the scorecard's scoped line rather than the whole catalogue's. `confirmed`: the
  * fragments or a notice bore it out. `dismissed`: the next sets took the
  * step back, or every piece proved old. `expired`: nothing confirmed it in
  * the time allowed. `manoeuvre`: the step is one the object's own history
@@ -34,7 +38,7 @@ export type VerdictKind = (typeof VERDICT_KINDS)[number];
  * under a launch with no step on any parent, listed for review and never a
  * detection.
  */
-export const VERDICT_STATES = ["watch", "suspected", "confirmed", "dismissed", "expired", "manoeuvre", "cloud-only"] as const;
+export const VERDICT_STATES = ["watch", "suspected", "scoped", "confirmed", "dismissed", "expired", "manoeuvre", "cloud-only"] as const;
 export type VerdictState = (typeof VERDICT_STATES)[number];
 
 /** The states the scorecard counts as an alert on the object: a suspected step, or one already confirmed. */

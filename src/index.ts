@@ -37,7 +37,7 @@ export {
   type StatedTime,
   type Statement,
 } from "./truth.ts";
-export { GEOSYNCHRONOUS_MAX_ECCENTRICITY, OPS_STATUSES, apsidesOf, fromElements, isWorkingStatus, opsStatusOf, publishedNoEarlierThan, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus, type SetContext } from "./elements.ts";
+export { GEOSYNCHRONOUS_MAX_ECCENTRICITY, OPS_STATUSES, apsidesOf, dayOf, endedByOf, fromElements, isWorkingStatus, operationalAt, opsStatusOf, publishedNoEarlierThan, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus, type SetContext } from "./elements.ts";
 export {
   ALERT_STATES,
   DETECTOR_NAME,
@@ -71,3 +71,4 @@ export { estimateStep, fitSegment, type Environment, type SegmentFit, type StepE
 export { EXPLANATION_BITS, SIGNATURE_BITS, damageOf, judgeStep, persistent, type AlertOrigin, type ConfirmationReading, type OpenAlert, type PieceCounts, type StepEvidence, type StepJudgement, type TierKey, type TierPoint } from "./fusion.ts";
 export { ENVELOPE_MONTHS, heldLevel, isMaintenance, maintenanceToleranceKm, returnMissKm, monthOf, newEnvelope, noteLevel, snapshotEnvelope, type AltitudeEnvelope, type HeldLevel } from "./maintenance.ts";
 export { LEDGER_DAYS, LEDGER_MAX, isDeploying, matesOf, newLedger, noteLedgerStep, siblingsOf, similarSteps, towardsMates, type LedgerStep, type Mates, type Siblings, type StepLedger } from "./siblings.ts";
+export { OPEN_GATES, SCOPE_TIERS, WHOLE_CATALOGUE, foldedRatio, inScope, passesGates, type GatedStep, type ScopeGates, type ScopeParameters, type ScopePolicy, type ScopeSubject, type ScopeTier } from "./scope.ts";

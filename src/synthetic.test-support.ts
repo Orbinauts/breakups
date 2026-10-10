@@ -32,10 +32,12 @@ export interface SyntheticSet {
   meanMotionDot?: number;
 }
 
-/** What a test may set beside the orbit: the designator (the launch the object is filed under) and the catalogue's operational status. */
+/** What a test may set beside the orbit: the designator (the launch the object is filed under), the catalogue's operational status, the dated end of contact with it and its launch. */
 export interface SetExtras {
   designator?: string;
   opsStatus?: ElementSet["opsStatus"];
+  endedByMs?: number | null;
+  launchedMs?: number | null;
 }
 
 export function setOf(number: number, s: SyntheticSet, bodyClass: ElementSet["bodyClass"] = "payload", extras: SetExtras = {}): ElementSet {
@@ -56,6 +58,8 @@ export function setOf(number: number, s: SyntheticSet, bodyClass: ElementSet["bo
     elementSetNumber: 1,
     bodyClass,
     opsStatus: extras.opsStatus ?? "unknown",
+    ...(extras.endedByMs === undefined ? {} : { endedByMs: extras.endedByMs }),
+    ...(extras.launchedMs === undefined ? {} : { launchedMs: extras.launchedMs }),
   };
 }
 

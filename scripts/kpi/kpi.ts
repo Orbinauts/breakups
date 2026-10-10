@@ -1,4 +1,4 @@
-import { BREAKUP_KINDS, REGIMES, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type Verdict } from "../../src/index.ts";
+import { BREAKUP_KINDS, DETECTOR_PARAMETERS, REGIMES, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type ScopeParameters, type Verdict } from "../../src/index.ts";
 import type { Manifest } from "../archive/archive.ts";
 import { LINES, type Line, type YearScore } from "./match.ts";
 import { DAY_MS, type TimeBasis } from "./replay.ts";
@@ -125,6 +125,49 @@ export interface ConfirmedCells {
   beforeStatement: number;
 }
 
+/**
+ * The scoped line (`src/scope.ts`): the headline line restricted to the
+ * reported events whose parent was in the detector's scope at the event,
+ * and the alerts whose parent was in it at the step and whose step passed
+ * the scope's gates and held to its tier. A target is detected where such
+ * an alert on its parent and step came, at the tier's instant, before the
+ * catalogue's first fragment and any notice; late where it came after.
+ * The false alarms are such alerts matching no reported event. The
+ * false-alarm rate is over the detections on every line in the scope, as
+ * the whole-catalogue rate is; each rate carries its Wilson 95% interval,
+ * since the scoped counts are small; and the headline events the scope
+ * leaves out are counted, so a scope cannot reach its rate by leaving the
+ * events out unseen.
+ */
+export interface ScopedCells {
+  /** Headline targets in the scope, undetectable ones in it, and the outcomes. */
+  targets: number;
+  undetectable: number;
+  detected: number;
+  late: number;
+  missed: number;
+  /** Headline events (targets and undetectable) the scope leaves out, and all headline events. */
+  excluded: number;
+  headlineEvents: number;
+  /** Detections on every line in the scope, and the scoped false alarms. */
+  detectedAllLines: number;
+  falseAlarms: number;
+  detectionRate: number | null;
+  detectionInterval: [number, number] | null;
+  falseAlarmRate: number | null;
+  falseAlarmInterval: [number, number] | null;
+}
+
+/** The Wilson score interval of a proportion, 95%; null where n is zero. */
+export function wilson(k: number, n: number, z = 1.96): [number, number] | null {
+  if (n === 0) return null;
+  const p = k / n;
+  const denominator = 1 + (z * z) / n;
+  const centre = (p + (z * z) / (2 * n)) / denominator;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denominator;
+  return [Math.max(0, centre - half), Math.min(1, centre + half)];
+}
+
 export interface Cells {
   years: number[];
   lines: Record<Line, LineCells>;
@@ -147,6 +190,8 @@ export interface Cells {
   timingErrorMinutes: number | null;
   byRegime: Record<Regime, LineCells>;
   byKind: Record<BreakupKind, LineCells>;
+  /** The scoped line, where the year files carry the scope's readings. */
+  scoped: ScopedCells;
 }
 
 /** What a year's file carries: the replay's record, the matched score, every verdict and log row. */
@@ -242,12 +287,60 @@ export function tierCellsOf(alerts: TieredAlert[]): TierCells[] {
   });
 }
 
-/** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers. */
-export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map()): Cells {
+/** When a scoped alert would be raised: at its raising, or at the instant its step reached the scope's tier still holding (no earlier than the raising); null where it never did. */
+function scopedAt(alert: { raisedAt: number }, row: LogRow | undefined, tier: ScopeParameters["tier"]): number | null {
+  if (tier === "raised") return alert.raisedAt;
+  if (row?.signals[`tier${tier}Held`] !== 1) return null;
+  return Math.max(row.signals[`tier${tier}At`]!, alert.raisedAt);
+}
+
+/** The scoped line over a set of scored years. */
+export function scopedCellsOf(years: Pick<YearFile, "score">[], rows: AlertRows, scope: ScopeParameters): ScopedCells {
+  const c: ScopedCells = { targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, excluded: 0, headlineEvents: 0, detectedAllLines: 0, falseAlarms: 0, detectionRate: null, detectionInterval: null, falseAlarmRate: null, falseAlarmInterval: null };
+  for (const { score } of years) {
+    for (const event of score.events) {
+      const headline = event.line === "breakups A-B";
+      if (headline) c.headlineEvents++;
+      if (event.scopeIn !== true) {
+        if (headline) c.excluded++;
+        continue;
+      }
+      if (event.status === "undetectable") {
+        if (headline) c.undetectable++;
+        continue;
+      }
+      const deadline = Math.min(event.catalogueAt ?? Number.POSITIVE_INFINITY, event.noticeAt ?? Number.POSITIVE_INFINITY);
+      let at: number | null = null;
+      for (const alert of score.alerts.filter((a) => a.event === event.id && a.number === event.parent && a.scoped === true && (a.outcome === "detection" || a.outcome === "late" || a.outcome === "duplicate")).sort((a, b) => a.raisedAt - b.raisedAt)) {
+        at = scopedAt(alert, alert.afterEpoch === null ? undefined : rows.get(alertKey(alert.number, alert.afterEpoch)), scope.tier);
+        if (at !== null) break;
+      }
+      const outcome = at === null ? "missed" : at < deadline ? "detected" : "late";
+      if (outcome === "detected") c.detectedAllLines++;
+      if (!headline) continue;
+      c.targets++;
+      c[outcome]++;
+    }
+    for (const alert of score.alerts) {
+      if (alert.outcome !== "false-alarm" || alert.scoped !== true) continue;
+      if (scopedAt(alert, alert.afterEpoch === null ? undefined : rows.get(alertKey(alert.number, alert.afterEpoch)), scope.tier) !== null) c.falseAlarms++;
+    }
+  }
+  c.detectionRate = c.targets === 0 ? null : c.detected / c.targets;
+  c.detectionInterval = wilson(c.detected, c.targets);
+  const n = c.falseAlarms + c.detectedAllLines;
+  c.falseAlarmRate = n === 0 ? null : c.falseAlarms / n;
+  const precision = wilson(c.detectedAllLines, n);
+  c.falseAlarmInterval = precision === null ? null : [1 - precision[1], 1 - precision[0]];
+  return c;
+}
+
+/** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers and the scoped line's tier. */
+export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope): Cells {
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
@@ -361,7 +454,8 @@ export function splitYears(years: number[], split: SplitName): number[] {
 export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "truthSha256" | "detector">): Latest {
   const years = files.map((f) => f.year).sort((a, b) => a - b);
   const rows = alertRowsOf(files);
-  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows)])) as Record<SplitName, Cells>;
+  const scope = meta.detector.parameters.scope ?? DETECTOR_PARAMETERS.scope;
+  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope)])) as Record<SplitName, Cells>;
   const archive = Object.fromEntries(files.sort((a, b) => a.year - b.year).map((f) => [String(f.year), { ...f.archive, timeBasis: f.timeBasis }]));
   return { format: 1, ...meta, archive, years, splits };
 }
@@ -444,6 +538,23 @@ export function tiersTable(cells: Cells, title: string): string {
   );
 }
 
+const intervalCell = (rate: number | null, interval: [number, number] | null): string => (rate === null ? DASH : `${pct(rate)} (${interval === null ? DASH : `${pct(interval[0])} to ${pct(interval[1])}`})`);
+
+/** The table of a split's scoped line beside the whole catalogue's headline line: the targets, the outcomes, the detection rate and the false-alarm rate with their Wilson intervals, and the headline events the scope leaves out. */
+export function scopedTable(cells: Cells, title: string): string {
+  const s = cells.scoped;
+  const whole = cells.lines["breakups A-B"];
+  const allDetected = (Object.values(cells.lines) as LineCells[]).reduce((sum, line) => sum + line.detected, 0);
+  const wholeFa = wilson(allDetected, cells.falseAlarms + allDetected);
+  return table(
+    [title, "Targets", "Undetectable", "Detected", "Late", "Missed", "Detection rate (95% interval)", "False alarms", "False-alarm rate (95% interval)", "Headline events left out"],
+    [
+      ["The whole catalogue", whole.targets, whole.undetectable, whole.detected, whole.late, whole.missed, intervalCell(whole.detectionRate, wilson(whole.detected, whole.targets)), cells.falseAlarms, intervalCell(cells.falseAlarmRate, wholeFa === null ? null : [1 - wholeFa[1], 1 - wholeFa[0]]), 0],
+      ["Scoped", s.targets, s.undetectable, s.detected, s.late, s.missed, intervalCell(s.detectionRate, s.detectionInterval), s.falseAlarms, intervalCell(s.falseAlarmRate, s.falseAlarmInterval), `${s.excluded} of ${s.headlineEvents}`],
+    ],
+  );
+}
+
 /** The breakdown of a split's targets by regime and by kind. */
 export function breakdownTable(cells: Cells, title: string): string {
   const rows: (string | number)[][] = [];
@@ -459,7 +570,7 @@ export function readmeTables(latest: Latest): string[] {
   const cells = latest.splits.validation;
   const title = `${SPLIT_TITLES.validation} (${yearsOf(cells)})`;
   const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-  return [linesTable(cells, title), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The confirmed line, ${lower}`)];
+  return [linesTable(cells, title), scopedTable(cells, `Breakups A and B, scoped, ${lower}`), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The confirmed line, ${lower}`)];
 }
 
 /** The whole report: every split's tables, with the breakdown. */
@@ -467,16 +578,16 @@ export function renderLatest(latest: Latest): string {
   const sections = [
     "# The scorecard, as last run",
     "",
-    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first four tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
+    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first five tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
     "",
-    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The confirmed table is the product's second line: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing. The agencies' publication dates are not in the truth except for the notices, so the last two rows count those alone.",
+    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. The scoped table is the headline line restricted to the detector's scope (\`DETECTOR_PARAMETERS.scope\`, \`docs/detector/d7-scope.md\`): the reported events whose parent was in the scope at the event, and the alerts whose parent was in it at the step, whose step passed the scope's gates and held to its tier; its false-alarm rate is over the detections on every line in the scope, both rates carry their Wilson 95% intervals, and the headline events the scope leaves out are counted beside them. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The confirmed table is the product's second line: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing. The agencies' publication dates are not in the truth except for the notices, so the last two rows count those alone.",
     "",
   ];
   for (const split of SPLITS) {
     const cells = latest.splits[split];
     const title = `${SPLIT_TITLES[split]} (${yearsOf(cells)})`;
     const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The confirmed line, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
+    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", scopedTable(cells, `Breakups A and B, scoped, ${lower}`), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The confirmed line, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
   }
   sections.push("## The years", "", table(["Year", "Source", "Built", "Sets", "Bodies", "Timed by"], latest.years.map((year) => {
     const record = latest.archive[String(year)]!;

@@ -54,6 +54,20 @@ export interface ElementSet {
   bodyClass: BodyClass;
   /** What the satellite catalogue says of the object's operational status, where the caller has it; absent or `unknown` where it says nothing. It is the status as of the catalogue snapshot the caller read, which for a backtest is today's, not the set's day: the detector reads it as evidence under that caveat. */
   opsStatus?: OpsStatus;
+  /**
+   * The instant by which the object had fallen silent for good, its owners'
+   * last contact, in milliseconds since 1970, as a dated source gives it
+   * (GCAT's end of transmission for a payload: the midnight after the last day its stated end may fall on);
+   * null or absent where the caller has no date, which is every rocket body
+   * and piece of debris and every payload believed still in contact. Unlike
+   * `opsStatus` it says when, so the detector reads it as of the step
+   * (`operationalAt`).
+   */
+  endedByMs?: number | null;
+  /** The instant from which the object may have fallen silent, the start of the first day its stated end may fall on (GCAT's dates are vague: `1998?` spans 1997 to 1999); null or absent with `endedByMs`, or where the end is a single day. */
+  endedFromMs?: number | null;
+  /** The object's launch, in milliseconds since 1970 (the launch day's midnight), as the satellite catalogue gives it; null or absent where the caller has none. The scope reads the object's age from it (`scope.ts`). */
+  launchedMs?: number | null;
 }
 
 /**
@@ -95,12 +109,64 @@ export function opsStatusOf(code: string | null | undefined): OpsStatus {
 /** Whether the status says the object works today, in any of the catalogue's working grades. */
 export const isWorkingStatus = (status: OpsStatus | undefined): boolean => status === "operational" || status === "partially operational" || status === "backup" || status === "spare" || status === "extended mission";
 
+const DAY_MS = 86_400_000;
+
+/**
+ * The object's operational status at an instant, as the detector reads it
+ * for a step there. Read as of today (the parameter off), it is the
+ * caller's status, today's for a backtest, hindsight and all. Read as of
+ * the step (on), it is dated where the caller gives the window the
+ * object's end of contact falls in (the last time its owners could
+ * command it): a step more than `endedUnknownDays` before the window's
+ * first day is a commanded satellite's, so it reads `operational` (it
+ * could have burned); a step more than that after the window's last day
+ * is a dead one's, `nonoperational`; and a step within that margin of the
+ * window reads `unknown`, since the end of a satellite that broke up is
+ * often the breakup itself (GCAT dates Hitomi's to the day of it and
+ * Orbcomm FM16's to the month), so an end that close to the step may be
+ * the step's consequence. With no date, a status that says
+ * the object works today is kept (a satellite working today was working
+ * at any step of its life) and every other reads `unknown`: a satellite
+ * nonoperational or decayed today with no dated end may have worked at
+ * the step.
+ */
+export function operationalAt(set: Pick<ElementSet, "opsStatus" | "endedByMs" | "endedFromMs">, atMs: number, params: { opsStatusDated: boolean; endedUnknownDays: number }): OpsStatus {
+  const today = set.opsStatus ?? "unknown";
+  if (!params.opsStatusDated) return today;
+  const by = set.endedByMs;
+  if (by === null || by === undefined) return isWorkingStatus(today) ? today : "unknown";
+  const from = set.endedFromMs ?? by - DAY_MS;
+  const margin = params.endedUnknownDays * DAY_MS;
+  if (atMs + margin < from) return "operational";
+  if (atMs - margin >= by) return "nonoperational";
+  return "unknown";
+}
+
+/** The instant by which the object had fallen silent, from the last day the end may fall on (an ISO day): the midnight after it; null for null. */
+export function endedByOf(endedOn: string | null | undefined): number | null {
+  const day = dayOf(endedOn);
+  return day === null ? null : day + DAY_MS;
+}
+
+/** The midnight that starts an ISO day, in milliseconds since 1970; null for null or an empty string. */
+export function dayOf(day: string | null | undefined): number | null {
+  if (day === null || day === undefined || day === "") return null;
+  const ms = Date.parse(`${day.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isFinite(ms)) throw new Error(`not a day: ${day}`);
+  return ms;
+}
+
 /** What a caller knows of the object beyond its message: when the set was published, and what the object is. */
 export interface SetContext {
   createdMs?: number | null;
   bodyClass?: BodyClass;
   /** The catalogue's operational status code, or the status itself. */
   opsStatus?: OpsStatus | string | null;
+  /** The last and the first day the object's end of contact may fall on, as ISO days (GCAT's end of transmission for a payload); null where none is dated. */
+  endedOn?: string | null;
+  endedFrom?: string | null;
+  /** The launch day, as an ISO day; null where unknown. */
+  launchedOn?: string | null;
 }
 
 /**
@@ -128,6 +194,9 @@ export function fromElements(elements: Elements, context: SetContext = {}): Elem
     elementSetNumber: omm.ELEMENT_SET_NO,
     bodyClass: context.bodyClass ?? "unknown",
     opsStatus: (OPS_STATUSES as readonly string[]).includes(context.opsStatus ?? "") ? (context.opsStatus as OpsStatus) : opsStatusOf(context.opsStatus),
+    endedByMs: endedByOf(context.endedOn),
+    endedFromMs: dayOf(context.endedFrom),
+    launchedMs: dayOf(context.launchedOn),
   };
 }
 

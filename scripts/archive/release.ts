@@ -10,7 +10,8 @@ import { spaceDir } from "./space-weather.ts";
  * The Archive as release assets of this repository: one tarball per built
  * year (`archive-v1-<year>.tar`, the year's gzipped columns, body table
  * and manifest), one for the side files (`archive-v1-side.tar`: the
- * space-weather days and the satellite catalogue snapshot), and
+ * space-weather days, the satellite catalogue snapshot and GCAT's payload
+ * catalogue), and
  * `manifest.json` naming each asset's size and SHA-256. `npm run
  * archive:upload -- [years]` builds the tarballs and uploads them with the
  * GitHub CLI to the release `archive-v1`, creating it if need be; `npm run
@@ -41,7 +42,7 @@ export interface ReleaseManifest {
   writtenAt: string;
 }
 
-const CITATION = "Element sets from the public catalogue's yearly bundles and history, used under its blanket approval for redistribution of basic space-situational-awareness data with citation; space-weather indices from GFZ Potsdam (CC BY 4.0) and NASA OMNI2; the satellite catalogue from CelesTrak.";
+const CITATION = "Element sets from the public catalogue's yearly bundles and history, used under its blanket approval for redistribution of basic space-situational-awareness data with citation; space-weather indices from GFZ Potsdam (CC BY 4.0) and NASA OMNI2; the satellite catalogue from CelesTrak; the payloads' end of transmission from GCAT (J. McDowell, planet4589.org, CC-BY-4.0).";
 
 const yearAsset = (year: number): string => `${RELEASE_TAG}-${year}.tar`;
 const SIDE_ASSET = `${RELEASE_TAG}-side.tar`;
@@ -82,7 +83,7 @@ export function upload(archive: string, years: number[]): void {
   }
   if (existsSync(spaceDir(archive))) {
     const out = join(work, SIDE_ASSET);
-    execFileSync("tar", ["-cf", out, "-C", archive, "space", "satcat"]);
+    execFileSync("tar", ["-cf", out, "-C", archive, "space", "satcat", ...(existsSync(join(archive, "gcat")) ? ["gcat"] : [])]);
     manifest.side = { file: SIDE_ASSET, bytes: statSync(out).size, sha256: sha256File(out) };
     files.push(out);
   }

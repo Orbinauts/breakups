@@ -1,3 +1,4 @@
+import { OPEN_GATES, WHOLE_CATALOGUE, type ScopeParameters } from "./scope.ts";
 import type { Regime } from "./truth.ts";
 
 /**
@@ -178,6 +179,10 @@ export interface DetectorParameters {
   deployAgeDays: number;
   /** Whether the catalogue's operational status is read as evidence: a step on an object working today needs a breakup signature to be raised, a step on one nonoperational today needs no manoeuvre explanation. The status is the snapshot's, today's, so a backtest carries hindsight; off, the detector reads none of it. Policy, with the training split's evidence and the scorecard run both ways. */
   opsStatusEvidence: boolean;
+  /** Whether the status is read as of the step rather than as of today (`operationalAt` in `elements.ts`): where the caller gives the window the object's end of contact falls in (GCAT's end of transmission: after it the satellite cannot have been commanded), a satellite in contact until more than `endedUnknownDays` after the step could have burned at it, one silent from more than that before it was dead, and one within that margin of its end says nothing; where no end is dated, only a working status today is read (a satellite working today was working at the step), the rest as nothing. Off, today's status is read for every step. Policy: the dated reading removes the hindsight the fifth decision record states, and the seventh phase's scorecard runs it beside today's status and none. */
+  opsStatusDated: boolean;
+  /** The days either side of a dated end of contact within which a step reads the status as nothing: the end of a satellite that broke up is often set by the breakup itself (GCAT dates Hitomi's to the day of its breakup and Orbcomm FM16's to the month), so an end that close may be the event's consequence rather than a status it had, and a working satellite's last month may hold its disposal. Policy: thirty days, the alert's time to live. */
+  endedUnknownDays: number;
   /** Whether a nonoperational status voids the manoeuvre explanations that are not the object's own record (maintenance, siblings, deployment): the record is contemporaneous evidence that the object was moving itself then, the status is today's. Fitted on the training split. */
   nonoperationalOverrides: boolean;
   /** The fewest past raises for a lowering on an object whose record holds nothing but raises, and whose step is not disposal-shaped, to be the breakup pattern (a move against drag that no make-up burn makes): zero reads a lowering with no record as the pattern too; a value beyond reach turns the test off. Fitted on the training split. */
@@ -191,6 +196,8 @@ export interface DetectorParameters {
   /** The days after the step over which the object's one-step-ahead residual scatter is read for damage (tumbling or a changed shape), against its scatter before the step: from this many days to this many. Policy: the second to fourth week, once the post-step fit has settled and before the alert's time to live. */
   damageFromDays: number;
   damageToDays: number;
+  /** The scoped line (`scope.ts`): the population of parents it speaks for, as a predicate on the parent at the step, the gates a raised step on one must pass beyond the whole-catalogue line's, and the persistence tier the step must still hold at before the scoped line raises it. Every raised step carries whether its parent was in the scope and whether it passed the gates, and the scorecard scores the scoped line on the reported events in the scope and the alerts in it, the excluded share stated. Fitted on the training split: `d7-scope.md` records the hypotheses, the frontier and the choice. */
+  scope: ScopeParameters;
   /** The event-time search: the grid step in seconds, how many hours before the pre set's epoch the grid starts, and the position error of a published set, in kilometres, that divides the along-track slope for the time's sigma. Physical: a minute resolves an event to its revolution; a mean element set places an object to about a kilometre in low orbit. */
   eventGridSeconds: number;
   eventLeadHours: number;
@@ -290,6 +297,8 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   siblingOrbitAltitudeKm: 50,
   deployAgeDays: 180,
   opsStatusEvidence: true,
+  opsStatusDated: true,
+  endedUnknownDays: 30,
   nonoperationalOverrides: true,
   againstDragMinRaises: 1e6,
   geometryKickMinMps: 0,
@@ -297,6 +306,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   explanationsForNonPayloads: true,
   damageFromDays: 14,
   damageToDays: 28,
+  scope: { policy: { ...WHOLE_CATALOGUE, minAgeDays: 1825 }, gates: { ...OPEN_GATES, zMin: 20, deltaVMinMps: 0.03, bstarRatioMin: 2, consistencyMin: 100 }, tier: "D7" },
   eventGridSeconds: 60,
   eventLeadHours: 6,
   eventSigmaPositionKm: 1,
@@ -415,6 +425,8 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   siblingOrbitAltitudeKm: { kind: "policy", source: "a constellation's shells are tens of kilometres apart" },
   deployAgeDays: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat to half a year" },
   opsStatusEvidence: { kind: "policy", source: "d6-fitting.md and the fifth decision record: read as evidence with the hindsight stated, the scorecard run both ways" },
+  opsStatusDated: { kind: "policy", source: "d7-scope.md, the status as of the step: GCAT's dated end of transmission removes the hindsight of today's status" },
+  endedUnknownDays: { kind: "policy", source: "d7-scope.md: an end of contact within the alert's time to live of a step may be the breakup's own consequence (Hitomi's is the day of it, Orbcomm FM16's the month)" },
   nonoperationalOverrides: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: one headline hit for 143 false alarms" },
   againstDragMinRaises: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: from two raises the direction test reads it, from fewer it only costs" },
   geometryKickMinMps: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: any floor loses two headline hits" },
@@ -422,6 +434,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   explanationsForNonPayloads: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: 265 fewer, no training hit lost" },
   damageFromDays: { kind: "policy", source: "the second to fourth week after the step, once the post-step fit has settled" },
   damageToDays: { kind: "policy", source: "as damageFromDays" },
+  scope: { kind: "fitted", source: "d7-scope.md, the hypotheses on the training split: no scope reaches nine in ten at under one in ten; the point nearest the target, objects launched five years or more before the step, a step of 20 sigma with a kick (0.03 m/s along the track, chi-squared 100), the drag term changed two-fold, held seven days" },
   eventGridSeconds: { kind: "physical", source: "a minute resolves an event to its revolution" },
   eventLeadHours: { kind: "policy", source: "six hours before the pre set's epoch" },
   eventSigmaPositionKm: { kind: "physical", source: "a mean element set places an object to about a kilometre in low orbit" },

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { opsStatusOf, runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
+import { dayOf, endedByOf, opsStatusOf, runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
 import { readBodies, readColumn, readManifest, yearDir, type ArchivedBody, type ArchivedSet, type ColumnName, type Columns, type Manifest } from "../archive/archive.ts";
 import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
 
@@ -78,6 +78,12 @@ export interface LoadedYear {
   byNumber: Map<number, ArchivedBody>;
   /** The operational status of each body the table says something of (the snapshot's, today's); a body absent here is `unknown`. */
   statusByNumber: Map<number, OpsStatus>;
+  /** The instant by which each payload had fallen silent, where the table dates it (GCAT's end of transmission); a body absent here has no date. */
+  endedByNumber: Map<number, number>;
+  /** The first day each dated end of transmission may fall on. */
+  endedFromByNumber: Map<number, number>;
+  /** Each body's launch day, where the table gives it. */
+  launchedByNumber: Map<number, number>;
   columns: Columns;
   /** The set index at each position of the publication order. */
   order: Uint32Array;
@@ -95,7 +101,7 @@ export function loadYear(archive: string, year: number): LoadedYear {
   const order = orderOf(columns.rank as Uint32Array, year);
   const byNumber = new Map<number, ArchivedBody>();
   for (const body of bodies) byNumber.set(body.number, body);
-  return { year, manifest, bodies, byNumber, statusByNumber: statusMapOf(bodies), columns: columns as unknown as Columns, order, timeBasis: columns.created === undefined ? "epoch" : "created" };
+  return { year, manifest, bodies, byNumber, statusByNumber: statusMapOf(bodies), endedByNumber: endedMapOf(bodies), endedFromByNumber: dayMapOf(bodies, (body) => body.endedFrom), launchedByNumber: dayMapOf(bodies, (body) => body.launch), columns: columns as unknown as Columns, order, timeBasis: columns.created === undefined ? "epoch" : "created" };
 }
 
 /** The bodies' operational statuses by number, those the table says something of. */
@@ -108,8 +114,28 @@ export function statusMapOf(bodies: readonly ArchivedBody[]): Map<number, OpsSta
   return statuses;
 }
 
+/** The bodies' dated ends of operations by number, those the table dates. */
+export function endedMapOf(bodies: readonly ArchivedBody[]): Map<number, number> {
+  const ends = new Map<number, number>();
+  for (const body of bodies) {
+    const ended = endedByOf(body.endedOn);
+    if (ended !== null) ends.set(body.number, ended);
+  }
+  return ends;
+}
+
+/** A day the body table gives, by number, those it gives. */
+export function dayMapOf(bodies: readonly ArchivedBody[], dayOfBody: (body: ArchivedBody) => string | null | undefined): Map<number, number> {
+  const days = new Map<number, number>();
+  for (const body of bodies) {
+    const day = dayOf(dayOfBody(body));
+    if (day !== null) days.set(body.number, day);
+  }
+  return days;
+}
+
 /** The light row of an Archive set, with what the body table says of the object. */
-export function fromArchivedSet(set: ArchivedSet, body: Pick<ArchivedBody, "designator" | "bodyClass" | "opsStatus"> | undefined): ElementSet {
+export function fromArchivedSet(set: ArchivedSet, body: (Pick<ArchivedBody, "designator" | "bodyClass"> & Partial<Pick<ArchivedBody, "opsStatus" | "endedOn" | "endedFrom" | "launch">>) | undefined): ElementSet {
   return {
     number: set.number,
     designator: body?.designator ?? null,
@@ -127,6 +153,9 @@ export function fromArchivedSet(set: ArchivedSet, body: Pick<ArchivedBody, "desi
     elementSetNumber: set.elementSetNumber,
     bodyClass: body?.bodyClass ?? "unknown",
     opsStatus: opsStatusOf(body?.opsStatus),
+    endedByMs: endedByOf(body?.endedOn),
+    endedFromMs: dayOf(body?.endedFrom),
+    launchedMs: dayOf(body?.launch),
   };
 }
 
@@ -152,6 +181,9 @@ export function elementSetAt(loaded: LoadedYear, i: number): ElementSet {
     elementSetNumber: c.elementSetNumber[i]!,
     bodyClass: body?.bodyClass ?? "unknown",
     opsStatus: loaded.statusByNumber.get(number) ?? "unknown",
+    endedByMs: loaded.endedByNumber.get(number) ?? null,
+    endedFromMs: loaded.endedFromByNumber.get(number) ?? null,
+    launchedMs: loaded.launchedByNumber.get(number) ?? null,
   };
 }
 
@@ -236,9 +268,21 @@ export interface ReplayOptions {
 }
 
 /** The sets of a replayed year and its warm-up, as the matcher reads them: by object, with their epochs and publication bounds. */
+/** An object's orbit as one set gives it: the epoch, the mean motion in revolutions a day, the eccentricity and the drag term. */
+export interface OrbitSample {
+  epochMs: number;
+  meanMotion: number;
+  eccentricity: number;
+  bstar: number;
+}
+
 export interface SetIndex {
   /** How many sets of the object have an epoch in [from, to). */
   countSets(number: number, from: number, to: number): number;
+  /** The object's last set with an epoch before the instant, over the year and the one before; null where it has none. */
+  orbitBefore(number: number, at: number): OrbitSample | null;
+  /** What the body tables say of the object, the year's table first; undefined where neither lists it. */
+  bodyOf(number: number): ArchivedBody | undefined;
   /** The earliest a set of the object can have been published, over the year and its warm-up; null where it has none. */
   firstPublication(number: number): number | null;
   /** The earliest any set of the object with an epoch at or after `from` appeared in the catalogue's publication order, by the replay's clock; null where there is none. */
@@ -287,6 +331,10 @@ export interface YearSlice {
   epoch: Float64Array;
   published: Float64Array;
   clock: Float64Array;
+  /** The mean motion, the eccentricity and the drag term of each set, as the columns store them (the first two scaled by 1e8 and 1e7), so the matcher can read a parent's orbit at an event; absent on a slice written without them. */
+  meanMotion?: ArrayLike<number>;
+  eccentricity?: ArrayLike<number>;
+  bstar?: ArrayLike<number>;
 }
 
 /** The replay's clock at each set: the latest publication bound seen so far in publication order, leaping at most a day on any one set, as `runsOf` keeps it. */
@@ -305,7 +353,7 @@ export function clockOf(order: Uint32Array, published: Float64Array): Float64Arr
 
 function sliceOf(loaded: LoadedYear): YearSlice {
   const published = loaded.columns.created ?? loaded.columns.epoch;
-  return { year: loaded.year, bodies: loaded.bodies, byNumber: loaded.byNumber, epoch: loaded.columns.epoch, published, clock: clockOf(loaded.order, published) };
+  return { year: loaded.year, bodies: loaded.bodies, byNumber: loaded.byNumber, epoch: loaded.columns.epoch, published, clock: clockOf(loaded.order, published), meanMotion: loaded.columns.meanMotion, eccentricity: loaded.columns.eccentricity, bstar: loaded.columns.bstar };
 }
 
 /** The publication order of a year from its rank column: the set indices by ascending rank, gaps skipped; two sets sharing a rank is an error in the year. */
@@ -331,7 +379,7 @@ export function loadSlice(archive: string, year: number): YearSlice {
   const epoch = readColumn(dir, "epoch", manifest.sets) as Float64Array;
   const published = manifest.columns.includes("created") ? (readColumn(dir, "created", manifest.sets) as Float64Array) : epoch;
   const order = orderOf(readColumn(dir, "rank", manifest.sets) as Uint32Array, year);
-  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published, clock: clockOf(order, published) };
+  return { year, bodies, byNumber: new Map(bodies.map((body) => [body.number, body])), epoch, published, clock: clockOf(order, published), meanMotion: readColumn(dir, "meanMotion", manifest.sets), eccentricity: readColumn(dir, "eccentricity", manifest.sets), bstar: readColumn(dir, "bstar", manifest.sets) };
 }
 
 /** The matcher's index over a year's slice and the previous year's, where there is one. */
@@ -382,6 +430,21 @@ export function indexOf(current: YearSlice, previous: YearSlice | null): SetInde
         for (let i = body.first; i < body.first + body.count; i++) if (slice.epoch[i]! >= from && slice.clock[i]! < first) first = slice.clock[i]!;
       }
       return Number.isFinite(first) ? first : null;
+    },
+    orbitBefore(number, at) {
+      let best: OrbitSample | null = null;
+      for (const slice of slices) {
+        const body = slice.byNumber.get(number);
+        if (body === undefined || slice.meanMotion === undefined || slice.eccentricity === undefined || slice.bstar === undefined) continue;
+        for (let i = body.first; i < body.first + body.count; i++) {
+          const epoch = slice.epoch[i]!;
+          if (epoch < at && (best === null || epoch > best.epochMs)) best = { epochMs: epoch, meanMotion: slice.meanMotion[i]! / 1e8, eccentricity: slice.eccentricity[i]! / 1e7, bstar: slice.bstar[i]! };
+        }
+      }
+      return best;
+    },
+    bodyOf(number) {
+      return current.byNumber.get(number) ?? previous?.byNumber.get(number);
     },
     bodies: current.bodies,
     highWaterMark(at) {

@@ -1,6 +1,6 @@
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, EventEstimate, LogRow, Notice, Step, Verdict } from "./detector.ts";
-import { OPS_STATUSES, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
+import { OPS_STATUSES, operationalAt, regimeOf, semiMajorAxisOf, type ElementSet, type OpsStatus } from "./elements.ts";
 import { bandOf, environmentOf, statsFor, weatherOf, type BandStats, type Measurement, type Weather } from "./environment.ts";
 import { eventTimeOf } from "./event-time.ts";
 import { catalogueFor, cloudBodies, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, nearestCloudDistance, noteBody, noteCloud, piecesWithin, planeOrbitOf, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
@@ -13,6 +13,7 @@ import { median, predictAt, predictionSigma, type Fit, type Prediction } from ".
 import { parametersWith, type DetectorParameters } from "./params.ts";
 import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
+import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
@@ -72,7 +73,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "fusion-v5";
+export const DETECTOR_NAME = "scoped-v6";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -211,6 +212,10 @@ interface Reading {
   towards: boolean;
   opsStatus: OpsStatus;
   judgement: StepJudgement;
+  /** The parent at the step as the scope reads it, whether it is in the scope, and whether the step also passes the scope's gates. */
+  subject: ScopeSubject;
+  scopeIn: boolean;
+  scoped: boolean;
   /** The step as the catalogue's ledger will keep it, where it is persistent. */
   ledgerStep: LedgerStep;
 }
@@ -251,9 +256,14 @@ function readStep(state: SeriesState, candidate: Candidate, estimate: StepEstima
   const launch = launchKey === null ? undefined : (context.launches.get(launchKey) as LaunchRecord | undefined);
   const mates = launch === undefined || isAnalystLaunch(launchKey!) ? { count: 0, medianAKm: Number.NaN } : matesOf(launch.bodies, state.number, (number) => altitudeOf(context.states, number));
   const towards = towardsMates(candidate.aKm, postAKm, mates, Math.abs(estimate.delta) / 2);
-  const opsStatus = item.set.opsStatus ?? "unknown";
+  const opsStatus = operationalAt(item.set, candidate.afterEpoch, params);
   const judgement = judgeStep({ manoeuvreClass, tests, bodyClass: item.set.bodyClass, opsStatus, deltaKm: estimate.delta, radialMps: impulse.radialMps, n730: features.n730, pastRaises: features.pastRaises, disposalLike: features.disposalLike, ageDays: features.ageDays, sigmaOwnKm: candidate.sigmaOwn, held, siblings, mates, towardsMates: towards }, params);
-  return { impulse, step, features, manoeuvreClass, atypical: atypicalReasons(features, step, params), held, siblings, mates, towards, opsStatus, judgement, ledgerStep };
+  // The scope reads the status as of the step whether or not the fusion reads it, and the parent's orbit as the step was judged on.
+  const launched = item.set.launchedMs;
+  const subject: ScopeSubject = { bodyClass: item.set.bodyClass, status: operationalAt(item.set, candidate.afterEpoch, { ...params, opsStatusDated: true }), regime: state.regime, perigeeKm: item.perigeeHeightKm, bstar: candidate.bstar, ageDays: launched === null || launched === undefined ? Number.NaN : (candidate.afterEpoch - launched) / DAY_MS, daysSinceStep: features.n730 === 0 ? Number.POSITIVE_INFINITY : features.daysSinceStep };
+  const scopeIn = inScope(subject, params.scope.policy);
+  const scoped = scopeIn && passesGates({ zk: estimate.z, deltaKm: estimate.delta, deltaVMps: impulse.tangentialMps, bstarRatio: candidate.bstarRatio, impulseConsistency: impulse.consistency, explanations: judgement.explanations.length }, params.scope.gates);
+  return { impulse, step, features, manoeuvreClass, atypical: atypicalReasons(features, step, params), held, siblings, mates, towards, opsStatus, judgement, ledgerStep, subject, scopeIn, scoped };
 }
 
 /** The step as the ledger keeps it: on the orbit at the bracket's first edge, under the launch's code (zero with no launch). */
@@ -297,6 +307,9 @@ function readingSignals(reading: Reading): Partial<Record<SignalName, number>> {
     signatures: reading.judgement.signatures.length,
     explanationBits: reading.judgement.explanationBits,
     signatureBits: reading.judgement.signatureBits,
+    ageFromLaunchDays: reading.subject.ageDays,
+    scopeIn: reading.scopeIn ? 1 : 0,
+    scoped: reading.scoped ? 1 : 0,
   };
 }
 
@@ -330,7 +343,7 @@ function estimateSignals(candidate: Candidate, estimate: StepEstimate): Partial<
 }
 
 /** The signals a verdict carries as its evidence: the numbers it was judged by, by the log's names. */
-const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "zMean", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "pastRaises", "manoeuvreClass", "atypical", "envelopeTopKm", "envelopeBottomKm", "envelopeMissKm", "envelopeMonths", "siblingsLaunch", "siblingsOrbit", "mates", "matesMedianAKm", "towardsMates", "opsStatus", "againstDrag", "explanations", "signatures", "explanationBits", "signatureBits", "cadenceBefore", "cadenceAfter"];
+const EVIDENCE: readonly SignalName[] = ["regime", "bodyClass", "delta1", "z1", "deltaKm", "zk", "zMean", "k", "spanHours", "rhoMedian", "slope", "stepEvidence", "deltaPerigeeKm", "deltaInclinationDeg", "sigmaOwn", "sigmaPred", "bandScale1", "gapHours", "bstar", "bstarRatio", "perigeeKm", "kpMax", "stormHold", "recentCandidates", "deltaVMps", "deltaVNormalMps", "deltaVRadialMps", "impulseConsistency", "ageDays", "n365", "n730", "daysSinceStep", "typicality", "sameSignShare", "pastRaises", "manoeuvreClass", "atypical", "envelopeTopKm", "envelopeBottomKm", "envelopeMissKm", "envelopeMonths", "siblingsLaunch", "siblingsOrbit", "mates", "matesMedianAKm", "towardsMates", "opsStatus", "againstDrag", "explanations", "signatures", "explanationBits", "signatureBits", "cadenceBefore", "cadenceAfter", "ageFromLaunchDays", "scopeIn", "scoped"];
 
 function evidenceOf(signals: Partial<Record<SignalName, number>>, params: DetectorParameters): Record<string, number> {
   const evidence: Record<string, number> = {};
@@ -528,6 +541,24 @@ function raiseAlert(state: SeriesState, candidate: Candidate, item: Pending, ori
   return verdictOf(state, candidate, item, "suspected", estimate, evidence, alert.reasons, now, alert.event);
 }
 
+const TIER_WORDS: Record<ScopeTier, string> = { raised: "as raised", "3": "three post sets", "5": "five post sets", D1: "a day of post sets", D3: "three days of post sets", D5: "five days of post sets", D7: "seven days of post sets" };
+
+/**
+ * The scoped line's verdict on an open alert: once, where the alert was
+ * raised as suspected on a parent in the scope with a step through the
+ * scope's gates (the evidence says so), and its step has reached the
+ * scope's tier still holding. The verdict carries the alert's step, event
+ * and evidence, so it reads as the suspected verdict it narrows.
+ */
+function raiseScoped(state: SeriesState, alert: OpenAlert, context: RunContext): void {
+  const { params } = context;
+  if (alert.scopedRaised === true || alert.origin !== "suspected" || alert.evidence.scoped !== 1) return;
+  const tier = params.scope.tier;
+  if (tier !== "raised" && alert.tiers[tier]?.held !== true) return;
+  alert.scopedRaised = true;
+  context.verdicts.push({ kind: "object", state: "scoped", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: context.now, step: alert.step, event: alert.event, evidence: alert.evidence, reasons: [...alert.reasons, `the parent is in the scoped line's population and the step passed its gates and held ${TIER_WORDS[tier]}: raised on the scoped line`] });
+}
+
 /** Closes an alert: its log row, the verdict where it was a suspected one and `withVerdict`, and the object's slot cleared. */
 function closeAlert(state: SeriesState, alert: OpenAlert, outcome: number, context: RunContext, withVerdict: boolean, extra: { reasons?: string[]; evidence?: Record<string, number>; bodies?: number[] } = {}): void {
   const { now, params } = context;
@@ -584,6 +615,8 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
     candidate.suspected = true;
     const verdict = raiseAlert(state, candidate, item, "suspected", estimate, evidence, reasons, context);
     if (verdict !== null) context.verdicts.push(verdict);
+    // The scoped line's verdict follows the suspected one in the same run where its tier is reached at the raising.
+    if (state.alert !== null && state.alert.candidate === candidate) raiseScoped(state, state.alert, context);
   } else if (outcome === OUTCOMES.manoeuvre) {
     context.verdicts.push(verdictOf(state, candidate, item, "manoeuvre", estimate, evidence, reasons, context.now));
     raiseAlert(state, candidate, item, "manoeuvre", estimate, evidence, reasons, context);
@@ -664,6 +697,7 @@ function track(item: Pending, stats: BandStats, context: RunContext): void {
   const environment: Environment = { commonMode: stats.commonMode, scale: stats.scale, weather: context.weather.dragFactor };
   trackAlert(state, alert, item.set.epochMs, environment, context.now, context.params);
   noteDamage(alert, state, context.params);
+  raiseScoped(state, alert, context);
 }
 
 /** Candidates that saw no post set in too long for their regime lapse, at the end of the run. */

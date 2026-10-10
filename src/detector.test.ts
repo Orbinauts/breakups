@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { OUTCOMES } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
+import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
@@ -705,7 +706,7 @@ describe("the sixth phase's discriminators", () => {
   test("a dead satellite's lone step: the same return to a held altitude is suspected on a payload nonoperational today, a manoeuvre on one working today, and read neither way with the status off", () => {
     // One raise on day 150, on an object with no record, back to the altitude it held in the spring.
     const series = sawTooth(7000, 0.02, 150, 200);
-    const parameters = { maintenanceToleranceSigmas: 3, maintenanceToleranceKm: 0.1, opsStatusEvidence: true, nonoperationalOverrides: true };
+    const parameters = { maintenanceToleranceSigmas: 3, maintenanceToleranceKm: 0.1, opsStatusEvidence: true, nonoperationalOverrides: true, opsStatusDated: false };
     const dead = feed(one(series.map((s) => setOf(1, s, "payload", { opsStatus: "nonoperational" }))), { parameters });
     expect(suspected(dead).length).toBeGreaterThanOrEqual(1);
     expect(suspected(dead)[0]!.reasons.join(" ")).toContain("nonoperational");
@@ -724,6 +725,30 @@ describe("the sixth phase's discriminators", () => {
     for (let i = 0; i < lone.length; i++) if (lone[i]!.epochMs >= T0 + 100 * DAY) lone[i]!.aKm += 3;
     expect(suspected(feed(one(lone.map((s) => setOf(5, s, "payload", { opsStatus: "operational" }))), { parameters }))).toEqual([]);
     expect(suspected(feed(one(lone.map((s) => setOf(6, s, "payload", { opsStatus: "nonoperational" }))), { parameters })).length).toBe(1);
+  });
+
+  test("the status as of the step: the same return to a held altitude is suspected on a payload that fell silent long before it, a manoeuvre on one that fell silent long after it, and read as nothing when the end of contact came within a month of it, whatever its status today", () => {
+    const series = sawTooth(7000, 0.02, 150, 200);
+    const step = T0 + 150 * DAY;
+    const parameters = { maintenanceToleranceSigmas: 3, maintenanceToleranceKm: 0.1, opsStatusEvidence: true, nonoperationalOverrides: true, opsStatusDated: true, endedUnknownDays: 30 };
+    // Working today, but silent from sixty days before the step: dead at it.
+    const dead = feed(one(series.map((s) => setOf(1, s, "payload", { opsStatus: "operational", endedByMs: step - 60 * DAY }))), { parameters });
+    expect(suspected(dead).length).toBeGreaterThanOrEqual(1);
+    expect(suspected(dead)[0]!.reasons.join(" ")).toContain("fell silent more than 30 days before the step");
+    // Nonoperational today, but in contact until a year after the step: it could have burned.
+    const alive = feed(one(series.map((s) => setOf(2, s, "payload", { opsStatus: "nonoperational", endedByMs: step + 365 * DAY }))), { parameters });
+    expect(suspected(alive)).toEqual([]);
+    expect(alive.verdicts.find((v) => v.state === "manoeuvre")!.reasons.join(" ")).toContain("could have burned");
+    // An end ten days before the step, or a week after it, may be the step's own consequence: read as nothing, so the return to the held altitude explains it.
+    expect(suspected(feed(one(series.map((s) => setOf(6, s, "payload", { opsStatus: "nonoperational", endedByMs: step + 7 * DAY }))), { parameters }))).toEqual([]);
+    const unsure = feed(one(series.map((s) => setOf(3, s, "payload", { opsStatus: "nonoperational", endedByMs: step - 10 * DAY }))), { parameters });
+    expect(suspected(unsure)).toEqual([]);
+    const read = unsure.verdicts.find((v) => v.state === "manoeuvre")!;
+    expect(read.evidence.explanations).toBe(1);
+    expect(read.reasons.join(" ")).not.toContain("could have burned");
+    // No date: a satellite nonoperational today says nothing of the step; one working today could have burned.
+    expect(suspected(feed(one(series.map((s) => setOf(4, s, "payload", { opsStatus: "nonoperational" }))), { parameters }))).toEqual([]);
+    expect(feed(one(series.map((s) => setOf(5, s, "payload", { opsStatus: "operational" }))), { parameters }).verdicts.find((v) => v.state === "manoeuvre")!.evidence.explanations).toBe(2);
   });
 
   test("a kicked body whose residual scatter triples after the step: the alert's row carries a damage ratio near three, and a clean step one near one", () => {
@@ -771,5 +796,43 @@ describe("the sixth phase's discriminators", () => {
     expect(lowering[0]!.evidence.pastRaises).toBe(1);
     expect(lowering[0]!.reasons.join(" ")).toContain("past step was a raise");
     expect(suspected(feed(one(twice.map((s) => setOf(4, s, "payload", { opsStatus: "operational" }))), { parameters: { ...base, againstDragMinRaises: 2 } })).filter((v) => v.step!.deltaKm < 0)).toEqual([]);
+  });
+});
+
+describe("the scoped line", () => {
+  // The quiet old rocket body's step of the detector's first tests, launched twenty years or one year before.
+  const series = decaying(7200, 0.02, 0.004, 40);
+  for (let i = 90; i < series.length; i++) series[i]!.aKm += -0.4;
+  const old = series.map((s) => setOf(1, s, "rocket body", { launchedMs: T0 - 20 * 365 * DAY }));
+  const young = series.map((s) => setOf(2, s, "rocket body", { launchedMs: T0 - 365 * DAY }));
+  const scope = (over: Partial<typeof DETECTOR_PARAMETERS.scope>) => ({ scope: { policy: { ...WHOLE_CATALOGUE, minAgeDays: 5 * 365 }, gates: OPEN_GATES, tier: "5" as const, ...over } });
+  const scopedOf = (fed: ReturnType<typeof feed>) => fed.verdicts.filter((v) => v.state === "scoped");
+
+  test("a suspected step on a parent in the scope, through its gates, is raised on the scoped line once it held to the tier, and once", () => {
+    const fed = feed(one(old), { parameters: scope({}) });
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.evidence).toMatchObject({ scopeIn: 1, scoped: 1 });
+    expect(raised[0]!.evidence.ageFromLaunchDays).toBeGreaterThan(5 * 365);
+    const scoped = scopedOf(fed);
+    expect(scoped).toHaveLength(1);
+    expect(scoped[0]!.step).toEqual(raised[0]!.step);
+    expect(scoped[0]!.raisedAt).toBeGreaterThan(raised[0]!.raisedAt);
+    expect(scoped[0]!.reasons.at(-1)).toContain("held five post sets");
+    // At the tier of the raising, the scoped verdict comes in the same run.
+    const now = scopedOf(feed(one(old), { parameters: scope({ tier: "raised" }) }));
+    expect(now[0]!.raisedAt).toBe(raised[0]!.raisedAt);
+  });
+
+  test("a parent out of the scope, or a step the gates refuse, is raised on the whole catalogue's line alone", () => {
+    const outside = feed(one(young), { parameters: scope({}) });
+    expect(suspected(outside)).toHaveLength(1);
+    expect(suspected(outside)[0]!.evidence).toMatchObject({ scopeIn: 0, scoped: 0 });
+    expect(scopedOf(outside)).toEqual([]);
+    const gated = feed(one(old), { parameters: scope({ gates: { ...OPEN_GATES, zMin: 1e6 } }) });
+    expect(suspected(gated)[0]!.evidence).toMatchObject({ scopeIn: 1, scoped: 0 });
+    expect(scopedOf(gated)).toEqual([]);
+    // The whole catalogue as the scope raises every suspected step on the scoped line too.
+    expect(scopedOf(feed(one(young), { parameters: scope({ policy: WHOLE_CATALOGUE }) }))).toHaveLength(1);
   });
 });
