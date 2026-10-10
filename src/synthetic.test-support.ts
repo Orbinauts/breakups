@@ -1,8 +1,10 @@
-import { semiMajorAxisKm } from "@orbinauts/engine";
+import { propagate, semiMajorAxisKm } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, Notice, SpaceWeatherDay } from "./detector.ts";
 import type { ElementSet } from "./elements.ts";
+import { cartesianOf, elementsOf } from "./event-time.ts";
 import type { DetectorParameters } from "./params.ts";
 import { runDetector } from "./run.ts";
+import { nodePrecessionDegPerDay } from "./series.ts";
 
 /**
  * Synthetic element sets for the detector's tests: an object described
@@ -111,3 +113,44 @@ export function feed(batches: ElementSet[][], options: { parameters?: Partial<De
 
 /** Each set in its own run. */
 export const one = (sets: ElementSet[]): ElementSet[][] => sets.map((s) => [s]);
+
+/** The distance between two sets' propagated positions at an instant, in kilometres; infinite where either cannot be propagated. */
+export function apartAt(a: ElementSet, b: ElementSet, at: number): number {
+  const ea = elementsOf(a);
+  const eb = elementsOf(b);
+  if (ea === null || eb === null) return Number.POSITIVE_INFINITY;
+  const p = propagate(ea, new Date(at));
+  const q = propagate(eb, new Date(at));
+  const r = cartesianOf(p.latitude, p.longitude, p.altitude);
+  const s = cartesianOf(q.latitude, q.longitude, q.altitude);
+  return Math.hypot(s[0] - r[0], s[1] - r[1], s[2] - r[2]);
+}
+
+/**
+ * A piece of a breakup of `parent` at `eventMs`: its first set at
+ * `epochMs`, its semi-major axis `deltaAKm` from the parent's, the same
+ * plane (the node carried from the event at each orbit's own J2 rate, as
+ * a real piece's would be printed), and its mean anomaly searched so that
+ * it is where the parent was at the event, as every piece of a breakup is.
+ * The printed mean motion is not the rate the propagation advances the
+ * phase at, so the phase is searched rather than carried by hand.
+ */
+export function pieceOf(parent: ElementSet, eventMs: number, deltaAKm: number, epochMs: number, number: number, designator: string): ElementSet {
+  const aKm = semiMajorAxisKm(parent.meanMotion) + deltaAKm;
+  const meanMotion = meanMotionOf(aKm);
+  const parentRate = nodePrecessionDegPerDay(semiMajorAxisKm(parent.meanMotion), parent.eccentricity, parent.inclinationDeg, parent.meanMotion);
+  const pieceRate = nodePrecessionDegPerDay(aKm, parent.eccentricity, parent.inclinationDeg, meanMotion);
+  const raanDeg = parent.raanDeg + parentRate * ((eventMs - parent.epochMs) / DAY) + pieceRate * ((epochMs - eventMs) / DAY);
+  const at = (meanAnomalyDeg: number): ElementSet => ({ ...parent, number, designator, epochMs, meanMotion, raanDeg: ((raanDeg % 360) + 360) % 360, meanAnomalyDeg: ((meanAnomalyDeg % 360) + 360) % 360, bodyClass: "debris" });
+  let best = 0;
+  let least = Number.POSITIVE_INFINITY;
+  for (let m = 0; m < 360; m += 0.5) {
+    const d = apartAt(parent, at(m), eventMs);
+    if (d < least) [best, least] = [m, d];
+  }
+  for (let m = best - 0.5; m <= best + 0.5; m += 0.002) {
+    const d = apartAt(parent, at(m), eventMs);
+    if (d < least) [best, least] = [m, d];
+  }
+  return at(best);
+}

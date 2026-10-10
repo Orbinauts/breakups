@@ -1,5 +1,6 @@
-import { ALERT_STATES, DETECTOR_PARAMETERS, dayOf, endedByOf, inScope, launchOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf, yearOf, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type Notice, type Regime, type ScopeSubject, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, dayOf, endedByOf, firstAgencyStatement, inScope, launchOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type ScopeSubject, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
+import { FRAGMENTS_DAYS, fragmentsOf, type Catalogue, type EventFragments } from "./catalogue.ts";
 import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.ts";
 
 /**
@@ -125,6 +126,47 @@ export interface ScoredEvent {
   /** The parent at the event's lower edge as the scope reads it (`scope.ts`): its class, its status as of the event, its last set's orbit before the event, its age from launch and the days since its last persistent step in the year; and whether it is in the detector's scope. Absent on a year file scored before the scope existed. */
   subject?: ScopeSubject;
   scopeIn?: boolean;
+  /** The Confirmed line's reading of the event (`catalogue.ts`): the fresh pieces the catalogue published in the parent's plane within 180 days, the first of them and when, and whether the parent's orbit before the event was known. Absent on a year file scored before the Confirmed line existed. */
+  fragments?: EventFragments;
+  /** The first statement on the event by an agency, and by anyone, as the truth dates them: the earliest instant it can have been public (the first day of a quarterly news issue's month, or the day a notice was seen), how finely, and the source. */
+  statement?: StatementAt | null;
+  firstStatement?: StatementAt | null;
+}
+
+/** A first statement as the scorecard reads it: the earliest it can have been public, in milliseconds since 1970, how finely that is known, and who made it. */
+export interface StatementAt {
+  at: number;
+  precision: StatedPrecision;
+  source: SourceId;
+}
+
+const statementAt = (first: FirstStatement | null): StatementAt | null => (first === null ? null : { at: Date.parse(`${first.on}T00:00:00Z`), precision: first.precision, source: first.source });
+
+/**
+ * One confirmed verdict of the year as the Confirmed line lands it: a
+ * confirmation of a reported event (the verdict on the event's parent
+ * from the margin before its window to 180 days after it; the matcher of
+ * the aggregate makes the first on each event its detection and the rest
+ * duplicates, across the years), inside an exempt window, on a fragment
+ * of a reported event, or a false alarm. A confirmation by a notice alone
+ * is not the Confirmed line's: the agency had said it.
+ */
+export interface ConfirmedLanding {
+  verdict: number;
+  number: number;
+  launch: string | null;
+  raisedAt: number;
+  outcome: "detection" | "exempt" | "fragment" | "false-alarm";
+  /** The event it lands on or is exempt by; null for a false alarm. */
+  event: string | null;
+  note: string;
+  /** Whether it was attributed from the pieces with no step seen on the parent, or confirmed an alert on the parent's step. */
+  attributed: boolean;
+  /** The detector's instant of the event and its sigma in minutes, where it gave them. */
+  eventAt: number | null;
+  sigmaMinutes: number | null;
+  /** The parent's class as the verdict's evidence gives it. */
+  bodyClass: BodyClass;
 }
 
 /** One counted verdict of the year, with where it landed. */
@@ -167,6 +209,8 @@ export interface YearScore {
   events: ScoredEvent[];
   alerts: ScoredAlert[];
   review: ReviewRow[];
+  /** The year's confirmed verdicts as the Confirmed line lands them; absent on a year file scored before it existed. */
+  confirmations?: ConfirmedLanding[];
 }
 
 /** The notices the truth records, as the detector and the matcher take them: the day each was seen is the earliest it is known to have been public. */
@@ -195,7 +239,7 @@ export function brackets(step: Step | null, from: number, to: number, marginDays
 const overlaps = (a: Step, b: Step): boolean => a.beforeEpoch <= b.afterEpoch && b.beforeEpoch <= a.afterEpoch;
 
 /** A row of the truth as the matcher holds it, scoreable or not. */
-interface Row {
+export interface Row {
   breakup: Breakup;
   from: number;
   to: number;
@@ -220,6 +264,28 @@ function rowOf(breakup: Breakup, index: SetIndex): Row {
     for (const body of index.bodies) if (body.number > mark && body.number < ANALYST_FLOOR && launchOf(body.designator) === launch) fragments.add(body.number);
   }
   return { breakup, from, to, margin, launch, fragments, scored: null };
+}
+
+/**
+ * Every row of the truth as the Confirmed line lands verdicts against it,
+ * read through the catalogue of every year rather than one year's index:
+ * the offline sweeps land simulated confirmations with it, as the matcher
+ * lands the replay's.
+ */
+export function catalogueRowsOf(breakups: readonly Breakup[], catalogue: Catalogue): Row[] {
+  return breakups.map((breakup) => {
+    const from = lowerOf(breakup);
+    const to = upperOf(breakup);
+    const margin = marginDaysOf(breakup.orbit.regime) * DAY_MS;
+    const parent = breakup.parent.catalogueNumber;
+    const launch = launchOf(breakup.parent.designator) ?? (parent === null ? null : catalogue.bodies.get(parent)?.launch ?? null);
+    const fragments = new Set<number>();
+    if (launch !== null) {
+      const mark = Math.max(catalogue.markAt(from - margin), parent ?? 0);
+      for (const body of catalogue.byLaunch.get(launch) ?? []) if (body.number > mark && body.number < ANALYST_FLOOR) fragments.add(body.number);
+    }
+    return { breakup, from, to, margin, launch, fragments, scored: null };
+  });
 }
 
 const hours = (ms: number): number => ms / 3_600_000;
@@ -259,7 +325,32 @@ export function subjectAt(parent: number, at: number, regime: Regime, index: Set
   };
 }
 
-export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[], index: SetIndex, timeBasis: TimeBasis, notices: Notice[] = noticesOf(breakups), params: DetectorParameters = DETECTOR_PARAMETERS): YearScore {
+/**
+ * Where a confirmed verdict lands on the Confirmed line, against the truth's
+ * rows (the year's and its neighbours'): on the parent of a reported event
+ * whose window it follows by no more than 180 days (the latest such
+ * event, since a parent may break up twice), a detection where the event
+ * is scoreable and exempt where it is not; inside the window of a row
+ * naming no catalogued object (an unnamed report, or one naming the launch
+ * alone, as an analyst-parented row does); on a fragment of a reported
+ * event after it; or a false alarm.
+ */
+export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence">, i: number, rows: readonly Row[]): ConfirmedLanding {
+  const number = verdict.number!;
+  const base = { verdict: i, number, launch: verdict.launch, raisedAt: verdict.raisedAt, attributed: verdict.step === null, eventAt: verdict.event?.at ?? null, sigmaMinutes: verdict.evidence.sigmaMinutes ?? null, bodyClass: BODY_CLASSES[verdict.evidence.bodyClass ?? -1] ?? "unknown" };
+  const after = FRAGMENTS_DAYS * DAY_MS;
+  const onParent = rows.filter((row) => row.breakup.parent.catalogueNumber === number && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after).sort((a, b) => b.from - a.from);
+  const scoreable = onParent.find((row) => row.breakup.scoreable);
+  if (scoreable !== undefined) return { ...base, outcome: "detection", event: scoreable.breakup.id, note: "a confirmed verdict on a reported event's parent within 180 days of it" };
+  if (onParent[0] !== undefined) return { ...base, outcome: "exempt", event: onParent[0].breakup.id, note: `inside the window of ${onParent[0].breakup.exemptReason ?? onParent[0].breakup.kind}` };
+  const unnamed = rows.find((row) => row.breakup.parent.catalogueNumber === null && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after && (row.breakup.kind === "unnamed" || (row.launch !== null && row.launch === verdict.launch)));
+  if (unnamed !== undefined) return { ...base, outcome: "exempt", event: unnamed.breakup.id, note: `inside the window of ${unnamed.breakup.kind === "unnamed" ? "a report naming no object" : "a row naming the launch alone"}` };
+  const ofFragment = rows.find((row) => row.fragments.has(number) && verdict.raisedAt >= row.from - row.margin);
+  if (ofFragment !== undefined) return { ...base, outcome: ofFragment.breakup.scoreable ? "fragment" : "exempt", event: ofFragment.breakup.id, note: "a confirmed verdict on a fragment of a reported event" };
+  return { ...base, outcome: "false-alarm", event: null, note: "matches no reported event" };
+}
+
+export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[], index: SetIndex, timeBasis: TimeBasis, notices: Notice[] = noticesOf(breakups), params: DetectorParameters = DETECTOR_PARAMETERS, catalogue?: Catalogue): YearScore {
   const rows = breakups.filter((b) => Math.abs(yearOf(b) - year) <= 1).map((b) => rowOf(b, index));
   const events: ScoredEvent[] = [];
   for (const row of rows) {
@@ -310,10 +401,14 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     const subject = subjectAt(parent, row.from, breakup.orbit.regime, index, verdicts, params);
     row.scored.subject = subject;
     row.scored.scopeIn = inScope(subject, params.scope.policy);
+    if (catalogue !== undefined) row.scored.fragments = fragmentsOf(catalogue, parent, row.launch, row.from, row.to, row.scored.at ?? row.from, row.margin, params);
+    row.scored.statement = statementAt(firstAgencyStatement(breakup));
+    row.scored.firstStatement = statementAt(breakup.firstStatement);
     events.push(row.scored);
   }
   const alerts: ScoredAlert[] = [];
   const review: ReviewRow[] = [];
+  const confirmations: ConfirmedLanding[] = [];
   const stepsRaised = new Map<number, Step[]>();
   const ordered = verdicts.map((verdict, i) => ({ verdict, i })).sort((a, b) => a.verdict.raisedAt - b.verdict.raisedAt || a.i - b.i);
   for (const { verdict, i } of ordered) {
@@ -322,6 +417,10 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
       continue;
     }
     if (!ALERT_STATES.includes(verdict.state) || verdict.number === null) continue;
+    // The Confirmed line: every confirmed verdict by pieces, with or without a step seen on the parent.
+    if (verdict.state === "confirmed" && verdict.evidence.noticed !== 1) confirmations.push(landConfirmed(verdict, i, rows));
+    // A confirmed verdict with no step was attributed from the pieces alone: the Confirmed line's, never an alert on the parent's step.
+    if (verdict.state === "confirmed" && verdict.step === null) continue;
     const number = verdict.number;
     // A confirmed verdict that lands as an alert of its own (a step the record read as a manoeuvre, promoted by the pieces, which raised no counted alert before) is confirmed as it lands.
     const land = (outcome: AlertOutcome, event: string | null, note: string, nearEvent: string | null = null): void => {
@@ -393,5 +492,5 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     const near = verdict.step === null ? undefined : rows.find((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber === number && verdict.step!.afterEpoch >= row.from - row.margin && verdict.step!.beforeEpoch <= row.to + NEAR_EVENT_DAYS * DAY_MS);
     land("false-alarm", null, near === undefined ? "matches no reported event" : `matches no reported event; the parent of ${near.breakup.id}, whose window ended within the month before the step`, near?.breakup.id ?? null);
   }
-  return { year, timeBasis, events, alerts, review };
+  return { year, timeBasis, events, alerts, review, confirmations };
 }

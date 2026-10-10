@@ -12,7 +12,27 @@ import { REGIMES, type Regime } from "./truth.ts";
  */
 
 /** Where in a candidate's life the row was written: its opening on the first post set, a later post set, or its close; `alert` is the row an alert writes when it closes, with the persistence tiers and the cadence it read after the step; `cloud` is the row a launch writes in a run that brought it new bodies, with the burst and plane tests. */
-export const PHASES = { open: 0, post: 1, close: 2, alert: 3, cloud: 4 } as const;
+export const PHASES = { open: 0, post: 1, close: 2, alert: 3, cloud: 4, attribution: 5 } as const;
+
+/**
+ * Why an attribution, or a confirmation of an open alert by pieces, was
+ * refused, as bits on its row: the pieces under the velocity floor; a
+ * debris-classed parent that is itself a fresh piece; the parent lying in
+ * the plane of a cloud the launch remembers, or every piece lying in it; no
+ * piece nearer a debris-classed parent's plane than the remembered cloud;
+ * a single piece where one means nothing; a launch under a month old; a
+ * launch still cataloguing an old cloud's backlog; another body of the
+ * launch the pieces cannot be told from; pieces that do not converge on
+ * the parent when propagated back; fewer pieces than the attribution needs;
+ * an analyst range's burst the parameters do not let attribute; pieces
+ * the timing could not propagate; and a run in which the catalogue listed
+ * new bodies under many old launches at once, a cataloguing campaign
+ * rather than a breakup.
+ */
+export const REFUSALS = { velocity: 1, freshPiece: 2, parentInCloud: 4, piecesInCloud: 8, nearerThanCloud: 16, singlePiece: 32, youngLaunch: 64, background: 128, ambiguous: 256, miss: 512, minPieces: 1024, analyst: 2048, untimed: 4096, batch: 8192 } as const;
+
+/** The path an attribution row was written on: the confirmation of an open alert on the parent's step, an attribution to a body with no open alert, an analyst range's burst against the open alerts, or an attribution to a debris-classed body of a launch with few of them, for pieces in the plane of no other body. */
+export const ATTRIBUTION_PATHS = { alert: 0, cloud: 1, analyst: 2, debris: 3 } as const;
 
 /** How a candidate ended: still open, raised as suspected, dismissed as a bad set, lapsed with no post set, closed unraised after the last gap, or a persistent step the object's own history explains, closed as a manoeuvre; and how an alert ended: confirmed by pieces or a notice, expired with nothing under the launch, or dismissed because every piece was old. */
 export const OUTCOMES = { open: 0, suspected: 1, reverted: 2, lapsed: 3, faded: 4, manoeuvre: 5, confirmed: 6, expired: 7, dismissed: 8 } as const;
@@ -216,6 +236,27 @@ export const SIGNALS = {
   gabbardSpreadKm: "km",
   openAlert: "flag",
   cloudDecision: "code",
+  /** The attribution row (phase 5), one per parent the pieces of a run were judged for, on either path: the path (`ATTRIBUTION_PATHS`), the pieces judged in the parent's plane and those the rules kept, how many other bodies of the launch the pieces lie within the plane bound of, the pieces' median plane distance, the back-propagated timing (the pieces' miss of the parent in kilometres, the least miss of the other bodies timed, the instant's sigma and the pieces' spread about it in minutes, the crossings it could be on, the instant itself), the refusals as `REFUSALS` bits, and whether a confirmed verdict was raised. The launch, its age, its background rate and counts, the cloud memory's readings, the parent's class and age and the cloud velocity use the names above. */
+  attributionPath: "code",
+  attributionPieces: "count",
+  attributionKept: "count",
+  attributionRivals: "count",
+  attributionDistance: "ratio",
+  attributionMissKm: "km",
+  attributionRivalMissKm: "km",
+  attributionSigmaMinutes: "min",
+  attributionSpreadMinutes: "min",
+  attributionCrossings: "count",
+  attributionEventAt: "ms",
+  attributionRefused: "code",
+  attributionRaised: "flag",
+  /** How many launches older than a year the run brought new bodies to: the catalogue publishing a batch of old objects lists them under many launches at once. */
+  launchesInRun: "count",
+  /** On an attribution whose pieces lie in the plane of other bodies too: 1 where the body made a persistent step in the search window, 2 where another did, 3 where both did. */
+  attributionStepped: "code",
+  /** On an attribution row: how far the pieces' median semi-major axis lies from the named body's, and from the nearest of the other bodies whose plane they share, in kilometres. */
+  attributionCentreKm: "km",
+  attributionRivalCentreKm: "km",
 } as const;
 
 export type SignalName = keyof typeof SIGNALS;

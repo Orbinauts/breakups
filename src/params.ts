@@ -161,6 +161,42 @@ export interface DetectorParameters {
   singlePieceNeedsQuietLaunch: boolean;
   /** How long a launch's cloud, once listed for review, is not listed again as its pieces keep coming, in days. Policy: the alert's time to live. */
   cloudRepeatDays: number;
+  /**
+   * The Confirmed channel's attribution (`judgeLaunches` in `run.ts`): fresh
+   * pieces in the plane of a body of their launch with no open alert are
+   * attributed to it as a confirmed breakup, whether or not a step was seen
+   * on it, under the confirmation rules above and these. Whether it runs at
+   * all; off, a burst with no alert on any parent is only listed for review
+   * as before. Policy: the owner's decision of 2026-10-10, the seventh decision record.
+   */
+  attributionEnabled: boolean;
+  /** The most fragment-classed bodies a launch may have had before the window for them to be candidate parents of an attribution: a fairing cover or a tank breaks up too, but under a launch with a cloud of its own every old piece would be a candidate. They are tried only for pieces in the plane of no other body of the launch. Zero turns them off. Fitted on the training split. */
+  attributionDebrisParentsMax: number;
+  /** The most launches older than a year the run may have brought new bodies to for an attribution to stand: on the days the catalogue lists a batch of old objects it lists them under many old launches at once, and a stray among them in a parent's plane is no breakup. A value beyond reach turns the rule off. Fitted on the training split. */
+  attributionBatchLaunchesMax: number;
+  /** The fewest pieces, after the confirmation rules have left out the ones they refuse, an attribution needs. Fitted on the training split. */
+  attributionMinPieces: number;
+  /** How long, in days, a burst under the launch that no parent was named for keeps the attribution from reading the launch's cloud memory: within it, the memory the attribution reads is the last cloud named, so a cloud whose first batch could not be attributed (a young launch's, an ambiguous one) can be attributed by its later batches. Fitted on the training split. */
+  attributionUnnamedGraceDays: number;
+  /** Whether, where the pieces converge on two bodies of the launch alike (an ullage motor and its twin, a stage and its payload), the one that made a persistent step in the search window, the others none, is named: the step seen on the parent breaks the tie. Fitted on the training split. */
+  attributionStepBreaksTies: boolean;
+  /** Whether a launch younger than `youngLaunchDays` may attribute its fresh pieces (those `judgeCloud` keeps there, at the young launch's velocity or more): a stage breaking up days after launch leaves pieces among the launch's own objects. Fitted on the training split. */
+  attributionYoungLaunch: boolean;
+  /** How far back before the first piece's first set the event's instant is searched, in days, and the coarse grid's step there, in minutes. Policy: the Confirmed line's 180 days, the longest the catalogue may take to list an event's first piece and still count it; an hour, which the angle's drift and its once-a-revolution wobble allow (the refinement is on the event-time grid). */
+  attributionSearchDays: number;
+  attributionGridMinutes: number;
+  /** The most pieces the timing propagates, the earliest first sets first, and the most candidate parents it times against each other. Policy: the cost of one attribution. */
+  attributionMaxPieces: number;
+  attributionMaxCandidates: number;
+  /** The most the pieces may miss the parent at the instant of their back-propagated crossing, as a root-mean-square distance in kilometres, for the attribution to stand: pieces that do not converge on the parent are not its. A value beyond reach (a finite one, so the scorecard's record of the parameters keeps it) turns the test off. Fitted on the training split. */
+  attributionMissKmMax: number;
+  /** Where the pieces lie within the plane bound of more than one candidate parent, the factor by which the next parent's miss must exceed the best one's for the best to be named; otherwise the cloud stays for review. Fitted on the training split. */
+  attributionAmbiguityRatio: number;
+  /** The same for the centre of the pieces' semi-major axes: the body named is the one they centre on, and it is told from the others where the nearest other body's offset from that centre is at least this factor times its own, its own floored at `attributionCentreFloorKm` (a cloud's centre is known to a kilometre or two, the spread of its first sets). Fitted on the training split; the floor is policy. */
+  attributionCentreRatio: number;
+  attributionCentreFloorKm: number;
+  /** Whether a burst in an analyst range (no designator, numbers reused) may confirm an open alert where the plane test names that alert's parent alone among the open alerts and the pieces converge on it. Fitted on the training split. */
+  analystAttributes: boolean;
   /** The tolerance by which a step's post-step level may miss a range the object held in the last year and still be a return to a held altitude (orbit maintenance): the larger of this many times the object's own scatter and this many kilometres; a negative floor turns the test off. Fitted on the training split by sweeping the log. */
   maintenanceToleranceSigmas: number;
   maintenanceToleranceKm: number;
@@ -286,6 +322,22 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   debrisParentNeedsNearerThanCloud: true,
   singlePieceNeedsQuietLaunch: true,
   cloudRepeatDays: 30,
+  attributionEnabled: true,
+  attributionDebrisParentsMax: 30,
+  attributionBatchLaunchesMax: 2,
+  attributionMinPieces: 2,
+  attributionYoungLaunch: false,
+  attributionStepBreaksTies: true,
+  attributionUnnamedGraceDays: 180,
+  attributionSearchDays: 180,
+  attributionGridMinutes: 60,
+  attributionMaxPieces: 8,
+  attributionMaxCandidates: 4,
+  attributionMissKmMax: 1e9,
+  attributionAmbiguityRatio: 3,
+  attributionCentreRatio: 3,
+  attributionCentreFloorKm: 2,
+  analystAttributes: false,
   maintenanceToleranceSigmas: 3,
   maintenanceToleranceKm: 1,
   maintenanceMonths: 12,
@@ -414,6 +466,22 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   debrisParentNeedsNearerThanCloud: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table" },
   singlePieceNeedsQuietLaunch: { kind: "fitted", source: "d5-fitting.md, the confirmation rules table: single-piece confirmations on the training split" },
   cloudRepeatDays: { kind: "policy", source: "the alert's time to live" },
+  attributionEnabled: { kind: "policy", source: "the seventh decision record: the target is on Confirmed alerts, attributed from fresh in-plane pieces with or without a step" },
+  attributionDebrisParentsMax: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionBatchLaunchesMax: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionMinPieces: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionUnnamedGraceDays: { kind: "fitted", source: "d9-confirmed.md, the replays of the Confirmed channel on the training split" },
+  attributionStepBreaksTies: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionYoungLaunch: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionSearchDays: { kind: "policy", source: "the Confirmed line's 180 days: a first piece listed that long after its event still counts" },
+  attributionGridMinutes: { kind: "policy", source: "an hour: the angle drifts slowly and wobbles once a revolution; the refinement is on the event-time grid" },
+  attributionMaxPieces: { kind: "policy", source: "the cost of one attribution's propagations" },
+  attributionMaxCandidates: { kind: "policy", source: "the cost of one attribution's propagations" },
+  attributionMissKmMax: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionAmbiguityRatio: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionCentreRatio: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
+  attributionCentreFloorKm: { kind: "policy", source: "a cloud's centre is known to a kilometre or two, the spread of its first sets" },
+  analystAttributes: { kind: "fitted", source: "d9-confirmed.md, the attribution sweep on the training split" },
   maintenanceToleranceSigmas: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: flat from 0 to 10" },
   maintenanceToleranceKm: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: the knee at a kilometre" },
   maintenanceMonths: { kind: "policy", source: "a year of held altitudes, the envelope's reach" },

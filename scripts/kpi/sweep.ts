@@ -5,6 +5,9 @@ import { brackets, marginDaysOf } from "./match.ts";
 import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";
 import { alertKey, alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi.ts";
+import { detailLines, rulesOf, sweepLines, type AttributionRules } from "./attributions.ts";
+import { catalogueOf } from "./run.ts";
+import { archiveHome } from "../archive/archive.ts";
 
 /**
  * The offline sweep: the persistence gates and the manoeuvre gate
@@ -65,6 +68,15 @@ import { alertKey, alertRowsOf, cellsOf, tiersTable, type YearFile } from "./kpi
  * of the per-piece rules is approximated by counts (the pieces left out
  * by one rule are taken as the same the next would leave out), so the
  * replay with the rules on is the record.
+ *
+ * `--attributions` sweeps the Confirmed channel of the ninth phase over
+ * the attribution rows (`attributions.ts`): each rule of the confirmation
+ * and of the attribution varied in turn from the detector's values, the
+ * confirmed verdicts it would raise landed against the truth as the
+ * matcher lands them, and the Confirmed line scored on the years given
+ * (the even years by default); `--set name=value` changes the base, and
+ * `--show` lists the misses with what refused their pieces and every
+ * false confirmation.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -591,13 +603,15 @@ function confirmationLine(label: string, rows: SweptConfirmation[], rules: Param
   return `| ${label} | ${kept.length} | ${count("detection") + count("late")} | ${count("near")} | ${count("false-alarm")} | ${count("other")} |`;
 }
 
-function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean } {
+function parseArgs(args: string[]): { years: number[] | null; show: boolean; grid: Partial<Record<keyof Gates, number[]>>; clouds: boolean; cloudGrid: Partial<Record<keyof CloudGates, number[]>>; tiers: boolean; confirmations: boolean; separation: boolean; attributions: boolean; set: Partial<AttributionRules> } {
   let years: number[] | null = null;
   let show = false;
   let clouds = false;
   let tiers = false;
   let confirmations = false;
   let separation = false;
+  let attributions = false;
+  const set: Partial<AttributionRules> = {};
   const grid: Partial<Record<keyof Gates, number[]>> = {};
   const cloudGrid: Partial<Record<keyof CloudGates, number[]>> = {};
   for (let i = 0; i < args.length; i++) {
@@ -608,11 +622,16 @@ function parseArgs(args: string[]): { years: number[] | null; show: boolean; gri
     else if (arg === "--tiers") tiers = true;
     else if (arg === "--confirmations") confirmations = true;
     else if (arg === "--separation") separation = true;
+    else if (arg === "--attributions") attributions = true;
+    else if (arg === "--set") {
+      const [name, value] = args[++i]!.split("=");
+      (set as Record<string, unknown>)[name!] = JSON.parse(value!) as unknown;
+    }
     else if (arg.startsWith("--") && arg.slice(2) in CLOUD_GRID) cloudGrid[arg.slice(2) as keyof CloudGates] = args[++i]!.split(",").map(Number);
     else if (arg.startsWith("--") && arg.slice(2) in DEFAULT_GRID) grid[arg.slice(2) as keyof Gates] = args[++i]!.split(",").map(Number);
     else throw new Error(`usage: sweep.ts [--years 2006,2008] [--show] [--clouds] [--tiers] [--confirmations] [--separation] [--<gate> v1,v2,...] where a gate is one of ${Object.keys(DEFAULT_GRID).join(", ")}, ${Object.keys(CLOUD_GRID).join(", ")}`);
   }
-  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation };
+  return { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, set };
 }
 
 const WHYS: Why[] = ["unique", "typicality", "opposite", "consistency", "bstar", "against-drag", "nonoperational", "occasional-raised"];
@@ -674,10 +693,39 @@ function separationTable(files: YearFile[]): string[] {
 }
 
 function main(): void {
-  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation } = parseArgs(process.argv.slice(2));
+  const { years, show, grid, clouds, cloudGrid, tiers, confirmations, separation, attributions, set } = parseArgs(process.argv.slice(2));
   const all = readYearFiles(process.env.KPI_DIR === undefined ? KPI_DIR : resolve(process.env.KPI_DIR));
   const files = all.filter((f) => (years === null ? f.year % 2 === 0 : years.includes(f.year)));
   if (files.length === 0) throw new Error(`no year files under ${yearsDir(KPI_DIR)} for the years asked`);
+  if (attributions) {
+    // Every year is simulated, an event's confirmation may come in the next year's file; the split read is the training one unless the odd years were asked.
+    const truth = readTruth();
+    const catalogue = catalogueOf(archiveHome(), truth);
+    const base = { ...rulesOf(DETECTOR_PARAMETERS), ...set };
+    const split = years !== null && years.every((y) => y % 2 === 1) ? "validation" : "train";
+    const grid: [string, Partial<AttributionRules>][] = [
+      ...[0, 0.5, 2, 5].map((x): [string, Partial<AttributionRules>] => [`the pieces move at least ${x} m/s (confirmDeltaVMinMps)`, { confirmDeltaVMinMps: x }]),
+      ...[0, 30, 180].map((x): [string, Partial<AttributionRules>] => [`a debris parent first seen under ${x} days confirms nothing (freshPieceDays)`, { freshPieceDays: x }]),
+      ...[0, 90, 180, 730].map((x): [string, Partial<AttributionRules>] => [`the cloud memory, ${x} days (cloudMemoryDays)`, { cloudMemoryDays: x }]),
+      [`a debris parent's pieces nearer than the cloud (debrisParentNeedsNearerThanCloud) ${!base.debrisParentNeedsNearerThanCloud}`, { debrisParentNeedsNearerThanCloud: !base.debrisParentNeedsNearerThanCloud }],
+      [`a single piece needs a quiet launch (singlePieceNeedsQuietLaunch) ${!base.singlePieceNeedsQuietLaunch}`, { singlePieceNeedsQuietLaunch: !base.singlePieceNeedsQuietLaunch }],
+      ...[0.5, 5, 20, 1e9].map((x): [string, Partial<AttributionRules>] => [`the launch's background at most ${x} a window (confirmBackgroundMax)`, { confirmBackgroundMax: x }]),
+      [`a step on one body breaks a tie (attributionStepBreaksTies) ${!base.attributionStepBreaksTies}`, { attributionStepBreaksTies: !base.attributionStepBreaksTies }],
+      [`a young launch attributes (attributionYoungLaunch) ${!base.attributionYoungLaunch}`, { attributionYoungLaunch: !base.attributionYoungLaunch }],
+      ...[0, 7, 90].map((x): [string, Partial<AttributionRules>] => [`a launch is young under ${x} days (youngLaunchDays)`, { youngLaunchDays: x }]),
+      ...[1, 2, 3, 5].map((x): [string, Partial<AttributionRules>] => [`at least ${x} pieces (attributionMinPieces)`, { attributionMinPieces: x }]),
+      ...[1, 2, 3, 5, 10, 1e9].map((x): [string, Partial<AttributionRules>] => [`at most ${x} old launches gaining bodies in the run (attributionBatchLaunchesMax)`, { attributionBatchLaunchesMax: x }]),
+      ...[20, 50, 100, 300, 1000, 1e9].map((x): [string, Partial<AttributionRules>] => [`the pieces miss the parent by at most ${x} km (attributionMissKmMax)`, { attributionMissKmMax: x }]),
+      ...[0, 1.5, 3, 10].map((x): [string, Partial<AttributionRules>] => [`a rival must be missed ${x} times worse (attributionAmbiguityRatio)`, { attributionAmbiguityRatio: x }]),
+      ...[0, 1.5, 3, 10, 1e9].map((x): [string, Partial<AttributionRules>] => [`a rival's centre must be ${x} times further (attributionCentreRatio)`, { attributionCentreRatio: x }]),
+      [`an analyst range confirms an alert (analystAttributes) ${!base.analystAttributes}`, { analystAttributes: !base.analystAttributes }],
+      [`debris parents tried (attributionDebrisParentsMax) ${base.attributionDebrisParentsMax > 0 ? 0 : DETECTOR_PARAMETERS.attributionDebrisParentsMax}`, { attributionDebrisParentsMax: base.attributionDebrisParentsMax > 0 ? 0 : DETECTOR_PARAMETERS.attributionDebrisParentsMax }],
+    ];
+    console.log(`the ${split} years of ${files[0] === undefined ? "" : process.env.KPI_DIR ?? KPI_DIR}; the base: ${Object.entries(base).map(([k, x]) => `${k} ${x}`).join(", ")}`);
+    for (const line of sweepLines(all, truth, catalogue, base, grid, split)) console.log(line);
+    if (show) for (const line of detailLines(all, truth, catalogue, base, split)) console.log(line);
+    return;
+  }
   if (tiers) {
     console.log(tiersTable(cellsOf(files, alertRowsOf(all)), `Precision per persistence tier, years ${files.map((f) => f.year).join(", ")}`));
     return;

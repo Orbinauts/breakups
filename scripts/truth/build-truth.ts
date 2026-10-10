@@ -2,10 +2,11 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readStatements, type Breakup, type BreakupKind, type BreakupsFile, type Cause, type Confidence, type Conflict, type Parent, type Precision, type Regime, type ResolvedFrom, type SourceId, type SourceRecord, type StatedOrbit, type StatedTime, type Statement } from "../../src/truth.ts";
+import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type BreakupsFile, type Cause, type Confidence, type Conflict, type Parent, type Precision, type Regime, type ResolvedFrom, type SourceId, type SourceRecord, type StatedOrbit, type StatedTime, type Statement } from "../../src/truth.ts";
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
 import { renderReport } from "./report.ts";
+import { statedOnFromRef } from "./stated.ts";
 
 /**
  * Builds the ground truth, `data/breakups.json`, from every statement the
@@ -69,7 +70,8 @@ function allStatements(): Statement[] {
   const gcat = gcatStatements(parseGcat(read("data/truth/sources/gcat-debriscat.html")));
   const hand = readStatements(parseJson<{ statements: unknown }>("data/truth/hand.json").statements);
   const catalogue = existsSync(resolve(ROOT, "data/truth/catalogue.json")) ? readStatements(parseJson<{ statements: unknown }>("data/truth/catalogue.json").statements) : [];
-  return [...hoosf, ...gcat, ...hand, ...catalogue];
+  // Each statement dated by when it can first have been public: NASA's history by the quarterly news it cites, a hand-entered one by its reference where it does not say.
+  return [...hoosf, ...gcat, ...hand, ...catalogue].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
 }
 
 const lower = (time: StatedTime): number => Date.parse(time.from ?? time.to);
@@ -339,6 +341,7 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
     statements: bySource(group.statements),
     conflicts: conflictsOf(group),
     overrides: group.overrides,
+    firstStatement: firstStatementOf(group.statements),
   };
 }
 

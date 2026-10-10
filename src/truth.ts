@@ -46,6 +46,18 @@ export type Confidence = (typeof CONFIDENCES)[number];
 export const SOURCE_IDS = ["hoosf-16e", "gcat", "odqn", "s4s-notice", "esa-ser", "news", "analyst", "catalogue"] as const;
 export type SourceId = (typeof SOURCE_IDS)[number];
 
+/**
+ * The sources whose statements are an agency's: NASA (its history, whose
+ * reference documents date its quarterly news issues, and the quarterly
+ * news itself), U.S. Space Forces-Space's notices and ESA's report. The
+ * owner reads the lead of a confirmation against the first of these; an
+ * analyst's dating, a company's post or a news report is recorded beside
+ * them and marked by its source, never counted as an agency's word.
+ */
+export const AGENCY_SOURCES: readonly SourceId[] = ["hoosf-16e", "odqn", "s4s-notice", "esa-ser"];
+
+export const isAgencySource = (source: SourceId): boolean => AGENCY_SOURCES.includes(source);
+
 export const BODY_CLASSES = ["payload", "rocket body", "debris", "unknown"] as const;
 export type BodyClass = (typeof BODY_CLASSES)[number];
 
@@ -80,6 +92,30 @@ export interface StatedOrbit {
   inclinationDeg: number | null;
 }
 
+/** How finely a statement's publication day is known: to the day (a notice seen, a post, a report's date), or to the month (a quarterly news issue's month). */
+export const STATED_PRECISIONS = ["day", "month"] as const;
+export type StatedPrecision = (typeof STATED_PRECISIONS)[number];
+
+/**
+ * When a statement can first have been public: the earliest day it can
+ * have been read, how finely that is known, and where the day was read.
+ * A quarterly news issue is dated to its month, and its first day is the
+ * earliest it can have been public, or the event's own day where the
+ * issue is of the event's month; a notice to the day it was seen; a post
+ * or a report to its day.
+ */
+export interface StatedOn {
+  /** `YYYY-MM-DD`. */
+  on: string;
+  precision: StatedPrecision;
+  ref: string;
+}
+
+/** The first statement on an event: the earliest any of its statements can have been public, with the source that made it. */
+export interface FirstStatement extends StatedOn {
+  source: SourceId;
+}
+
 /** One source's statement about one event, kept verbatim beside what was read from it. */
 export interface Statement {
   source: SourceId;
@@ -98,6 +134,8 @@ export interface Statement {
   /** The element set the source publishes for the parent before the event (NASA's spreads), in the OMM's shape. */
   preEventElements: Omm | null;
   note: string | null;
+  /** When the statement can first have been public; null where the source gives no publication date (GCAT's table, the catalogue itself, NASA's history where its references name no quarterly news issue after the event). A hand-entered statement may leave it out, and the build reads it from the reference. */
+  statedOn: StatedOn | null;
 }
 
 /** The parent of a Known Breakup, resolved across its statements. */
@@ -147,6 +185,8 @@ export interface Breakup {
   conflicts: Conflict[];
   /** The reviewer's overrides applied, by name. */
   overrides: string[];
+  /** The earliest any statement of the event can have been public, and which; null where none is dated. An agency's first statement is read from the statements (`firstAgencyStatement`). */
+  firstStatement: FirstStatement | null;
 }
 
 /** What the file says of each source it was built from. */
@@ -223,11 +263,23 @@ function instantOrNull(fields: Fields, name: string, where: string): string | nu
   return value;
 }
 
-function known(fields: Fields, allowed: readonly string[], where: string): void {
-  const extra = Object.keys(fields).find((key) => !allowed.includes(key));
+function known(fields: Fields, allowed: readonly string[], where: string, optional: readonly string[] = []): void {
+  const extra = Object.keys(fields).find((key) => !allowed.includes(key) && !optional.includes(key));
   if (extra !== undefined) fail(where, `unknown field ${extra}`);
   const missing = allowed.find((key) => !(key in fields));
   if (missing !== undefined) fail(where, `no ${missing} (null where the source gives none)`);
+}
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** A publication day checked: an ISO day, a precision of the day or the month, and where it was read; null passes. */
+function readStatedOn(value: unknown, where: string): StatedOn | null {
+  if (value === null || value === undefined) return null;
+  const fields = object(value, where);
+  known(fields, ["on", "precision", "ref"], where);
+  const on = text(fields, "on", where);
+  if (!ISO_DAY.test(on) || Number.isNaN(Date.parse(on))) fail(where, "on is not a day like 2020-02-01");
+  return { on, precision: oneOf(fields, "precision", STATED_PRECISIONS, where), ref: text(fields, "ref", where) };
 }
 
 function readParent(value: unknown, where: string): StatedParent {
@@ -265,10 +317,10 @@ function readOrbit(value: unknown, where: string): StatedOrbit {
 
 const STATEMENT_FIELDS = ["source", "ref", "kind", "parent", "event", "orbit", "cause", "causeStated", "piecesCatalogued", "piecesStatedOn", "preEventElements", "note"] as const;
 
-/** One statement checked; `where` names it in any error. */
+/** One statement checked; `where` names it in any error. A statement with no `statedOn` (a hand-entered one the build dates from its reference) reads it as null. */
 export function readStatement(value: unknown, where: string): Statement {
   const fields = object(value, where);
-  known(fields, STATEMENT_FIELDS, where);
+  known(fields, STATEMENT_FIELDS, where, ["statedOn"]);
   const piecesStatedOn = textOrNull(fields, "piecesStatedOn", where);
   if (piecesStatedOn !== null && !DAY.test(piecesStatedOn)) fail(where, "piecesStatedOn is not a day");
   const elements = fields.preEventElements;
@@ -286,6 +338,7 @@ export function readStatement(value: unknown, where: string): Statement {
     piecesStatedOn,
     preEventElements: elements as Omm | null,
     note: textOrNull(fields, "note", where),
+    statedOn: readStatedOn(fields.statedOn, `${where} statedOn`),
   };
 }
 
@@ -298,7 +351,7 @@ export function readStatements(input: unknown): Statement[] {
   });
 }
 
-const BREAKUP_FIELDS = ["id", "parent", "kind", "event", "orbit", "cause", "piecesCatalogued", "confidence", "scoreable", "exemptReason", "resolvedFrom", "statements", "conflicts", "overrides"] as const;
+const BREAKUP_FIELDS = ["id", "parent", "kind", "event", "orbit", "cause", "piecesCatalogued", "confidence", "scoreable", "exemptReason", "resolvedFrom", "statements", "conflicts", "overrides", "firstStatement"] as const;
 
 function readBreakup(value: unknown, where: string): Breakup {
   const fields = object(value, where);
@@ -344,6 +397,14 @@ function readBreakup(value: unknown, where: string): Breakup {
     return { field: oneOf(conflict, "field", CONFLICT_FIELDS, `${where} conflict ${index + 1}`), sources: conflict.sources as SourceId[], detail: text(conflict, "detail", `${where} conflict ${index + 1}`) };
   });
   if (!Array.isArray(fields.overrides) || !fields.overrides.every((name) => typeof name === "string")) fail(where, "overrides is not a list of names");
+  let firstStatement: FirstStatement | null = null;
+  if (fields.firstStatement !== null) {
+    const first = object(fields.firstStatement, `${where} firstStatement`);
+    known(first, ["on", "precision", "source", "ref"], `${where} firstStatement`);
+    const { source, ...rest } = first;
+    firstStatement = { ...readStatedOn(rest, `${where} firstStatement`)!, source: oneOf({ source }, "source", SOURCE_IDS, `${where} firstStatement`) };
+    if (!statements.some((s) => s.source === firstStatement!.source && s.statedOn?.on === firstStatement!.on)) fail(`${where} firstStatement`, "names no statement of the event dated so");
+  }
   return {
     id,
     parent,
@@ -359,6 +420,7 @@ function readBreakup(value: unknown, where: string): Breakup {
     statements,
     conflicts,
     overrides: fields.overrides as string[],
+    firstStatement,
   };
 }
 
@@ -387,6 +449,28 @@ export function readBreakups(input: unknown): Breakup[] {
 /** The launch of a designator: `1981-043` of `1981-043A`, or of `2018-005` alone; null for none. */
 export function launchOf(designator: string | null): string | null {
   return designator !== null && DESIGNATOR.test(designator) ? designator.slice(0, 8) : null;
+}
+
+/**
+ * The first statement of an event by an agency (`AGENCY_SOURCES`): the
+ * earliest of its agency statements' publication days, with the source;
+ * null where no agency statement is dated. The scorecard reads the lead
+ * of a confirmation against this, the owner's reading of "before the
+ * agencies said it".
+ */
+export function firstAgencyStatement(breakup: Pick<Breakup, "statements">): FirstStatement | null {
+  return firstStatementOf(breakup.statements.filter((s) => isAgencySource(s.source)));
+}
+
+/** The earliest dated statement among those given, a finer day before a month on the same day, then the source's order in `SOURCE_IDS`; null where none is dated. */
+export function firstStatementOf(statements: readonly Statement[]): FirstStatement | null {
+  let first: FirstStatement | null = null;
+  for (const s of statements) {
+    if (s.statedOn === null) continue;
+    const candidate: FirstStatement = { ...s.statedOn, source: s.source };
+    if (first === null || candidate.on < first.on || (candidate.on === first.on && (STATED_PRECISIONS.indexOf(candidate.precision) < STATED_PRECISIONS.indexOf(first.precision) || (candidate.precision === first.precision && SOURCE_IDS.indexOf(candidate.source) < SOURCE_IDS.indexOf(first.source))))) first = candidate;
+  }
+  return first;
 }
 
 /** The UTC year a Known Breakup is counted in: its window's lower edge, else its upper. */

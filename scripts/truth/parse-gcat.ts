@@ -129,6 +129,7 @@ export function gcatStatements(parsed: { updated: string; rows: CloudRow[] }): S
       piecesStatedOn: updatedOn,
       preEventElements: null,
       note: row.parent?.kind === "analyst" ? `Parent is GCAT's analyst object A${row.parent.number}.` : row.parent === null ? "GCAT names no parent object." : null,
+      statedOn: null,
     };
   });
 }

@@ -1,5 +1,5 @@
 import type { Omm } from "@orbinauts/engine";
-import type { BreakupKind, Cause, Statement } from "../../src/truth.ts";
+import type { BreakupKind, Cause, Statement, StatedOn, StatedTime } from "../../src/truth.ts";
 import { DateFormError, nasaWindow, parseNasaDate } from "./dates.ts";
 
 /**
@@ -59,6 +59,23 @@ export interface Spread {
   events: SpreadEvent[];
   anomalous: AnomalousEvents | null;
   comments: string;
+  /** The quarterly news issues the spread's REFERENCE DOCUMENTS cite, in the order cited. */
+  references: OdqnReference[];
+}
+
+/**
+ * One issue of NASA's Orbital Debris Quarterly News that a spread cites
+ * among its reference documents: the article's title where the entry
+ * quotes one, the issue's month as the entry prints it (`2020-02` of
+ * "February 2020"), and the volume and issue where the entry's link
+ * names them (`odqnv24i1.pdf`). The issue is NASA's statement of the
+ * event, published in that month.
+ */
+export interface OdqnReference {
+  title: string | null;
+  month: string;
+  volume: number | null;
+  issue: number | null;
 }
 
 /** A row of Table 2.1 (breakups by launch date). */
@@ -113,7 +130,7 @@ const DESIGNATOR = String.raw`\d{4}-\d{3}[A-Z]{0,3}`;
 const HEADER = new RegExp(String.raw`^\f?(\S.*?)\s{2,}(${DESIGNATOR})\s+(\d{1,6})\s*$`);
 const PAGE_NUMBER = /^\s*(\d{1,4})\s*$/;
 /** A section heading, numbered on a spread with more than one event ("EVENT DATA (2)", "PRE-EVENT ELEMENTS (2)"). */
-const SECTION = /^(?:FIRST |SECOND |THIRD |FOURTH )?(SATELLITE DATA|EVENT DATA|POST-EVENT DATA|PRE-EVENT ELEMENTS|POST-EVENT ELEMENTS|DEBRIS CLOUD DATA|COMMENTS|REFERENCE DOCUMENTS)(?:\s*\(\d+\))?\*?\s*$/;
+const SECTION = /^(?:FIRST |SECOND |THIRD |FOURTH )?(SATELLITE DATA|EVENT DATA|POST-EVENT DATA|PRE-EVENT ELEMENTS|POST-EVENT ELEMENTS|DEBRIS CLOUD DATA|COMMENTS|REFERENCE DOCUMENTS?)(?:\s*\(\d+\))?\*?\s*$/;
 /** A labelled field; a line may carry two ("DATE: ... LOCATION: ..."). */
 const FIELD = /([A-Z][A-Z0-9 .()/∆-]*?):\s+(.*?)(?=\s{2,}[A-Z][A-Z0-9 .()/∆-]*?:\s|\s*$)/g;
 
@@ -194,7 +211,9 @@ function parseSpread(header: RegExpExecArray, body: string[], chapter: 2 | 3): S
     events: [],
     anomalous: null,
     comments: "",
+    references: [],
   };
+  const referenceLines: string[] = [];
   let section: string | null = null;
   let event: SpreadEvent | null = null;
   let elementFields = new Map<string, string>();
@@ -216,7 +235,7 @@ function parseSpread(header: RegExpExecArray, body: string[], chapter: 2 | 3): S
     const heading = SECTION.exec(line.trim());
     if (heading !== null) {
       closeElements();
-      section = heading[1] === "POST-EVENT DATA" ? "EVENT DATA" : heading[1]!;
+      section = heading[1] === "POST-EVENT DATA" ? "EVENT DATA" : heading[1] === "REFERENCE DOCUMENT" ? "REFERENCE DOCUMENTS" : heading[1]!;
       if (section === "EVENT DATA") {
         event = { date: "", time: null, altitude: null, location: null, cause: null, elements: null };
         spread.events.push(event);
@@ -227,6 +246,10 @@ function parseSpread(header: RegExpExecArray, body: string[], chapter: 2 | 3): S
     }
     if (section === "COMMENTS") {
       comments.push(line.trim());
+      continue;
+    }
+    if (section === "REFERENCE DOCUMENTS") {
+      referenceLines.push(line.trim());
       continue;
     }
     if (section === "EVENT DATA" && orbitHeader) {
@@ -270,7 +293,69 @@ function parseSpread(header: RegExpExecArray, body: string[], chapter: 2 | 3): S
   closeElements();
   spread.events = spread.events.filter((e) => e.date !== "");
   spread.comments = comments.join(" ").replace(/\s+/g, " ").trim();
+  spread.references = odqnReferences(referenceLines.join(" "));
   return spread;
+}
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] as const;
+/** How far after the newsletter's name its issue month may stand, in characters ("The Orbital Debris Quarterly News, NASA JSC, February 2020"). */
+const MONTH_REACH = 40;
+/** How far before the newsletter's name the article's quoted title may end, and after it the issue's link may stand, in characters. */
+const TITLE_REACH = 200;
+const LINK_REACH = 160;
+
+/**
+ * The quarterly news issues a spread's reference documents cite, read
+ * from their text with the lines joined: each mention of the newsletter
+ * followed, within a few words, by a month and a year is one issue; the
+ * quoted title before it and the link after it (`odqnv24i1.pdf`, volume
+ * 24, issue 1) are read where present. A mention with no month (a
+ * comment's "Newsletter V, Issue 4") is not an issue cited.
+ */
+export function odqnReferences(text: string): OdqnReference[] {
+  const flat = text.replace(/\s+/g, " ");
+  const references: OdqnReference[] = [];
+  const name = /Orbital Debris Quarterly News(?:letter)?/gi;
+  for (const mention of flat.matchAll(name)) {
+    const at = mention.index!;
+    const after = flat.slice(at + mention[0].length, at + mention[0].length + MONTH_REACH);
+    const dated = new RegExp(`(${MONTHS.join("|")}),?\\s+(\\d{4})`).exec(after);
+    if (dated === null) continue;
+    const month = `${dated[2]}-${String(MONTHS.indexOf(dated[1] as (typeof MONTHS)[number]) + 1).padStart(2, "0")}`;
+    const before = flat.slice(Math.max(0, at - TITLE_REACH), at);
+    const quoted = [...before.matchAll(/[“"]([^“”"]+?)[,]?[”"]/g)].at(-1);
+    const link = /odqnv(\d+)i(\d+)/i.exec(flat.slice(at, at + LINK_REACH + mention[0].length));
+    references.push({ title: quoted === undefined ? null : quoted[1]!.trim().replace(/,$/, ""), month, volume: link === null ? null : Number(link[1]), issue: link === null ? null : Number(link[2]) });
+  }
+  return references;
+}
+
+/** A quarterly news issue as a citation: "ODQN 24(1), February 2020", the title quoted where known. */
+export function odqnCitation(reference: OdqnReference): string {
+  const [year, month] = reference.month.split("-");
+  const issue = reference.volume === null ? "ODQN" : `ODQN ${reference.volume}(${reference.issue})`;
+  return `${reference.title === null ? "" : `“${reference.title}”, `}${issue}, ${MONTHS[Number(month) - 1]} ${year}`;
+}
+
+/**
+ * When NASA first stated an event, as far as its history's references
+ * say: the earliest quarterly news issue the spread cites whose month is
+ * not before the event's (an issue cannot report what had not happened,
+ * and a spread with two events cites the issues of both), dated to the
+ * first day of its month, or to the event's own day where the issue is of
+ * the event's month, since that is the earliest it can have been public.
+ * Null where the spread cites no such issue: the history itself, the
+ * sixteenth edition of December 2022, is then the first NASA statement the
+ * sources hold, and a date that late would overstate any lead, so none is
+ * given.
+ */
+export function statedOnOf(references: readonly OdqnReference[], event: StatedTime, page: number): StatedOn | null {
+  const lower = (event.from ?? event.to).slice(0, 10);
+  const issues = references.filter((r) => r.month >= lower.slice(0, 7)).sort((a, b) => a.month.localeCompare(b.month));
+  const first = issues[0];
+  if (first === undefined) return null;
+  const monthStart = `${first.month}-01`;
+  return { on: monthStart > lower ? monthStart : lower, precision: "month", ref: `${odqnCitation(first)}, cited by NASA's history, p. ${page}` };
 }
 
 /** Every spread of chapters 2 and 3, in the document's order. */
@@ -471,7 +556,10 @@ export function hoosfStatements(hoosf: Hoosf): Statement[] {
           piecesStatedOn: row !== undefined ? "2022-05-01" : null,
           preEventElements: event.elements?.when === "pre" ? event.elements.omm : null,
           note: `Type: ${spread.type ?? "unknown"}; owner: ${spread.owner ?? "unknown"}; launched ${spread.launchDate ?? "unknown"}.${event.elements?.when === "post" ? " Post-event elements only." : ""}`,
+          statedOn: null,
         });
+        const added = statements.at(-1)!;
+        added.statedOn = statedOnOf(spread.references, added.event, spread.page);
       }
       continue;
     }
@@ -491,7 +579,10 @@ export function hoosfStatements(hoosf: Hoosf): Statement[] {
         piecesStatedOn: "2022-05-01",
         preEventElements: spread.events[0]?.elements?.when === "pre" ? spread.events[0].elements.omm : null,
         note: `Known events: ${spread.anomalous.knownEvents}. Type: ${spread.type ?? "unknown"}; owner: ${spread.owner ?? "unknown"}; launched ${spread.launchDate ?? "unknown"}.`,
+        statedOn: null,
       });
+      const added = statements.at(-1)!;
+      added.statedOn = statedOnOf(spread.references, added.event, spread.page);
       continue;
     }
     const row = breakupRows.get(spread.catalogueNumber);
@@ -510,7 +601,10 @@ export function hoosfStatements(hoosf: Hoosf): Statement[] {
         piecesStatedOn: index === 0 && row !== undefined ? "2022-05-01" : null,
         preEventElements: event.elements?.when === "pre" ? event.elements.omm : null,
         note: `Type: ${spread.type ?? "unknown"}; owner: ${spread.owner ?? "unknown"}; launched ${spread.launchDate ?? "unknown"}.${event.location !== null ? ` Location ${event.location}.` : ""}${event.elements?.when === "post" ? " Post-event elements only." : ""}${spread.events.length > 1 ? ` Event ${index + 1} of ${spread.events.length} on this spread.` : ""}`,
+        statedOn: null,
       });
+      const added = statements.at(-1)!;
+      added.statedOn = statedOnOf(spread.references, added.event, spread.page);
     });
   }
   const withSpread = new Set(hoosf.spreads.map((s) => s.catalogueNumber));
@@ -537,6 +631,7 @@ export function hoosfStatements(hoosf: Hoosf): Statement[] {
       piecesStatedOn: "2022-05-01",
       preEventElements: null,
       note: `Listed in Table 2.1 with no spread of its own; launched ${row.launchDate}.`,
+      statedOn: null,
     });
   }
   for (const row of hoosf.aerodynamicRows) {
@@ -561,6 +656,7 @@ export function hoosfStatements(hoosf: Hoosf): Statement[] {
       piecesStatedOn: "2022-05-01",
       preEventElements: null,
       note: row.reentryDate !== null ? `Reentered ${row.reentryDate}.` : null,
+      statedOn: null,
     });
   }
   return statements;

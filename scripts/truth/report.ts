@@ -1,5 +1,5 @@
-import type { Breakup, BreakupsFile, SourceId, Statement } from "../../src/truth.ts";
-import { yearOf } from "../../src/truth.ts";
+import type { Breakup, BreakupsFile, FirstStatement, SourceId, Statement } from "../../src/truth.ts";
+import { AGENCY_SOURCES, firstAgencyStatement, yearOf } from "../../src/truth.ts";
 
 /**
  * The report a reviewer reads beside the generated truth: what was built
@@ -34,6 +34,30 @@ function duplicates(breakups: Breakup[]): (string | number)[][] {
     }
   }
   return rows;
+}
+
+const statedCell = (first: FirstStatement | null): string => (first === null ? "" : `${first.on} (${first.source}, ${first.precision})`);
+
+/** The first-statement section: how many scoreable events from the scoring span have a dated first statement, by its source and how finely it is dated, and how many an agency's. */
+function firstStatements(scoreable: Breakup[]): string[] {
+  const headline = (b: Breakup): boolean => b.kind === "breakup" && (b.confidence === "A" || b.confidence === "B");
+  const rows: (string | number)[][] = SOURCES.map((source) => {
+    const firsts = scoreable.filter((b) => b.firstStatement?.source === source);
+    return [source, AGENCY_SOURCES.includes(source) ? "yes" : "no", firsts.length, firsts.filter(headline).length, firsts.filter((b) => b.firstStatement!.precision === "day").length, firsts.filter((b) => b.firstStatement!.precision === "month").length];
+  }).filter((row) => (row[2] as number) > 0);
+  const none = scoreable.filter((b) => b.firstStatement === null);
+  rows.push(["none dated", "", none.length, none.filter(headline).length, "", ""]);
+  const agency = scoreable.filter((b) => firstAgencyStatement(b) !== null);
+  return [
+    "## First statements",
+    "",
+    "When each event was first stated in public, as far as the sources date it: NASA's history by the quarterly news issues its reference documents cite (an issue is dated to its month, and the first day of the month, or the event's own day where the issue is of the event's month, is the earliest it can have been public; an issue dated before the event is not its statement), the quarterly news typed by hand by the issue its reference names, a U.S. Space Forces-Space notice by the day it was seen, ESA's report by its date, an analyst's dating or a company's or a newspaper's post by its day. GCAT's table and the catalogue carry no publication date. The first statement is the earliest of an event's dated statements, whoever made it; the scorecard reads the lead of a confirmation against the first statement by an agency (NASA, U.S. Space Forces-Space, ESA), which the source column marks.",
+    "",
+    table(["Source of the first statement", "An agency", "Scoreable events from 2005", "Of which breakups, confidence A and B", "Dated to the day", "Dated to the month"], rows),
+    "",
+    `Of the ${scoreable.length} scoreable events from ${SCORING_FROM}, ${scoreable.length - none.length} have a dated first statement and ${agency.length} a dated statement by an agency; of the ${scoreable.filter(headline).length} breakups of confidence A and B, ${scoreable.filter(headline).filter((b) => firstAgencyStatement(b) !== null).length} have an agency's.`,
+    "",
+  ];
 }
 
 export function renderReport(file: BreakupsFile, statements: Statement[]): string {
@@ -76,6 +100,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[]): strin
     "",
     conflicts.length === 0 ? "None." : table(["Event", "Field", "Disagreement", "Resolved from"], conflicts.flatMap((b) => b.conflicts.map((c) => [line(b), c.field, c.detail, c.field === "event" || c.field === "day" ? b.resolvedFrom.event : c.field === "cause" ? (b.resolvedFrom.cause ?? "none") : c.field === "kind" ? b.resolvedFrom.kind : b.parent.catalogueNumber ?? "none"]))),
     "",
+    ...firstStatements(scoring.filter((b) => b.scoreable)),
     "## Possible duplicates",
     "",
     "Events of one parent within a year of each other that no statement joins: a second event, or one event two sources date months apart. A reviewer merges the latter with an override.",
@@ -98,7 +123,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[]): strin
     "",
     `## Every scoreable event from ${SCORING_FROM}`,
     "",
-    table(["Event", "Kind", "Time", "Precision", "Confidence", "Regime", "Class", "Cause", "Pieces", "Sources"], scoring.filter((b) => b.scoreable).map((b) => [line(b), b.kind, b.event.at ?? `${b.event.from ?? "…"} to ${b.event.to}`, b.event.precision, b.confidence, b.orbit.regime, b.parent.class, b.cause, b.piecesCatalogued ?? "", b.statements.map((s) => s.source).join(", ")])),
+    table(["Event", "Kind", "Time", "Precision", "Confidence", "Regime", "Class", "Cause", "Pieces", "Sources", "First statement", "First agency statement"], scoring.filter((b) => b.scoreable).map((b) => [line(b), b.kind, b.event.at ?? `${b.event.from ?? "…"} to ${b.event.to}`, b.event.precision, b.confidence, b.orbit.regime, b.parent.class, b.cause, b.piecesCatalogued ?? "", b.statements.map((s) => s.source).join(", "), statedCell(b.firstStatement), statedCell(firstAgencyStatement(b))])),
     "",
   ];
   return sections.join("\n");

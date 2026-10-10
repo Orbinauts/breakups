@@ -219,7 +219,8 @@
       "cause": "propulsion", "causeStated": "Propulsion",
       "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
       "preEventElements": null,
-      "note": "ESA names no object; 60 asserted objects, 0 catalogued."
+      "note": "ESA names no object; 60 asserted objects, 0 catalogued.",
+      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
     },
     {
       "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-04-08",
@@ -230,7 +231,8 @@
       "cause": "propulsion", "causeStated": "Propulsion",
       "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
       "preEventElements": null,
-      "note": "ESA names no object; 92 asserted objects, 0 catalogued."
+      "note": "ESA names no object; 92 asserted objects, 0 catalogued.",
+      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
     },
     {
       "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-05-27",
@@ -241,7 +243,8 @@
       "cause": "unknown", "causeStated": "Unknown",
       "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
       "preEventElements": null,
-      "note": "ESA names no object; 1 asserted object, 0 catalogued."
+      "note": "ESA names no object; 1 asserted object, 0 catalogued.",
+      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
     },
     {
       "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-07-05",
@@ -252,7 +255,8 @@
       "cause": "propulsion", "causeStated": "Propulsion",
       "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
       "preEventElements": null,
-      "note": "ESA names no object; 44 asserted objects, 0 catalogued. No authority names the object; the 2024-126C attribution rests on secondary reports only."
+      "note": "ESA names no object; 44 asserted objects, 0 catalogued. No authority names the object; the 2024-126C attribution rests on secondary reports only.",
+      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
     },
     {
       "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-12-01",
@@ -263,7 +267,8 @@
       "cause": "unknown", "causeStated": "Unknown",
       "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
       "preEventElements": null,
-      "note": "ESA names no object; 100 asserted objects, 0 catalogued."
+      "note": "ESA names no object; 100 asserted objects, 0 catalogued.",
+      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
     }
   ]
 }

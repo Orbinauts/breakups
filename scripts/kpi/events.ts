@@ -1,7 +1,8 @@
 import { writeFileSync } from "node:fs";
-import { DETECTOR_PARAMETERS, EXPLANATION_BITS, MANOEUVRE_CLASSES, OUTCOMES, PHASES, type LogRow } from "../../src/index.ts";
+import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, EXPLANATION_BITS, MANOEUVRE_CLASSES, OUTCOMES, PHASES, REFUSALS, type LogRow } from "../../src/index.ts";
+import { FRAGMENTS_DAYS } from "./catalogue.ts";
 
-import { LINE_LABELS, type Latest, type YearFile } from "./kpi.ts";
+import { LINE_LABELS, firstConfirmationsOf, isConfirmedTarget, type FirstConfirmations, type Latest, type YearFile } from "./kpi.ts";
 import { LINES, marginDaysOf, type Line, type ScoredEvent } from "./match.ts";
 import { DAY_MS } from "./replay.ts";
 import type { Truth } from "./run.ts";
@@ -51,6 +52,80 @@ export interface Dissection {
   year: number;
   cause: Cause;
   detail: string;
+}
+
+/** Why the Confirmed line missed a target, read off the detector's attribution and cloud rows for the launch in the 180 days after the event. */
+export const CONFIRMED_CAUSES = ["confirmed", "attributed to another body", "ambiguous parent", "old cloud", "young launch", "backlog", "velocity floor", "single piece", "fresh piece", "too few pieces", "no convergence", "not timed", "analyst range", "cataloguing batch", "parent not a candidate", "no piece in a plane the detector read", "no new body seen", "no fragments catalogued", "no parent orbit"] as const;
+export type ConfirmedCause = (typeof CONFIRMED_CAUSES)[number];
+
+/** The refusal bits in the order a cause is named by: the first that applies. */
+const REFUSAL_CAUSES: [number, ConfirmedCause][] = [
+  [REFUSALS.ambiguous, "ambiguous parent"],
+  [REFUSALS.parentInCloud | REFUSALS.piecesInCloud | REFUSALS.nearerThanCloud, "old cloud"],
+  [REFUSALS.youngLaunch, "young launch"],
+  [REFUSALS.background, "backlog"],
+  [REFUSALS.velocity, "velocity floor"],
+  [REFUSALS.singlePiece, "single piece"],
+  [REFUSALS.freshPiece, "fresh piece"],
+  [REFUSALS.minPieces, "too few pieces"],
+  [REFUSALS.miss, "no convergence"],
+  [REFUSALS.untimed, "not timed"],
+  [REFUSALS.analyst, "analyst range"],
+  [REFUSALS.batch, "cataloguing batch"],
+];
+
+/** The words for refusal bits. */
+export function refusalWords(bits: number): string {
+  const words: string[] = [];
+  for (const [bit, cause] of REFUSAL_CAUSES) if ((bits & bit) !== 0) words.push(cause);
+  return words.join(", ");
+}
+
+/** The attribution and cloud rows of every file, by the launch's code. */
+type LaunchRows = Map<number, LogRow[]>;
+
+function launchRowsOf(files: YearFile[]): LaunchRows {
+  const rows: LaunchRows = new Map();
+  for (const file of files) for (const row of file.log) if ((row.signals.phase === PHASES.attribution || row.signals.phase === PHASES.cloud) && row.signals.launch !== undefined) (rows.get(row.signals.launch) ?? rows.set(row.signals.launch, []).get(row.signals.launch)!).push(row);
+  return rows;
+}
+
+const launchCode = (launch: string | null): number | null => (launch === null ? null : Number(launch.slice(0, 4)) * 1000 + Number(launch.slice(5, 8)));
+
+/** The Confirmed line's reading of one event: confirmed (and how), not a target, or the cause of the miss and what the log says. */
+export function dissectConfirmed(event: ScoredEvent, first: FirstConfirmations, launchRows: LaunchRows): { cause: ConfirmedCause; detail: string } {
+  const confirmation = first.get(event.id);
+  if (!isConfirmedTarget(event)) {
+    const cause: ConfirmedCause = event.fragments !== undefined && !event.fragments.parentOrbit ? "no parent orbit" : "no fragments catalogued";
+    return { cause, detail: confirmation === undefined ? "" : "confirmed none the less" };
+  }
+  if (confirmation !== undefined) {
+    const landing = confirmation.landing;
+    const statement = event.statement === null || event.statement === undefined ? "" : `, ${((event.statement.at - landing.raisedAt) / DAY_MS).toFixed(1)} d ${landing.raisedAt < event.statement.at ? "before" : "after"} the first agency statement (${event.statement.source}, to the ${event.statement.precision})`;
+    return { cause: "confirmed", detail: `${landing.attributed ? "attributed from the pieces" : "the step alert confirmed by the pieces"} ${((landing.raisedAt - (event.at ?? event.from)) / DAY_MS).toFixed(1)} d after the event, ${((landing.raisedAt - event.fragments!.firstAt!) / DAY_MS).toFixed(1)} d after the first fragment's publication${statement}` };
+  }
+  const code = launchCode(event.launch);
+  const window = (event.at ?? event.from) - marginDaysOf(event.regime) * DAY_MS;
+  const until = event.to + FRAGMENTS_DAYS * DAY_MS;
+  const rows = (code === null ? [] : launchRows.get(code) ?? []).filter((row) => row.at >= window && row.at <= until);
+  const attributions = rows.filter((row) => row.signals.phase === PHASES.attribution);
+  const own = attributions.filter((row) => row.number === event.parent);
+  if (own.length > 0) {
+    const bits = own.reduce((all, row) => all | (row.signals.attributionRefused ?? 0), 0);
+    const cause = REFUSAL_CAUSES.find(([bit]) => (bits & bit) !== 0)?.[1] ?? "too few pieces";
+    const paths = [...new Set(own.map((row) => (row.signals.attributionPath === ATTRIBUTION_PATHS.alert ? "the step alert" : row.signals.attributionPath === ATTRIBUTION_PATHS.analyst ? "an analyst range" : "an attribution")))].join(" and ");
+    const best = own.reduce((most, row) => Math.max(most, row.signals.attributionPieces ?? 0), 0);
+    return { cause, detail: `${own.length} judgement${own.length === 1 ? "" : "s"} of pieces for the parent (${paths}), at most ${best} in its plane, refused: ${refusalWords(bits)}` };
+  }
+  const elsewhere = attributions.filter((row) => row.signals.attributionRaised === 1);
+  if (elsewhere.length > 0) return { cause: "attributed to another body", detail: `the pieces were attributed to ${[...new Set(elsewhere.map((row) => row.number))].join(", ")} of the launch` };
+  const clouds = rows.filter((row) => row.signals.phase === PHASES.cloud);
+  if (attributions.length > 0) return { cause: "parent not a candidate", detail: `pieces were judged for ${[...new Set(attributions.map((row) => row.number))].join(", ")} of the launch, never for the parent` };
+  if (clouds.length > 0) {
+    const inPlane = clouds.reduce((most, row) => Math.max(most, row.signals.inPlane3 ?? 0), 0);
+    return inPlane > 0 ? { cause: "parent not a candidate", detail: `${clouds.length} run${clouds.length === 1 ? "" : "s"} brought the launch new bodies, at most ${inPlane} in a plane of its bodies, none judged for the parent` } : { cause: "no piece in a plane the detector read", detail: `${clouds.length} run${clouds.length === 1 ? "" : "s"} brought the launch new bodies, none in the plane of a body the detector held` };
+  }
+  return { cause: "no new body seen", detail: "the detector saw no new body under the launch in the 180 days after the event" };
 }
 
 /** The log rows of an object with a step bracket, over every file. */
@@ -147,6 +222,12 @@ export function dissectAll(files: YearFile[]): Dissection[] {
   return all.sort((a, b) => order.get(a.event.line)! - order.get(b.event.line)! || a.event.from - b.event.from);
 }
 
+function confirmedTotals(rows: { cause: ConfirmedCause }[]): string[] {
+  const counts = new Map<ConfirmedCause, number>();
+  for (const row of rows) counts.set(row.cause, (counts.get(row.cause) ?? 0) + 1);
+  return CONFIRMED_CAUSES.filter((cause) => counts.has(cause)).map((cause) => `| ${cause} | ${counts.get(cause)} |`);
+}
+
 function totals(rows: Dissection[]): string[] {
   const counts = new Map<Cause, number>();
   for (const row of rows) counts.set(row.cause, (counts.get(row.cause) ?? 0) + 1);
@@ -155,11 +236,16 @@ function totals(rows: Dissection[]): string[] {
 
 export function renderEvents(files: YearFile[], latest: Latest): string {
   const rows = dissectAll(files);
+  const first = firstConfirmationsOf(files);
+  const launchRows = launchRowsOf(files);
+  const confirmed = new Map(rows.map((r) => [r.event.id, dissectConfirmed(r.event, first, launchRows)]));
   const years = files.map((f) => f.year).sort((a, b) => a - b);
   const out: string[] = [
     "# The events, dissected",
     "",
-    `Generated by \`npm run kpi -- --aggregate\` with the scorecard, over the years ${years[0]} to ${years.at(-1)} of the Archive with the ${latest.detector.name} detector: one row per scoreable reported event, with the matcher's outcome, the cause as the detector's own log for the parent gives it, the alert's lead over the catalogue's first fragment, whether and when the alert was confirmed, and the timing error where the truth states a minute. Never edited by hand. The validation years are the odd ones.`,
+    `Generated by \`npm run kpi -- --aggregate\` with the scorecard, over the years ${years[0]} to ${years.at(-1)} of the Archive with the ${latest.detector.name} detector: one row per scoreable reported event, with the Confirmed line's outcome and its cause first (the target since the seventh decision record), then the parent-step line's outcome, the cause as the detector's own log for the parent gives it, the alert's lead over the catalogue's first fragment, whether and when the alert was confirmed, and the timing error where the truth states a minute. Never edited by hand. The validation years are the odd ones.`,
+    "",
+    "The Confirmed line's causes: **confirmed** (the first confirmed verdict by pieces on the parent within 180 days: attributed from the pieces, or the step alert confirmed by them, with the days after the event, after the first fragment's publication and before or after the first agency statement); **no fragments catalogued** and **no parent orbit** (not a target: no fresh piece in the parent's plane within 180 days, or no set of the parent before the event to test a plane against); and for a miss, read off the detector's attribution rows for the launch in the 180 days after the event, the first that applies: **ambiguous parent** (the pieces lay in the plane of another body of the launch too and did not converge on the parent clearly better), **old cloud** (the launch remembered a cloud within the year and the parent or the pieces lay in its plane), **young launch** (under a month old), **backlog** (the launch was still cataloguing an old cloud), **velocity floor**, **single piece**, **fresh piece** (a debris-classed parent itself a fresh piece), **too few pieces**, **no convergence** (propagated back, the pieces missed the parent), **not timed**, **analyst range** (the pieces were analyst objects), **cataloguing batch** (the run listed new bodies under many old launches at once); **attributed to another body** (the launch's pieces were attributed to another of its bodies); **parent not a candidate** (pieces were judged for other bodies of the launch, or lay in some plane, but never for the parent: a debris-classed parent, or one the detector held no set of); **no piece in a plane the detector read**; **no new body seen** (none under the launch in the window, as when the pieces were catalogued as analyst objects).",
     "",
     "The causes: **raised** (detected, with what raised it); **no post set before the catalogue** and **persistence after the catalogue** (late: the parent's first set after the event came after the first fragment's, or came before it but the second or third did not); **record gate** (a persistent step the object's own record classed as a manoeuvre); **manoeuvre explanation** (a persistent step on an object with no record of moving itself that an explanation from outside the record read as a manoeuvre: its working status at the step, a return to a held altitude, siblings or a deployment); **ramping fit** (the step held at the post sets' centroid but not at the first post set); **step taken back** (the later sets undid the first jump); **below persistence** (a candidate that faded under the gates); **no further set** (a candidate that lapsed); **margin** (a persistent step on the parent within ten days of the window but outside the matcher's margin); **no sets before the catalogue** (no set of the parent between the event and the first fragment); **parent did not move** (the parent had sets and none left its model); **no public sets** (undetectable, out of the denominator).",
     "",
@@ -167,16 +253,25 @@ export function renderEvents(files: YearFile[], latest: Latest): string {
   for (const line of LINES) {
     const mine = rows.filter((r) => r.event.line === line);
     if (mine.length === 0) continue;
-    out.push(`## ${LINE_LABELS[line].replace(" (the target is 90%)", "")}`, "", `| Year | Event | Regime | Outcome | Cause | What the log says | Lead over the catalogue | Confirmed | Timing error |`, `| --- | --- | --- | --- | --- | --- | --- | --- | --- |`);
+    out.push(`## ${LINE_LABELS[line].replace(" (the headline line)", "")}`, "", `| Year | Event | Regime | Confirmed line | Why | Parent step | Cause | What the log says | Lead over the catalogue | Step alert confirmed | Timing error |`, `| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |`);
     for (const r of mine) {
       const e = r.event;
-      out.push(`| ${r.year} | ${escape(e.name)} (${e.parent}, ${e.launch ?? "no launch"}), ${iso(e.at ?? e.from)}${e.at === null ? ` to ${iso(e.to)}` : ""} | ${e.regime} | ${e.status} | ${r.cause} | ${escape(r.detail)} | ${leadCell(e)} | ${confirmedCell(e)} | ${e.timingErrorMinutes === null ? "–" : `${e.timingErrorMinutes.toFixed(0)} min`} |`);
+      const c = confirmed.get(e.id)!;
+      out.push(`| ${r.year} | ${escape(e.name)} (${e.parent}, ${e.launch ?? "no launch"}), ${iso(e.at ?? e.from)}${e.at === null ? ` to ${iso(e.to)}` : ""} | ${e.regime} | ${c.cause} | ${escape(c.detail)} | ${e.status} | ${r.cause} | ${escape(r.detail)} | ${leadCell(e)} | ${confirmedCell(e)} | ${e.timingErrorMinutes === null ? "–" : `${e.timingErrorMinutes.toFixed(0)} min`} |`);
     }
-    out.push("", `| Totals, ${LINE_LABELS[line].replace(" (the target is 90%)", "").toLowerCase()} | Events |`, `| --- | --- |`, ...totals(mine), "");
+    out.push("", `| Totals, ${LINE_LABELS[line].replace(" (the headline line)", "").toLowerCase()} | Events |`, `| --- | --- |`, ...totals(mine), "", `| Confirmed line, ${LINE_LABELS[line].replace(" (the headline line)", "").toLowerCase()} | Events |`, `| --- | --- |`, ...confirmedTotals(mine.map((r) => confirmed.get(r.event.id)!)), "");
   }
   const headline = rows.filter((r) => r.event.line === "breakups A-B");
   const validation = headline.filter((r) => r.year % 2 === 1);
-  out.push("## Totals by cause", "", "| Cause | Breakups A and B, validation (odd years) | Breakups A and B, every year | Every line, every year |", "| --- | --- | --- | --- |");
+  const training = headline.filter((r) => r.year % 2 === 0);
+  out.push("## The Confirmed line's causes", "", "| Cause | Breakups A and B, training (even years) | Breakups A and B, validation (odd years) | Every line, every year |", "| --- | --- | --- | --- |");
+  for (const cause of CONFIRMED_CAUSES) {
+    const count = (set: Dissection[]): number => set.filter((r) => confirmed.get(r.event.id)!.cause === cause).length;
+    if (count(rows) === 0) continue;
+    out.push(`| ${cause} | ${count(training)} | ${count(validation)} | ${count(rows)} |`);
+  }
+  out.push("");
+  out.push("## Totals by cause, the parent-step line", "", "| Cause | Breakups A and B, validation (odd years) | Breakups A and B, every year | Every line, every year |", "| --- | --- | --- | --- |");
   for (const cause of CAUSES) {
     const count = (set: Dissection[]): number => set.filter((r) => r.cause === cause).length;
     if (count(rows) === 0) continue;

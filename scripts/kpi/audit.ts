@@ -2,12 +2,13 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OPS_STATUSES, REGIMES, deltaVOfAxisChange, foldedRatio, isWorkingStatus, planeDistance, poissonTail, readBreakups, readStatements, semiMajorAxisOf, type BodyClass, type Breakup, type PlaneOrbit, type Regime, type Statement, type Step, type Verdict } from "../../src/index.ts";
-import { archiveHome, builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OPS_STATUSES, REGIMES, deltaVOfAxisChange, foldedRatio, isWorkingStatus, planeDistance, poissonTail, readBreakups, readStatements, type BodyClass, type Breakup, type PlaneOrbit, type Regime, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { archiveHome } from "../archive/archive.ts";
 import { gcatStatements, parseGcat } from "../truth/parse-gcat.ts";
 import type { YearFile } from "./kpi.ts";
+import { readCatalogue, type BodyFact, type Catalogue, type ParentSet } from "./catalogue.ts";
 import { MATCH_MARGIN_DAYS } from "./match.ts";
-import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
+import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
 
 /**
  * The truth audit of the eighth phase: how many of the scorecard's false
@@ -184,101 +185,6 @@ export function sampleOf<T>(items: T[], n: number, random: () => number): T[] {
     [index[i], index[j]] = [index[j]!, index[i]!];
   }
   return index.slice(0, n).sort((a, b) => a - b).map((i) => items[i]!);
-}
-
-/** What the Archive says of one body over every year: its launch, class and name, when it was first published, and its earliest set's orbit. */
-interface BodyFact {
-  number: number;
-  launch: string | null;
-  name: string;
-  bodyClass: BodyClass;
-  decayMs: number | null;
-  launchMs: number | null;
-  firstClock: number;
-  firstEpoch: number;
-  orbit: PlaneOrbit;
-}
-
-interface ParentSet {
-  epoch: number;
-  orbit: PlaneOrbit;
-}
-
-const planeOrbit = (epoch: number, meanMotion: number, eccentricity: number, inclination: number, raan: number): PlaneOrbit => ({ epochMs: epoch, aKm: semiMajorAxisOf({ meanMotion }), eccentricity, inclinationDeg: inclination, raanDeg: raan, meanMotion });
-
-/** The catalogue read once: every body's facts, the sets of the parents asked for, and the high-water mark against time. */
-export interface Catalogue {
-  bodies: Map<number, BodyFact>;
-  byLaunch: Map<string, BodyFact[]>;
-  parentSets: Map<number, ParentSet[]>;
-  markAt(at: number): number;
-}
-
-export function readCatalogue(archive: string, parents: ReadonlySet<number>): Catalogue {
-  const bodies = new Map<number, BodyFact>();
-  const parentSets = new Map<number, ParentSet[]>();
-  for (const year of builtYears(archive)) {
-    const { manifest, bodies: table, columns } = readYear(archive, year, ["number", "epoch", "meanMotion", "eccentricity", "inclination", "raan", "rank", "created"]);
-    const published = columns.created ?? columns.epoch;
-    const clock = clockOf(orderOf(columns.rank, year), published);
-    for (const body of table) {
-      let firstClock = Number.POSITIVE_INFINITY;
-      let firstIndex = -1;
-      for (let i = body.first; i < body.first + body.count; i++) {
-        if (clock[i]! < firstClock) firstClock = clock[i]!;
-        if (firstIndex === -1 || columns.epoch[i]! < columns.epoch[firstIndex]!) firstIndex = i;
-      }
-      if (firstIndex === -1) continue;
-      const orbit = planeOrbit(columns.epoch[firstIndex]!, columns.meanMotion[firstIndex]! / 1e8, columns.eccentricity[firstIndex]! / 1e7, columns.inclination[firstIndex]! / 1e4, columns.raan[firstIndex]! / 1e4);
-      const known = bodies.get(body.number);
-      const fact = factOf(body, firstClock, orbit);
-      if (known === undefined) bodies.set(body.number, fact);
-      else {
-        // The latest table's class, name and decay; the earliest publication and set.
-        known.bodyClass = fact.bodyClass;
-        known.name = fact.name || known.name;
-        known.decayMs = fact.decayMs ?? known.decayMs;
-        known.launchMs = known.launchMs ?? fact.launchMs;
-        known.launch = known.launch ?? fact.launch;
-        known.firstClock = Math.min(known.firstClock, firstClock);
-        if (orbit.epochMs < known.firstEpoch) [known.firstEpoch, known.orbit] = [orbit.epochMs, orbit];
-      }
-      if (parents.has(body.number)) {
-        const list = parentSets.get(body.number) ?? parentSets.set(body.number, []).get(body.number)!;
-        for (let i = body.first; i < body.first + body.count; i++) list.push({ epoch: columns.epoch[i]!, orbit: planeOrbit(columns.epoch[i]!, columns.meanMotion[i]! / 1e8, columns.eccentricity[i]! / 1e7, columns.inclination[i]! / 1e4, columns.raan[i]! / 1e4) });
-      }
-    }
-    console.error(`audit: read ${year} (${manifest.sets} sets)`);
-  }
-  for (const list of parentSets.values()) list.sort((a, b) => a.epoch - b.epoch);
-  const byLaunch = new Map<string, BodyFact[]>();
-  for (const fact of bodies.values()) if (fact.launch !== null) (byLaunch.get(fact.launch) ?? byLaunch.set(fact.launch, []).get(fact.launch)!).push(fact);
-  // The mark: the highest designated number published by each instant.
-  const designated = [...bodies.values()].filter((b) => b.launch !== null && b.number < ANALYST_FLOOR).sort((a, b) => a.firstClock - b.firstClock);
-  const at = designated.map((b) => b.firstClock);
-  const top: number[] = [];
-  let mark = 0;
-  for (const b of designated) top.push((mark = Math.max(mark, b.number)));
-  return {
-    bodies,
-    byLaunch,
-    parentSets,
-    markAt(t) {
-      let lo = 0;
-      let hi = at.length;
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        if (at[mid]! <= t) lo = mid + 1;
-        else hi = mid;
-      }
-      return lo === 0 ? 0 : top[lo - 1]!;
-    },
-  };
-}
-
-function factOf(body: ArchivedBody, firstClock: number, orbit: PlaneOrbit): BodyFact {
-  const launch = body.designator !== null && /^\d{4}-\d{3}/.test(body.designator) ? body.designator.slice(0, 8) : null;
-  return { number: body.number, launch, name: body.name ?? "", bodyClass: body.bodyClass, decayMs: body.decay === null ? null : Date.parse(`${body.decay}T00:00:00Z`), launchMs: body.launch === null || body.launch.length !== 10 ? null : Date.parse(`${body.launch}T00:00:00Z`), firstClock, firstEpoch: orbit.epochMs, orbit };
 }
 
 /** One new body under the parent's launch, as read against the parent. */

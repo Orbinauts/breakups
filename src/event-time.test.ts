@@ -1,10 +1,11 @@
 import { propagate } from "@orbinauts/engine";
 import { describe, expect, test } from "vitest";
-import { cartesianOf, elementsOf, eventTimeOf } from "./event-time.ts";
+import type { ElementSet } from "./elements.ts";
+import { cartesianOf, elementsOf, eventFromPieces, eventTimeOf } from "./event-time.ts";
 import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
-import { DAY, HOUR, meanMotionOf, setOf } from "./synthetic.test-support.ts";
+import { DAY, HOUR, apartAt, meanMotionOf, pieceOf, setOf } from "./synthetic.test-support.ts";
 
 /**
  * The event's time from a synthetic pre and post set with a known kick:
@@ -121,5 +122,55 @@ describe("the event's time", () => {
     expect(Math.abs(over[0])).toBeLessThan(1e-9);
     expect(Math.hypot(over[1], over[2])).toBeGreaterThan(6378 + 500 - 30);
     expect(DAY).toBe(86_400_000);
+  });
+});
+
+describe("the event's time from the pieces", () => {
+  // A quiet parent near 7,000 km and pieces of a breakup at noon on the fifth day, their first sets three days later.
+  const parent = setOf(1, { epochMs: T0 + 6 * DAY, aKm: 7000, eccentricity: 0.001, inclinationDeg: 74 });
+  const event = T0 + 4.5 * DAY;
+  const firstSets = T0 + 7.5 * DAY;
+  // Pieces of a few kilometres' change of axis: a change of the axis alone leaves the piece's orbit that far from the event's point radially, as a tangential impulse would not, so the pieces pass within a few kilometres of it rather than through it.
+  const deltas = [-6, -3, -1, 1.5, 4, 6.5];
+  const pieces = deltas.map((d, i) => pieceOf(parent, event, d, firstSets, 50001 + i, "2010-001C"));
+
+  test("six pieces converge on the parent at the event, timed within their sigma, one crossing agreed", () => {
+    for (const piece of pieces) expect(apartAt(parent, piece, event)).toBeLessThan(8);
+    const timed = eventFromPieces(parent, pieces, firstSets - 20 * DAY, firstSets, params)!;
+    expect(timed).not.toBeNull();
+    expect(timed.pieces).toBe(6);
+    expect(timed.crossings).toBe(1);
+    expect(timed.missKm).toBeLessThan(8);
+    expect(Math.abs(timed.at - event)).toBeLessThan(2 * timed.sigmaMinutes * 60_000 + 5 * 60_000);
+    expect(timed.sigmaMinutes).toBeLessThan(60);
+    expect(timed.spreadMinutes).toBeLessThan(60);
+    expect(timed.from).toBeLessThan(timed.at);
+    expect(timed.to).toBeGreaterThan(timed.at);
+    expect(timed.points).toBeLessThanOrEqual(params.eventMaxPoints);
+  });
+
+  test("a body of the same plane forty kilometres higher is missed by many times more: the miss tells two candidate parents apart, and a copy of the orbit a quarter of a lap behind does not", () => {
+    const right = eventFromPieces(parent, pieces, firstSets - 20 * DAY, firstSets, params)!;
+    const higher = eventFromPieces({ ...parent, number: 2, meanMotion: meanMotionOf(7040) }, pieces, firstSets - 20 * DAY, firstSets, params)!;
+    expect(higher.missKm).toBeGreaterThan(5 * right.missKm);
+    // The same orbit a quarter of a lap behind is the parent's own path, late: the pieces meet it there too, at another instant.
+    const behind = eventFromPieces({ ...parent, number: 3, meanAnomalyDeg: parent.meanAnomalyDeg - 90 }, pieces, firstSets - 20 * DAY, firstSets, params)!;
+    expect(behind.missKm).toBeLessThan(3 * right.missKm);
+    expect(Math.abs(behind.at - right.at)).toBeGreaterThan(10 * 60_000);
+  });
+
+  test("a single piece crosses the parent once a lap: the best crossing is taken and the laps it could be on are counted", () => {
+    const timed = eventFromPieces(parent, [pieces[5]!], firstSets - 20 * DAY, firstSets, params)!;
+    expect(timed.pieces).toBe(1);
+    expect(Number.isNaN(timed.spreadMinutes)).toBe(true);
+    expect(timed.crossings).toBeGreaterThanOrEqual(1);
+    expect(timed.missKm).toBeLessThan(8);
+    expect(Math.abs(timed.at - event)).toBeLessThan(2 * timed.sigmaMinutes * 60_000 + 5 * 60_000);
+  });
+
+  test("an empty window or a parent the engine cannot propagate gives nothing", () => {
+    expect(eventFromPieces(parent, pieces, firstSets, firstSets, params)).toBeNull();
+    expect(eventFromPieces({ ...parent, eccentricity: 1.5 }, pieces, firstSets - 20 * DAY, firstSets, params)).toBeNull();
+    expect(eventFromPieces(parent, [], firstSets - 20 * DAY, firstSets, params)).toBeNull();
   });
 });

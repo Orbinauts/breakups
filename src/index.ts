@@ -3,6 +3,7 @@
 // on a server and in a browser alike, and scored against every reported
 // on-orbit fragmentation rather than against hand-picked cases.
 export {
+  AGENCY_SOURCES,
   BODY_CLASSES,
   BREAKUP_KINDS,
   CAUSES,
@@ -11,7 +12,11 @@ export {
   PRECISIONS,
   REGIMES,
   SOURCE_IDS,
+  STATED_PRECISIONS,
   TruthError,
+  firstAgencyStatement,
+  firstStatementOf,
+  isAgencySource,
   launchOf,
   readBreakups,
   readStatedTime,
@@ -26,6 +31,7 @@ export {
   type Confidence,
   type Conflict,
   type ConflictField,
+  type FirstStatement,
   type Parent,
   type Precision,
   type Regime,
@@ -33,7 +39,9 @@ export {
   type SourceId,
   type SourceRecord,
   type StatedOrbit,
+  type StatedOn,
   type StatedParent,
+  type StatedPrecision,
   type StatedTime,
   type Statement,
 } from "./truth.ts";
@@ -62,11 +70,11 @@ export {
 export { PARAMETER_PROVENANCE, parametersWith, type ParameterKind, type PerRegime, type Provenance } from "./params.ts";
 export { type Candidate, type Held, type SeriesState } from "./series.ts";
 export { type Fit } from "./model.ts";
-export { ORIGINS, OUTCOMES, PHASES, SIGNALS, type SignalName } from "./log.ts";
+export { ATTRIBUTION_PATHS, ORIGINS, OUTCOMES, PHASES, REFUSALS, SIGNALS, type SignalName } from "./log.ts";
 export { MU_KM3_PER_S2, impulseOf, speedAt, type Impulse, type MeasuredStep, type Orbit } from "./impulse.ts";
 export { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, isDisposalLike, isRaised, pruneHistory, recordStep, type AtypicalTests, type CurrentStep, type HistoryFeatures, type ManoeuvreClass, type StepRecord } from "./manoeuvre.ts";
 export { ANALYST_FLOOR, ANALYST_SECOND_FLOOR, CATALOGUE_KEY, cloudBodies, deltaVOfAxisChange, isFragmentClass, judgeCloud, launchCodeOf, launchKeyOf, markAt, nearestCloudDistance, noteBody, noteCloud, planeDistance, poissonTail, type BodyRecord, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneDistance, type PlaneOrbit } from "./fragments.ts";
-export { cartesianOf, elementsOf, eventTimeOf, type EventTime, type Minimum, type Vector } from "./event-time.ts";
+export { cartesianOf, elementsOf, eventFromPieces, eventTimeOf, type EventTime, type Minimum, type PiecesEventTime, type Vector } from "./event-time.ts";
 export { estimateStep, fitSegment, type Environment, type SegmentFit, type StepEstimate } from "./step.ts";
 export { EXPLANATION_BITS, SIGNATURE_BITS, damageOf, judgeStep, persistent, type AlertOrigin, type ConfirmationReading, type OpenAlert, type PieceCounts, type StepEvidence, type StepJudgement, type TierKey, type TierPoint } from "./fusion.ts";
 export { ENVELOPE_MONTHS, heldLevel, isMaintenance, maintenanceToleranceKm, returnMissKm, monthOf, newEnvelope, noteLevel, snapshotEnvelope, type AltitudeEnvelope, type HeldLevel } from "./maintenance.ts";

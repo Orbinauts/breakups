@@ -146,6 +146,7 @@ export function catalogueStatements(bursts: Burst[]): Statement[] {
     piecesStatedOn: day(burst.start + COUNT_DAYS * DAY_MS).slice(0, 10),
     preEventElements: null,
     note: `Found by the burst rule: at least ${BURST_PIECES} new debris objects within ${BURST_DAYS} days, more than ${AFTER_LAUNCH_DAYS} days after launch, at least ${Math.round(BURST_SHARE * 100)}% of the ${burst.debrisBefore} debris the launch had before. Pieces ${burst.pieces[0]!.number} to ${burst.pieces.at(-1)!.number}.`,
+    statedOn: null,
   }));
 }
 

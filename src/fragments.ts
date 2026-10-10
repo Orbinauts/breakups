@@ -89,6 +89,9 @@ export interface LaunchRecord {
   /** The launch's cloud memory: when a burst with consistent pieces was last judged under it or an alert on one of its bodies was last confirmed by pieces, and the event instant that cloud's nodes are carried from. A later alert under the launch is confirmed only by pieces this cloud cannot account for, for the policy's memory. */
   lastCloudBurstAt: number;
   lastCloudEventMs: number;
+  /** When a cloud under the launch was last named for a parent (a confirmation of an alert by pieces, or an attribution), and the event instant it was carried from; absent on a record written before the attribution existed, or where none was. A burst nobody was named for is remembered as a cloud too, and the attribution reads it apart (`attributionUnnamedGraceDays`). */
+  lastNamedAt?: number;
+  lastNamedEventMs?: number;
 }
 
 /** The catalogue-wide state: the high-water mark of designated numbers against time, and the notices already applied. */
@@ -129,9 +132,13 @@ export function newLaunch(key: string): LaunchRecord {
 }
 
 /** Records a cloud under the launch: a burst with consistent pieces, or a confirmation by pieces, at the run's instant, with the event instant its nodes are carried from. */
-export function noteCloud(launch: LaunchRecord, now: number, eventMs: number): void {
+export function noteCloud(launch: LaunchRecord, now: number, eventMs: number, named = false): void {
   launch.lastCloudBurstAt = now;
   launch.lastCloudEventMs = eventMs;
+  if (named) {
+    launch.lastNamedAt = now;
+    launch.lastNamedEventMs = eventMs;
+  }
 }
 
 export function newCatalogue(): CatalogueRecord {
@@ -198,7 +205,8 @@ export function noteBody(launches: Map<string, unknown>, set: ElementSet, now: n
     launch.monthCounts[bin] = 0;
   }
   launch.monthCounts[bin]!++;
-  if (!isAnalystLaunch(key)) noteMark(catalogueFor(launches), set.number, now);
+  // The mark is the designated numbers' below the analyst ranges: a designated body numbered in or above them (a re-designated analyst object) would lift it over every piece catalogued after it, as one did in 2020.
+  if (!isAnalystLaunch(key) && set.number < ANALYST_FLOOR) noteMark(catalogueFor(launches), set.number, now);
   return record;
 }
 
@@ -350,6 +358,8 @@ export interface PieceReading {
   /** Its change of semi-major axis from that parent, in kilometres, and as a tangential impulse in metres a second. */
   deltaKm: number;
   deltaVMps: number;
+  /** Every candidate parent whose plane it lies within the bound of, nearest first: more than one, and the plane test alone cannot say whose piece it is. */
+  within: number[];
 }
 
 /** The cloud as the launch pass judged it on one run. */
@@ -415,13 +425,15 @@ export function judgeCloud(launch: LaunchRecord, catalogue: CatalogueRecord, par
     let parent: number | null = null;
     let distance = Number.POSITIVE_INFINITY;
     let deltaKm = Number.NaN;
+    const within: { number: number; distance: number }[] = [];
     for (const candidate of parents) {
       if (candidate.number === body.number) continue;
       const d = planeDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params).distance;
+      if (d <= params.planeDistanceMax) within.push({ number: candidate.number, distance: d });
       if (d < distance) [parent, distance, deltaKm] = [candidate.number, d, body.aKm - candidate.orbit.aKm];
     }
     const aboveMark = analyst || body.number > mark;
-    return { number: body.number, bodyClass: body.bodyClass, firstSeenAt: body.firstSeenAt, firstEpoch: body.firstEpoch, aboveMark, parent, distance, deltaKm, deltaVMps: parent === null ? Number.NaN : deltaVOfAxisChange(parents.find((p) => p.number === parent)!.orbit.aKm, deltaKm) };
+    return { number: body.number, bodyClass: body.bodyClass, firstSeenAt: body.firstSeenAt, firstEpoch: body.firstEpoch, aboveMark, parent, distance, deltaKm, deltaVMps: parent === null ? Number.NaN : deltaVOfAxisChange(parents.find((p) => p.number === parent)!.orbit.aKm, deltaKm), within: within.sort((a, b) => a.distance - b.distance).map((w) => w.number) };
   });
   const n = pieces.filter((p) => p.aboveMark).length;
   const p = poissonTail(n, lambda);

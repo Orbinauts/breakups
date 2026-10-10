@@ -1,6 +1,6 @@
-import { BREAKUP_KINDS, DETECTOR_PARAMETERS, REGIMES, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type ScopeParameters, type Verdict } from "../../src/index.ts";
+import { BODY_CLASSES, BREAKUP_KINDS, DETECTOR_PARAMETERS, REGIMES, type BodyClass, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type ScopeParameters, type Verdict } from "../../src/index.ts";
 import type { Manifest } from "../archive/archive.ts";
-import { LINES, type Line, type YearScore } from "./match.ts";
+import { LINES, type ConfirmedLanding, type Line, type ScoredEvent, type YearScore } from "./match.ts";
 import { DAY_MS, type TimeBasis } from "./replay.ts";
 
 /**
@@ -50,7 +50,7 @@ export const SPLIT_TITLES: Record<SplitName, string> = {
 };
 
 export const LINE_LABELS: Record<Line, string> = {
-  "breakups A-B": "Breakups, confidence A and B (the target is 90%)",
+  "breakups A-B": "Breakups, confidence A and B (the headline line)",
   "breakups C": "Breakups, confidence C",
   "breakups D": "Breakups, confidence D",
   "anomalous A-B": "Anomalous events, confidence A and B",
@@ -168,8 +168,155 @@ export function wilson(k: number, n: number, z = 1.96): [number, number] | null 
   return [Math.max(0, centre - half), Math.min(1, centre + half)];
 }
 
+/** One line of the Confirmed table: the events whose launch gained fresh pieces in the parent's plane (the targets), those listed apart (no such piece, or no orbit of the parent before the event to test a plane against), and the targets confirmed and missed, with the recall and its Wilson 95% interval. */
+export interface ConfirmedLine {
+  targets: number;
+  noFragments: number;
+  noParentOrbit: number;
+  detected: number;
+  missed: number;
+  rate: number | null;
+  interval: [number, number] | null;
+}
+
+/**
+ * The Confirmed line, the owner's target since the decision of 2026-10-10
+ * (the seventh decision record): a confirmed verdict by pieces on a reported event's parent,
+ * within 180 days of its window, with or without a step seen first, is a
+ * detection of the event; the first on each event counts, across the
+ * years (an event of December confirmed in January is its year's), the
+ * later ones are duplicates; a confirmed verdict matching no reported
+ * event is a false alarm. The targets are the events whose launch gained
+ * fresh pieces in the parent's plane within 180 days; the false-alarm
+ * rate is over the detections on every line, each rate with its Wilson
+ * interval. The headline line's confirmations are timed three ways: the
+ * lead over the first statement by an agency (positive where the
+ * confirmation came first; a quarterly news issue dated to its month's
+ * first day, so the lead is the least it can have been), the lag after
+ * the first fresh piece's publication, and the error of the detector's
+ * instant against the truth's where it states one.
+ */
+export interface ConfirmedLineCells {
+  lines: Record<Line, ConfirmedLine>;
+  /** The split's confirmed verdicts by pieces, and where they landed; how many were attributed from the pieces with no step. */
+  verdicts: number;
+  attributed: number;
+  detections: number;
+  duplicates: number;
+  exempt: number;
+  falseAlarms: number;
+  /** Events confirmed on every line, targets or not: the precision's numerator. */
+  detectedAllLines: number;
+  /** Events confirmed though the scorecard reads no fresh piece in the parent's plane (the detector's plane test read them otherwise). */
+  detectedNoFragments: number;
+  falseAlarmRate: number | null;
+  falseAlarmInterval: [number, number] | null;
+  /** The headline line: the lead over the first agency statement in days (median, tenth percentile), how many confirmations had one dated and how many came before it, and how the statements were dated (to the day, to the month). */
+  lead: Spread | null;
+  withStatement: number;
+  beforeStatement: number;
+  statementDays: number;
+  statementMonths: number;
+  /** The headline line: the days from the first fresh piece's publication to the confirmation (median, ninetieth percentile). */
+  lag: Spread | null;
+  /** The headline line: the error of the detector's instant against the truth's, in minutes (median, ninetieth percentile), where both state one. */
+  timing: Spread | null;
+  /** The false alarms by the parent's class, and how many were attributed with no step. */
+  falseByClass: Record<BodyClass, number>;
+  falseAttributed: number;
+}
+
+/** The first confirmation of each event over every year file, by the event's id: the Confirmed line's detection of it. */
+export type FirstConfirmations = Map<string, { year: number; landing: ConfirmedLanding }>;
+
+export function firstConfirmationsOf(files: Pick<YearFile, "year" | "score">[]): FirstConfirmations {
+  const first: FirstConfirmations = new Map();
+  for (const file of files) {
+    for (const landing of file.score.confirmations ?? []) {
+      if (landing.outcome !== "detection" || landing.event === null) continue;
+      const known = first.get(landing.event);
+      if (known === undefined || landing.raisedAt < known.landing.raisedAt) first.set(landing.event, { year: file.year, landing });
+    }
+  }
+  return first;
+}
+
+const emptyConfirmedLine = (): ConfirmedLine => ({ targets: 0, noFragments: 0, noParentOrbit: 0, detected: 0, missed: 0, rate: null, interval: null });
+
+/** Whether an event is a target of the Confirmed line: the parent's orbit known before it, and at least one fresh piece in its plane. */
+export const isConfirmedTarget = (event: Pick<ScoredEvent, "fragments">): boolean => event.fragments !== undefined && event.fragments.parentOrbit && event.fragments.inPlane > 0;
+
+/** The Confirmed line over a set of scored years, the first confirmations read over every year (an event's may be in the next year's file). */
+export function confirmedCellsOf(years: Pick<YearFile, "year" | "score">[], first: FirstConfirmations = firstConfirmationsOf(years)): ConfirmedLineCells {
+  const lines = Object.fromEntries(LINES.map((line) => [line, emptyConfirmedLine()])) as Record<Line, ConfirmedLine>;
+  const c: ConfirmedLineCells = { lines, verdicts: 0, attributed: 0, detections: 0, duplicates: 0, exempt: 0, falseAlarms: 0, detectedAllLines: 0, detectedNoFragments: 0, falseAlarmRate: null, falseAlarmInterval: null, lead: null, withStatement: 0, beforeStatement: 0, statementDays: 0, statementMonths: 0, lag: null, timing: null, falseByClass: Object.fromEntries(BODY_CLASSES.map((k) => [k, 0])) as Record<BodyClass, number>, falseAttributed: 0 };
+  const leads: number[] = [];
+  const lags: number[] = [];
+  const timings: number[] = [];
+  for (const { year, score } of years) {
+    for (const event of score.events) {
+      const line = lines[event.line];
+      const confirmation = first.get(event.id);
+      if (confirmation !== undefined) c.detectedAllLines++;
+      if (!isConfirmedTarget(event)) {
+        if (event.fragments === undefined || event.fragments.parentOrbit) line.noFragments++;
+        else line.noParentOrbit++;
+        if (confirmation !== undefined) c.detectedNoFragments++;
+        continue;
+      }
+      line.targets++;
+      if (confirmation === undefined) {
+        line.missed++;
+        continue;
+      }
+      line.detected++;
+      if (event.line !== "breakups A-B") continue;
+      const at = confirmation.landing.raisedAt;
+      if (event.statement !== null && event.statement !== undefined) {
+        c.withStatement++;
+        if (event.statement.precision === "day") c.statementDays++;
+        else c.statementMonths++;
+        const lead = (event.statement.at - at) / DAY_MS;
+        leads.push(lead);
+        if (lead > 0) c.beforeStatement++;
+      }
+      if (event.fragments!.firstAt !== null) lags.push((at - event.fragments!.firstAt) / DAY_MS);
+      if (event.at !== null && confirmation.landing.eventAt !== null) timings.push(Math.abs(confirmation.landing.eventAt - event.at) / 60_000);
+    }
+    for (const landing of score.confirmations ?? []) {
+      c.verdicts++;
+      if (landing.attributed) c.attributed++;
+      if (landing.outcome === "detection") {
+        const firstOne = landing.event === null ? undefined : first.get(landing.event);
+        if (firstOne !== undefined && firstOne.year === year && firstOne.landing.verdict === landing.verdict) c.detections++;
+        else c.duplicates++;
+      } else if (landing.outcome === "fragment") c.duplicates++;
+      else if (landing.outcome === "exempt") c.exempt++;
+      else {
+        c.falseAlarms++;
+        c.falseByClass[landing.bodyClass]++;
+        if (landing.attributed) c.falseAttributed++;
+      }
+    }
+  }
+  for (const line of Object.values(lines)) {
+    line.rate = line.targets === 0 ? null : line.detected / line.targets;
+    line.interval = wilson(line.detected, line.targets);
+  }
+  const n = c.falseAlarms + c.detectedAllLines;
+  c.falseAlarmRate = n === 0 ? null : c.falseAlarms / n;
+  const precision = wilson(c.detectedAllLines, n);
+  c.falseAlarmInterval = precision === null ? null : [1 - precision[1], 1 - precision[0]];
+  c.lead = spread(leads, 10);
+  c.lag = spread(lags, 90);
+  c.timing = spread(timings, 90);
+  return c;
+}
+
 export interface Cells {
   years: number[];
+  /** The Confirmed line, the target since the seventh decision record. */
+  confirmedLine: ConfirmedLineCells;
   lines: Record<Line, LineCells>;
   alerts: number;
   duplicates: number;
@@ -336,11 +483,11 @@ export function scopedCellsOf(years: Pick<YearFile, "score">[], rows: AlertRows,
 }
 
 /** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers and the scoped line's tier. */
-export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope): Cells {
+export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope, first: FirstConfirmations = firstConfirmationsOf(years)): Cells {
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), confirmedLine: confirmedCellsOf(years, first), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
@@ -455,7 +602,9 @@ export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "tru
   const years = files.map((f) => f.year).sort((a, b) => a - b);
   const rows = alertRowsOf(files);
   const scope = meta.detector.parameters.scope ?? DETECTOR_PARAMETERS.scope;
-  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope)])) as Record<SplitName, Cells>;
+  // An event's first confirmation may be in the next year's file, whatever split that year is in.
+  const first = firstConfirmationsOf(files);
+  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope, first)])) as Record<SplitName, Cells>;
   const archive = Object.fromEntries(files.sort((a, b) => a.year - b.year).map((f) => [String(f.year), { ...f.archive, timeBasis: f.timeBasis }]));
   return { format: 1, ...meta, archive, years, splits };
 }
@@ -485,7 +634,7 @@ export function alertsTable(cells: Cells, title: string): string {
       ["Duplicates", cells.duplicates],
       ["Exempt", cells.exempt],
       ["False alarms", cells.falseAlarms],
-      ["False-alarm rate (the target is under 10%)", pct(cells.falseAlarmRate)],
+      ["False-alarm rate", pct(cells.falseAlarmRate)],
       ["False alarms per 10,000 body-years", one(cells.falseAlarmsPer10kBodyYears)],
       ["Lead over the catalogue, hours: median (10th percentile)", spreadCell(cells.leadHours)],
       ["Latency from the event, hours: median (90th percentile)", spreadCell(cells.latencyHours)],
@@ -530,6 +679,68 @@ export function confirmedTable(cells: Cells, title: string): string {
   );
 }
 
+const fraction = (k: number, n: number): string => (n === 0 ? DASH : `${k} of ${n}`);
+
+/** The rows of the Confirmed headline: the headline line on each split the owner reads, the training and validation splits first. */
+export const CONFIRMED_HEADLINE_SPLITS: readonly SplitName[] = ["validation", "train", "chronologicalTrain", "chronologicalValidation"];
+
+/**
+ * The Confirmed line's headline table, the README's first: per split, the
+ * breakups of confidence A and B whose launch gained fresh pieces in the
+ * parent's plane, those listed apart for want of one, the confirmed and
+ * missed, the recall and the false-alarm rate with their Wilson 95%
+ * intervals, the lead over the first agency statement, the lag after the
+ * first fragment's publication and the timing error.
+ */
+export function confirmedHeadlineTable(latest: Pick<Latest, "splits">, title = "Confirmed: the target, breakups A and B"): string {
+  return table(
+    [title, "Targets (fragments catalogued)", "No fragments catalogued", "Confirmed", "Missed", "Recall (95% interval)", "False confirmations", "False-alarm rate (95% interval)", "Lead over the first agency statement, days: median (10th percentile)", "Confirmed before it", "Lag after the first fragment, days: median (90th percentile)", "Timing error, minutes: median (90th percentile)"],
+    CONFIRMED_HEADLINE_SPLITS.map((split) => {
+      const c = latest.splits[split].confirmedLine;
+      const line = c.lines["breakups A-B"];
+      return [`${SPLIT_TITLES[split]} (${yearsOf(latest.splits[split])})`, line.targets, line.noFragments + line.noParentOrbit, line.detected, line.missed, intervalCell(line.rate, line.interval), c.falseAlarms, intervalCell(c.falseAlarmRate, c.falseAlarmInterval), spreadCell(c.lead), fraction(c.beforeStatement, c.withStatement), spreadCell(c.lag), spreadCell(c.timing)];
+    }),
+  );
+}
+
+/** The Confirmed line of a split, every line: the targets, those listed apart (no fresh piece in the plane; no orbit of the parent before the event), the confirmed and missed, the recall. */
+export function confirmedLinesTable(cells: Cells, title: string): string {
+  return table(
+    [title, "Targets (fragments catalogued)", "No fragments catalogued", "No parent orbit before the event", "Confirmed", "Missed", "Recall (95% interval)"],
+    LINES.map((line) => {
+      const l = cells.confirmedLine.lines[line];
+      return [LINE_LABELS[line].replace(" (the headline line)", " (the target is 90%)"), l.targets, l.noFragments, l.noParentOrbit, l.detected, l.missed, intervalCell(l.rate, l.interval)];
+    }),
+  );
+}
+
+/** The Confirmed line's verdicts of a split: where they landed, the false alarms by class and path, and the headline line's timings with how its statements were dated. */
+export function confirmedVerdictsTable(cells: Cells, title: string): string {
+  const c = cells.confirmedLine;
+  return table(
+    [title, "Count"],
+    [
+      ["Confirmed verdicts by pieces", c.verdicts],
+      ["Of which attributed from the pieces with no step seen on the parent", c.attributed],
+      ["Detections (the first confirmation of a reported event)", c.detections],
+      ["Duplicates (a later confirmation of an event, or one on its fragment)", c.duplicates],
+      ["Exempt (inside an exempt window)", c.exempt],
+      ["False confirmations (matching no reported event)", c.falseAlarms],
+      ["Of those, attributed with no step", c.falseAttributed],
+      ["Of those, on a payload / a rocket body / debris / an unknown body", BODY_CLASSES.map((k) => c.falseByClass[k]).join(" / ")],
+      ["Events confirmed on every line (the precision's numerator)", c.detectedAllLines],
+      ["Of which with no fragment the scorecard reads in the plane", c.detectedNoFragments],
+      ["False-alarm rate (the target is under 10%)", intervalCell(c.falseAlarmRate, c.falseAlarmInterval)],
+      ["Headline confirmations with an agency's statement dated", c.withStatement],
+      ["Of which the statement dated to the day / to the month", `${c.statementDays} / ${c.statementMonths}`],
+      ["Of which confirmed before the statement", c.beforeStatement],
+      ["Lead over the first agency statement, days: median (10th percentile)", spreadCell(c.lead)],
+      ["Lag after the first fragment's publication, days: median (90th percentile)", spreadCell(c.lag)],
+      ["Timing error against the truth's instant, minutes: median (90th percentile)", spreadCell(c.timing)],
+    ],
+  );
+}
+
 /** The table of a split's precision per persistence tier: what raising only once the step had held that long would have cost. */
 export function tiersTable(cells: Cells, title: string): string {
   return table(
@@ -565,12 +776,12 @@ export function breakdownTable(cells: Cells, title: string): string {
 
 const yearsOf = (cells: Cells): string => (cells.years.length === 0 ? "no year" : cells.years.length === 1 ? String(cells.years[0]) : `${cells.years[0]} to ${cells.years.at(-1)}, ${cells.years.length} years`);
 
-/** The four tables the README carries: the headline split. */
+/** The tables the README carries: the Confirmed headline over the splits and its lines on the validation split, then the parent-step tables of the validation split as secondary measurements. */
 export function readmeTables(latest: Latest): string[] {
   const cells = latest.splits.validation;
   const title = `${SPLIT_TITLES.validation} (${yearsOf(cells)})`;
   const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-  return [linesTable(cells, title), scopedTable(cells, `Breakups A and B, scoped, ${lower}`), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The confirmed line, ${lower}`)];
+  return [confirmedHeadlineTable(latest), confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), linesTable(cells, `Parent step: ${lower}`), scopedTable(cells, `Breakups A and B, scoped, ${lower}`), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The step alerts confirmed, ${lower}`)];
 }
 
 /** The whole report: every split's tables, with the breakdown. */
@@ -578,16 +789,20 @@ export function renderLatest(latest: Latest): string {
   const sections = [
     "# The scorecard, as last run",
     "",
-    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the first five tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
+    `Generated by \`npm run kpi -- --aggregate\` over the years ${latest.years[0]} to ${latest.years.at(-1)} of the Archive with the ${latest.detector.name} detector of \`${latest.package.name}\` ${latest.package.version}, against the ground truth whose SHA-256 is \`${latest.truthSha256}\`. The README's "How well it does" carries the Confirmed headline and the validation split's tables; the tests check them against \`kpi/latest.json\`. Never edited by hand. The per-event dissection is in \`docs/detector/events.md\`, written with this file.`,
     "",
-    "A target is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. The scoped table is the headline line restricted to the detector's scope (\`DETECTOR_PARAMETERS.scope\`, \`docs/detector/d7-scope.md\`): the reported events whose parent was in the scope at the event, and the alerts whose parent was in it at the step, whose step passed the scope's gates and held to its tier; its false-alarm rate is over the detections on every line in the scope, both rates carry their Wilson 95% intervals, and the headline events the scope leaves out are counted beside them. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The confirmed table is the product's second line: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many the fragments or a notice confirmed and how long after; and of every alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing. The agencies' publication dates are not in the truth except for the notices, so the last two rows count those alone.",
+    "**The Confirmed line is the target** (the owner's decision of 2026-10-10, `docs/decisions/0007-the-target-is-on-confirmed-alerts.md`). A detection is a confirmed verdict by pieces on a reported event's parent, raised within 180 days after the event's window, with or without a step seen first on the parent: the confirmation of an alert on the parent's step, or the attribution of fresh pieces in the parent's plane to it. The targets are the scoreable events whose launch gained at least one fresh piece in the parent's plane within 180 days in the Archive (a body under the launch numbered above the catalogue's mark at the event, classed as a fragment is, first published after it, its plane within the detector's bound of the parent's last set before the event); events with no such piece, or no orbit of the parent before the event to test a plane against, are listed apart and out of the denominator. The first confirmation of an event counts, across the years; later ones are duplicates; a confirmed verdict matching no reported event is a false alarm, and the false-alarm rate is over the detections on every line, each rate with its Wilson 95% interval. A confirmation by a notice alone is not the Confirmed line's. The lead is the days from the confirmation to the first statement by an agency (NASA's quarterly news, dated to the first day of its issue's month, the earliest it can have been public; a U.S. Space Forces-Space notice, to the day it was seen; ESA's report), positive where the confirmation came first; the lag is the days from the first fresh piece's publication to the confirmation; the timing error is the detector's instant of the event against the truth's, where both state one.",
+    "",
+    confirmedHeadlineTable(latest),
+    "",
+    "The parent-step lines follow each split's Confirmed tables as secondary measurements, as the scorecard measured them before that decision. A target there is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. The scoped table is the headline line restricted to the detector's scope (\`DETECTOR_PARAMETERS.scope\`, \`docs/detector/d7-scope.md\`); both its rates carry their Wilson 95% intervals, and the headline events the scope leaves out are counted beside them. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The last table is the step alerts confirmed: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many alerts on the parent's step the fragments or a notice confirmed and how long after; and of every step alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing.",
     "",
   ];
   for (const split of SPLITS) {
     const cells = latest.splits[split];
     const title = `${SPLIT_TITLES[split]} (${yearsOf(cells)})`;
     const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-    sections.push(`## ${SPLIT_TITLES[split]}`, "", linesTable(cells, title), "", scopedTable(cells, `Breakups A and B, scoped, ${lower}`), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The confirmed line, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
+    sections.push(`## ${SPLIT_TITLES[split]}`, "", confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), "", confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), "", linesTable(cells, `Parent step: ${lower}`), "", scopedTable(cells, `Breakups A and B, scoped, ${lower}`), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The step alerts confirmed, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
   }
   sections.push("## The years", "", table(["Year", "Source", "Built", "Sets", "Bodies", "Timed by"], latest.years.map((year) => {
     const record = latest.archive[String(year)]!;

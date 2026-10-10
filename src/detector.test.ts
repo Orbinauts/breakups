@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { OUTCOMES } from "./log.ts";
+import { OUTCOMES, PHASES, REFUSALS } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
-import { DAY, HOUR, feed, meanMotionOf, noise, one, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
+import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
 
 /**
@@ -383,24 +383,33 @@ describe("the fusion with the fragments", () => {
     expect(confirmed[0]!.bodies).toEqual([]);
   });
 
-  test("a burst of pieces in the plane of a parent that did not move is listed as a cloud for review, never a detection", () => {
+  test("a burst of pieces in the plane of two bodies of the launch that it cannot tell apart is listed as a cloud for review, never named", () => {
     const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload"));
+    // A twin of the payload in the same orbit, the launch's second body: the pieces lie in both planes and converge on both alike.
+    const twin = quiet.map((s) => ({ ...s, number: 7, designator: "2010-002B" }));
     const at = quiet[110]!.epochMs;
     const cloudPieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50011 + i, { epochMs: at + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
-    const fed = feed([...one(quiet.slice(0, 115)), cloudPieces, ...one(quiet.slice(115))]);
+    const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, twin[from + i]!]));
+    const fed = feed([...both(0, 115), cloudPieces, ...both(115, quiet.length)]);
     expect(suspected(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.state === "confirmed")).toEqual([]);
     const clouds = fed.verdicts.filter((v) => v.kind === "cloud");
     expect(clouds).toHaveLength(1);
     expect(clouds[0]!.state).toBe("cloud-only");
-    expect(clouds[0]!.number).toBe(2);
+    expect([2, 7]).toContain(clouds[0]!.number);
     expect(clouds[0]!.launch).toBe("2010-002");
     expect(clouds[0]!.bodies).toHaveLength(6);
     expect(clouds[0]!.evidence.piecesInPlane).toBe(6);
     expect(clouds[0]!.evidence.pBurst).toBeLessThan(params.pBurst);
     expect(clouds[0]!.reasons[0]).toContain("listed for review, not a detection");
+    // The attribution was tried and refused: the other body is a rival the pieces cannot be told from.
+    const row = fed.log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
+    expect(row.signals.attributionRivals).toBe(1);
+    expect(row.signals.attributionRaised).toBe(0);
+    expect(row.signals.attributionRefused! & (REFUSALS.ambiguous | REFUSALS.untimed)).not.toBe(0);
     // Listed once: the same cloud's later pieces do not list it again within the repeat window.
     const more = Array.from({ length: 3 }, (_, i) => ({ ...setOf(50021 + i, { epochMs: at + 2 * DAY, aKm: 7201, raanDeg: 102 }, "debris"), designator: "2010-002J" }));
-    const again = feed([...one(quiet.slice(0, 115)), cloudPieces, ...one(quiet.slice(115, 125)), more, ...one(quiet.slice(125))]);
+    const again = feed([...both(0, 115), cloudPieces, ...both(115, 125), more, ...both(125, quiet.length)]);
     expect(again.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
   });
 
@@ -514,9 +523,10 @@ describe("the confirmation rules", () => {
     const stepEpoch = parent[180]!.epochMs;
     const cloudEpoch = parent[96]!.epochMs + HOUR;
     const same = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 0), debris(50011, 6, stepEpoch + 5 * DAY, 0)]), { until: stepEpoch + 33 * DAY });
-    expect(same.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
+    // The first cloud, in parent 1's plane with no step on it, is attributed to it from the pieces; the second batch confirms nothing more.
     expect(suspected(same)).toHaveLength(1);
-    expect(confirmedOn(same, 1)).toEqual([]);
+    expect(confirmedOn(same, 1).map((v) => v.step)).toEqual([null]);
+    expect(confirmedOn(same, 1)[0]!.raisedAt).toBeLessThan(stepEpoch);
     const row = alertRow(same, 1)!;
     expect(row.signals.confirmPieces).toBe(6);
     expect(row.signals.confirmRefused).toBe(1);
@@ -528,7 +538,7 @@ describe("the confirmation rules", () => {
     // The same launch with a second body sixty degrees of node away whose plane the earlier cloud shares: parent 1's new pieces lie out of that cloud's plane and confirm it.
     const other = decaying(7200, 0.02, 0.004, 80, 8, 5).map((s) => ({ ...withNode(setOf(2, s, "payload")), designator: "2010-001B" })).map((s) => ({ ...s, raanDeg: s.raanDeg + 60 }));
     const apart = feed(runsWith(parent, [debris(50001, 6, cloudEpoch, 60), debris(50011, 6, stepEpoch + 5 * DAY, 0)], other), { until: stepEpoch + 33 * DAY });
-    expect(apart.verdicts.filter((v) => v.kind === "cloud").map((v) => v.number)).toEqual([2]);
+    expect(apart.verdicts.filter((v) => v.state === "confirmed" && v.step === null).map((v) => v.number)).toEqual([2]);
     const confirmed = confirmedOn(apart, 1);
     expect(confirmed).toHaveLength(1);
     expect(confirmed[0]!.bodies).toHaveLength(6);
@@ -601,6 +611,130 @@ describe("the confirmation rules", () => {
     const row = alertRow(fed, 1)!;
     expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
     expect(row.signals.confirmRefused).toBe(1);
+  });
+});
+
+/**
+ * The Confirmed channel's attribution: fresh pieces in the plane of a body
+ * with no open alert, a breakup the parent's own sets never showed. The
+ * pieces here are built as a breakup's are (`pieceOf`): each at the
+ * parent's place at the event's instant, so propagated back they converge
+ * on it there, and the verdict's event is that instant.
+ */
+describe("the Confirmed channel's attribution", () => {
+  const RATE = nodePrecessionDegPerDay(7200, 0.001, 98, meanMotionOf(7200));
+  const withNode = (set: ElementSet, offsetDeg = 0): ElementSet => ({ ...set, raanDeg: 100 + offsetDeg + RATE * ((set.epochMs - T0) / DAY) });
+  /** A quiet decaying body of launch 2010-001 over eighty days, eight-hourly, no step, its node precessing `offsetDeg` from the first's. */
+  const quietBody = (number: number, designator: string, offsetDeg = 0, bodyClass: ElementSet["bodyClass"] = "rocket body"): ElementSet[] => decaying(7200, 0.02, 0.004, 80, 8, number).map((s) => ({ ...withNode(setOf(number, s, bodyClass), offsetDeg), designator }));
+  const EVENT = T0 + 50.3 * DAY;
+  const FIRST_SETS = EVENT + 3 * DAY;
+  /** Six pieces of a breakup of the body at `event`, their first sets `after` later, built from the body's last set before them. */
+  const cloudOf = (body: ElementSet[], from: number, event = EVENT, after = 3 * DAY, scale = 1): ElementSet[] => {
+    const epoch = event + after;
+    const parentSet = [...body].filter((s) => s.epochMs <= epoch).at(-1)!;
+    return [-6, -3, -1, 1.5, 4, 6.5].map((d, i) => pieceOf(parentSet, event, d * scale, epoch, from + i, `2010-001${"CDEFGH"[i]}`));
+  };
+  /** The bodies' sets in runs of one, with each batch of pieces slotted in after the last set before its epoch. */
+  const runs = (bodies: ElementSet[], batches: ElementSet[][]): ElementSet[][] => {
+    const out = one([...bodies].sort((a, b) => a.epochMs - b.epochMs || a.number - b.number));
+    for (const batch of batches) {
+      const at = out.findIndex((r) => r[0]!.epochMs > batch[0]!.epochMs);
+      out.splice(at === -1 ? out.length : at, 0, batch);
+    }
+    return out;
+  };
+  const attributed = (fed: ReturnType<typeof feed>) => fed.verdicts.filter((v) => v.state === "confirmed" && v.step === null);
+
+  test("a fresh cloud in the plane of a body that never stepped is attributed to it, confirmed with no step, timed by the pieces' convergence", () => {
+    const body = quietBody(1, "2010-001A");
+    const pieces = cloudOf(body, 50001);
+    const fed = feed(runs(body, [pieces]));
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.kind === "cloud")).toEqual([]);
+    const confirmed = attributed(fed);
+    expect(confirmed).toHaveLength(1);
+    const verdict = confirmed[0]!;
+    expect(verdict).toMatchObject({ kind: "object", state: "confirmed", number: 1, launch: "2010-001", step: null });
+    expect(verdict.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+    expect(verdict.evidence).toMatchObject({ attributed: 1, piecesInPlane: 6, rivals: 0 });
+    expect(verdict.evidence.cloudDeltaVMps).toBeGreaterThan(params.confirmDeltaVMinMps);
+    expect(verdict.evidence.missKm).toBeLessThan(15);
+    // The event is the pieces' convergence on the parent, within its stated sigma of the breakup's instant.
+    const sigmaMs = verdict.evidence.sigmaMinutes! * 60_000;
+    expect(Math.abs(verdict.event!.at - EVENT)).toBeLessThan(2 * sigmaMs + 15 * 60_000);
+    expect(verdict.event!.from).toBeLessThan(verdict.event!.at);
+    expect(verdict.reasons[0]).toContain("attributed from the pieces with no step seen on it");
+    expect(verdict.reasons[1]).toMatch(/^propagated back, 6 pieces converge on 1 at/);
+    // Its row in the log carries the readings the sweep re-applies the rules from.
+    const row = fed.log.find((r) => r.signals.phase === PHASES.attribution && r.number === 1)!;
+    expect(row.signals).toMatchObject({ attributionPath: 1, attributionPieces: 6, attributionKept: 6, attributionRivals: 0, attributionRefused: 0, attributionRaised: 1 });
+  });
+
+  test("of two bodies of the launch in different planes, the pieces are attributed to the one whose plane they share", () => {
+    const first = quietBody(1, "2010-001A");
+    const second = quietBody(2, "2010-001B", 60, "payload");
+    const pieces = cloudOf(second, 50001);
+    const fed = feed(runs([...first, ...second], [pieces]));
+    expect(attributed(fed).map((v) => v.number)).toEqual([2]);
+    expect(attributed(fed)[0]!.evidence.rivals).toBe(0);
+    expect(fed.log.filter((r) => r.signals.phase === PHASES.attribution).map((r) => r.number)).toEqual([2]);
+  });
+
+  test("an old cloud's later batch is refused: the launch remembers the cloud it attributed, and the parent lies in its plane", () => {
+    const body = quietBody(1, "2010-001A");
+    const fed = feed(runs(body, [cloudOf(body, 50001), cloudOf(body, 50011, EVENT, 20 * DAY)]));
+    expect(attributed(fed)).toHaveLength(1);
+    const rows = fed.log.filter((r) => r.signals.phase === PHASES.attribution && r.number === 1);
+    expect(rows).toHaveLength(2);
+    expect(rows[1]!.signals.attributionRaised).toBe(0);
+    expect(rows[1]!.signals.attributionRefused! & REFUSALS.parentInCloud).toBe(REFUSALS.parentInCloud);
+    expect(rows[1]!.signals.daysSinceCloud).toBeLessThan(params.cloudMemoryDays);
+    // With the memory off, the same batch would be attributed again: the rule is what refuses it.
+    const forgetful = feed(runs(body, [cloudOf(body, 50001), cloudOf(body, 50011, EVENT, 20 * DAY)]), { parameters: { cloudMemoryDays: 0 } });
+    expect(attributed(forgetful)).toHaveLength(2);
+  });
+
+  test("a launch younger than a month attributes nothing unless the parameter lets it, and pieces at under a metre a second never", () => {
+    // A young launch's pieces count only at its own velocity floor or more, so these move ten metres a second.
+    const body = quietBody(1, "2010-001A").filter((s) => s.epochMs >= EVENT - 20 * DAY);
+    const fast = cloudOf(body, 50001, EVENT, 3 * DAY, 4);
+    expect(attributed(feed(runs(body, [fast])))).toEqual([]);
+    expect(attributed(feed(runs(body, [fast]), { parameters: { attributionYoungLaunch: true } }))).toHaveLength(1);
+    const slow = quietBody(1, "2010-001A");
+    const parentSet = slow.filter((s) => s.epochMs <= FIRST_SETS).at(-1)!;
+    const creep = [-0.4, -0.2, 0.2, 0.4].map((d, i) => pieceOf(parentSet, EVENT, d, FIRST_SETS, 50001 + i, "2010-001C"));
+    const fed = feed(runs(slow, [creep]));
+    expect(attributed(fed)).toEqual([]);
+    const row = fed.log.find((r) => r.signals.phase === PHASES.attribution)!;
+    expect(row.signals.attributionRefused! & REFUSALS.velocity).toBe(REFUSALS.velocity);
+  });
+
+  test("a body designated under a launch but numbered in the analyst ranges does not lift the catalogue's mark over the pieces after it", () => {
+    const body = quietBody(1, "2010-001A");
+    const redesignated: ElementSet = { ...setOf(270_001, { epochMs: T0 + DAY, aKm: 7300, raanDeg: 30 }, "debris"), designator: "2010-009A" };
+    const fed = feed(runs([redesignated, ...body], [cloudOf(body, 50001)]));
+    expect(attributed(fed).map((v) => v.number)).toEqual([1]);
+  });
+
+  test("a debris-classed body of a launch with few of them is a candidate parent for pieces in no other body's plane, on its own path", () => {
+    // A fairing of the launch, in its own plane sixty degrees from the payload's, quiet for a hundred and forty days; its pieces at day a hundred and ten.
+    const payload = quietBody(1, "2010-001A", 60, "payload");
+    const fairing = decaying(7200, 0.02, 0.004, 140, 8, 7).map((s) => ({ ...withNode(setOf(2, s, "debris")), designator: "2010-001B" }));
+    const event = T0 + 110.3 * DAY;
+    const epoch = event + 3 * DAY;
+    const parentSet = fairing.filter((s) => s.epochMs <= epoch).at(-1)!;
+    const pieces = [-6, -3, -1, 1.5, 4, 6.5].map((d, i) => pieceOf(parentSet, event, d, epoch, 50001 + i, `2010-001${"CDEFGH"[i]}`));
+    const fed = feed(runs([...payload.filter((s) => s.epochMs <= T0 + 140 * DAY), ...fairing], [pieces]));
+    expect(attributed(fed).map((v) => v.number)).toEqual([2]);
+    expect(fed.log.find((r) => r.signals.phase === PHASES.attribution && r.number === 2)!.signals.attributionPath).toBe(3);
+    expect(attributed(feed(runs([...payload.filter((s) => s.epochMs <= T0 + 140 * DAY), ...fairing], [pieces]), { parameters: { attributionDebrisParentsMax: 0 } }))).toEqual([]);
+  });
+
+  test("off, the channel attributes nothing and the burst is listed for review as before", () => {
+    const body = quietBody(1, "2010-001A");
+    const fed = feed(runs(body, [cloudOf(body, 50001)]), { parameters: { attributionEnabled: false } });
+    expect(attributed(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.kind === "cloud").map((v) => v.number)).toEqual([1]);
   });
 });
 

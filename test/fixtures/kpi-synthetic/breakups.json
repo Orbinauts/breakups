@@ -73,11 +73,22 @@
      "piecesCatalogued": 2,
      "piecesStatedOn": null,
      "preEventElements": null,
-     "note": null
+     "note": null,
+     "statedOn": {
+      "on": "2013-04-01",
+      "precision": "month",
+      "ref": "a quarterly news issue of April 2013, synthetic"
+     }
     }
    ],
    "conflicts": [],
-   "overrides": []
+   "overrides": [],
+   "firstStatement": {
+    "on": "2013-04-01",
+    "precision": "month",
+    "ref": "a quarterly news issue of April 2013, synthetic",
+    "source": "hoosf-16e"
+   }
   },
   {
    "id": "40002:2013-03-05",
@@ -144,11 +155,13 @@
      "piecesCatalogued": 2,
      "piecesStatedOn": null,
      "preEventElements": null,
-     "note": null
+     "note": null,
+     "statedOn": null
     }
    ],
    "conflicts": [],
-   "overrides": []
+   "overrides": [],
+   "firstStatement": null
   },
   {
    "id": "40004:2013-01-25",
@@ -215,11 +228,13 @@
      "piecesCatalogued": 0,
      "piecesStatedOn": null,
      "preEventElements": null,
-     "note": null
+     "note": null,
+     "statedOn": null
     }
    ],
    "conflicts": [],
-   "overrides": []
+   "overrides": [],
+   "firstStatement": null
   },
   {
    "id": "40005:2013-03-20",
@@ -286,11 +301,13 @@
      "piecesCatalogued": 2,
      "piecesStatedOn": null,
      "preEventElements": null,
-     "note": null
+     "note": null,
+     "statedOn": null
     }
    ],
    "conflicts": [],
-   "overrides": []
+   "overrides": [],
+   "firstStatement": null
   }
  ]
 }

@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readElements } from "@orbinauts/engine";
 import { describe, expect, test } from "vitest";
-import { causeOf, epochOf, EXPECTED, hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
+import { causeOf, epochOf, EXPECTED, hoosfStatements, odqnReferences, parseHoosf, statedOnOf } from "./parse-hoosf.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const text = readFileSync(resolve(ROOT, "data/truth/sources/hoosf-16e.txt"), "utf8");
@@ -109,5 +109,52 @@ describe("the vocabulary", () => {
   test("the two-line epoch becomes an instant to the microsecond", () => {
     expect(epochOf("19356.69052255")).toBe("2019-12-22T16:34:21.148320");
     expect(epochOf("75192.78059719")).toBe("1975-07-11T18:44:03.597216");
+  });
+});
+
+describe("the quarterly news issues the spreads cite", () => {
+  test("an entry read as the history prints it, its title, month and issue", () => {
+    // Cosmos 2491's spread, p. 554: the entry spans two lines and pads the gap before the link.
+    const entry = `“Russian Satellite Fragments,” The Orbital Debris Quarterly News, NASA JSC, February 2020.                    Available online at
+https://www.orbitaldebris.jsc.nasa.gov/quarterly-news/pdfs/odqnv24i1.pdf.`;
+    expect(odqnReferences(entry)).toEqual([{ title: "Russian Satellite Fragments", month: "2020-02", volume: 24, issue: 1 }]);
+  });
+
+  test("a month that wraps to the next line, an entry with no link, and other documents left out", () => {
+    // DMSP 5D-2 F11's (p. 18011 of the text) and COSMOS 192's entries, beside a technical report the reading must skip.
+    const entries = `“Major Satellite Breakup in June,” N. Johnson, Orbital Debris Quarterly News, NASA JSC, September
+1996, p. 2 and 11.
+History of Soviet/Russian Satellite Fragmentations-A Joint U.S.-Russian Investigation, N. L. Johnson, et al., Kaman Sciences
+Corporation, October 1995.
+“Flurry of Small Breakups in First Half of 2014”, The Orbital Debris Quarterly News, NASA JSC, July 2014.`;
+    expect(odqnReferences(entries)).toEqual([
+      { title: "Major Satellite Breakup in June", month: "1996-09", volume: null, issue: null },
+      { title: "Flurry of Small Breakups in First Half of 2014", month: "2014-07", volume: null, issue: null },
+    ]);
+  });
+
+  test("an issue before the event is not its statement; one of the event's month is dated to the event's day", () => {
+    const references = [
+      { title: "Fragmentation of Fregat Upper Stage Debris", month: "2016-04", volume: 20, issue: 1 },
+      { title: "Second Fragmentation of Fregat Upper Stage Debris", month: "2020-08", volume: 24, issue: 3 },
+    ];
+    const window = (from: string) => ({ stated: from, at: null, from: `${from}T00:00Z`, to: `${from}T23:59Z`, precision: "day" as const });
+    expect(statedOnOf(references, window("2015-08-03"), 571)).toEqual({ on: "2016-04-01", precision: "month", ref: "“Fragmentation of Fregat Upper Stage Debris”, ODQN 20(1), April 2016, cited by NASA's history, p. 571" });
+    expect(statedOnOf(references, window("2020-07-12"), 571)!.on).toBe("2020-08-01");
+    expect(statedOnOf(references, window("2020-08-20"), 571)!.on).toBe("2020-08-20");
+    expect(statedOnOf(references, window("2021-01-01"), 571)).toBeNull();
+  });
+
+  test("every statement of the history is dated by the issues its spread cites", () => {
+    const statements = hoosfStatements(hoosf);
+    const of = (number: number) => statements.filter((s) => s.parent.catalogueNumber === number);
+    expect(hoosf.spreads.filter((s) => s.references.length > 0).length).toBeGreaterThan(120);
+    // Cosmos 2251 and Iridium 33, 10 February 2009: the April 2009 issue.
+    for (const number of [22675, 24946]) expect(of(number)[0]!.statedOn).toMatchObject({ on: "2009-04-01", precision: "month" });
+    expect(of(22675)[0]!.statedOn!.ref).toBe("“Satellite Collision Leaves Significant Debris Clouds”, ODQN 13(2), April 2009, cited by NASA's history, p. 404");
+    // Cosmos 1408, 15 November 2021: the March 2022 issue.
+    expect(of(13552)[0]!.statedOn).toMatchObject({ on: "2022-03-01", precision: "month" });
+    // The aerodynamic table carries no reference documents.
+    expect(statements.filter((s) => s.ref === "Table 4.1-1").every((s) => s.statedOn === null)).toBe(true);
   });
 });

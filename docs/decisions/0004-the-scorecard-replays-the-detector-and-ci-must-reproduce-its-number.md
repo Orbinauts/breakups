@@ -1,9 +1,18 @@
 ---
-status: accepted
+status: accepted; its headline target amended on 2026-10-10 by docs/decisions/0007-the-target-is-on-confirmed-alerts.md
 date: 2026-10-09
 ---
 
 # The scorecard replays the detector over the Archive and CI must reproduce its committed number
+
+Status note, 2026-10-10: the owner moved the nine-in-ten and one-in-ten
+targets from the alert on the parent's step to the Confirmed line, a
+breakup the detector attributes to a parent from fresh fragments in its
+plane, with or without a step seen first
+(`docs/decisions/0007-the-target-is-on-confirmed-alerts.md`). The rules
+below (the replay, the matching, the parity split, the committed number
+CI must make again) stand; the parent-step lines they define stay in the
+scorecard as secondary measurements, below the Confirmed line.
 
 The scorecard feeds the detector every element set of every object in the
 order the catalogue published them, in runs of four hours as the product

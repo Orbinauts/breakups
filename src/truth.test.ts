@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { launchOf, readBreakups, readStatement, readStatements, TruthError, yearOf } from "./index.ts";
+import { firstAgencyStatement, firstStatementOf, launchOf, readBreakups, readStatement, readStatements, TruthError, yearOf, type Statement } from "./index.ts";
 
 const statement = {
   source: "odqn",
@@ -14,6 +14,7 @@ const statement = {
   piecesStatedOn: "2023-10",
   preEventElements: null,
   note: null,
+  statedOn: { on: "2023-10-01", precision: "month", ref: "ODQN 27(4), October 2023" },
 };
 
 const breakup = {
@@ -31,6 +32,7 @@ const breakup = {
   statements: [statement],
   conflicts: [],
   overrides: [],
+  firstStatement: { on: "2023-10-01", precision: "month", ref: "ODQN 27(4), October 2023", source: "odqn" },
 };
 
 const file = { format: 1, sources: {}, breakups: [breakup] };
@@ -52,9 +54,33 @@ describe("a statement", () => {
     ["a designator of the wrong shape", { ...statement, parent: { ...statement.parent, designator: "91033A" } }, "designator is not like"],
     ["a catalogue number that is not positive", { ...statement, parent: { ...statement.parent, catalogueNumber: 0 } }, "positive whole number"],
     ["a piece count day that is not a day", { ...statement, piecesStatedOn: "October" }, "piecesStatedOn is not a day"],
+    ["a publication day that is a month", { ...statement, statedOn: { ...statement.statedOn, on: "2023-10" } }, "on is not a day"],
+    ["a publication day dated to the year", { ...statement, statedOn: { ...statement.statedOn, precision: "year" } }, "precision is not one of day, month"],
+    ["a publication day with no reference", { ...statement, statedOn: { on: "2023-10-01", precision: "month" } }, "no ref"],
   ] as const)("is refused with %s", (_, input, reason) => {
     expect(() => readStatement(input, "it")).toThrow(TruthError);
     expect(() => readStatement(input, "it")).toThrow(reason);
+  });
+});
+
+describe("a statement's publication day", () => {
+  test("a hand-entered statement may leave it out, and reads it as null", () => {
+    const { statedOn: _, ...undated } = statement;
+    expect(readStatement(undated, "it").statedOn).toBeNull();
+    expect(readStatement({ ...statement, statedOn: null }, "it").statedOn).toBeNull();
+  });
+
+  const at = (source: Statement["source"], on: string | null, precision: "day" | "month" = "day"): Statement => ({ ...(readStatement(statement, "it") as Statement), source, statedOn: on === null ? null : { on, precision, ref: source } });
+
+  test("the first statement is the earliest dated one, a day before a month on the same day, whoever made it", () => {
+    expect(firstStatementOf([at("odqn", "2023-10-01", "month"), at("news", "2023-07-02"), at("gcat", null)])).toEqual({ on: "2023-07-02", precision: "day", ref: "news", source: "news" });
+    expect(firstStatementOf([at("odqn", "2023-10-01", "month"), at("s4s-notice", "2023-10-01")])).toMatchObject({ source: "s4s-notice", precision: "day" });
+    expect(firstStatementOf([at("gcat", null)])).toBeNull();
+  });
+
+  test("the first agency statement leaves out the analyst, the companies and the news", () => {
+    expect(firstAgencyStatement({ statements: [at("news", "2023-07-02"), at("analyst", "2023-07-01"), at("odqn", "2023-10-01", "month")] })).toMatchObject({ source: "odqn", on: "2023-10-01" });
+    expect(firstAgencyStatement({ statements: [at("news", "2023-07-02")] })).toBeNull();
   });
 });
 
@@ -73,6 +99,9 @@ describe("the breakups file", () => {
     ["no statements", { ...file, breakups: [{ ...breakup, statements: [] }] }, "has no statements"],
     ["a regime not listed", { ...file, breakups: [{ ...breakup, orbit: { ...breakup.orbit, regime: "cislunar" } }] }, "regime is not one of"],
     ["two events with one id", { ...file, breakups: [breakup, breakup] }, "its id is not unique"],
+    ["no first statement", { ...file, breakups: [(({ firstStatement: _, ...rest }) => rest)(breakup)] }, "no firstStatement"],
+    ["a first statement no statement makes", { ...file, breakups: [{ ...breakup, firstStatement: { ...breakup.firstStatement, on: "2023-09-01" } }] }, "names no statement of the event dated so"],
+    ["a first statement by a source not listed", { ...file, breakups: [{ ...breakup, firstStatement: { ...breakup.firstStatement, source: "rumour" } }] }, "source is not one of"],
   ] as const)("is refused with %s", (_, input, reason) => {
     expect(() => readBreakups(input)).toThrow(TruthError);
     expect(() => readBreakups(input)).toThrow(reason);

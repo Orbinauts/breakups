@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorParameters } from "../../src/index.ts";
 import { archiveHome, builtYears, yearDir } from "../archive/archive.ts";
+import { readCatalogue, type Catalogue } from "./catalogue.ts";
 import { jumpDetector } from "./jump.ts";
 import { writeEvents } from "./events.ts";
 import { aggregate, renderLatest, type Latest, type YearFile } from "./kpi.ts";
@@ -46,13 +47,29 @@ export function readTruth(root = ROOT): Truth {
 
 export interface ScoreYearOptions extends ReplayOptions {
   detectorName?: string;
+  /** The catalogue read over every year, for the Confirmed line's targets; read once per Archive and truth where not given. */
+  catalogue?: Catalogue;
+}
+
+const catalogues = new Map<string, Catalogue>();
+
+/** The catalogue over every built year of the Archive, with the sets of every parent the truth names, read once per Archive and truth (about a minute over twenty-two years). */
+export function catalogueOf(archive: string, truth: Truth): Catalogue {
+  const key = `${archive}:${truth.sha256}`;
+  let catalogue = catalogues.get(key);
+  if (catalogue === undefined) {
+    const parents = new Set(truth.breakups.map((b) => b.parent.catalogueNumber).filter((n): n is number => n !== null));
+    catalogue = readCatalogue(archive, parents, false);
+    catalogues.set(key, catalogue);
+  }
+  return catalogue;
 }
 
 /** One year replayed and matched: the file as it is written, and the replay's result for the next year to carry. */
 export function replayAndScore(archive: string, year: number, truth: Truth, options: ScoreYearOptions = {}): { file: YearFile; result: ReplayResult } {
   const notices = options.notices ?? noticesOf(truth.breakups);
   const result = replayYear(archive, year, { ...options, notices });
-  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters });
+  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters }, options.catalogue ?? catalogueOf(archive, truth));
   const file: YearFile = {
     format: 1,
     year,
@@ -77,7 +94,7 @@ export function rematch(archive: string, file: YearFile, truth: Truth): YearFile
   const notices = noticesOf(truth.breakups);
   const previous = existsSync(join(yearDir(archive, file.year - 1), "manifest.json")) ? loadSlice(archive, file.year - 1) : null;
   const index = indexOf(loadSlice(archive, file.year), previous);
-  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...file.detector.parameters }) };
+  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...file.detector.parameters }, catalogueOf(archive, truth)) };
 }
 
 /** One year replayed and matched: the file as it is written. */
@@ -163,7 +180,7 @@ function summary(file: YearFile): string {
   const scoped = file.verdicts.filter((v) => v.state === "scoped").length;
   const confirmed = file.score.alerts.filter((a) => a.confirmedAt !== null);
   const start = file.carried ? "from the carried states" : file.warmup === null ? "cold" : `after ${file.warmup.runs} runs of ${file.warmup.year}`;
-  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length - alerts("confirmation")}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; confirmed ${confirmed.length} (${confirmed.filter((a) => a.outcome === "detection" || a.outcome === "late").length} on events); manoeuvres ${manoeuvres}; scoped ${scoped}; review ${file.score.review.length}`;
+  return `${file.year}: ${file.sets} sets in ${file.runs} runs ${start}, ${file.replaySeconds} s; targets ${events.length - count("undetectable")} (undetectable ${count("undetectable")}): detected ${count("detected")}, late ${count("late")}, missed ${count("missed")}; alerts ${file.score.alerts.length - alerts("confirmation")}: false alarms ${alerts("false-alarm")}, duplicates ${alerts("duplicate")}, exempt ${alerts("exempt")}; confirmed ${confirmed.length} (${confirmed.filter((a) => a.outcome === "detection" || a.outcome === "late").length} on events); Confirmed line ${(file.score.confirmations ?? []).length} (${(file.score.confirmations ?? []).filter((c) => c.outcome === "detection").length} on events, ${(file.score.confirmations ?? []).filter((c) => c.outcome === "false-alarm").length} false); manoeuvres ${manoeuvres}; scoped ${scoped}; review ${file.score.review.length}`;
 }
 
 async function main(): Promise<void> {

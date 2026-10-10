@@ -6,7 +6,7 @@ import { afterAll, describe, expect, test } from "vitest";
 import { DETECTOR_PARAMETERS, readBreakups, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
 import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
-import { alertKey, cellsOf, percentile, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
+import { alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
 import { brackets, lineOf, marginDaysOf, noticesOf, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
 import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
@@ -110,14 +110,26 @@ const work = mkdtempSync(join(tmpdir(), "breakups-kpi-"));
 const archive = join(work, "archive");
 afterAll(() => rmSync(work, { recursive: true, force: true }));
 
-/** The jump detector, plus one cloud verdict on the launch of the first event at the run of 1 March. */
+/**
+ * The jump detector, plus one cloud verdict on the launch of the first
+ * event at the run of 1 March, and three confirmed verdicts with no step,
+ * as the Confirmed channel attributes them from the pieces: ALPHA's on 14
+ * February (its fragments, published the 13th, lie in its plane in the
+ * fixture), ALPHA's again on 20 February (a duplicate), and one on GAMMA's
+ * rocket body on 25 March, which matches no reported event.
+ */
 const CLOUD_AT = at(3, 1);
+const CONFIRMED_AT = at(2, 14, 4);
+const attributedOn = (number: number, now: number, eventAt: number, bodyClass: number): Verdict => ({ kind: "object", state: "confirmed", number, launch: `2010-00${number % 10}`, raisedAt: now, step: null, event: { at: eventAt, from: eventAt - HOUR, to: eventAt + HOUR }, evidence: { attributed: 1, sigmaMinutes: 20, bodyClass }, reasons: ["attributed from the pieces"], bodies: [] });
 const stub = (input: DetectorInput) => {
   const output = jumpDetector(1)(input);
   if (input.now === CLOUD_AT) {
     const cloud: Verdict = { kind: "cloud", state: "cloud-only", number: null, launch: "2010-001", raisedAt: input.now, step: null, event: null, evidence: {}, reasons: ["two new bodies under the launch"] };
     output.verdicts.push(cloud);
   }
+  if (input.now === CONFIRMED_AT) output.verdicts.push(attributedOn(40001, input.now, at(2, 10, 6), 0));
+  if (input.now === at(2, 20, 4)) output.verdicts.push(attributedOn(40001, input.now, at(2, 10, 6), 0));
+  if (input.now === at(3, 25, 4)) output.verdicts.push(attributedOn(40003, input.now, at(3, 24), 1));
   return output;
 };
 
@@ -227,6 +239,38 @@ describe("the scorecard on the synthetic year", () => {
     expect(alerts.find((a) => a.number === 40005)!.note).toBe("the parent had too few public sets before the event to be scored");
   });
 
+  test("the Confirmed line: the targets are the events whose fragments lie in the parent's plane, and the confirmed verdicts land on them or nowhere", () => {
+    // ALPHA's fragments lie in its plane; BETA's piece and EPSILON's none do not.
+    expect(events.ALPHA!.fragments).toEqual({ inPlane: 2, firstAt: at(2, 13), firstBody: 40101, parentOrbit: true });
+    expect(events.BETA!.fragments!.inPlane).toBe(0);
+    expect(events.EPSILON!.fragments!.inPlane).toBe(0);
+    expect(events.ALPHA!.statement).toEqual({ at: Date.UTC(YEAR, 3, 1), precision: "month", source: "hoosf-16e" });
+    expect(events.BETA!.statement).toBeNull();
+    // The confirmed verdicts with no step are the Confirmed line's alone: none landed among the alerts on the parent's step.
+    expect(alerts.every((a) => a.state !== "confirmed")).toBe(true);
+    expect(file.score.confirmations!.map((c) => `${c.number} ${c.outcome} ${c.event ?? "-"} ${c.attributed}`)).toEqual(["40001 detection 40001:2013-02-10 true", "40001 detection 40001:2013-02-10 true", "40003 false-alarm - true"]);
+    const c = cellsOf([file]).confirmedLine;
+    expect(c.lines["breakups A-B"]).toEqual({ targets: 1, noFragments: 2, noParentOrbit: 0, detected: 1, missed: 0, rate: 1, interval: wilson(1, 1) });
+    expect(c).toMatchObject({ verdicts: 3, attributed: 3, detections: 1, duplicates: 1, exempt: 0, falseAlarms: 1, detectedAllLines: 1, detectedNoFragments: 0, falseAttributed: 1, withStatement: 1, beforeStatement: 1, statementDays: 0, statementMonths: 1 });
+    expect(c.falseByClass).toEqual({ payload: 0, "rocket body": 1, debris: 0, unknown: 0 });
+    expect(c.falseAlarmRate).toBe(0.5);
+    // The lead over the April issue, the lag after the first fragment's publication on the 13th, and the instant's error against 05:30.
+    expect(c.lead!.median).toBeCloseTo((Date.UTC(YEAR, 3, 1) - CONFIRMED_AT) / DAY, 9);
+    expect(c.lag!.median).toBeCloseTo((CONFIRMED_AT - at(2, 13)) / DAY, 9);
+    expect(c.timing).toEqual({ median: 30, tail: 30, count: 1 });
+  });
+
+  test("an event's first confirmation counts in its own year's cells, wherever its file is", () => {
+    const next = { year: YEAR + 1, score: { ...file.score, year: YEAR + 1, events: [], alerts: [], review: [], confirmations: file.score.confirmations!.slice(0, 1).map((c) => ({ ...c, raisedAt: c.raisedAt - DAY })) } };
+    const both = [file, next];
+    const first = firstConfirmationsOf(both);
+    expect(first.get("40001:2013-02-10")!.year).toBe(YEAR + 1);
+    const c = confirmedCellsOf([file], first);
+    // In this year's file both of ALPHA's confirmations are now duplicates, and the event is still detected, by the next year's.
+    expect(c).toMatchObject({ detections: 0, duplicates: 2, detectedAllLines: 1 });
+    expect(c.lines["breakups A-B"].detected).toBe(1);
+  });
+
   test("the cloud verdict goes to the review list and counts as nothing", () => {
     expect(file.score.review).toEqual([{ verdict: expect.any(Number), launch: "2010-001", number: null, raisedAt: CLOUD_AT, state: "cloud-only", pieces: 0 }]);
     expect(file.verdicts.filter((v) => v.kind === "cloud")).toHaveLength(1);
@@ -263,7 +307,13 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [lines, scoped, alertsTable, tiers, confirmed] = readmeTables(latest);
+    const [headline, confirmedLines, confirmedVerdicts, lines, scoped, alertsTable, tiers, confirmed] = readmeTables(latest);
+    // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body a false confirmation.
+    expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 1 | 50% (9% to 91%) | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
+    expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – |");
+    expect(confirmedLines).toContain("| Breakups, confidence A and B (the target is 90%) | 1 | 2 | 0 | 1 | 0 | 100% (21% to 100%) |");
+    expect(confirmedVerdicts).toContain("| False confirmations (matching no reported event) | 1 |");
+    expect(confirmedVerdicts).toContain("| Of which the statement dated to the day / to the month | 0 / 1 |");
     // The scoped line: the synthetic bodies carry no launch day, so no parent is known to be five years old and the scope leaves every headline event out, which the table says.
     expect(scoped).toContain("| The whole catalogue | 2 | 1 | 1 | 1 | 0 |");
     expect(scoped).toContain("| Scoped | 0 | 0 | 0 | 0 | 0 | – | 0 | – | 3 of 3 |");
@@ -274,10 +324,10 @@ describe("the scorecard on the synthetic year", () => {
     expect(confirmed).toContain("| Precision of the confirmed alerts, on the step | – |");
     expect(confirmed).toContain("| Targets with an agency's statement dated in the truth (the notices) | 0 |");
     expect(tiers).toContain("| 7 days of post sets | 0 | 0 | 0 | – | 0% | – |");
-    expect(lines).toContain("| Breakups, confidence A and B (the target is 90%) | 2 | 1 | 1 | 1 | 0 | 50% |");
+    expect(lines).toContain("| Breakups, confidence A and B (the headline line) | 2 | 1 | 1 | 1 | 0 | 50% |");
     expect(lines).toContain("| Breakups, confidence C | 0 | 0 | 0 | 0 | 0 | – |");
     expect(alertsTable).toContain("| False alarms | 1 |");
-    expect(alertsTable).toContain("| False-alarm rate (the target is under 10%) | 50% |");
+    expect(alertsTable).toContain("| False-alarm rate | 50% |");
     expect(alertsTable).toContain("| Lead over the catalogue, hours: median (10th percentile) | 44.0 (44.0) |");
     expect(alertsTable).toContain("| Cloud verdicts, for review (a burst with no parent step) | 1 |");
     const markdown = readFileSync(join(dir, "latest.md"), "utf8");
@@ -286,10 +336,12 @@ describe("the scorecard on the synthetic year", () => {
     expect(markdown).toContain(confirmed);
     // The dissection is written beside the aggregate (under `docs/detector/` for the committed one), one row per scoreable event with its cause.
     const events = readFileSync(join(dir, "events.md"), "utf8");
-    expect(events).toContain("| 2013 | ALPHA (40001, 2010-001), 2013-02-10 | LEO | detected | raised |");
-    expect(events).toContain("| 2013 | BETA (40002, 2010-002), 2013-03-05 to 2013-03-06 | LEO | late | no post set before the catalogue |");
-    expect(events).toContain("| 2013 | EPSILON (40005, 2010-005), 2013-03-20 | LEO | undetectable | no public sets |");
+    expect(events).toContain("| 2013 | ALPHA (40001, 2010-001), 2013-02-10 | LEO | confirmed | attributed from the pieces 3.9 d after the event, 1.2 d after the first fragment's publication, 45.8 d before the first agency statement (hoosf-16e, to the month) | detected | raised |");
+    expect(events).toContain("| 2013 | BETA (40002, 2010-002), 2013-03-05 to 2013-03-06 | LEO | no fragments catalogued |  | late | no post set before the catalogue |");
+    expect(events).toContain("| 2013 | EPSILON (40005, 2010-005), 2013-03-20 | LEO | no fragments catalogued |  | undetectable | no public sets |");
     expect(events).toContain("| no public sets | 1 | 1 | 1 |");
+    expect(events).toContain("| confirmed | 0 | 1 | 1 |");
+    expect(events).toContain("| no fragments catalogued | 0 | 2 | 2 |");
     expect(markdown).toContain("| 2013 | bundle | 2026-01-01 | 575 | 9 | epoch (a lower bound) |");
   });
 });
