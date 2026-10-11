@@ -1,7 +1,7 @@
 name: Maintenance
 
-# The project's weekly upkeep, so the truth, the scorecard, the README and
-# the prospective test's score stay current with no one at the keyboard
+# The project's weekly upkeep, so the truth, the scorecard, the README, the
+# documentation pages and the prospective test's score stay current with no one at the keyboard
 # (docs/decisions/0009-the-project-keeps-itself-up-to-date.md). On a fresh
 # runner, every Monday:
 #
@@ -24,9 +24,11 @@ name: Maintenance
 #    workflow replays them: the same result as `npm run kpi -- --all`),
 #    which writes kpi/latest.json, kpi/latest.md and the per-event
 #    dissection docs/detector/events.md.
-# 4. Always: the README's generated parts are written from the files
-#    (`npm run kpi:readme`), and the prospective test is scored: score.md
-#    on the `prospective` branch, and its summary in the README.
+# 4. Always: the generated parts of the README, docs/results.md and
+#    docs/ground-truth.md are written from the files (`npm run kpi:readme`),
+#    and the prospective test is scored: score.md on the `prospective`
+#    branch, and its summary on docs/results.md. `git add -A` below commits
+#    whichever of these pages changed.
 # 5. Every check runs: the typecheck, the tests and the documentation
 #    build. A failure anywhere opens an issue labelled `maintenance` with
 #    the log (or comments on the one open) and nothing is merged.
@@ -218,7 +220,7 @@ jobs:
           done
           npm run -s kpi -- --aggregate
           df -h "$BREAKUPS_ARCHIVE"
-      - name: Write the README's tables
+      - name: Write the generated tables of the README and the documentation pages
         working-directory: main
         run: |
           set -euo pipefail

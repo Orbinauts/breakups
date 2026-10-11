@@ -4,38 +4,57 @@ import { fileURLToPath } from "node:url";
 import * as library from "../../src/index.ts";
 import { readBreakups, yearOf, type Breakup } from "../../src/index.ts";
 import { parseGcat } from "../truth/parse-gcat.ts";
-import { readmeTables, type Latest } from "./kpi.ts";
+import { resultsTables, type Latest } from "./kpi.ts";
 
 /**
- * The README's generated parts: `npm run kpi:readme` rewrites, between
- * explicit markers, every part of the README that states a number of the
- * scorecard or of the truth, and nothing else, so the prose around them
- * stays as written. Each part sits between `<!-- <name>:begin -->` and
- * `<!-- <name>:end -->`; a block part (a table, a fenced block) has a blank
- * line on either side of it, so the Markdown reads as it would without the
- * markers, and an inline part (a sentence, a count) sits between the
- * markers with nothing around it.
+ * The generated parts of the README and the documentation pages:
+ * `npm run kpi:readme` rewrites, between explicit markers, every part of
+ * those pages that states a number of the scorecard or of the truth, and
+ * nothing else, so the prose around them stays as written. Each part sits
+ * between `<!-- <name>:begin -->` and `<!-- <name>:end -->`; a block part
+ * (a table, a fenced block) has a blank line on either side of it, so the
+ * Markdown reads as it would without the markers, and an inline part (a
+ * sentence, a count) sits between the markers with nothing around it.
+ * Every name is marked once, on one page (`GENERATED_PARTS`).
  *
- * The parts: the "Current results" table (`kpi:current`), the sentence
- * that says whether the held-out years reach the target (`kpi:target`)
- * and the one that says it of both splits (`kpi:splits`), the Confirmed
- * tables (`kpi:confirmed`) and the parent-step tables (`kpi:parent-step`)
- * of "How well it does", the counts of the ground truth (`truth:counts`),
- * the count of GCAT's debris clouds (`truth:gcat-clouds`) and what the
- * quick start prints (`truth:quick-start`), which is the README's own code
- * run against the truth. The prospective score's summary
- * (`prospective:score`) is written by `npm run prospective:score --
- * --readme`, since it reads the `prospective` branch.
+ * The README carries the summary: the table of the held-out years against
+ * the target (`kpi:summary`), the sentence saying whether the target is
+ * reached (`kpi:target`), and what the quick start prints
+ * (`truth:quick-start`), which is the README's own code run against the
+ * truth. `docs/results.md` carries the full results: the headline of both
+ * splits (`kpi:current`), the sentence saying which splits reach the
+ * target (`kpi:splits`), the sentences on the medians of the lead and the
+ * lag (`kpi:medians`), the Confirmed tables (`kpi:confirmed`) and the
+ * parent-step tables (`kpi:parent-step`). `docs/ground-truth.md` carries
+ * the truth's counts (`truth:counts`) and the count of GCAT's debris
+ * clouds (`truth:gcat-clouds`). The prospective score's summary
+ * (`prospective:score`, on the results page) is written by
+ * `npm run prospective:score -- --readme`, since it reads the
+ * `prospective` branch.
  *
  * The inputs are `kpi/latest.json`, `data/breakups.json` and the GCAT
  * snapshot, all committed, so the command run twice, or run on the files
- * the README was last generated from, changes nothing.
+ * the pages were last generated from, changes nothing.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** The year the scorecard's truth counts start from. */
 export const SCORING_FROM = 2005;
+
+/** The README, the page npm and GitHub show first. */
+export const README = "README.md";
+/** The full results: every table of the scorecard and the prospective score. */
+export const RESULTS = "docs/results.md";
+/** The ground truth: what a positive event is, its counts and its sources. */
+export const GROUND_TRUTH = "docs/ground-truth.md";
+
+/** Every generated part, by the page that holds it. */
+export const GENERATED_PARTS: Readonly<Record<string, readonly string[]>> = {
+  [README]: ["kpi:summary", "kpi:target", "truth:quick-start"],
+  [RESULTS]: ["kpi:current", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:parent-step", "prospective:score"],
+  [GROUND_TRUTH]: ["truth:counts", "truth:gcat-clouds"],
+};
 
 /** A marker's opening and closing comments. */
 export const beginOf = (name: string): string => `<!-- ${name}:begin -->`;
@@ -46,11 +65,11 @@ function spanOf(text: string, name: string): { from: number; to: number } {
   const begin = beginOf(name);
   const end = endOf(name);
   const at = text.indexOf(begin);
-  if (at === -1) throw new Error(`the README has no ${begin}`);
-  if (text.indexOf(begin, at + begin.length) !== -1) throw new Error(`the README has ${begin} twice`);
+  if (at === -1) throw new Error(`the page has no ${begin}`);
+  if (text.indexOf(begin, at + begin.length) !== -1) throw new Error(`the page has ${begin} twice`);
   const close = text.indexOf(end, at + begin.length);
-  if (close === -1) throw new Error(`the README has ${begin} with no ${end} after it`);
-  if (text.indexOf(end, close + end.length) !== -1) throw new Error(`the README has ${end} twice`);
+  if (close === -1) throw new Error(`the page has ${begin} with no ${end} after it`);
+  if (text.indexOf(end, close + end.length) !== -1) throw new Error(`the page has ${end} twice`);
   return { from: at + begin.length, to: close };
 }
 
@@ -77,7 +96,25 @@ const row = (cells: string[]): string => `| ${cells.join(" | ")} |`;
 
 type ConfirmedLineCells = Latest["splits"]["validation"]["confirmedLine"];
 
-/** The "Current results" column of a split: the headline in plain units. */
+/** A rate with its count, as the README's summary states it: "74% (17 of 23)". */
+const rateOf = (rate: number | null, k: number, n: number): string => (rate === null ? "–" : `${percent(rate)} (${k} of ${n})`);
+
+/** The README's summary: the held-out years' headline in plain words, against the target. */
+export function summaryTable(latest: Latest): string {
+  const held = latest.splits.validation;
+  const c = held.confirmedLine;
+  const line = c.lines["breakups A-B"];
+  return [
+    row([`Held-out years (the odd years, ${held.years[0]} to ${held.years.at(-1)})`, "Result", "Target"]),
+    row(["---", "---", "---"]),
+    row(["Reported breakups confirmed", rateOf(line.rate, line.detected, line.targets), "90% or more"]),
+    row(["Confirmations that were false", rateOf(c.falseAlarmRate, c.falseAlarms, c.falseAlarms + c.detectedAllLines), "under 10%"]),
+    row(["Median lead over the first official report", c.lead === null ? "–" : `${Math.round(c.lead.median)} days (${c.beforeStatement} of ${c.withStatement} confirmed before it)`, ""]),
+    row(["Median error in the time of the breakup", c.timing === null ? "–" : duration(c.timing.median), ""]),
+  ].join("\n");
+}
+
+/** A column of the results page's first table: a split's headline in plain units. */
 function currentColumn(c: ConfirmedLineCells): string[] {
   const line = c.lines["breakups A-B"];
   return [
@@ -93,7 +130,7 @@ function currentColumn(c: ConfirmedLineCells): string[] {
 const LABELS = ["Confirmed, of the targets", "Recall (95% interval)", "False confirmations, of all events confirmed", "False-alarm rate (95% interval)", "Median lead over the first agency statement", "Median timing error"];
 const TARGETS = ["", "90% or more", "", "under 10%", "", ""];
 
-/** The "Current results" table: the headline of the held-out and the training years, in plain units, against the target. */
+/** The results page's first table: the headline of the held-out and the training years, in plain units, against the target. */
 export function currentTable(latest: Latest): string {
   const held = latest.splits.validation;
   const train = latest.splits.train;
@@ -113,12 +150,36 @@ export function reachesTarget(c: ConfirmedLineCells): boolean {
   return rate !== null && rate >= 0.9 && c.falseAlarmRate !== null && c.falseAlarmRate < 0.1;
 }
 
-/** The sentence of "Current results" that says whether the held-out years reach the target. */
+/** The README's sentence that says whether the held-out years reach the target. */
 export function targetSentence(latest: Latest): string {
-  return reachesTarget(latest.splits.validation.confirmedLine) ? "**It reaches that target on the held-out years.**" : "**It does not reach that target on the held-out years.**";
+  return reachesTarget(latest.splits.validation.confirmedLine) ? "**It reaches that target on the held-out years.**" : "**It does not reach that target yet.**";
 }
 
-/** The sentence of "How well it does" that says which splits reach the target. */
+const WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+/** A count in words up to twelve, in figures above, with its unit. */
+const counted = (n: number, unit: string): string => `${n < WORDS.length ? WORDS[n] : n} ${unit}${n === 1 ? "" : "s"}`;
+
+/** A span of days in plain words: weeks from two weeks, days from two days, hours below. */
+export function inWords(days: number): string {
+  if (days >= 14) return counted(Math.round(days / 7), "week");
+  if (days >= 2) return counted(Math.round(days), "day");
+  const hours = Math.round(days * 24);
+  return hours < 1 ? "under an hour" : counted(hours, "hour");
+}
+
+/** The results page's sentences on the held-out years' medians: how long before the first agency statement, and how long after the first fresh piece, the confirmations came. */
+export function mediansSentence(latest: Latest): string {
+  const c = latest.splits.validation.confirmedLine;
+  const sentences: string[] = [];
+  if (c.lead !== null && c.withStatement > 0) {
+    const who = c.beforeStatement === c.withStatement ? "Every held-out confirmation with an agency's statement came before that statement" : `${c.beforeStatement} of the ${c.withStatement} held-out confirmations with an agency's statement came before that statement`;
+    sentences.push(c.lead.median >= 0 ? `${who}, and the median one by ${inWords(c.lead.median)}.` : `${who}, and the median one ${inWords(-c.lead.median)} after it.`);
+  }
+  if (c.lag !== null) sentences.push(`The median confirmation came ${inWords(c.lag.median)} after the catalogue published the first fresh piece.`);
+  return sentences.length === 0 ? "No held-out confirmation is timed yet." : sentences.join(" ");
+}
+
+/** The results page's sentence that says which splits reach the target. */
 export function splitsSentence(latest: Latest): string {
   const held = reachesTarget(latest.splits.validation.confirmedLine);
   const train = reachesTarget(latest.splits.train.confirmedLine);
@@ -143,7 +204,7 @@ export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[]
   ["Confidence D (pieces in the catalogue, or news with no time)", (b) => b.scoreable && b.confidence === "D"],
 ];
 
-/** The ground truth's counts from 2005, as the README's table. */
+/** The ground truth's counts from 2005, as the ground-truth page's table. */
 export function truthTable(breakups: readonly Breakup[]): string {
   const since = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   return [row([`Events from ${SCORING_FROM}`, "Count"]), row(["---", "---"]), ...TRUTH_ROWS.map(([label, counts]) => row([label, String(since.filter(counts).length)]))].join("\n");
@@ -194,21 +255,27 @@ export interface ReadmeInputs {
   gcatClouds: number;
 }
 
-/** The README with every generated part written from the inputs; the prose and the prospective score's summary are left as they are. */
-export async function renderReadme(readme: string, inputs: ReadmeInputs): Promise<string> {
+/** A page with every generated part it holds written from the inputs; the prose and the prospective score's summary are left as they are. */
+export async function renderPage(path: string, text: string, inputs: ReadmeInputs): Promise<string> {
   const { latest, file, gcatClouds } = inputs;
-  const breakups = readBreakups(file);
-  const tables = readmeTables(latest);
-  let text = readme;
-  text = replacePart(text, "kpi:current", currentTable(latest));
-  text = replacePart(text, "kpi:target", targetSentence(latest), true);
-  text = replacePart(text, "kpi:splits", splitsSentence(latest), true);
-  text = replacePart(text, "kpi:confirmed", tables.slice(0, 3).join("\n\n"));
-  text = replacePart(text, "kpi:parent-step", tables.slice(3).join("\n\n"));
-  text = replacePart(text, "truth:counts", truthTable(breakups));
-  text = replacePart(text, "truth:gcat-clouds", String(gcatClouds), true);
-  text = replacePart(text, "truth:quick-start", `\`\`\`text\n${(await quickStartOutput(text, file)).join("\n")}\n\`\`\``);
-  return text;
+  if (path === README) {
+    let out = replacePart(text, "kpi:summary", summaryTable(latest));
+    out = replacePart(out, "kpi:target", targetSentence(latest), true);
+    return replacePart(out, "truth:quick-start", `\`\`\`text\n${(await quickStartOutput(out, file)).join("\n")}\n\`\`\``);
+  }
+  if (path === RESULTS) {
+    const tables = resultsTables(latest);
+    let out = replacePart(text, "kpi:current", currentTable(latest));
+    out = replacePart(out, "kpi:splits", splitsSentence(latest), true);
+    out = replacePart(out, "kpi:medians", mediansSentence(latest), true);
+    out = replacePart(out, "kpi:confirmed", tables.slice(0, 3).join("\n\n"));
+    return replacePart(out, "kpi:parent-step", tables.slice(3).join("\n\n"));
+  }
+  if (path === GROUND_TRUTH) {
+    const out = replacePart(text, "truth:counts", truthTable(readBreakups(file)));
+    return replacePart(out, "truth:gcat-clouds", String(gcatClouds), true);
+  }
+  throw new Error(`${path} holds no generated part`);
 }
 
 /** The inputs as committed. */
@@ -221,15 +288,18 @@ export function readInputs(root = ROOT): ReadmeInputs {
 }
 
 async function main(): Promise<void> {
-  const path = join(ROOT, "README.md");
-  const before = readFileSync(path, "utf8");
-  const after = await renderReadme(before, readInputs());
-  if (after === before) {
-    console.log("README.md: every generated part is current");
-    return;
+  const inputs = readInputs();
+  for (const page of Object.keys(GENERATED_PARTS)) {
+    const path = join(ROOT, page);
+    const before = readFileSync(path, "utf8");
+    const after = await renderPage(page, before, inputs);
+    if (after === before) {
+      console.log(`${page}: every generated part is current`);
+      continue;
+    }
+    writeFileSync(path, after);
+    console.log(`${page}: generated parts rewritten from kpi/latest.json and data/breakups.json`);
   }
-  writeFileSync(path, after);
-  console.log("README.md: generated parts rewritten from kpi/latest.json and data/breakups.json");
 }
 
-if (process.argv[1] !== undefined && process.argv[1].endsWith("kpi/readme.ts")) await main();
+if (process.argv[1] !== undefined && process.argv[1].endsWith("kpi/pages.ts")) await main();

@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { archiveHome } from "../archive/archive.ts";
 import type { Latest } from "../kpi/kpi.ts";
-import { markedPart } from "../kpi/readme.ts";
+import { GENERATED_PARTS, markedPart, RESULTS } from "../kpi/pages.ts";
 import type { SnapshotRecord } from "../truth/fetch-sources.ts";
 import { BODY_LIMIT } from "./github.ts";
 import { readPromoted, type Promoted } from "./promote.ts";
@@ -15,8 +15,9 @@ import { readPromoted, type Promoted } from "./promote.ts";
  * checkout once every check has passed. It compares the files the run may
  * change with the base commit's: the sources it fetched with their hashes,
  * the truth's events added, removed or changed by id, the scorecard's
- * cells that moved with their old and new values, the README's generated
- * parts, and the year promoted into the Archive; and it gives the
+ * cells that moved with their old and new values, the generated parts of
+ * the README and the documentation pages, and the year promoted into the
+ * Archive; and it gives the
  * prospective score's summary. It writes `title.txt`, `body.md` (the pull
  * request's) and `message.txt` (the commit's and the squash merge's body,
  * prose with no trailer) into the directory given.
@@ -104,8 +105,8 @@ export function kpiMoves(before: Latest | null, after: Latest): Move[] {
   return moves;
 }
 
-/** The README's generated parts whose content changed. */
-export function readmeParts(before: string, after: string, names: readonly string[]): string[] {
+/** The generated parts of a page whose content changed. */
+export function changedParts(before: string, after: string, names: readonly string[]): string[] {
   const part = (text: string, name: string): string | null => {
     try {
       return markedPart(text, name);
@@ -116,9 +117,6 @@ export function readmeParts(before: string, after: string, names: readonly strin
   return names.filter((name) => part(before, name) !== part(after, name));
 }
 
-/** The names of the README's generated parts. */
-export const README_PARTS = ["kpi:current", "kpi:target", "kpi:splits", "kpi:confirmed", "kpi:parent-step", "truth:counts", "truth:gcat-clouds", "truth:quick-start", "prospective:score"] as const;
-
 /** Everything a maintenance run's pull request reports. */
 export interface RunReport {
   date: string;
@@ -128,7 +126,8 @@ export interface RunReport {
   /** Why the scorecard was replayed, or empty where it was not. */
   rescored: string;
   moves: Move[];
-  readme: string[];
+  /** The generated parts that changed, on every page that holds them. */
+  generated: string[];
   promoted: Promoted | null;
   prospective: string;
   /** A branch the run folded in (`-f from=<branch>`), with the subjects of its commits; null where none was. */
@@ -146,7 +145,7 @@ export const MOVES_SHOWN = 120;
 
 /** The pull request's title: the day, and what changed. */
 export function prTitle(report: RunReport): string {
-  const parts = [report.folded === null ? null : `${report.folded.branch} folded in`, report.sources.length > 0 ? "sources refreshed" : null, report.truth.added.length + report.truth.removed.length + report.truth.changed.length > 0 ? "truth updated" : null, report.promoted === null ? null : `${report.promoted.year} promoted`, report.rescored !== "" ? "scorecard replayed" : null, report.readme.includes("prospective:score") ? "prospective score" : null].filter((part) => part !== null);
+  const parts = [report.folded === null ? null : `${report.folded.branch} folded in`, report.sources.length > 0 ? "sources refreshed" : null, report.truth.added.length + report.truth.removed.length + report.truth.changed.length > 0 ? "truth updated" : null, report.promoted === null ? null : `${report.promoted.year} promoted`, report.rescored !== "" ? "scorecard replayed" : null, report.generated.includes("prospective:score") ? "prospective score" : null].filter((part) => part !== null);
   return `Maintenance of ${report.date}: ${parts.length === 0 ? "generated files brought up to date" : parts.join(", ")}`;
 }
 
@@ -159,7 +158,7 @@ export function commitMessage(report: RunReport): string {
   if (added.length + removed.length + changed.length > 0) sentences.push(`The truth rebuilt from them has ${plural(added.length, "event", "events")} added, ${removed.length} removed and ${changed.length} changed${added.length > 0 ? ` (added: ${added.slice(0, 10).map((row) => row.id).join(", ")}${added.length > 10 ? ", and more" : ""})` : ""}.`);
   if (report.promoted !== null) sentences.push(`The closed year ${report.promoted.year} is promoted into the Archive from the prospective test's day slices, ${report.promoted.days} days and ${report.promoted.sets} sets through ${report.promoted.through}.`);
   if (report.rescored !== "") sentences.push(`The scorecard was replayed over every year because ${report.rescored}, and ${plural(report.moves.length, "cell", "cells")} of kpi/latest.json moved.`);
-  if (report.readme.length > 0) sentences.push(`The README's generated parts ${report.readme.join(", ")} follow.`);
+  if (report.generated.length > 0) sentences.push(`The generated parts ${report.generated.join(", ")} of the README and the documentation pages follow.`);
   sentences.push(`Every check ran before the merge: the typecheck, the tests and the documentation build${report.runUrl === null ? "" : `, in ${report.runUrl}`}.`);
   return sentences.join(" ");
 }
@@ -198,7 +197,7 @@ export function prBody(report: RunReport): string {
       if (report.moves.length > MOVES_SHOWN) lines.push("", `And ${report.moves.length - MOVES_SHOWN} more; the diff of \`kpi/latest.json\` has them all.`);
     }
   }
-  lines.push("", "## The README", "", report.readme.length === 0 ? "No generated part changed." : `Generated parts rewritten: ${report.readme.map((name) => `\`${name}\``).join(", ")}.`);
+  lines.push("", "## The README and the documentation pages", "", report.generated.length === 0 ? "No generated part changed." : `Generated parts rewritten: ${report.generated.map((name) => `\`${name}\``).join(", ")}.`);
   lines.push("", "## The prospective test", "", report.prospective, "");
   lines.push("## Files", "", ...report.files.map((file) => `- \`${file}\``), "");
   const body = lines.join("\n");
@@ -233,9 +232,9 @@ function main(): void {
     truth: truthChanges(truthRows(atBase(base, "data/breakups.json")), truthRows(read("data/breakups.json"))),
     rescored: process.env.RESCORE_REASONS ?? "",
     moves: kpiMoves(latestBefore === null ? null : (JSON.parse(latestBefore) as Latest), JSON.parse(read("kpi/latest.json")) as Latest),
-    readme: readmeParts(atBase(base, "README.md") ?? "", read("README.md"), README_PARTS),
+    generated: Object.entries(GENERATED_PARTS).flatMap(([page, names]) => changedParts(atBase(base, page) ?? "", read(page), names)),
     promoted: existsSync(archiveHome()) ? readPromoted(archiveHome()) : null,
-    prospective: markedPart(read("README.md"), "prospective:score"),
+    prospective: markedPart(read(RESULTS), "prospective:score"),
     folded: process.env.FROM === undefined || process.env.FROM === "" ? null : { branch: process.env.FROM, commits: git("log", "--no-merges", "--reverse", "--format=%s", `${base}..HEAD`).split("\n").filter((line) => line !== "") },
     files,
   };

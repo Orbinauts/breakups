@@ -8,7 +8,7 @@ import { decide, namedOf, rulesOf } from "../scripts/kpi/attributions.ts";
 import { REQUIRED_COLUMNS, catalogueIndexPath, releaseManifestPath, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { readCatalogue } from "../scripts/kpi/catalogue.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
-import { SCORED_FROM_YEAR, alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readingOf, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
+import { SCORED_FROM_YEAR, alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readingOf, resultsTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
 import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, landConfirmed, lineOf, lowerOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
 import { carriedOf, catalogueOf, readTruth, replayAndScore, rematch, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
@@ -317,7 +317,7 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [headline, confirmedLines, confirmedVerdicts, lines, scoped, alertsTable, tiers, confirmed] = readmeTables(latest);
+    const [headline, confirmedLines, confirmedVerdicts, lines, scoped, alertsTable, tiers, confirmed] = resultsTables(latest);
     // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body a false confirmation.
     expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 1 | 50% (9% to 91%) | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
     expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – |");

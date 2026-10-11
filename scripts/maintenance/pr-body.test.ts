@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { Latest } from "../kpi/kpi.ts";
 import type { SnapshotRecord } from "../truth/fetch-sources.ts";
-import { commitMessage, kpiMoves, MOVES_SHOWN, prBody, prTitle, readmeParts, sourceChanges, truthChanges, type RunReport, type TruthRow } from "./pr-body.ts";
+import { commitMessage, kpiMoves, MOVES_SHOWN, prBody, prTitle, changedParts, sourceChanges, truthChanges, type RunReport, type TruthRow } from "./pr-body.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const latest = JSON.parse(readFileSync(join(ROOT, "kpi/latest.json"), "utf8")) as Latest;
@@ -43,10 +43,10 @@ describe("what a maintenance run moved", () => {
     expect(moves).toHaveLength(3);
   });
 
-  test("the README's generated parts that changed", () => {
+  test("the generated parts of a page that changed", () => {
     const before = "<!-- a:begin -->1<!-- a:end --> <!-- b:begin -->2<!-- b:end -->";
     const after = "<!-- a:begin -->1<!-- a:end --> <!-- b:begin -->3<!-- b:end -->";
-    expect(readmeParts(before, after, ["a", "b", "c"])).toEqual(["b"]);
+    expect(changedParts(before, after, ["a", "b", "c"])).toEqual(["b"]);
   });
 });
 
@@ -60,11 +60,11 @@ describe("the pull request and its commit", () => {
     truth: truthChanges([row("2:2026-02-01")], [row("2:2026-02-01"), row("4:2026-09-01")]),
     rescored: "the truth's sha256 changed",
     moves: kpiMoves(latest, moved),
-    readme: ["kpi:confirmed", "truth:counts"],
+    generated: ["kpi:confirmed", "truth:counts"],
     promoted: null,
     prospective: "So far: 0 alerts logged since the freeze.",
     folded: null,
-    files: ["data/breakups.json", "kpi/latest.json", "README.md"],
+    files: ["data/breakups.json", "docs/ground-truth.md", "docs/results.md", "kpi/latest.json"],
   };
 
   test("the body says what changed and why: the sources with their hashes, the events by id, the cells with old and new values, the prospective score", () => {
@@ -84,7 +84,7 @@ describe("the pull request and its commit", () => {
 
   test("the title names what changed", () => {
     expect(prTitle(report)).toBe("Maintenance of 2026-10-19: sources refreshed, truth updated, scorecard replayed");
-    expect(prTitle({ ...report, sources: [], truth: { added: [], removed: [], changed: [] }, rescored: "", readme: ["prospective:score"] })).toBe("Maintenance of 2026-10-19: prospective score");
+    expect(prTitle({ ...report, sources: [], truth: { added: [], removed: [], changed: [] }, rescored: "", generated: ["prospective:score"] })).toBe("Maintenance of 2026-10-19: prospective score");
   });
 
   test("a branch folded in is named in the title, the body and the message, with its commits", () => {

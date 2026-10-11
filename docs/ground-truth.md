@@ -1,0 +1,42 @@
+# The ground truth
+
+The list of reported breakups the detector is scored against. It ships in the package as `data/breakups.json`, one row per breakup an authority reported since 1961, with every source's statement and the values resolved from them. A script builds it from its sources, and the tests check it. The full generated report, with the counts per year and per source, is [docs/truth.md](truth.md).
+
+## What counts as a breakup
+
+A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.
+
+## The counts
+
+<!-- truth:counts:begin -->
+
+| Events from 2005 | Count |
+| --- | --- |
+| All | 623 |
+| Scoreable (breakups and anomalous events of a catalogued object) | 363 |
+| Breakups | 258 |
+| Anomalous events (low-velocity shedding) | 146 |
+| Aerodynamic breakups at reentry (kept out) | 31 |
+| Objects released on purpose (kept out) | 183 |
+| Reports naming no object (kept out) | 5 |
+| Confidence A (an authority states the minute) | 74 |
+| Confidence B (an authority states the day, or a window of three days at most) | 31 |
+| Confidence C (GCAT alone, an authority's month, or an analyst's dating) | 225 |
+| Confidence D (pieces in the catalogue, or news with no time) | 33 |
+
+<!-- truth:counts:end -->
+
+## The sources
+
+- **NASA, History of On-Orbit Satellite Fragmentations, 16th edition** (NASA/TP-20220019160, December 2022): every breakup and anomalous event to 1 May 2022, each with its date, time, altitude, assessed cause and the parent's pre-event element set. Read from the text of the PDF.
+- **NASA, Orbital Debris Quarterly News**: each breakup since the cut-off, in prose. Typed by hand with issue and page.
+- **GCAT, Space Debris Clouds** (Jonathan McDowell, planet4589.org, CC-BY-4.0): <!-- truth:gcat-clouds:begin -->402<!-- truth:gcat-clouds:end --> debris clouds with the parent, the event date and the orbit. Read from its table.
+- **GCAT, the satellite catalogue** (Jonathan McDowell, planet4589.org, CC-BY-4.0): every catalogued fragment and component with its parent, its separation date and its type (fragmentation debris by cause, anomalous debris, aerodynamic breakup, or a component released on purpose). Read uniformly for every object and every year: the pieces of one parent separated within three days of each other are one separation, its kind the pieces' type (a release at launch is the launch's own staging and is left out); a separation no other source reports is an event of confidence C (D where GCAT dates it to a year only), one another source reports joins its event. Kept as a snapshot reduced to the rows and columns read, with the whole file's hash.
+- **ESA, Space Environment Report 2025**, Table 3.7: the fragmentations of 2024, the object unnamed.
+- **U.S. Space Forces-Space notices**, named analysts, LeoLabs' notifications and news reports for 2025 to 2026, and the public catalogue where fragments were published with no report.
+
+Every statement also records when it can first have been public (a quarterly news issue by its month, from NASA's history's reference documents or the hand file; a notice by the day it was seen; ESA's report by its date; an analyst's or a company's post by its day), and every event its first statement, from which the scorecard reads the Confirmed line's lead over the agencies; [docs/truth.md](truth.md) counts them by source.
+
+## When sources disagree
+
+Where sources disagree, the time comes from the source that states it most finely, an authority first; the orbit from NASA's spread, then the quarterly news, then GCAT; the cause from NASA, then ESA, then GCAT; the piece count from the latest statement. GCAT's satellite catalogue decides a field only where no other source states the event. Every disagreement is kept on the row. A reviewer who disagrees with a row edits the hand file or the overrides, never the built file; `npm run truth` rebuilds it and the tests fail until the committed file matches. [docs/truth.md](truth.md), generated by `npm run truth`, lists what was built from what.

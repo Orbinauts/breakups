@@ -19,23 +19,27 @@ merge is safe.
 
 ## The decision
 
-- **The README's numbers are generated.** Every table and count of the
-  README that states a number of the scorecard or of the truth sits
-  between two markers, `<!-- <name>:begin -->` and `<!-- <name>:end -->`,
-  and `npm run kpi:readme` (`scripts/kpi/readme.ts`) writes them from
-  `kpi/latest.json`, `data/breakups.json` and the GCAT snapshot: the
-  current results (`kpi:current`), the Confirmed tables and the
-  parent-step tables of "How well it does" (`kpi:confirmed`,
-  `kpi:parent-step`), the truth's counts (`truth:counts`), the count of
-  GCAT's clouds (`truth:gcat-clouds`) and what the quick start prints
-  (`truth:quick-start`, the README's own code run against the truth). The
-  two sentences that say whether the target is met follow the numbers
-  (`kpi:target`, `kpi:splits`): "It does not reach that target on the
-  held-out years" stands while the target is unmet and is replaced by a
+- **The README's numbers are generated, and so are the documentation
+  pages'.** Every table and count of the README, `docs/results.md` and
+  `docs/ground-truth.md` that states a number of the scorecard or of the
+  truth sits between two markers, `<!-- <name>:begin -->` and
+  `<!-- <name>:end -->`, and `npm run kpi:readme` (`scripts/kpi/pages.ts`)
+  writes them from `kpi/latest.json`, `data/breakups.json` and the GCAT
+  snapshot. The README carries the summary of the held-out years
+  (`kpi:summary`) and what the quick start prints (`truth:quick-start`,
+  the README's own code run against the truth). The results page carries
+  the headline of both splits (`kpi:current`), the sentences on the
+  medians of the lead and the lag (`kpi:medians`), the Confirmed tables
+  and the parent-step tables (`kpi:confirmed`, `kpi:parent-step`). The
+  ground-truth page carries the truth's counts (`truth:counts`) and the
+  count of GCAT's clouds (`truth:gcat-clouds`). The two sentences that
+  say whether the target is met follow the numbers (`kpi:target` in the
+  README, `kpi:splits` on the results page): "It does not reach that
+  target yet" stands while the target is unmet and is replaced by a
   sentence saying it is met once it is. The prose around them is never
-  touched, and the command run on the files the README was written from
-  changes nothing. `test/readme.test.ts` still checks every cell against
-  the files, independently of the generator.
+  touched, and the command run on the files the pages were written from
+  changes nothing. `test/readme.test.ts` and `test/results.test.ts` still
+  check every cell against the files, independently of the generator.
 - **The prospective test opens an issue per confirmed alert.** The daily
   workflow `prospective.yml`, after it has logged the day's alerts and kept
   the day slices, opens one issue, labelled `prospective-alert`, for every
@@ -60,9 +64,9 @@ merge is safe.
   whole Archive, rebuilds the catalogue index and replays every year in
   order, a year a process as the KPI workflow does, which writes
   `kpi/latest.json`, `kpi/latest.md` and `docs/detector/events.md`. It
-  always writes the README's generated parts and scores the prospective
-  test: `score.md` on the `prospective` branch, and a summary in the
-  README (`prospective:score`) of the alerts so far, the confirmed alerts
+  always writes the generated parts and scores the prospective test:
+  `score.md` on the `prospective` branch, and a summary on the results
+  page (`prospective:score`) of the alerts so far, the confirmed alerts
   matching reported events, the false confirmations, the truth's last
   change and the caveat that recent events are not in the truth yet. It
   then runs every check, the typecheck, the tests and the documentation
@@ -139,7 +143,8 @@ The merge is automatic because the owner asked for no action, and it is
 safe for three reasons. Every check that guards a person's change runs on
 the tree before the merge: the typecheck, the whole test suite (which
 rebuilds the truth from its snapshots and fails on any difference, and
-checks every README cell against the files) and the documentation build;
+checks every generated cell of the README and the documentation pages
+against the files) and the documentation build;
 a failure stops the run with an issue and nothing is merged. CI then runs
 on the pull request itself, with the configuration a person's pull request
 meets, on Node 22 and 24, and the merge waits for it to pass: the bot
@@ -153,7 +158,7 @@ replaying the Archive from the release to make the committed aggregate
 again and failing where it cannot, so a merged change that only the
 release could expose is seen within the hour. What the workflow changes
 is generated: snapshots, the truth built from them, the aggregate, the
-README's marked parts and the score. It never edits code, a rule or the
+marked parts of the README and the documentation pages, and the score. It never edits code, a rule or the
 hand file; those reach main from a person, directly or in a branch the
 person asks it to fold in (`-f from=<branch>`), which meets the same checks.
 

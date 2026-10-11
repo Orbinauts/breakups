@@ -149,5 +149,6 @@ The decision stands; what changed is where its parts live.
   the parent, the state, the evidence, the run and the line of the log,
   once per alert key; and the weekly maintenance workflow scores the log
   against the truth on main, commits the score to the branch as `score.md`
-  and summarises it in the README. Neither touches `alerts.jsonl` or
+  and summarises it on the results page, `docs/results.md`. Neither
+  touches `alerts.jsonl` or
   `runs.jsonl`, whose commit times stay the test's evidence.

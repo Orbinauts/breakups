@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
 import { landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
-import { replacePart } from "../kpi/readme.ts";
+import { replacePart, RESULTS } from "../kpi/pages.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
 import { runUrlOf } from "./run.ts";
 
@@ -32,11 +32,12 @@ import { runUrlOf } from "./run.ts";
  *
  * `--markdown <path>` also writes the score as Markdown (the weekly
  * maintenance writes it to `score.md` on the `prospective` branch), and
- * `--readme` rewrites the README's summary of it between the
- * `prospective:score` markers. The truth's last change is the last commit
- * that changed it, or today where the working tree's truth differs from
- * the base commit's (`--base`, the last commit by default), as it does in
- * a maintenance run that rebuilt it.
+ * `--readme` rewrites the summary of it between the `prospective:score`
+ * markers of the results page, `docs/results.md`, which the README links
+ * to. The truth's last change is the last commit that changed it, or
+ * today where the working tree's truth differs from the base commit's
+ * (`--base`, the last commit by default), as it does in a maintenance run
+ * that rebuilt it.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -181,14 +182,14 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
 }
 
 /**
- * The score as the README's "Prospective test" section summarises it,
+ * The score as the results page's "The live test" section summarises it,
  * between its `prospective:score` markers: the alerts logged since the
  * freeze, the confirmed alerts landing on reported events, the false
  * confirmations, when the truth last changed, and the caveat about recent
  * events. It names no date of its own, so the weekly maintenance changes
  * it only when the score or the truth does.
  */
-export function readmeSummary(score: ProspectiveScore, truthChangedOn: string): string {
+export function resultsSummary(score: ProspectiveScore, truthChangedOn: string): string {
   const logged = Object.values(score.logged).reduce((sum, count) => sum + count, 0);
   const byState = Object.entries(score.logged)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -250,11 +251,11 @@ function main(): void {
     console.log(`${path} written`);
   }
   if (args.includes("--readme")) {
-    const path = join(ROOT, "README.md");
+    const path = join(ROOT, RESULTS);
     const before = readFileSync(path, "utf8");
-    const after = replacePart(before, "prospective:score", readmeSummary(score, Number.isNaN(Date.parse(truthChangedAt)) ? truthChangedAt : new Date(truthChangedAt).toISOString().slice(0, 10)), true);
+    const after = replacePart(before, "prospective:score", resultsSummary(score, Number.isNaN(Date.parse(truthChangedAt)) ? truthChangedAt : new Date(truthChangedAt).toISOString().slice(0, 10)), true);
     if (after !== before) writeFileSync(path, after);
-    console.log(`README.md: the prospective score's summary ${after === before ? "is current" : "rewritten"}`);
+    console.log(`${RESULTS}: the prospective score's summary ${after === before ? "is current" : "rewritten"}`);
   }
 }
 

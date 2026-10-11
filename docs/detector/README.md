@@ -19,7 +19,7 @@ A breakup leaves two traces in public data. The parent's own orbit jumps, by met
 - **The space-weather indices** of each day (`DetectorInput.space`): Kp, ap and F10.7 from GFZ Potsdam, Dst from NASA's OMNI2.
 - **Public notices** naming an object, where the caller has them. A notice confirms an open alert on its object, but a confirmation by a notice alone is not on the Confirmed line.
 
-In the backtest the Archive supplies all of this (the README's "The Archive"). In the prospective test, main's scripts pull the same data each day.
+In the backtest the Archive supplies all of this ([docs/archive.md](../archive.md)). In the prospective test, main's scripts pull the same data each day.
 
 ## The Confirmed channel, step by step
 
@@ -178,7 +178,7 @@ Fitted values were read off the training split, the even years, and never touche
 
 ## The KPIs
 
-The current numbers are in the README, read from `kpi/latest.json` and checked by its test cell by cell: the headline in [Current results](../../README.md#current-results), and every table of the held-out years in [How well it does](../../README.md#how-well-it-does). `kpi/latest.md` carries every split, and `events.md` the outcome and cause of every reported event.
+The current numbers are on the results page, read from `kpi/latest.json` and checked by its test cell by cell: the headline in [The headline](../results.md#the-headline), and every table of the held-out years under [The Confirmed line](../results.md#the-confirmed-line-the-target) and [The parent's step](../results.md#the-parents-step-a-secondary-measurement). The README carries a summary of the held-out years. `kpi/latest.md` carries every split, and `events.md` the outcome and cause of every reported event.
 
 ## How it got here
 
