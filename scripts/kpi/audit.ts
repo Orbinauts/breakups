@@ -6,7 +6,7 @@ import { BODY_CLASSES, DETECTOR_PARAMETERS, MANOEUVRE_CLASSES, OPS_STATUSES, REG
 import { archiveHome } from "../archive/archive.ts";
 import { gcatStatements, parseGcat } from "../truth/parse-gcat.ts";
 import type { YearFile } from "./kpi.ts";
-import { readCatalogue, type BodyFact, type Catalogue, type ParentSet } from "./catalogue.ts";
+import { readCatalogue, type BodyFact, type ParentSet, type WholeCatalogue } from "./catalogue.ts";
 import { MATCH_MARGIN_DAYS } from "./match.ts";
 import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
 
@@ -298,7 +298,7 @@ function retainedOf(sets: ParentSet[], fa: FalseAlarm): number | null {
 }
 
 /** One false alarm read against the catalogue, the statements and the truth, and classed. */
-export function audit(fa: FalseAlarm, catalogue: Catalogue, statements: Statement[], truth: Breakup[], alertAt: number): Audited {
+export function audit(fa: FalseAlarm, catalogue: WholeCatalogue, statements: Statement[], truth: Breakup[], alertAt: number): Audited {
   const params = DETECTOR_PARAMETERS;
   const parent = catalogue.bodies.get(fa.number);
   const launch = parent?.launch ?? null;

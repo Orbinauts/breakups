@@ -21,6 +21,9 @@ import { gunzipSync, gzipSync } from "node:zlib";
  *   <archive>/<year>/manifest.json         where the year came from and what it holds
  *   <archive>/.decoded/<year>/<column>.bin a column's unpacked bytes, kept on its first read (`readColumn`)
  *   <archive>/.decoded/<year>/<column>.key the key they were unpacked under: the year's build time and the column's hash
+ *   <archive>/release-manifest.json        the release's manifest, as the last download fetched it
+ *   <archive>/side.sha256                  the hash of the release's side files the last download extracted whole
+ *   <archive>/index/catalogue-index.json.gz every body's facts over every year, each year's build time recorded (`scripts/kpi/catalogue-index.ts`)
  *
  * A column file is the typed array's bytes, little endian, gzipped; its
  * unpacked length is the year's set count times the type's width.
@@ -217,6 +220,10 @@ export const bundleFile = (year: number): string => `tle${year}.txt.zip`;
 export const bundlePath = (archive: string, year: number): string => join(rawDir(archive), bundleFile(year));
 export const satcatDir = (archive: string): string => join(archive, "satcat");
 export const yearDir = (archive: string, year: number): string => join(archive, String(year));
+/** The release's manifest as the last download fetched it: every released year's build time, and the side files' hash. */
+export const releaseManifestPath = (archive: string): string => join(archive, "release-manifest.json");
+/** The catalogue index: what the scorecard reads of every year's catalogue, built once from the whole Archive and shipped with the side files, since a replay holds two years. */
+export const catalogueIndexPath = (archive: string): string => join(archive, "index", "catalogue-index.json.gz");
 
 const columnPath = (dir: string, name: string): string => join(dir, `${name}.bin.gz`);
 

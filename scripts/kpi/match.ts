@@ -244,7 +244,8 @@ export function noticesOf(breakups: Breakup[]): Notice[] {
   return notices.sort((a, b) => a.at - b.at);
 }
 
-const lowerOf = (breakup: Breakup): number => Date.parse(breakup.event.from ?? breakup.event.to);
+/** Where a row's window starts: the event's earliest instant, or its only one. */
+export const lowerOf = (breakup: Breakup): number => Date.parse(breakup.event.from ?? breakup.event.to);
 const upperOf = (breakup: Breakup): number => Date.parse(breakup.event.to);
 
 /** Whether a step bracket and a window, each widened by the margin, overlap. */

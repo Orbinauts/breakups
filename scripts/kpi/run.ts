@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorParameters } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, yearDir } from "../archive/archive.ts";
-import { readCatalogue, type Catalogue } from "./catalogue.ts";
+import type { Catalogue } from "./catalogue.ts";
+import { indexWrittenAt, loadCatalogue } from "./catalogue-index.ts";
 import { jumpDetector } from "./jump.ts";
 import { writeEvents } from "./events.ts";
 import { aggregate, renderLatest, type Latest, type YearFile } from "./kpi.ts";
@@ -40,6 +41,13 @@ import { hasStates, readStates, writeStates } from "./states.ts";
  * approximate, so it never writes to `kpi/`. `--from-states <dir>` alone
  * says where a year not preceded by one replayed in the same command reads
  * its starting states, and likewise wants `--out`.
+ *
+ * Every command that scores reads the catalogue over every year (the
+ * detector's reentries, the Confirmed line's targets) from the Archive's
+ * catalogue index, built by `npm run kpi:index` (`catalogue-index.ts`),
+ * never from the years on disk, and refuses to run without it or with a
+ * stale one: a replay holds a year and the one before it, and the KPI
+ * workflow downloads no more.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -59,19 +67,27 @@ export function readTruth(root = ROOT): Truth {
 
 export interface ScoreYearOptions extends ReplayOptions {
   detectorName?: string;
-  /** The catalogue read over every year, for the Confirmed line's targets; read once per Archive and truth where not given. */
+  /** The catalogue over every year, for the Confirmed line's targets and the detector's reentries; read from the Archive's catalogue index where not given. */
   catalogue?: Catalogue;
 }
 
 const catalogues = new Map<string, Catalogue>();
 
-/** The catalogue over every built year of the Archive, with the sets of every parent the truth names, read once per Archive and truth (about a minute over twenty-two years). */
+/**
+ * The catalogue over every year of the Archive, with the last set before
+ * the window of every parent the truth names, read from the Archive's
+ * catalogue index (`catalogue-index.ts`) once per Archive, index and
+ * truth. It is never read from the years on disk: a replay holds a year
+ * and the one before it, so the KPI workflow has two years where a local
+ * Archive has every one, and the same year scored on each read different
+ * catalogues. Without an index, or with a stale one, or with one built for
+ * a truth lacking one of this truth's parents' rows, it refuses.
+ */
 export function catalogueOf(archive: string, truth: Truth): Catalogue {
-  const key = `${archive}:${truth.sha256}`;
+  const key = `${archive}:${indexWrittenAt(archive)}:${truth.sha256}`;
   let catalogue = catalogues.get(key);
   if (catalogue === undefined) {
-    const parents = new Set(truth.breakups.map((b) => b.parent.catalogueNumber).filter((n): n is number => n !== null));
-    catalogue = readCatalogue(archive, parents, false);
+    catalogue = loadCatalogue(archive, truth.breakups);
     catalogues.set(key, catalogue);
   }
   return catalogue;

@@ -59,7 +59,8 @@
     "truth:catalogue": "node --experimental-strip-types scripts/truth/parse-catalogue.ts",
     "kpi": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/run.ts",
     "kpi:year": "node --experimental-strip-types scripts/kpi/run.ts --year",
-    "kpi:sweep": "node --experimental-strip-types scripts/kpi/sweep.ts"
+    "kpi:sweep": "node --experimental-strip-types scripts/kpi/sweep.ts",
+    "kpi:index": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/catalogue-index.ts"
   },
   "dependencies": {
     "@orbinauts/engine": "^0.1.2"

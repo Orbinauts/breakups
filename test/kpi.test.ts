@@ -1,16 +1,18 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
 import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, PHASES, REFUSALS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
 import { decide, namedOf, rulesOf } from "../scripts/kpi/attributions.ts";
-import { REQUIRED_COLUMNS, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
+import { REQUIRED_COLUMNS, catalogueIndexPath, releaseManifestPath, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
+import { readCatalogue } from "../scripts/kpi/catalogue.ts";
 import { jumpDetector } from "../scripts/kpi/jump.ts";
 import { SCORED_FROM_YEAR, alertKey, cellsOf, confirmedCellsOf, firstConfirmationsOf, percentile, readingOf, readmeTables, renderLatest, scopedCellsOf, splitYears, wilson, type Latest } from "../scripts/kpi/kpi.ts";
-import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, landConfirmed, lineOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
+import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, landConfirmed, lineOf, lowerOf, marginDaysOf, noticesOf, type Row, type ScoredAlert, type ScoredEvent, type YearScore } from "../scripts/kpi/match.ts";
 import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/kpi/replay.ts";
-import { carriedOf, readTruth, replayAndScore, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
+import { carriedOf, catalogueOf, readTruth, replayAndScore, rematch, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
+import { buildCatalogueIndex, loadCatalogue, readCatalogueIndex, writeCatalogueIndex } from "../scripts/kpi/catalogue-index.ts";
 import { readStates, writeStates } from "../scripts/kpi/states.ts";
 
 /**
@@ -103,13 +105,20 @@ function yearOf(rows: (number | string)[][], bodies: Omit<ArchivedBody, "first" 
 }
 
 const sets = JSON.parse(readFileSync(join(FIXTURE, "sets.json"), "utf8")) as SetsFile;
-const bodies = JSON.parse(readFileSync(join(FIXTURE, "bodies.json"), "utf8")) as Omit<ArchivedBody, "first" | "count">[];
+// The fixture's table says no decay where none is known, as a stripped table says null.
+const bodies = (JSON.parse(readFileSync(join(FIXTURE, "bodies.json"), "utf8")) as Omit<ArchivedBody, "first" | "count">[]).map((body) => ({ ...body, decay: body.decay ?? null }));
 const truthFile = JSON.parse(readFileSync(join(FIXTURE, "breakups.json"), "utf8")) as unknown;
 const truth = { breakups: readBreakups(truthFile), sha256: "synthetic" };
 
 const work = mkdtempSync(join(tmpdir(), "breakups-kpi-"));
 const archive = join(work, "archive");
 afterAll(() => rmSync(work, { recursive: true, force: true }));
+
+/** A year written into an Archive with the catalogue index the scorecard reads, built from it as `npm run kpi:index` builds it. */
+function writeIndexedYear(at: string, year: Parameters<typeof writeYear>[1]): void {
+  writeYear(at, year);
+  writeCatalogueIndex(at, buildCatalogueIndex(at, truth.breakups, truth.sha256, false));
+}
 
 /**
  * The jump detector, plus one cloud verdict on the launch of the first
@@ -135,7 +144,7 @@ const stub = (input: DetectorInput) => {
 };
 
 describe("the scorecard on the synthetic year", () => {
-  writeYear(archive, yearOf(sets.rows, bodies));
+  writeIndexedYear(archive, yearOf(sets.rows, bodies));
   const file = scoreYear(archive, YEAR, truth, { detector: stub, detectorName: "jump" });
   const events = Object.fromEntries(file.score.events.map((e) => [e.name, e]));
   const alerts = file.score.alerts;
@@ -207,7 +216,7 @@ describe("the scorecard on the synthetic year", () => {
     // A body numbered above ALPHA's fragments, catalogued last (the highest rank) but with a set epoch of 1 January: by its epoch it would raise the mark above the fragments and hide them; by the clock it appeared in March.
     const rows = [...sets.rows.map((row) => [...row]), [40900, "2013-01-01T00:00:00.000Z", 14.2, 0.001, 98, 100, 0, 0, 1e-4, 1e-6, 0, 1, 1]];
     const late = [...bodies, { number: 40900, designator: "1999-001AB", name: "OLD DEB", bodyClass: "debris" as const, launch: "1999-01-01", decay: null }];
-    writeYear(join(work, "backdated"), yearOf(rows, late));
+    writeIndexedYear(join(work, "backdated"), yearOf(rows, late));
     const scored = scoreYear(join(work, "backdated"), YEAR, truth, { detector: stub, detectorName: "jump" });
     const alpha = scored.score.events.find((e) => e.name === "ALPHA")!;
     expect(alpha.catalogueBody).toBe(40101);
@@ -412,7 +421,7 @@ describe("the matching rule's pieces", () => {
   });
 
   test("a year replayed from carried states skips the warm-up and says so, and the states carry an object's record across the boundary", () => {
-    writeYear(join(work, "carried"), yearOf(sets.rows, bodies));
+    writeIndexedYear(join(work, "carried"), yearOf(sets.rows, bodies));
     const first = replayAndScore(join(work, "carried"), YEAR, truth, { detector: stub, detectorName: "jump" });
     const again = replayAndScore(join(work, "carried"), YEAR, truth, { detector: stub, detectorName: "jump", carried: carriedOf(first.result) });
     expect(again.file.carried).toBe(true);
@@ -599,5 +608,71 @@ describe("the sweep's re-application of the eleventh phase's rules", () => {
     expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 4, preferNamedStepped: 0 }), preferring, facts).number).toBe(34839);
     expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 2, preferNamedStepped: 1 }), preferring, facts).number).toBe(34839);
     expect(namedOf(row({ preferAlternative: 34840, preferCentreRatio: 2 }), base, facts).number).toBe(34839);
+  });
+});
+
+describe("the catalogue index", () => {
+  const parents = new Set(truth.breakups.map((b) => b.parent.catalogueNumber).filter((n): n is number => n !== null));
+  const rowsWithParents = truth.breakups.filter((b) => b.parent.catalogueNumber !== null);
+
+  test("reads back every body's facts, the launches, the mark and every truth row's parent's last set as the whole Archive gives them, with the year's build time recorded", () => {
+    const dir = join(work, "indexed");
+    writeIndexedYear(dir, yearOf(sets.rows, bodies));
+    const index = readCatalogueIndex(catalogueIndexPath(dir));
+    expect(index.years).toEqual({ [String(YEAR)]: { builtAt: "2026-01-01T00:00:00.000Z", sets: sets.rows.length } });
+    expect(index.truthSha256).toBe("synthetic");
+    const whole = readCatalogue(dir, parents, false);
+    const read = loadCatalogue(dir, truth.breakups);
+    expect([...read.bodies.values()]).toEqual([...whole.bodies.values()]);
+    expect([...read.byLaunch.entries()]).toEqual([...whole.byLaunch.entries()]);
+    for (const t of [at(1, 1), at(2, 12), at(2, 14), at(6, 1)]) expect(read.markAt(t)).toBe(whole.markAt(t));
+    const lastSets = rowsWithParents.map((b) => read.orbitBefore(b.parent.catalogueNumber!, lowerOf(b)));
+    expect(lastSets).toEqual(rowsWithParents.map((b) => whole.orbitBefore(b.parent.catalogueNumber!, lowerOf(b))));
+    expect(lastSets.some((set) => set !== null)).toBe(true);
+    // An instant no truth row asks at is not answered from a part of the Archive: it is refused.
+    expect(() => read.orbitBefore(40001, at(7, 1))).toThrow(/holds no last set of 40001 before 2013-07-01/);
+  });
+
+  test("the scorecard refuses to run without it, before any replay, rather than read the years on disk as the whole Archive", () => {
+    const dir = join(work, "bare");
+    writeIndexedYear(dir, yearOf(sets.rows, bodies));
+    const scored = scoreYear(dir, YEAR, truth, { detector: stub, detectorName: "jump" });
+    rmSync(catalogueIndexPath(dir));
+    expect(() => catalogueOf(dir, truth)).toThrow(/no catalogue index at .*npm run kpi:index/);
+    expect(() => scoreYear(dir, YEAR, truth, { detector: stub, detectorName: "jump", onRun: () => expect.unreachable("a replay began") })).toThrow(/no catalogue index/);
+    expect(() => rematch(dir, scored, truth)).toThrow(/no catalogue index/);
+  });
+
+  test("a stale index is refused: a year built again, a year added, a released year it did not read", () => {
+    const dir = join(work, "stale");
+    const year = yearOf(sets.rows, bodies);
+    writeIndexedYear(dir, year);
+    expect(() => loadCatalogue(dir, truth.breakups)).not.toThrow();
+    writeYear(dir, { ...year, manifest: { ...year.manifest, builtAt: "2026-02-01T00:00:00.000Z" } });
+    expect(() => loadCatalogue(dir, truth.breakups)).toThrow(/is stale \(2013 was built at 2026-02-01T00:00:00.000Z, the index read it as built at 2026-01-01T00:00:00.000Z\)/);
+    expect(() => scoreYear(dir, YEAR, truth, { detector: stub, detectorName: "jump" })).toThrow(/is stale/);
+    writeIndexedYear(dir, { ...year, manifest: { ...year.manifest, builtAt: "2026-02-01T00:00:00.000Z" } });
+    expect(() => loadCatalogue(dir, truth.breakups)).not.toThrow();
+    writeYear(dir, { ...year, manifest: { ...year.manifest, year: YEAR + 1 } });
+    expect(() => loadCatalogue(dir, truth.breakups)).toThrow(/2014 is in the Archive but not in the index/);
+    writeIndexedYear(dir, { ...year, manifest: { ...year.manifest, year: YEAR + 1 } });
+    // The years not on disk are held to the release's manifest the last download fetched.
+    writeFileSync(releaseManifestPath(dir), JSON.stringify({ years: { "2012": { builtAt: "2026-01-01T00:00:00.000Z" }, "2013": { builtAt: "2026-02-01T00:00:00.000Z" } } }));
+    expect(() => loadCatalogue(dir, truth.breakups)).toThrow(/2012 is in the release but not in the index/);
+    rmSync(join(dir, String(YEAR)), { recursive: true });
+    writeFileSync(releaseManifestPath(dir), JSON.stringify({ years: { "2013": { builtAt: "2026-03-01T00:00:00.000Z" }, "2014": { builtAt: "2026-01-01T00:00:00.000Z" } } }));
+    expect(() => loadCatalogue(dir, truth.breakups)).toThrow(/2013 was released as built at 2026-03-01T00:00:00.000Z, the index read it as built at 2026-02-01T00:00:00.000Z/);
+    writeFileSync(releaseManifestPath(dir), JSON.stringify({ years: { "2013": { builtAt: "2026-02-01T00:00:00.000Z" }, "2014": { builtAt: "2026-01-01T00:00:00.000Z" } } }));
+    expect(() => loadCatalogue(dir, truth.breakups)).not.toThrow();
+  });
+
+  test("an index built for a truth lacking one of this truth's parents' rows is refused by name", () => {
+    const dir = join(work, "another-truth");
+    writeIndexedYear(dir, yearOf(sets.rows, bodies));
+    const moved = structuredClone(rowsWithParents[0]!);
+    moved.event = { ...moved.event, from: null, to: "2013-07-01T00:00:00.000Z" };
+    const other = { breakups: [...truth.breakups, moved], sha256: "another" };
+    expect(() => loadCatalogue(dir, other.breakups)).toThrow(new RegExp(`built for another truth: it holds no last set of ${moved.parent.catalogueNumber} before 2013-07-01T00:00:00.000Z`));
+    expect(() => catalogueOf(dir, other)).toThrow(/built for another truth/);
   });
 });

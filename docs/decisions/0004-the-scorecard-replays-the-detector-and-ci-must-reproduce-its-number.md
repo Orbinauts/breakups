@@ -201,3 +201,46 @@ open:
   `kpi/`, and the committed results and the KPI workflow keep the
   sequential replay: a change found by exploring is replayed in order
   before it is committed.
+- The scorecard reads every year's catalogue from an index built from
+  the whole Archive, never from the years on disk. From the ninth phase
+  the matcher read the catalogue over every year (which reported events
+  gained fresh pieces in their parent's plane, the parent's last set
+  before the event, when the first piece was published, the high-water
+  mark), and from the eleventh the detector was given its reentries from
+  it. The KPI workflow keeps a year and the one before it on disk, so it
+  scored each year against the catalogue of those two and failed on every
+  commit from the ninth phase: on the eleventh's it read the held-out
+  Confirmed headline as 19 targets, 11 with no fragments catalogued and
+  14 confirmed, where the committed file says 23, 7 and 17, and the
+  detector's own verdicts moved with the reentries it was given. `npm run
+  kpi:index` reads the
+  whole Archive once, in half a minute, into
+  `<archive>/index/catalogue-index.json.gz` (1.9 MB gzipped): one row per
+  body, 58,674 of them (its number, launch, name and class, its decay and
+  launch days, its first publication by the replay's clock, its earliest
+  set's epoch and the orbit the plane test reads), from which the
+  launches' bodies and the mark are made as the whole read makes them.
+  The parent's last set before an event may lie in any year, in a later
+  year's back-filled sets or years back, and answering it for any body at
+  any time would want every set of every year, so the index answers it at
+  the instants the truth asks: one row per truth row with a parent (2,289),
+  the parent's last set before the row's window opens. Its builder reads
+  every row back through the JSON before writing it and refuses a fact
+  that does not come back to the bit. The index records each year's build
+  time, and a reader refuses it where a year on disk is missing from it
+  or was built at another time, where a year not on disk was released at
+  another time than the release's manifest the last download fetched
+  says, and where the truth has a row with a parent the index was not
+  built for; without it the scorecard refuses, rather than read a part of
+  the Archive as the whole. It is rebuilt whenever a year of the Archive
+  is built again or added, or the truth gains a row with a parent or
+  moves one's window, and travels with the side files of the release:
+  `npm run archive:upload -- --side-only` refreshes them and the manifest
+  without the years, and the download verifies that the index it fetched
+  describes the released years. The offline sweeps read the same index;
+  the truth audit, which wants every set of the bodies it asks for, still
+  reads the whole Archive. Read from the index, the sequential replay made
+  `kpi/latest.json`, `kpi/latest.md` and the dissection again to the
+  byte, and a scratch Archive holding only a year and its predecessor
+  with the side files, replayed by the workflow's own commands, made the
+  same year files as the whole Archive did.

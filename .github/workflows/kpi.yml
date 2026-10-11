@@ -14,8 +14,12 @@ name: KPI
 # detector's verdict depends on each object's record of steps over two
 # years: a year replayed cold would score every object's first step of
 # the year as new. Each year's Archive is deleted once the next year is
-# scored, so the runner's disk holds two years at a time. The per-year
-# files are kept as artifacts of the run, not in git.
+# scored, so the runner's disk holds two years at a time. What the
+# scorecard reads of every year's catalogue (each body's facts, the
+# reentries the detector is given, the truth's parents' last sets) it
+# reads from the catalogue index the side files carry, built from the
+# whole Archive and refused where stale, never from the two years on disk.
+# The per-year files are kept as artifacts of the run, not in git.
 #
 # Where the release is unreachable (an outage, a fork with no release) the
 # scorecard is skipped with a notice rather than failed: the score cannot
@@ -88,6 +92,12 @@ jobs:
         with:
           node-version: 24
       - run: npm install --no-audit --no-fund
+      # The side files before any year: the space weather and the catalogue index, through which every year is scored against the whole Archive's catalogue; the download verifies the tarball's hash and that the index describes the released years.
+      - name: Fetch the side files and the catalogue index
+        run: |
+          set -euo pipefail
+          npm run archive:download
+          test -f ../breakups-archive/index/catalogue-index.json.gz
       # Each year downloaded into the Archive's home beside the repository, its hash verified, replayed from the states the year before left, and deleted once the next is done.
       - name: Replay each year from the states the one before ended with
         env:

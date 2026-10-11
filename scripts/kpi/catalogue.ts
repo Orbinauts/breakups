@@ -3,16 +3,26 @@ import { builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
 import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
 
 /**
- * The catalogue read once over every built year of the Archive, for the
- * scripts that read pieces against parents outside the replay: every
- * body's launch, class, name, decay and launch days, when it was first
- * published (by the replay's clock, in the catalogue's publication order,
- * so a newly catalogued piece's back-filled epochs do not date it early),
- * and its earliest set's orbit; the sets of the parents asked for; and the
+ * The catalogue over every built year of the Archive, for the scripts that
+ * read pieces against parents outside the replay: every body's launch,
+ * class, name, decay and launch days, when it was first published (by the
+ * replay's clock, in the catalogue's publication order, so a newly
+ * catalogued piece's back-filled epochs do not date it early), and its
+ * earliest set's orbit; each parent's last set before a time; and the
  * high-water mark of designated numbers against time. The scorecard reads
  * through it which reported events gained fresh pieces in their parent's
- * plane (the Confirmed line's targets), and the truth audit of the eighth
- * phase read its false alarms' pieces through it.
+ * plane (the Confirmed line's targets) and the reentries the detector is
+ * given, and the truth audit of the eighth phase read its false alarms'
+ * pieces through it.
+ *
+ * It is read two ways. `readCatalogue` reads every built year of the
+ * Archive's columns, about a minute over twenty-two years, and is what the
+ * catalogue index is built from (`catalogue-index.ts`) and what the truth
+ * audit reads, since it wants every set of the bodies it asks for. The
+ * scorecard reads it from the index alone, since a replay holds a year
+ * and the one before it, not the whole Archive: a year downloaded with its
+ * predecessor, as the KPI workflow does, must score as it does beside
+ * every other year.
  */
 
 /** What the Archive says of one body over every year: its launch, class and name, when it was first published, and its earliest set's orbit. */
@@ -35,15 +45,56 @@ export interface ParentSet {
 
 export const planeOrbit = (epoch: number, meanMotion: number, eccentricity: number, inclination: number, raan: number): PlaneOrbit => ({ epochMs: epoch, aKm: semiMajorAxisOf({ meanMotion }), eccentricity, inclinationDeg: inclination, raanDeg: raan, meanMotion });
 
-/** The catalogue read once: every body's facts, the sets of the parents asked for, and the high-water mark against time. */
+/** The catalogue as its readers hold it: every body's facts, each parent's last set before a time, and the high-water mark against time. */
 export interface Catalogue {
   bodies: Map<number, BodyFact>;
   byLaunch: Map<string, BodyFact[]>;
-  parentSets: Map<number, ParentSet[]>;
+  /** The parent's last set (the latest epoch) before `from` in any year of the Archive, null where it has none; a catalogue read from the index throws where the index does not hold the answer. */
+  orbitBefore(parent: number, from: number): ParentSet | null;
   markAt(at: number): number;
 }
 
-export function readCatalogue(archive: string, parents: ReadonlySet<number>, log = true): Catalogue {
+/** The catalogue read from every year of the Archive, with every set of the parents asked for. */
+export interface WholeCatalogue extends Catalogue {
+  parentSets: Map<number, ParentSet[]>;
+}
+
+/** The last of a parent's sets, in epoch order, dated before `from`: the first of them where several share the latest epoch. */
+export function lastSetBefore(sets: readonly ParentSet[], from: number): ParentSet | null {
+  let before: ParentSet | null = null;
+  for (const set of sets) if (set.epoch < from && (before === null || set.epoch > before.epoch)) before = set;
+  return before;
+}
+
+/** The catalogue over the bodies' facts, in the order the Archive's years first list them: the launches' bodies and the high-water mark, with the parents' sets read through `orbitBefore`. */
+export function catalogueOver(bodies: Map<number, BodyFact>, orbitBefore: Catalogue["orbitBefore"]): Catalogue {
+  const byLaunch = new Map<string, BodyFact[]>();
+  for (const fact of bodies.values()) if (fact.launch !== null) (byLaunch.get(fact.launch) ?? byLaunch.set(fact.launch, []).get(fact.launch)!).push(fact);
+  // The mark: the highest designated number published by each instant.
+  const designated = [...bodies.values()].filter((b) => b.launch !== null && b.number < ANALYST_FLOOR).sort((a, b) => a.firstClock - b.firstClock);
+  const at = designated.map((b) => b.firstClock);
+  const top: number[] = [];
+  let mark = 0;
+  for (const b of designated) top.push((mark = Math.max(mark, b.number)));
+  return {
+    bodies,
+    byLaunch,
+    orbitBefore,
+    markAt(t) {
+      let lo = 0;
+      let hi = at.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (at[mid]! <= t) lo = mid + 1;
+        else hi = mid;
+      }
+      return lo === 0 ? 0 : top[lo - 1]!;
+    },
+  };
+}
+
+/** The catalogue read from every built year of the Archive, one year at a time, with every set of the parents asked for. */
+export function readCatalogue(archive: string, parents: ReadonlySet<number>, log = true): WholeCatalogue {
   const bodies = new Map<number, BodyFact>();
   const parentSets = new Map<number, ParentSet[]>();
   for (const year of builtYears(archive)) {
@@ -80,29 +131,7 @@ export function readCatalogue(archive: string, parents: ReadonlySet<number>, log
     if (log) console.error(`catalogue: read ${year} (${manifest.sets} sets)`);
   }
   for (const list of parentSets.values()) list.sort((a, b) => a.epoch - b.epoch);
-  const byLaunch = new Map<string, BodyFact[]>();
-  for (const fact of bodies.values()) if (fact.launch !== null) (byLaunch.get(fact.launch) ?? byLaunch.set(fact.launch, []).get(fact.launch)!).push(fact);
-  // The mark: the highest designated number published by each instant.
-  const designated = [...bodies.values()].filter((b) => b.launch !== null && b.number < ANALYST_FLOOR).sort((a, b) => a.firstClock - b.firstClock);
-  const at = designated.map((b) => b.firstClock);
-  const top: number[] = [];
-  let mark = 0;
-  for (const b of designated) top.push((mark = Math.max(mark, b.number)));
-  return {
-    bodies,
-    byLaunch,
-    parentSets,
-    markAt(t) {
-      let lo = 0;
-      let hi = at.length;
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        if (at[mid]! <= t) lo = mid + 1;
-        else hi = mid;
-      }
-      return lo === 0 ? 0 : top[lo - 1]!;
-    },
-  };
+  return { ...catalogueOver(bodies, (parent, from) => lastSetBefore(parentSets.get(parent) ?? [], from)), parentSets };
 }
 
 export function factOf(body: ArchivedBody, firstClock: number, orbit: PlaneOrbit): BodyFact {
@@ -132,13 +161,11 @@ export interface EventFragments {
  * after, whose earliest set is no more than a day before the window, and
  * whose plane lies within the detector's bound of the parent's last set
  * before the event, each node carried at its own J2 rate. The parent's
- * plane is unknown where it had no set before the event in the years the
- * catalogue was read for; then no piece can be in it.
+ * plane is unknown where it had no set before the event in any year of the
+ * Archive; then no piece can be in it.
  */
 export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string | null, from: number, to: number, eventMs: number, marginMs: number, params: DetectorParameters): EventFragments {
-  const sets = catalogue.parentSets.get(parent) ?? [];
-  let before: ParentSet | null = null;
-  for (const set of sets) if (set.epoch < from && (before === null || set.epoch > before.epoch)) before = set;
+  const before = catalogue.orbitBefore(parent, from);
   const result: EventFragments = { inPlane: 0, firstAt: null, firstBody: null, parentOrbit: before !== null };
   if (before === null || launch === null) return result;
   const mark = Math.max(catalogue.markAt(from - marginMs), parent);
