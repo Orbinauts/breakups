@@ -1,0 +1,166 @@
+name: Prospective
+
+# The prospective test of the detector frozen at the tag
+# `frozen-confirmed-v10` (docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md),
+# once a day on a fresh runner. Main's scripts pull the current year's new
+# days from the catalogue's history class, through the throttled client
+# that writes every request to the ledger `requests.log`, onto the day
+# slices kept in the release `prospective-data`, rebuild the year from
+# them, refresh the satellite catalogue and the space weather, and annotate
+# the year's body table. The detector, its truth and its scorecard code are
+# the tag's, checked out beside main and installed with the dependency
+# versions the tag's runs used: it builds its own catalogue index over
+# every year of the Archive (the released years before the current one,
+# and the year just rebuilt) and replays the year from the states it ended
+# the previous year with. Every alert raised after the freeze and not yet
+# logged is appended to `alerts.jsonl` on the `prospective` branch, with a
+# line for the run in `runs.jsonl` that names this run's URL, and the
+# branch is committed and pushed by the Actions bot: the commit time is the
+# proof of when each alert was known, and this run's log a second,
+# independent timestamp. The updated day slices, and a closed year's end
+# states once it has settled, go back to the release afterwards.
+#
+# Any failing step fails the run, and the run commits whole or not at all.
+# To pause the test: gh workflow disable prospective.yml; to resume it:
+# gh workflow enable prospective.yml. A gap in `runs.jsonl` shows when it
+# was not running.
+
+on:
+  schedule:
+    # Every day at 02:37 UTC, off the hour when scheduled runs queue.
+    - cron: "37 2 * * *"
+  workflow_dispatch:
+
+# Two runs never overlap: a run started while another is going waits for it rather than cancelling it.
+concurrency:
+  group: prospective
+  cancel-in-progress: false
+
+permissions:
+  # The push to the `prospective` branch and the upload to the release `prospective-data`.
+  contents: write
+
+env:
+  FROZEN_TAG: frozen-confirmed-v10
+  # The commit the tag was made at: a tag moved since is refused, here and by the run itself.
+  FROZEN_COMMIT: 8729987b9d9890f071aff9a1df594f2daada8ed3
+  BREAKUPS_FROZEN: ${{ github.workspace }}/frozen
+  BREAKUPS_PROSPECTIVE: ${{ github.workspace }}/prospective
+  # The decoded-column cache would keep every year unpacked beside the Archive for replays to come; this run reads each year once.
+  BREAKUPS_DECODED: "off"
+
+jobs:
+  daily:
+    name: replay the year with the frozen detector
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out main (the scripts)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+      - name: Check out the frozen tag (the detector)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ env.FROZEN_TAG }}
+          path: frozen
+          persist-credentials: false
+      - name: Check out the prospective branch (the log)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: prospective
+          path: prospective
+          fetch-depth: 0
+      - name: The tag must still name the frozen commit
+        run: |
+          set -euo pipefail
+          git -C main fetch --quiet --no-tags --depth=1 origin "+refs/tags/$FROZEN_TAG:refs/tags/$FROZEN_TAG"
+          tagged=$(git -C main rev-parse "$FROZEN_TAG^{commit}")
+          head=$(git -C frozen rev-parse HEAD)
+          if [ "$tagged" != "$FROZEN_COMMIT" ] || [ "$head" != "$FROZEN_COMMIT" ]; then
+            echo "::error::the tag $FROZEN_TAG names $tagged (checked out at $head), not the frozen commit $FROZEN_COMMIT"
+            exit 1
+          fi
+          echo "$FROZEN_TAG is $FROZEN_COMMIT"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install main's dependencies
+        working-directory: main
+        run: npm install --no-audit --no-fund
+      # No lockfile is committed: the detector's runtime dependencies are pinned to the versions the tag's runs used, and checked.
+      - name: Install the frozen detector's dependencies
+        working-directory: frozen
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund --no-save --no-package-lock @orbinauts/engine@0.1.2 satellite.js@7.1.0 astronomy-engine@2.1.19
+          node -e '
+            const { readFileSync, existsSync } = require("node:fs");
+            const pinned = { "@orbinauts/engine": "0.1.2", "satellite.js": "7.1.0", "astronomy-engine": "2.1.19" };
+            for (const [name, version] of Object.entries(pinned)) {
+              const found = JSON.parse(readFileSync(`node_modules/${name}/package.json`, "utf8")).version;
+              if (found !== version) throw new Error(`${name} is ${found}, not ${version}`);
+            }
+            for (const name of ["satellite.js", "astronomy-engine"]) if (existsSync(`node_modules/@orbinauts/engine/node_modules/${name}`)) throw new Error(`the engine carries its own ${name}`);
+            console.log("the frozen detector runs on", JSON.stringify(pinned));
+          '
+          test -z "$(git status --porcelain)"
+      # The Archive (some seven gigabytes) on the runner's larger disk.
+      - name: Place the Archive
+        run: |
+          set -euo pipefail
+          df -h
+          avail() { df --output=avail -B1 "$1" | tail -1; }
+          if [ -d /mnt ] && sudo -n true 2>/dev/null && [ "$(avail /mnt)" -gt "$(avail "$GITHUB_WORKSPACE")" ]; then
+            sudo mkdir -p /mnt/breakups-archive
+            sudo chown "$(id -u):$(id -g)" /mnt/breakups-archive
+            archive=/mnt/breakups-archive
+          else
+            archive="$GITHUB_WORKSPACE/breakups-archive"
+            mkdir -p "$archive"
+          fi
+          echo "BREAKUPS_ARCHIVE=$archive" >> "$GITHUB_ENV"
+          echo "the Archive is at $archive"
+      # The test's states and day slices, then the Archive's years before the first replayed one and its side files, each hash verified.
+      - name: Download the test's data and the Archive
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: npm run prospective:data -- download
+      - name: Pull, replay with the frozen detector, and log the alerts
+        working-directory: main
+        env:
+          SPACETRACK_IDENTITY: ${{ secrets.SPACETRACK_IDENTITY }}
+          SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
+        run: |
+          set -euo pipefail
+          git -C "$BREAKUPS_PROSPECTIVE" config user.name "github-actions[bot]"
+          git -C "$BREAKUPS_PROSPECTIVE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm run prospective
+          git -C "$BREAKUPS_PROSPECTIVE" log -1 --format='pushed %H at %cI'
+      - name: Keep the day slices and any closed year's states in the release
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: npm run prospective:data -- upload
+      - name: The request ledger and the run's log
+        if: always()
+        run: |
+          echo "requests to the catalogue this run:"
+          cat "$BREAKUPS_ARCHIVE/requests.log" 2>/dev/null || echo "(none)"
+          echo "the run's log:"
+          cat "$BREAKUPS_ARCHIVE/prospective/prospective.log" 2>/dev/null || echo "(none)"
+          df -h
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ledger
+          path: |
+            ${{ env.BREAKUPS_ARCHIVE }}/requests.log
+            ${{ env.BREAKUPS_ARCHIVE }}/prospective/prospective.log
+          if-no-files-found: warn
+          retention-days: 90

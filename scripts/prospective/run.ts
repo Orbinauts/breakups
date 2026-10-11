@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,10 +12,13 @@ import { latestSatcat } from "../archive/satcat.ts";
 import { spaceDir } from "../archive/space-weather.ts";
 import type { YearFile } from "../kpi/kpi.ts";
 import { alertsOf, jsonl, newAlerts, readJsonl, type LoggedAlert } from "./alerts.ts";
+import { replayYearsOf } from "./data.ts";
 
 /**
  * The prospective test's daily run: `npm run prospective`, from this
- * repository, which the scheduled job runs once a day. It keeps the
+ * repository, which the scheduled workflow `.github/workflows/prospective.yml`
+ * runs once a day on a fresh runner (it ran as a launchd agent on the
+ * maintainer's machine on the test's first day). It keeps the
  * Archive's current year up to date and replays it through the detector
  * frozen at the tag `frozen-confirmed-v10`, never through the code on this
  * branch, then logs every alert raised after the freeze to the
@@ -47,12 +51,23 @@ import { alertsOf, jsonl, newAlerts, readJsonl, type LoggedAlert } from "./alert
  * Any failure stops the run with a non-zero exit and a line in
  * `<archive>/prospective/prospective.log`, and the branch's files are put
  * back as they were, so a run commits whole or not at all.
+ *
+ * The places are the environment's where it names them: the Archive
+ * (`BREAKUPS_ARCHIVE`), the frozen checkout (`BREAKUPS_FROZEN`) and the
+ * branch's (`BREAKUPS_PROSPECTIVE`), so the workflow runs the same code
+ * over its own checkouts. Run by GitHub Actions, the run's URL
+ * (`GITHUB_SERVER_URL`, `GITHUB_REPOSITORY`, `GITHUB_RUN_ID`) goes into its
+ * line and its commit, a timestamp kept by another party than the branch's.
+ * Wherever it runs, the tag must still name the commit it was made at
+ * (`FROZEN_COMMIT`): a tag moved is refused, not followed.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** The tag the test runs, and the detector it holds. */
 export const FROZEN_TAG = "frozen-confirmed-v10";
+/** The commit the tag was made at, the detector scored there; the tag naming any other is refused. */
+export const FROZEN_COMMIT = "8729987b9d9890f071aff9a1df594f2daada8ed3";
 export const FROZEN_DETECTOR = "confirmed-v10";
 export const BRANCH = "prospective";
 /** How many days' scratch directories are kept: each holds a year's file and its end states, a couple of hundred megabytes. */
@@ -114,6 +129,26 @@ export interface RunLine {
   requests: number;
   satcat: string | null;
   node: string;
+  /** The GitHub Actions run that made the line, whose log is a second, independent timestamp; absent from the lines of runs made elsewhere. */
+  runUrl?: string | null;
+}
+
+/** The URL of the GitHub Actions run the process is part of, or null outside one. */
+export function runUrlOf(env: NodeJS.ProcessEnv): string | null {
+  const { GITHUB_SERVER_URL: server, GITHUB_REPOSITORY: repository, GITHUB_RUN_ID: id, GITHUB_RUN_ATTEMPT: attempt } = env;
+  if (server === undefined || repository === undefined || id === undefined || server === "" || repository === "" || id === "") return null;
+  return `${server}/${repository}/actions/runs/${id}${attempt !== undefined && attempt !== "" && attempt !== "1" ? `/attempts/${attempt}` : ""}`;
+}
+
+/** Refuses a tag that no longer names the commit the test froze. */
+export function checkTagged(tagged: string): void {
+  if (tagged !== FROZEN_COMMIT) throw new Error(`the tag ${FROZEN_TAG} names ${tagged}, not ${FROZEN_COMMIT}, the commit the test froze: a moved tag is not the frozen detector`);
+}
+
+/** What a settled year's end states are and what made them, kept beside them and in the release with them. */
+export function provenanceOf(year: number, context: { today: string; tagged: string; scratch: string; runUrl: string | null; sha256: string }): string {
+  const where = context.runUrl === null ? `in ${context.scratch}` : `in ${context.scratch} by ${context.runUrl}`;
+  return `${year}.json.gz is the detector ${FROZEN_DETECTOR}'s states at the end of ${year}, written on ${context.today} by the prospective test's daily run once ${year} had settled: the frozen commit ${context.tagged} replayed ${year} through ${year}-12-31 from its states at the end of ${year - 1}, ${where}. sha256 ${context.sha256}.\n`;
 }
 
 /** The last day a year of the Archive holds: a pulled year's last kept day, a bundle year's last. */
@@ -232,6 +267,7 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   // The frozen worktree is the tag, untouched; the branch's worktree is the branch, clean and current.
   if (!existsSync(frozen)) throw new Error(`no frozen worktree at ${frozen}: git worktree add --detach ${frozen} ${FROZEN_TAG}`);
   const tagged = git(root, "rev-parse", `${FROZEN_TAG}^{commit}`);
+  checkTagged(tagged);
   const head = git(frozen, "rev-parse", "HEAD");
   if (head !== tagged) throw new Error(`the frozen worktree ${frozen} is at ${head}, not at ${FROZEN_TAG} (${tagged})`);
   if (git(frozen, "status", "--porcelain") !== "") throw new Error(`the frozen worktree ${frozen} has changes: it must be the tag as committed`);
@@ -241,7 +277,7 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   run("git", ["pull", "-q", "--ff-only"], branch);
 
   // The years to replay: the current one, and the previous one while its last days settle.
-  const replayYears = existsSync(join(states, statesFileName(year - 1))) ? [year] : [year - 1, year];
+  const replayYears = replayYearsOf(year, existsSync(join(states, statesFileName(year - 1))));
   const startStates = join(states, statesFileName(replayYears[0]! - 1));
   if (!existsSync(startStates)) throw new Error(`no frozen states to start ${replayYears[0]} from: ${startStates}`);
 
@@ -283,9 +319,10 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
     requests: ledgerLines(archive) - ledgerBefore,
     satcat: satcat.day,
     node: process.version,
+    runUrl: runUrlOf(process.env),
   };
   const through = line.years.map((y) => `${y.year} through ${y.through}`).join(" and ");
-  const body = `The frozen detector ${FROZEN_DETECTOR} (${tagged.slice(0, 7)}) replayed ${through}, ${line.setsReplayed} sets, and found ${fresh.length} new ${fresh.length === 1 ? "alert" : "alerts"} raised since the freeze, of ${found.length} in all. The run made ${line.requests} requests to the catalogue and took ${line.durationSeconds} seconds.`;
+  const body = `The frozen detector ${FROZEN_DETECTOR} (${tagged.slice(0, 7)}) replayed ${through}, ${line.setsReplayed} sets, and found ${fresh.length} new ${fresh.length === 1 ? "alert" : "alerts"} raised since the freeze, of ${found.length} in all. The run made ${line.requests} requests to the catalogue and took ${line.durationSeconds} seconds.${line.runUrl === null ? "" : ` It ran as ${line.runUrl}.`}`;
   const commit = commitRun(branch, fresh, line, `Alerts of ${today}`, body);
 
   // A settled year's last replay hands its end states to the next year, only once its alerts are committed.
@@ -293,6 +330,8 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
     if (y >= year || daysToPull(archive, y, `${y}-12-31`).length > 0) continue;
     const settled = join(states, statesFileName(y));
     copyFileSync(endStatesPath(scratch, y), `${settled}.copying`);
+    const sha256 = createHash("sha256").update(readFileSync(`${settled}.copying`)).digest("hex");
+    writeFileSync(join(states, `${y}.provenance.txt`), provenanceOf(y, { today, tagged, scratch, runUrl: line.runUrl ?? null, sha256 }));
     renameSync(`${settled}.copying`, settled);
     console.log(`${y} has settled: its end states are ${settled}`);
   }

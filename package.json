@@ -62,7 +62,8 @@
     "kpi:sweep": "node --experimental-strip-types scripts/kpi/sweep.ts",
     "kpi:index": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/catalogue-index.ts",
     "prospective": "node --env-file-if-exists=.env --experimental-strip-types scripts/prospective/run.ts",
-    "prospective:score": "node --experimental-strip-types scripts/prospective/score.ts"
+    "prospective:score": "node --experimental-strip-types scripts/prospective/score.ts",
+    "prospective:data": "node --experimental-strip-types scripts/prospective/data.ts"
   },
   "dependencies": {
     "@orbinauts/engine": "^0.1.2"

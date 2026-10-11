@@ -47,7 +47,8 @@ export interface ReleaseManifest {
   writtenAt: string;
 }
 
-const CITATION = "Element sets from the public catalogue's yearly bundles and history, used under its blanket approval for redistribution of basic space-situational-awareness data with citation; space-weather indices from GFZ Potsdam (CC BY 4.0) and NASA OMNI2; the satellite catalogue from CelesTrak; the payloads' end of transmission from GCAT (J. McDowell, planet4589.org, CC-BY-4.0).";
+/** What the Archive's data are and whence, as every release built from them cites it. */
+export const CITATION = "Element sets from the public catalogue's yearly bundles and history, used under its blanket approval for redistribution of basic space-situational-awareness data with citation; space-weather indices from GFZ Potsdam (CC BY 4.0) and NASA OMNI2; the satellite catalogue from CelesTrak; the payloads' end of transmission from GCAT (J. McDowell, planet4589.org, CC-BY-4.0).";
 
 const yearAsset = (year: number): string => `${RELEASE_TAG}-${year}.tar`;
 const SIDE_ASSET = `${RELEASE_TAG}-side.tar`;
@@ -55,7 +56,8 @@ const SIDE_ASSET = `${RELEASE_TAG}-side.tar`;
 /** The hash of the side files a download last extracted whole, so a later download knows its copy from one built here. */
 const sideRecordPath = (archive: string): string => join(archive, "side.sha256");
 
-function sha256File(path: string): string {
+/** A file's SHA-256, in hex. */
+export function sha256File(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
@@ -119,7 +121,8 @@ export function upload(archive: string, years: number[], sideOnly = false): void
   for (const file of files) rmSync(file);
 }
 
-async function fetchTo(url: string, path: string): Promise<void> {
+/** A URL fetched to a file, following redirects, with `ARCHIVE_AUTH_HEADER` where one is set. */
+export async function fetchTo(url: string, path: string): Promise<void> {
   const headers: Record<string, string> = { "User-Agent": "breakups-archive (https://github.com/Orbinauts/breakups)" };
   const auth = process.env.ARCHIVE_AUTH_HEADER;
   if (auth !== undefined && auth !== "") {
