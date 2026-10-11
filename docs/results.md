@@ -2,14 +2,15 @@
 
 How well the detector finds the breakups that were reported, measured over every year since 2005. This page carries every table of the scorecard; the [README](../README.md) gives the summary.
 
-The detector is `confirmed-v10`, the twelfth phase of its build. Its target is to confirm 90% of reported breakups, with fewer than 10% of its confirmations false. <!-- kpi:splits:begin -->The target is not reached on either split.<!-- kpi:splits:end --> The held-out years have also been read during development, so they are no longer a blind test: the clean test is the [live test](#the-live-test), run every day by a version frozen before it started.
+The detector is `confirmed-v10`, the twelfth phase of its build. It raises two kinds of alert: a **confirmed** breakup, once fragments in the parent's plane are catalogued, and an **early warning** (a suspected breakup), raised on the parent's own orbit jump before any fragment is. Its target is to confirm 90% of reported breakups, with fewer than 10% of its confirmations false; the early warning is measured and reported beside it, as prominently, with no target of its own. <!-- kpi:splits:begin -->The target is not reached on either split.<!-- kpi:splits:end --> The held-out years have also been read during development, so they are no longer a blind test: the clean test is the [live test](#the-live-test), run every day by a version frozen before it started.
 
 ## Contents
 
 - [The headline](#the-headline)
 - [How the numbers are made](#how-the-numbers-are-made)
 - [The Confirmed line, the target](#the-confirmed-line-the-target)
-- [The parent's step, a secondary measurement](#the-parents-step-a-secondary-measurement)
+- [Early warning (suspected)](#early-warning-suspected)
+- [The life of an alert](#the-life-of-an-alert)
 - [The live test](#the-live-test)
 
 ## The headline
@@ -27,7 +28,22 @@ The detector is `confirmed-v10`, the twelfth phase of its build. Its target is t
 
 <!-- kpi:current:end -->
 
-A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead counts the days from the detector's confirmation to the first statement by an agency: NASA, ESA or U.S. Space Forces-Space. The timing error compares the detector's instant of the breakup with the one the ground truth gives. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, `npm run kpi:readme` writes this page's tables and the README's summary from it, and a test fails if any cell here differs from that file.
+<!-- kpi:current-early-warning:begin -->
+
+| Early warning (suspected): breakups reported to the day | Held-out years (odd, 2007 to 2025) | Training years (even, 2006 to 2026) |
+| --- | --- | --- |
+| Flagged before the first fragment, of the targets | 10 of 28 | 18 of 43 |
+| Detection rate (95% interval) | 36% (21% to 54%) | 42% (28% to 57%) |
+| Flagged only after the first fragment (late) | 2 of 28 | 5 of 43 |
+| False alarms, of all early warnings | 2448 of 2464 | 2906 of 2930 |
+| False-alarm rate (95% interval) | 99% (99% to 100%) | 99% (99% to 99%) |
+| False alarms a year | 245 | 264 |
+| Median lead over the first catalogued fragment | 20 days | 12 days |
+| Median timing error | 35 minutes | 9 hours |
+
+<!-- kpi:current-early-warning:end -->
+
+A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead counts the days from the detector's confirmation to the first statement by an agency: NASA, ESA or U.S. Space Forces-Space. The timing error compares the detector's instant of the breakup with the one the ground truth gives. An early warning's target is a reported breakup whose parent had public orbits to be judged on; it is flagged when the warning came before the first fragment was catalogued, and late when it came after; its lead is over that first fragment. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, `npm run kpi:readme` writes this page's tables and the README's summary from it, and a test fails if any cell here differs from that file.
 
 ## How the numbers are made
 
@@ -89,33 +105,48 @@ The held-out years were read while earlier phases were fitted, so their numbers 
 
 <!-- kpi:confirmed:end -->
 
-## The parent's step, a secondary measurement
+## Early warning (suspected)
 
-The tables below measure the second layer, the step on the parent's own orbit, as the scorecard measured it before the target moved. They are kept as secondary measurements. A target there is an event whose parent had at least five public sets in the sixty days before it. Detected means an alert on the parent's step before the first fragment's set was published, and late means after it. The scoped line keeps only old objects with large, kicked steps that change the drag term and hold for a week ([docs/detector/d7-scope.md](detector/d7-scope.md)). The tier table shows that waiting longer before raising a step does not make it precise.
+The early warning is the detector's second layer: an alert on the parent's own orbit, raised when a step in it holds over the sets after it and nothing the object is known to do explains it ([how the detector works](detector/README.md#the-parent-step-layer)). It comes before any fragment is catalogued, and when it is right it is precise in time, but most early warnings are other orbit changes, chiefly manoeuvres the detector cannot tell apart, so it is a watch list, not a confirmation. The target is set on the Confirmed line ([docs/decisions/0007](decisions/0007-the-target-is-on-confirmed-alerts.md)); the early warning is measured here, on every split, and [regression tests on real orbit histories](../test/early-warning.test.ts) check case by case that it still flags known breakups before their first fragment and stays quiet on a station's reboost, a constellation satellite's orbit raise, a geosynchronous satellite's station-keeping and a quiet rocket body.
 
-<!-- kpi:parent-step:begin -->
+- A **target** is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is **undetectable** and out of the denominator.
+- **Flagged** (detected): a suspected verdict on the parent whose step bracket covers the event's window, each widened by a day (five near the geostationary ring), raised before the first fragment's set was published and before any notice. **Late**: the same after that. Late and missed both count against the detection rate.
+- A **false alarm** is a suspected step that matches no reported event; a second alert on the same step, or one inside an exempt window, is neither. The false-alarm rate is false alarms over false alarms plus the detections on every line, with its Wilson 95% interval. False alarms are also counted a year and per ten thousand object-years (the sum over the objects of the span their orbits cover).
+- The **lead** is the time from the alert to the first fragment's set; the **timing error** compares the detector's instant with the truth's where it states the minute. Both are over the detections on every line.
+- The **scoped** line keeps only old objects with large, kicked steps that change the drag term and hold for a week ([docs/detector/d7-scope.md](detector/d7-scope.md)). The tier table shows that waiting longer before raising a step does not make it precise.
 
-| Parent step: validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
+<!-- kpi:early-warning-tables:begin -->
+
+| Early warning (suspected): breakups A and B | Targets | Undetectable | Flagged before the first fragment | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | False alarms a year | False alarms per 10,000 object-years | Lead over the first catalogued fragment, days: median (10th percentile) | Timing error, minutes, median |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Validation: the odd years (2007 to 2025, 10 years) | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2448 | 99% (99% to 100%) | 244.8 | 138.3 | 20.0 (3.9) | 34.6 |
+| Training: the even years (2006 to 2026, 11 years) | 43 | 7 | 18 | 5 | 20 | 42% (28% to 57%) | 2906 | 99% (99% to 99%) | 264.2 | 152.2 | 12.4 (3.4) | 511.1 |
+| Every year (2006 to 2026, 21 years) | 71 | 13 | 28 | 7 | 36 | 39% (29% to 51%) | 5354 | 99% (99% to 99%) | 255.0 | 145.5 | 20.0 (3.4) | 114.4 |
+| The last 3 years (2024 to 2026, 3 years) | 4 | 2 | 3 | 0 | 1 | 75% (30% to 95%) | 927 | 99% (99% to 100%) | 309.0 | 119.5 | 4.3 (4.3) | 59.0 |
+| Fitted on the years to 2017 (2006 to 2017, 12 years) | 40 | 7 | 15 | 4 | 21 | 38% (24% to 53%) | 2463 | 99% (99% to 99%) | 205.3 | 148.8 | 10.3 (2.2) | 583.0 |
+| Validated on the years from 2018 (2018 to 2026, 9 years) | 31 | 6 | 13 | 3 | 15 | 42% (26% to 59%) | 2891 | 99% (99% to 100%) | 321.2 | 142.9 | 29.9 (4.3) | 72.8 |
+
+| Early warning, every line, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the headline line) | 28 | 6 | 10 | 2 | 16 | 36% |
-| Breakups, confidence C | 33 | 15 | 3 | 0 | 30 | 9% |
-| Breakups, confidence D | 12 | 0 | 0 | 0 | 12 | 0% |
-| Anomalous events, confidence A and B | 8 | 1 | 0 | 1 | 7 | 0% |
-| Anomalous events, confidence C and D | 68 | 2 | 3 | 0 | 65 | 4% |
+| Breakups, confidence A and B (the headline line) | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) |
+| Breakups, confidence C | 33 | 15 | 3 | 0 | 30 | 9% (3% to 24%) |
+| Breakups, confidence D | 12 | 0 | 0 | 0 | 12 | 0% (0% to 24%) |
+| Anomalous events, confidence A and B | 8 | 1 | 0 | 1 | 7 | 0% (0% to 32%) |
+| Anomalous events, confidence C and D | 68 | 2 | 3 | 0 | 65 | 4% (2% to 12%) |
 
-| Breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2448 | 99% (99% to 100%) | 0 |
 | Scoped | 21 | 0 | 3 | 0 | 18 | 14% (5% to 35%) | 52 | 95% (85% to 98%) | 13 of 34 |
 
-| Alerts, validation: the odd years (2007 to 2025, 10 years) | Count |
+| Early warnings, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 2638 |
 | Duplicates | 121 |
 | Exempt | 50 |
 | False alarms | 2448 |
 | False-alarm rate | 99% |
-| False alarms per 10,000 body-years | 138.3 |
+| False alarms per 10,000 object-years | 138.3 |
 | Lead over the catalogue, hours: median (10th percentile) | 479.0 (94.0) |
 | Latency from the event, hours: median (90th percentile) | 140.1 (1384.0) |
 | Confirmed share of the detections | 38% |
@@ -133,7 +164,7 @@ The tables below measure the second layer, the step on the parent's own orbit, a
 | 5 days of post sets | 1432 | 10 | 1417 | 1% | 63% | 575.4 (156.0) |
 | 7 days of post sets | 1291 | 7 | 1281 | 1% | 44% | 404.1 (88.0) |
 
-| The step alerts confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
+| The early warnings confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 87 |
 | Of which alerted on the parent (detected or late) | 14 |
@@ -151,10 +182,47 @@ The tables below measure the second layer, the step on the parent's own orbit, a
 | Targets with an agency's statement dated in the truth (the notices) | 0 |
 | Of which confirmed before that statement | 0 |
 
-<!-- kpi:parent-step:end -->
+<!-- kpi:early-warning-tables:end -->
+
+## The life of an alert
+
+Every step that holds in an object's orbit is judged once: raised as an early warning, or cleared as a manoeuvre that the object's record, its working status, a return to an altitude it held or its neighbours' like moves explain. An early warning then ends confirmed (fragments in the parent's plane, or a notice), dismissed (the new bodies under its launch were all old pieces), or expired (nothing confirmed it within the alert's thirty days); a few are still open where the Archive ends. A cleared step is watched as long, and fragments can still confirm it; and a breakup can be confirmed from its fragments with no step seen at all. The tables give, on the held-out and the training years, how many steps reached each end, the probability that an alert at that end was on a reported breakup's step (detections and late alerts over those and the false alarms; duplicates and exempt alerts in neither count), how long each end took, and from the other side, the reported breakups of confidence A and B whose fragments were catalogued, by the path they took. Every share and probability carries its Wilson 95% interval. A cleared or an expired alert is no guarantee that nothing happened: some were on reported breakups, as the tables say.
+
+<!-- kpi:lifecycle-full:begin -->
+
+| The life of an alert | Validation: the odd years (2007 to 2025, 10 years) | Training: the even years (2006 to 2026, 11 years) |
+| --- | --- | --- |
+| Steps that held, cleared as manoeuvres | 69179 | 95629 |
+| Of those, on a reported breakup's step (95% interval) | 0.04% (0.03% to 0.06%), 28 of 69179 | 0.02% (0.02% to 0.04%), 23 of 95629 |
+| Of those, confirmed later by fragments (of which on a reported breakup) | 5 (1) | 11 (6) |
+| Steps that held, raised as early warnings (suspected alerts) | 2633 | 3146 |
+| Of those, on a reported breakup's step (95% interval) | 0.77% (0.49% to 1.2%), 19 of 2463 | 0.96% (0.66% to 1.4%), 28 of 2929 |
+| Of those, duplicates or inside an exempt window (in neither count) | 170 | 217 |
+| Ended confirmed (fragments in the parent's plane, or a notice), share of the early warnings (95% interval) | 0.30% (0.15% to 0.60%), 8 of 2633 | 0.32% (0.17% to 0.58%), 10 of 3146 |
+| Ended confirmed: on a reported breakup's step (95% interval) | 75% (41% to 93%), 6 of 8 | 100% (68% to 100%), 8 of 8 |
+| Ended confirmed: days after the early warning, median (90th percentile) | 4.0 (24.2) | 2.3 (19.3) |
+| Ended dismissed (the new bodies under its launch were all old pieces), share of the early warnings (95% interval) | 4.2% (3.5% to 5.0%), 110 of 2633 | 4.8% (4.1% to 5.6%), 152 of 3146 |
+| Ended dismissed: on a reported breakup's step (95% interval) | 1.0% (0.18% to 5.7%), 1 of 96 | 0.75% (0.13% to 4.1%), 1 of 134 |
+| Ended dismissed: days after the early warning, median (90th percentile) | 30.0 (30.0) | 30.0 (30.0) |
+| Ended expired (nothing confirmed it in 30 days), share of the early warnings (95% interval) | 94% (94% to 95%), 2488 of 2633 | 92% (91% to 93%), 2905 of 3146 |
+| Ended expired: on a reported breakup's step (95% interval) | 0.47% (0.26% to 0.84%), 11 of 2335 | 0.66% (0.42% to 1.0%), 18 of 2719 |
+| Ended expired: days after the early warning, median (90th percentile) | 30.0 (30.0) | 30.0 (30.0) |
+| Still open where the Archive ends, share of the early warnings (95% interval) | 1.0% (0.71% to 1.5%), 27 of 2633 | 2.5% (2.0% to 3.1%), 79 of 3146 |
+| Still open: on a reported breakup's step (95% interval) | 4.2% (0.74% to 20%), 1 of 24 | 1.5% (0.26% to 7.9%), 1 of 68 |
+
+| The reported breakups' paths | Validation: the odd years (2007 to 2025, 10 years) | Training: the even years (2006 to 2026, 11 years) |
+| --- | --- | --- |
+| Reported breakups A and B with fragments catalogued (the Confirmed line's targets) | 23 | 35 |
+| Of those, flagged by an early warning before the first fragment | 8 of 23 | 14 of 35 |
+| An early warning, then confirmed (95% interval) | 39% (22% to 59%), 9 of 23 | 43% (28% to 59%), 15 of 35 |
+| An early warning, never confirmed (95% interval) | 4.3% (0.77% to 21%), 1 of 23 | 11% (4.5% to 26%), 4 of 35 |
+| Confirmed with no early warning first (from the fragments, or a cleared step the fragments confirmed) (95% interval) | 35% (19% to 55%), 8 of 23 | 20% (10% to 36%), 7 of 35 |
+| Never flagged (95% interval) | 22% (9.7% to 42%), 5 of 23 | 26% (14% to 42%), 9 of 35 |
+
+<!-- kpi:lifecycle-full:end -->
 
 ## The live test
 
-The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
+The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth, on the Confirmed line and on the early warning. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
 
-<!-- prospective:score:begin -->So far: 0 alerts logged since the freeze; 0 confirmed alerts match a reported event after the freeze, of 0 reported events with pieces; 0 false confirmations of 0 confirmed alerts. The truth last changed on 2026-10-11. The agencies report an event months after it, so the events of the last 90 days or so may not be in the truth yet, and the score is not final for them. The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.<!-- prospective:score:end -->
+<!-- prospective:score:begin -->So far: 0 alerts logged since the freeze; 0 confirmed alerts match a reported event after the freeze, of 0 reported events with pieces; 0 false confirmations of 0 confirmed alerts. Early warning: 0 suspected alerts flag a reported event after the freeze before the first sign of its fragments, and 0 after it, of 0 reported events with pieces; 0 false early warnings of 0 suspected alerts. The truth last changed on 2026-10-11. The agencies report an event months after it, so the events of the last 90 days or so may not be in the truth yet, and the score is not final for them. The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.<!-- prospective:score:end -->

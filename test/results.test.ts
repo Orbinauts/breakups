@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import * as library from "../src/index.ts";
 import { DETECTOR_NAME, yearOf } from "../src/index.ts";
-import { resultsTables, type Latest } from "../scripts/kpi/kpi.ts";
+import { SPLITS, lifecycleTables, resultsTables, type Latest } from "../scripts/kpi/kpi.ts";
 
 /**
  * The documentation pages against the files. The ground-truth page
@@ -126,10 +126,26 @@ describe("the results page's headline", () => {
     ["Median timing error", h.timing, t.timing, ""],
   ];
 
-  test("carries one table, every cell read from the aggregate", () => {
+  test("carries two tables, the Confirmed line and the early warning, every cell read from the aggregate", () => {
     const tables = tablesOf(text);
-    expect(tables).toHaveLength(1);
+    expect(tables).toHaveLength(2);
     expect(rowsOf(tables[0]!)).toEqual(expected);
+  });
+
+  test("the early warning's headline: flagged, late, the rates with their intervals, false alarms a year, the lead and the timing", () => {
+    const early = (cells: Latest["splits"]["validation"]) => {
+      const line = cells.lines["breakups A-B"];
+      const detected = Object.values(cells.lines).reduce((sum, l) => sum + l.detected, 0);
+      return [`${line.detected} of ${line.targets}`, withInterval(line.detectionRate!, line.detectionInterval!), `${line.late} of ${line.targets}`, `${cells.falseAlarms} of ${cells.falseAlarms + detected}`, withInterval(cells.falseAlarmRate!, cells.falseAlarmInterval!), String(Math.round(cells.falseAlarms / cells.years.length)), `${Math.round(cells.leadHours!.median / 24)} days`, duration(cells.timingErrorMinutes!)];
+    };
+    const h = early(held);
+    const t = early(train);
+    const labels = ["Flagged before the first fragment, of the targets", "Detection rate (95% interval)", "Flagged only after the first fragment (late)", "False alarms, of all early warnings", "False-alarm rate (95% interval)", "False alarms a year", "Median lead over the first catalogued fragment", "Median timing error"];
+    expect(rowsOf(tablesOf(text)[1]!)).toEqual([
+      ["Early warning (suspected): breakups reported to the day", `Held-out years (${span(held.years, "odd")})`, `Training years (${span(train.years, "even")})`],
+      ["---", "---", "---"],
+      ...labels.map((label, i) => [label, h[i]!, t[i]!]),
+    ]);
   });
 
   test("says plainly which splits reach the target, and points to the live test", () => {
@@ -174,7 +190,7 @@ describe("the results page's statement of the version", () => {
 });
 
 describe("the results page's scorecard tables", () => {
-  const tables = tablesOf(`${section(RESULTS, "The Confirmed line, the target")}\n${section(RESULTS, "The parent's step, a secondary measurement")}`);
+  const tables = tablesOf(`${section(RESULTS, "The Confirmed line, the target")}\n${section(RESULTS, "Early warning (suspected)")}`);
   const expected = resultsTables(latest);
 
   test("carries every table of the aggregate it should, every cell equal", () => {
@@ -200,11 +216,75 @@ describe("the results page's scorecard tables", () => {
   });
 });
 
+describe("the results page's early warning", () => {
+  test("is a section as prominent as the Confirmed line's: every split, with the Wilson intervals of both rates, the late, the false alarms a year and per 10,000 object-years, the lead and the timing", () => {
+    const text = section(RESULTS, "Early warning (suspected)");
+    const headline = rowsOf(tablesOf(text)[0]!);
+    expect(headline[0]).toEqual(["Early warning (suspected): breakups A and B", "Targets", "Undetectable", "Flagged before the first fragment", "Late", "Missed", "Detection rate (95% interval)", "False alarms", "False-alarm rate (95% interval)", "False alarms a year", "False alarms per 10,000 object-years", "Lead over the first catalogued fragment, days: median (10th percentile)", "Timing error, minutes, median"]);
+    expect(headline).toHaveLength(2 + SPLITS.length);
+    for (const [i, split] of SPLITS.entries()) {
+      const cells = latest.splits[split];
+      const line = cells.lines["breakups A-B"];
+      const row = headline[2 + i]!;
+      expect(row.slice(1, 6)).toEqual([line.targets, line.undetectable, line.detected, line.late, line.missed].map(String));
+      expect(row[6]).toBe(withInterval(line.detectionRate!, line.detectionInterval!));
+      expect(row[7]).toBe(String(cells.falseAlarms));
+      expect(row[8]).toBe(withInterval(cells.falseAlarmRate!, cells.falseAlarmInterval!));
+      expect(row[9]).toBe((cells.falseAlarms / cells.years.length).toFixed(1));
+      expect(row[10]).toBe(cells.falseAlarmsPer10kBodyYears!.toFixed(1));
+      expect(row[11]).toBe(`${(cells.leadHours!.median / 24).toFixed(1)} (${(cells.leadHours!.tail / 24).toFixed(1)})`);
+      expect(row[12]).toBe(cells.timingErrorMinutes!.toFixed(1));
+    }
+    expect(text).toContain("(../test/early-warning.test.ts)");
+    expect(text).not.toMatch(/secondary measurement/);
+  });
+
+  test("the intervals in the aggregate are the Wilson intervals of the counts", () => {
+    for (const split of SPLITS) {
+      const cells = latest.splits[split];
+      for (const line of Object.values(cells.lines)) {
+        if (line.targets === 0) expect(line.detectionInterval).toBeNull();
+        else {
+          expect(line.detectionInterval![0]).toBeLessThanOrEqual(line.detectionRate!);
+          expect(line.detectionInterval![1]).toBeGreaterThanOrEqual(line.detectionRate!);
+        }
+      }
+      expect(cells.falseAlarmInterval![0]).toBeLessThanOrEqual(cells.falseAlarmRate!);
+      expect(cells.falseAlarmInterval![1]).toBeGreaterThanOrEqual(cells.falseAlarmRate!);
+    }
+  });
+});
+
+describe("the results page's life of an alert", () => {
+  const text = section(RESULTS, "The life of an alert");
+
+  test("carries the lifecycle tables of the held-out and the training years, every cell equal to the aggregate's", () => {
+    const tables = tablesOf(text);
+    const expected = lifecycleTables(latest);
+    expect(tables).toHaveLength(expected.length);
+    for (const [i, table] of expected.entries()) expect(rowsOf(tables[i]!)).toEqual(rowsOf(table));
+  });
+
+  test("adds up: every suspected alert ends one way, and every reported breakup takes one path", () => {
+    for (const split of SPLITS) {
+      const { lifecycle, confirmedLine } = latest.splits[split];
+      expect(Object.values(lifecycle.ends).reduce((sum, e) => sum + e.alerts, 0)).toBe(lifecycle.suspected.alerts);
+      for (const e of [lifecycle.suspected, ...Object.values(lifecycle.ends)]) expect(e.real + e.falseAlarms + e.neither).toBe(e.alerts);
+      const b = lifecycle.breakups;
+      expect(b.suspectedThenConfirmed.count + b.suspectedNotConfirmed.count + b.confirmedWithoutSuspected.count + b.neverFlagged.count).toBe(b.targets);
+      expect(b.targets).toBe(confirmedLine.lines["breakups A-B"].targets);
+      expect(b.suspectedThenConfirmed.count + b.confirmedWithoutSuspected.count).toBe(confirmedLine.lines["breakups A-B"].detected);
+      expect(lifecycle.cleared.real).toBeLessThanOrEqual(lifecycle.cleared.steps);
+    }
+  });
+});
+
 describe("the results page's live test", () => {
   test("says how to score it and carries the score's summary", () => {
     const text = section(RESULTS, "The live test");
     expect(text).toContain("npm run prospective:score");
     expect(marked(text, "prospective:score")).toMatch(/^So far: /);
+    expect(marked(text, "prospective:score")).toContain("Early warning: ");
   });
 });
 

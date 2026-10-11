@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import * as library from "../src/index.ts";
-import { DETECTOR_NAME } from "../src/index.ts";
+import { DETECTOR_NAME, DETECTOR_PARAMETERS } from "../src/index.ts";
 import type { Latest } from "../scripts/kpi/kpi.ts";
 
 /**
@@ -11,7 +11,11 @@ import type { Latest } from "../scripts/kpi/kpi.ts";
  * finds it on GitHub or npm. Its summary table states cells of the
  * committed aggregate, its target sentence follows them, and its quick
  * start prints what the library answers; all are read here, so the README
- * cannot drift from any. `npm run kpi:readme` writes those parts between
+ * cannot drift from any. The early warning's table and the life of an
+ * alert are read the same way, and the plain words around them (weeks
+ * ahead, within the hour, most of them false, thirty days, a few hours)
+ * are checked against the numbers they summarise. `npm run kpi:readme`
+ * writes those parts between
  * their markers (`scripts/kpi/pages.ts`); these tests compute every cell
  * on their own, so a fault in the generator is caught here rather than
  * copied. The full tables live on `docs/results.md`, checked by
@@ -30,7 +34,7 @@ const file = JSON.parse(readFileSync(resolve(ROOT, "data/breakups.json"), "utf8"
 const latest = JSON.parse(readFileSync(resolve(ROOT, "kpi/latest.json"), "utf8")) as Latest;
 
 /** The README's sections, in order. */
-const SECTIONS = ["What it does", "How well it works", "How it works", "Install", "Quick start", "Live test", "Learn more", "Licence and data credits"];
+const SECTIONS = ["What it does", "How well it works", "How it works", "The life of an alert", "Install", "Quick start", "Live test", "Learn more", "Licence and data credits"];
 
 function section(heading: string): string {
   const start = README.indexOf(`\n## ${heading}\n`);
@@ -106,8 +110,8 @@ describe("the README's summary of the results", () => {
     .filter((block) => block.startsWith("|"))
     .map((block) => block.trim());
 
-  test("carries one table of the held-out years, every cell read from the aggregate", () => {
-    expect(tables).toHaveLength(1);
+  test("carries two tables of the held-out years, the Confirmed line and the early warning, every cell read from the aggregate", () => {
+    expect(tables).toHaveLength(2);
     const rows = tables[0]!.split("\n").map((row) => row.split("|").slice(1, -1).map((cell) => cell.trim()));
     expect(rows).toEqual([
       [`Held-out years (the odd years, ${held.years[0]} to ${held.years.at(-1)})`, "Result", "Target"],
@@ -117,6 +121,34 @@ describe("the README's summary of the results", () => {
       ["Median lead over the first official report", `${Math.round(c.lead!.median)} days (${c.beforeStatement} of ${c.withStatement} confirmed before it)`, ""],
       ["Median error in the time of the breakup", duration(c.timing!.median), ""],
     ]);
+  });
+
+  test("the early warning's table: flagged before the first fragment, late, false alarms a year and their share, the lead and the timing", () => {
+    const early = held.lines["breakups A-B"];
+    const detected = Object.values(held.lines).reduce((sum, l) => sum + l.detected, 0);
+    const rows = tables[1]!.split("\n").map((row) => row.split("|").slice(1, -1).map((cell) => cell.trim()));
+    expect(rows).toEqual([
+      ["Early warning (suspected), the same years", "Result"],
+      ["---", "---"],
+      ["Reported breakups flagged before the first fragment was catalogued", rateOf(early.detectionRate!, early.detected, early.targets)],
+      ["Flagged only after the first fragment (late)", `${early.late} of ${early.targets}`],
+      ["False alarms", `${Math.round(held.falseAlarms / held.years.length)} a year, ${Math.round(held.falseAlarmRate! * 100)}% of all early warnings (${held.falseAlarms} of ${held.falseAlarms + detected})`],
+      ["Median lead over the first catalogued fragment", `${Math.round(held.leadHours!.median / 24)} days`],
+      ["Median error in the time of the breakup", duration(held.timingErrorMinutes!)],
+    ]);
+  });
+
+  test("says what an early warning is in plain words that the numbers bear out, and no longer calls it unscored", () => {
+    expect(text).not.toMatch(/not scored/i);
+    expect(text).toContain("it comes weeks before the first fragment is catalogued");
+    expect(held.leadHours!.median / 24).toBeGreaterThanOrEqual(14);
+    expect(text).toContain("to within the hour");
+    expect(held.timingErrorMinutes!).toBeLessThan(60);
+    expect(text).toContain("most early warnings are other orbit changes");
+    expect(held.falseAlarmRate!).toBeGreaterThan(0.5);
+    expect(text).toContain("a watch list, not a confirmation");
+    expect(text).toContain("The target is set on confirmed breakups; the early warning is measured and reported beside it");
+    expect(text).toContain(`(${REPOSITORY}/blob/main/test/early-warning.test.ts)`);
   });
 
   test("says plainly whether the target is reached, and points to the live test and the full results", () => {
@@ -164,5 +196,73 @@ describe("the README's quick start", () => {
     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (...args: string[]) => (...values: unknown[]) => Promise<void>;
     await new AsyncFunction(...names, "console", body)(...bindings, log);
     expect(logged, `the quick start now prints:\n${logged.join("\n")}`).toEqual(printed);
+  });
+});
+
+/** A small probability as the lifecycle prints it: to a hundredth of a percent under one percent, a tenth under ten, else whole. */
+const chance = (rate: number): string => {
+  const percent = rate * 100;
+  if (percent === 0 || percent >= 10) return `${Math.round(percent)}%`;
+  return percent < 1 ? `${percent.toFixed(2)}%` : `${percent.toFixed(1)}%`;
+};
+
+describe("the README's life of an alert", () => {
+  const text = section("The life of an alert");
+  const held = latest.splits.validation;
+  const l = held.lifecycle;
+  const tables = text
+    .split("\n\n")
+    .filter((block) => block.startsWith("|"))
+    .map((block) => block.trim().split("\n").map((row) => row.split("|").slice(1, -1).map((cell) => cell.trim())));
+  const words = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+  const count = (n: number, unit: string) => `${words[n] ?? n} ${unit}${n === 1 ? "" : "s"}`;
+  const spoken = (days: number): string => (days >= 14 ? count(Math.round(days / 7), "week") : days >= 2 ? count(Math.round(days), "day") : Math.round(days * 24) < 1 ? "under an hour" : count(Math.round(days * 24), "hour"));
+  const of = (rate: number, k: number, n: number) => `${chance(rate)} (${k} of ${n})`;
+
+  test("names the stages as the detector runs them, its time to live read from the parameters", () => {
+    for (const stage of ["**A jump.**", "**The jump holds.**", "cleared as a manoeuvre", "raised as an early warning", "It is confirmed when", "It is dismissed when", "It expires when", "still open when the data ends", "**A breakup can also be confirmed with no early warning first**"]) expect(text).toContain(stage);
+    expect(text).toContain(`It expires when nothing confirms it within ${DETECTOR_PARAMETERS.alertTtlDays} days.`);
+    // "A few hours after the first one is catalogued": the median confirmation's lag after the first fragment.
+    expect(text).toContain("a few hours after the first one is catalogued");
+    expect(held.confirmedLine.lag!.median).toBeLessThan(0.5);
+  });
+
+  test("carries what became of each jump that held, with the chance it was a breakup, every cell read from the aggregate", () => {
+    expect(tables).toHaveLength(2);
+    const ends = { confirmed: `then confirmed by fragments or a notice, a median of ${spoken(l.ends.confirmed.days!.median)} later`, dismissed: "then dismissed: the new pieces under its launch were all old", expired: `then expired: nothing confirmed it within ${DETECTOR_PARAMETERS.alertTtlDays} days`, open: "still open where the data ends" } as const;
+    expect(tables[0]).toEqual([
+      ["What became of each orbit jump that held, on the held-out years", "How many", "Chance it was a reported breakup"],
+      ["---", "---", "---"],
+      ["Cleared as a manoeuvre", String(l.cleared.steps), of(l.cleared.realRate!, l.cleared.real, l.cleared.steps)],
+      [`Raised as an early warning, a median of ${spoken(held.latencyHours!.median / 24)} after the breakup and ${spoken(held.leadHours!.median / 24)} before the first fragment`, String(l.suspected.alerts), of(l.suspected.realRate!, l.suspected.real, l.suspected.real + l.suspected.falseAlarms)],
+      ...(["confirmed", "dismissed", "expired", "open"] as const).map((end) => {
+        const e = l.ends[end];
+        return [`... ${ends[end]}`, `${e.alerts} (${chance(e.share!)})`, of(e.realRate!, e.real, e.real + e.falseAlarms)];
+      }),
+    ]);
+    // Every suspected alert ends one way.
+    expect(Object.values(l.ends).reduce((sum, e) => sum + e.alerts, 0)).toBe(l.suspected.alerts);
+  });
+
+  test("carries the reported breakups by the path they took, which add up to the Confirmed line's targets", () => {
+    const b = l.breakups;
+    const rate = (k: number) => `${Math.round((k / b.targets) * 100)}% (${k} of ${b.targets})`;
+    expect(tables[1]).toEqual([
+      [`What happened to the ${b.targets} reported breakups whose fragments were catalogued, on the held-out years`, "Share"],
+      ["---", "---"],
+      ["An early warning first, then confirmed", rate(b.suspectedThenConfirmed.count)],
+      ["An early warning, never confirmed", rate(b.suspectedNotConfirmed.count)],
+      ["Confirmed from the fragments, with no early warning first", rate(b.confirmedWithoutSuspected.count)],
+      ["Never flagged", rate(b.neverFlagged.count)],
+    ]);
+    const c = held.confirmedLine.lines["breakups A-B"];
+    expect(b.targets).toBe(c.targets);
+    expect(b.suspectedThenConfirmed.count + b.confirmedWithoutSuspected.count).toBe(c.detected);
+    expect(b.suspectedThenConfirmed.count + b.suspectedNotConfirmed.count + b.confirmedWithoutSuspected.count + b.neverFlagged.count).toBe(b.targets);
+  });
+
+  test("says in one sentence, with the measured chance, that a cleared or expired alert is no guarantee nothing happened", () => {
+    expect(text).toContain(`A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, ${chance(l.ends.expired.realRate!)} of the expired early warnings (${l.ends.expired.real}) and ${chance(l.cleared.realRate!)} of the jumps cleared as manoeuvres (${l.cleared.real}) were on a reported breakup.`);
+    expect(text).toContain(`(${REPOSITORY}/blob/main/docs/results.md#the-life-of-an-alert)`);
   });
 });

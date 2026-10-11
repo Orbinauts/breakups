@@ -2,9 +2,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as library from "../../src/index.ts";
-import { readBreakups, yearOf, type Breakup } from "../../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, yearOf, type Breakup } from "../../src/index.ts";
 import { parseGcat } from "../truth/parse-gcat.ts";
-import { resultsTables, type Latest } from "./kpi.ts";
+import { ALERT_ENDS, BREAKUP_PATHS, CONFIRMED_TABLES, chance, detectedAllLines, falseAlarmsPerYear, lifecycleTables, resultsTables, type AlertEnd, type BreakupPath, type Latest } from "./kpi.ts";
 
 /**
  * The generated parts of the README and the documentation pages:
@@ -18,14 +18,20 @@ import { resultsTables, type Latest } from "./kpi.ts";
  * Every name is marked once, on one page (`GENERATED_PARTS`).
  *
  * The README carries the summary: the table of the held-out years against
- * the target (`kpi:summary`), the sentence saying whether the target is
- * reached (`kpi:target`), and what the quick start prints
+ * the target (`kpi:summary`), the early warning's table beside it
+ * (`kpi:early-warning`), the sentence saying whether the target is
+ * reached (`kpi:target`), the life of an alert, what each orbit jump that
+ * held became and the chance at each end that it was a breakup
+ * (`kpi:lifecycle`), with the sentence on what a cleared or expired alert
+ * still hides (`kpi:lifecycle-caveat`), and what the quick start prints
  * (`truth:quick-start`), which is the README's own code run against the
  * truth. `docs/results.md` carries the full results: the headline of both
- * splits (`kpi:current`), the sentence saying which splits reach the
- * target (`kpi:splits`), the sentences on the medians of the lead and the
- * lag (`kpi:medians`), the Confirmed tables (`kpi:confirmed`) and the
- * parent-step tables (`kpi:parent-step`). `docs/ground-truth.md` carries
+ * splits for the Confirmed line (`kpi:current`) and the early warning
+ * (`kpi:current-early-warning`), the sentence saying which splits reach
+ * the target (`kpi:splits`), the sentences on the medians of the lead and
+ * the lag (`kpi:medians`), the Confirmed tables (`kpi:confirmed`), the
+ * early warning's tables (`kpi:early-warning-tables`) and the life of an
+ * alert on both splits (`kpi:lifecycle-full`). `docs/ground-truth.md` carries
  * the truth's counts (`truth:counts`) and the count of GCAT's debris
  * clouds (`truth:gcat-clouds`). The prospective score's summary
  * (`prospective:score`, on the results page) is written by
@@ -51,8 +57,8 @@ export const GROUND_TRUTH = "docs/ground-truth.md";
 
 /** Every generated part, by the page that holds it. */
 export const GENERATED_PARTS: Readonly<Record<string, readonly string[]>> = {
-  [README]: ["kpi:summary", "kpi:target", "truth:quick-start"],
-  [RESULTS]: ["kpi:current", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:parent-step", "prospective:score"],
+  [README]: ["kpi:summary", "kpi:early-warning", "kpi:target", "kpi:lifecycle", "kpi:lifecycle-caveat", "truth:quick-start"],
+  [RESULTS]: ["kpi:current", "kpi:current-early-warning", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:early-warning-tables", "kpi:lifecycle-full", "prospective:score"],
   [GROUND_TRUTH]: ["truth:counts", "truth:gcat-clouds"],
 };
 
@@ -113,6 +119,102 @@ export function summaryTable(latest: Latest): string {
     row(["Median error in the time of the breakup", c.timing === null ? "–" : duration(c.timing.median), ""]),
   ].join("\n");
 }
+
+/** The README's early-warning table: the held-out years' suspected alerts in plain words, measured beside the target. */
+export function earlyWarningSummaryTable(latest: Latest): string {
+  const held = latest.splits.validation;
+  const line = held.lines["breakups A-B"];
+  const all = held.falseAlarms + detectedAllLines(held);
+  const perYear = falseAlarmsPerYear(held);
+  return [
+    row(["Early warning (suspected), the same years", "Result"]),
+    row(["---", "---"]),
+    row(["Reported breakups flagged before the first fragment was catalogued", rateOf(line.detectionRate, line.detected, line.targets)]),
+    row(["Flagged only after the first fragment (late)", `${line.late} of ${line.targets}`]),
+    row(["False alarms", perYear === null || held.falseAlarmRate === null ? "–" : `${Math.round(perYear)} a year, ${percent(held.falseAlarmRate)} of all early warnings (${held.falseAlarms} of ${all})`]),
+    row(["Median lead over the first catalogued fragment", held.leadHours === null ? "–" : `${Math.round(held.leadHours.median / 24)} days`]),
+    row(["Median error in the time of the breakup", held.timingErrorMinutes === null ? "–" : duration(held.timingErrorMinutes)]),
+  ].join("\n");
+}
+
+/** A chance with its counts, as the README's lifecycle states it: "0.8% (19 of 2463)". */
+const chanceOf = (rate: number | null, k: number, n: number): string => (rate === null ? "–" : `${chance(rate)} (${k} of ${n})`);
+
+/** What each end of a suspected alert is called in the README, its timing in words where it has one. */
+function endLabel(end: AlertEnd, days: number | null): string {
+  if (end === "confirmed") return `then confirmed by fragments or a notice${days === null ? "" : `, a median of ${inWords(days)} later`}`;
+  if (end === "dismissed") return "then dismissed: the new pieces under its launch were all old";
+  if (end === "expired") return `then expired: nothing confirmed it within ${DETECTOR_PARAMETERS.alertTtlDays} days`;
+  return "still open where the data ends";
+}
+
+/** The README's words for the reported breakups' paths. */
+const PATH_WORDS: Record<BreakupPath, string> = {
+  suspectedThenConfirmed: "An early warning first, then confirmed",
+  suspectedNotConfirmed: "An early warning, never confirmed",
+  confirmedWithoutSuspected: "Confirmed from the fragments, with no early warning first",
+  neverFlagged: "Never flagged",
+};
+
+/** The README's life of an alert on the held-out years: what each orbit jump that held became, how many, and the chance it was a breakup; then the reported breakups by the path they took. */
+export function lifecycleSummary(latest: Latest): string {
+  const held = latest.splits.validation;
+  const l = held.lifecycle;
+  const timing = held.latencyHours === null || held.leadHours === null ? "" : `, a median of ${inWords(held.latencyHours.median / 24)} after the breakup and ${inWords(held.leadHours.median / 24)} before the first fragment`;
+  const stages = [
+    row(["What became of each orbit jump that held, on the held-out years", "How many", "Chance it was a reported breakup"]),
+    row(["---", "---", "---"]),
+    row(["Cleared as a manoeuvre", String(l.cleared.steps), chanceOf(l.cleared.realRate, l.cleared.real, l.cleared.steps)]),
+    row([`Raised as an early warning${timing}`, String(l.suspected.alerts), chanceOf(l.suspected.realRate, l.suspected.real, l.suspected.real + l.suspected.falseAlarms)]),
+    ...ALERT_ENDS.map((end) => {
+      const e = l.ends[end];
+      return row([`... ${endLabel(end, e.days?.median ?? null)}`, `${e.alerts} (${chance(e.share)})`, chanceOf(e.realRate, e.real, e.real + e.falseAlarms)]);
+    }),
+  ];
+  const b = l.breakups;
+  const paths = [
+    row([`What happened to the ${b.targets} reported breakups whose fragments were catalogued, on the held-out years`, "Share"]),
+    row(["---", "---"]),
+    ...BREAKUP_PATHS.map((path) => row([PATH_WORDS[path], rateOf(b[path].share, b[path].count, b.targets)])),
+  ];
+  return `${stages.join("\n")}\n\n${paths.join("\n")}`;
+}
+
+/** The README's sentence on what a cleared or expired alert may still hide, with the measured chance. */
+export function lifecycleCaveat(latest: Latest): string {
+  const l = latest.splits.validation.lifecycle;
+  return `A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, ${chance(l.ends.expired.realRate)} of the expired early warnings (${l.ends.expired.real}) and ${chance(l.cleared.realRate)} of the jumps cleared as manoeuvres (${l.cleared.real}) were on a reported breakup.`;
+}
+
+/** The results page's early-warning headline: the held-out and the training years' suspected alerts in plain units. */
+export function currentEarlyWarningTable(latest: Latest): string {
+  const held = latest.splits.validation;
+  const train = latest.splits.train;
+  const span = (years: number[], parity: string): string => `${parity}, ${years[0]} to ${years.at(-1)}`;
+  const column = (cells: Latest["splits"]["validation"]): string[] => {
+    const line = cells.lines["breakups A-B"];
+    const perYear = falseAlarmsPerYear(cells);
+    return [
+      `${line.detected} of ${line.targets}`,
+      withInterval(line.detectionRate, line.detectionInterval),
+      `${line.late} of ${line.targets}`,
+      `${cells.falseAlarms} of ${cells.falseAlarms + detectedAllLines(cells)}`,
+      withInterval(cells.falseAlarmRate, cells.falseAlarmInterval),
+      perYear === null ? "–" : String(Math.round(perYear)),
+      cells.leadHours === null ? "–" : `${Math.round(cells.leadHours.median / 24)} days`,
+      cells.timingErrorMinutes === null ? "–" : duration(cells.timingErrorMinutes),
+    ];
+  };
+  const h = column(held);
+  const t = column(train);
+  return [
+    row(["Early warning (suspected): breakups reported to the day", `Held-out years (${span(held.years, "odd")})`, `Training years (${span(train.years, "even")})`]),
+    row(["---", "---", "---"]),
+    ...EARLY_LABELS.map((label, i) => row([label, h[i]!, t[i]!])),
+  ].join("\n");
+}
+
+const EARLY_LABELS = ["Flagged before the first fragment, of the targets", "Detection rate (95% interval)", "Flagged only after the first fragment (late)", "False alarms, of all early warnings", "False-alarm rate (95% interval)", "False alarms a year", "Median lead over the first catalogued fragment", "Median timing error"];
 
 /** A column of the results page's first table: a split's headline in plain units. */
 function currentColumn(c: ConfirmedLineCells): string[] {
@@ -260,16 +362,21 @@ export async function renderPage(path: string, text: string, inputs: ReadmeInput
   const { latest, file, gcatClouds } = inputs;
   if (path === README) {
     let out = replacePart(text, "kpi:summary", summaryTable(latest));
+    out = replacePart(out, "kpi:early-warning", earlyWarningSummaryTable(latest));
     out = replacePart(out, "kpi:target", targetSentence(latest), true);
+    out = replacePart(out, "kpi:lifecycle", lifecycleSummary(latest));
+    out = replacePart(out, "kpi:lifecycle-caveat", lifecycleCaveat(latest), true);
     return replacePart(out, "truth:quick-start", `\`\`\`text\n${(await quickStartOutput(out, file)).join("\n")}\n\`\`\``);
   }
   if (path === RESULTS) {
     const tables = resultsTables(latest);
     let out = replacePart(text, "kpi:current", currentTable(latest));
+    out = replacePart(out, "kpi:current-early-warning", currentEarlyWarningTable(latest));
     out = replacePart(out, "kpi:splits", splitsSentence(latest), true);
     out = replacePart(out, "kpi:medians", mediansSentence(latest), true);
-    out = replacePart(out, "kpi:confirmed", tables.slice(0, 3).join("\n\n"));
-    return replacePart(out, "kpi:parent-step", tables.slice(3).join("\n\n"));
+    out = replacePart(out, "kpi:confirmed", tables.slice(0, CONFIRMED_TABLES).join("\n\n"));
+    out = replacePart(out, "kpi:early-warning-tables", tables.slice(CONFIRMED_TABLES).join("\n\n"));
+    return replacePart(out, "kpi:lifecycle-full", lifecycleTables(latest).join("\n\n"));
   }
   if (path === GROUND_TRUTH) {
     const out = replacePart(text, "truth:counts", truthTable(readBreakups(file)));

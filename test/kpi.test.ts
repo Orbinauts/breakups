@@ -288,8 +288,11 @@ describe("the scorecard on the synthetic year", () => {
 
   test("the cells add the year up", () => {
     const cells = cellsOf([file]);
-    expect(cells.lines["breakups A-B"]).toEqual({ targets: 2, undetectable: 1, detected: 1, late: 1, missed: 0, detectionRate: 0.5 });
-    for (const line of ["breakups C", "breakups D", "anomalous A-B", "anomalous C-D"] as const) expect(cells.lines[line]).toEqual({ targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, detectionRate: null });
+    expect(cells.lines["breakups A-B"]).toEqual({ targets: 2, undetectable: 1, detected: 1, late: 1, missed: 0, detectionRate: 0.5, detectionInterval: wilson(1, 2) });
+    for (const line of ["breakups C", "breakups D", "anomalous A-B", "anomalous C-D"] as const) expect(cells.lines[line]).toEqual({ targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, detectionRate: null, detectionInterval: null });
+    // The false-alarm rate's interval: one less the precision's, one detection against one false alarm.
+    const precision = wilson(1, 2)!;
+    expect(cells.falseAlarmInterval).toEqual([1 - precision[1], 1 - precision[0]]);
     expect(cells).toMatchObject({ alerts: 7, duplicates: 2, exempt: 2, falseAlarms: 1, review: 1, falseAlarmRate: 0.5, confirmedShare: 0, daysToConfirmation: null, timingErrorMinutes: 390 });
     // The tiers: as raised, the detection, the late alert and the false alarm are the three counted; the trivial detector logs no alert row, so no later tier is reached.
     expect(cells.tiers[0]).toEqual({ tier: "2", raised: 3, detections: 1, falseAlarms: 1, precision: 0.5, detectionShare: 1, leadHours: { median: 44, tail: 44, count: 1 } });
@@ -317,7 +320,9 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.splits.validation.years).toEqual([YEAR]);
     expect(latest.splits.train.years).toEqual([]);
     expect(latest.splits.train.lines["breakups A-B"].targets).toBe(0);
-    const [headline, confirmedLines, confirmedVerdicts, lines, scoped, alertsTable, tiers, confirmed] = resultsTables(latest);
+    const [headline, confirmedLines, confirmedVerdicts, earlyHeadline, lines, scoped, alertsTable, tiers, confirmed] = resultsTables(latest);
+    // The early warning's headline: one detection, one late, one false alarm in the one year, the rates with their intervals.
+    expect(earlyHeadline).toContain(`| Validation: the odd years (${YEAR}) | 2 | 1 | 1 | 1 | 0 | 50% (9% to 91%) | 1 | 50% (9% to 91%) | 1.0 |`);
     // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body a false confirmation.
     expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 1 | 50% (9% to 91%) | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
     expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – |");
@@ -334,7 +339,7 @@ describe("the scorecard on the synthetic year", () => {
     expect(confirmed).toContain("| Precision of the confirmed alerts, on the step | – |");
     expect(confirmed).toContain("| Targets with an agency's statement dated in the truth (the notices) | 0 |");
     expect(tiers).toContain("| 7 days of post sets | 0 | 0 | 0 | – | 0% | – |");
-    expect(lines).toContain("| Breakups, confidence A and B (the headline line) | 2 | 1 | 1 | 1 | 0 | 50% |");
+    expect(lines).toContain("| Breakups, confidence A and B (the headline line) | 2 | 1 | 1 | 1 | 0 | 50% (9% to 91%) |");
     expect(lines).toContain("| Breakups, confidence C | 0 | 0 | 0 | 0 | 0 | – |");
     expect(alertsTable).toContain("| False alarms | 1 |");
     expect(alertsTable).toContain("| False-alarm rate | 50% |");

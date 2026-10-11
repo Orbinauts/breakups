@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
-import { landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
+import { brackets, landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
 import { replacePart, RESULTS } from "../kpi/pages.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
@@ -21,6 +21,21 @@ import { runUrlOf } from "./run.ts";
  * confirmation lands as the scorecard's Confirmed line lands it
  * (`landConfirmed`), on the parent within the window and the half year
  * after, a confirmation by a notice alone excluded.
+ *
+ * Beside it, the early warning: the suspected alerts logged since the
+ * freeze, each landed as the scorecard's parent-step line lands it, on a
+ * reported event whose parent it names and whose window its step bracket
+ * covers, each widened by the matcher's margin. It flagged the event
+ * where it was raised before the first sign of the fragments, and is late
+ * after it; a suspected alert on no reported event is a false alarm. The
+ * score reads no Archive, so the first sign of the fragments is the
+ * earliest the log and the truth give: a confirmation by pieces landing
+ * on the event, a cloud verdict under its launch after it, or the first
+ * agency statement (from the first day of its month for a quarterly
+ * news issue), a bound later than or equal to the first fragment's
+ * publication. The lead is the days from the alert to that sign, and the
+ * timing error is the detector's instant against the truth's where the
+ * truth states the minute.
  *
  * The truth is built from the agencies' reports, which come months after
  * an event, so the score is honest only once the truth has caught up: it
@@ -90,6 +105,30 @@ export interface Detection extends Landed {
   leadDays: number | null;
 }
 
+/** A suspected alert landed on a reported event after the freeze: before the first sign of the fragments, or after it. */
+export interface EarlyWarning extends Landed {
+  breakup: Breakup;
+  status: "flagged" | "late";
+  /** The first sign of the fragments the score knows of, in milliseconds since 1970; null where none yet. */
+  firstSignAt: number | null;
+  /** Days from the alert's raising to that sign; positive where the alert came first. */
+  leadDays: number | null;
+  /** The detector's instant against the truth's, in minutes, where the truth states the minute. */
+  timingMinutes: number | null;
+}
+
+/** The early warning's line over the suspected alerts logged since the freeze. */
+export interface EarlyWarningScore {
+  suspected: number;
+  flagged: EarlyWarning[];
+  late: EarlyWarning[];
+  falseAlarms: Landed[];
+  /** Suspected alerts on an event before the freeze, on an exempt row, or a later alert on an event already flagged. */
+  notCounted: Landed[];
+  /** The reported events after the freeze with pieces that no suspected alert landed on. */
+  missed: Breakup[];
+}
+
 export interface ProspectiveScore {
   freeze: string;
   /** Every logged alert, by state, the clouds apart. */
@@ -105,6 +144,55 @@ export interface ProspectiveScore {
   awaitingPieces: Breakup[];
   /** The scoreable events after the freeze with pieces: the headline's denominator. */
   reported: number;
+  /** The early warning's line, beside the Confirmed headline. */
+  earlyWarning: EarlyWarningScore;
+}
+
+/** When an agency first stated the event, as the start of the day (or of the month, or the year) it can first have been public; null where none is dated. */
+function statedAtOf(statement: FirstStatement | null): number | null {
+  if (statement === null) return null;
+  return Date.parse(`${statement.on.length === 7 ? `${statement.on}-01` : statement.on.length === 4 ? `${statement.on}-01-01` : statement.on}T00:00:00Z`);
+}
+
+/** The early warning's line: every suspected alert since the freeze, landed on the truth, against the first sign of each event's fragments the log and the truth give. */
+export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: CommittedAt, breakups: readonly Breakup[], confirmations: readonly Detection[], freezeMs = FREEZE_MS): EarlyWarningScore {
+  const suspected = alerts.filter((alert) => alert.kind === "object" && alert.state === "suspected" && alert.number !== null).sort((a, b) => Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
+  const clouds = alerts.filter((alert) => alert.kind === "cloud");
+  const firstSign = (breakup: Breakup): number | null => {
+    const launch = launchOf(breakup.parent.designator);
+    const signs = [
+      statedAtOf(firstAgencyStatement(breakup)),
+      ...confirmations.filter((d) => d.breakup.id === breakup.id).map((d) => Date.parse(d.alert.raisedAt)),
+      ...clouds.filter((cloud) => launch !== null && cloud.launch === launch && Date.parse(cloud.raisedAt) >= lowerOf(breakup)).map((cloud) => Date.parse(cloud.raisedAt)),
+    ].filter((at): at is number => at !== null);
+    return signs.length === 0 ? null : Math.min(...signs);
+  };
+  const score: EarlyWarningScore = { suspected: suspected.length, flagged: [], late: [], falseAlarms: [], notCounted: [], missed: [] };
+  const caught = new Set<string>();
+  for (const alert of suspected) {
+    const step = alert.verdict.step;
+    const on = breakups.filter((breakup) => breakup.parent.catalogueNumber === alert.number && brackets(step, lowerOf(breakup), Date.parse(breakup.event.to), marginDaysOf(breakup.orbit.regime)));
+    const landed: Landed = { alert, committedAt: committedAt.get(alert.key) ?? null, outcome: "false-alarm", event: null, note: "on no reported event's step" };
+    const breakup = on.find((b) => b.scoreable) ?? on[0];
+    if (breakup === undefined) {
+      score.falseAlarms.push(landed);
+      continue;
+    }
+    if (!breakup.scoreable) score.notCounted.push({ ...landed, outcome: "exempt", event: breakup.id, note: `inside the window of ${breakup.id}, ${breakup.exemptReason ?? "not scoreable"}` });
+    else if (lowerOf(breakup) < freezeMs) score.notCounted.push({ ...landed, outcome: "before the freeze", event: breakup.id, note: "an event before the freeze" });
+    else if (caught.has(breakup.id)) score.notCounted.push({ ...landed, outcome: "duplicate", event: breakup.id, note: "a later early warning of an event already flagged" });
+    else {
+      caught.add(breakup.id);
+      const raisedAt = Date.parse(alert.raisedAt);
+      const sign = firstSign(breakup);
+      const instant = breakup.event.precision === "minute" && breakup.event.at !== null && breakup.event.at !== undefined ? Date.parse(breakup.event.at) : null;
+      const status = sign === null || raisedAt < sign ? "flagged" : "late";
+      const warning: EarlyWarning = { ...landed, outcome: status, event: breakup.id, note: status === "flagged" ? "before the first sign of the fragments" : "after the first sign of the fragments", breakup, status, firstSignAt: sign, leadDays: sign === null ? null : Math.round(((sign - raisedAt) / DAY_MS) * 10) / 10, timingMinutes: instant === null || alert.verdict.event === null ? null : Math.round(Math.abs(alert.verdict.event.at - instant) / 60_000) };
+      (status === "flagged" ? score.flagged : score.late).push(warning);
+    }
+  }
+  score.missed = breakups.filter((breakup) => breakup.scoreable && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
+  return score;
 }
 
 /** The Confirmed headline over the alerts logged since the freeze, against the truth. */
@@ -135,13 +223,14 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
     else if (outcome === "detection" && breakup !== undefined && lowerOf(breakup) >= freezeMs) {
       caught.add(breakup.id);
       const statement = firstAgencyStatement(breakup);
-      const statedAt = statement === null ? null : Date.parse(`${statement.on.length === 7 ? `${statement.on}-01` : statement.on.length === 4 ? `${statement.on}-01-01` : statement.on}T00:00:00Z`);
+      const statedAt = statedAtOf(statement);
       detections.push({ ...landed, breakup, statement, leadDays: statedAt === null || landed.committedAt === null ? null : Math.round(((statedAt - landed.committedAt) / DAY_MS) * 10) / 10 });
     } else notCounted.push(landed);
   });
   const after = breakups.filter((breakup) => breakup.scoreable && lowerOf(breakup) >= freezeMs);
   const withPieces = after.filter((breakup) => (breakup.piecesCatalogued ?? 0) > 0);
   return {
+    earlyWarning: scoreEarlyWarning(alerts, committedAt, breakups, detections, freezeMs),
     freeze: new Date(freezeMs).toISOString(),
     logged,
     confirmed: confirmed.length,
@@ -178,6 +267,16 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
   for (const m of score.missed) lines.push(`  ${named(m)}: ${m.piecesCatalogued} pieces`);
   if (score.awaitingPieces.length > 0) lines.push("", "Reported events after the freeze whose pieces the truth does not count yet:");
   for (const a of score.awaitingPieces) lines.push(`  ${named(a)}`);
+  const ew = score.earlyWarning;
+  lines.push("", `Early warning (suspected), events after the freeze: ${ew.flagged.length} of ${score.reported} reported events with pieces flagged before the first sign of their fragments, ${ew.late.length} late; ${ew.falseAlarms.length} false ${ew.falseAlarms.length === 1 ? "alarm" : "alarms"} of ${ew.suspected} suspected alerts.`);
+  if (ew.flagged.length + ew.late.length > 0) lines.push("", "Early warnings on a reported event (lead over the first sign of the fragments; timing error against the truth's minute):");
+  for (const w of [...ew.flagged, ...ew.late]) lines.push(`  ${named(w.breakup)}: ${w.status}, raised ${iso(Date.parse(w.alert.raisedAt))}, committed ${iso(w.committedAt)}; first sign of the fragments ${w.firstSignAt === null ? "none yet" : iso(w.firstSignAt)}; lead ${w.leadDays === null ? "unknown" : `${w.leadDays} days`}; timing error ${w.timingMinutes === null ? "unknown" : `${w.timingMinutes} minutes`}`);
+  if (ew.falseAlarms.length > 0) lines.push("", "False early warnings (no reported event's step):");
+  for (const f of ew.falseAlarms) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
+  if (ew.notCounted.length > 0) lines.push("", "Early warnings not counted (an event before the freeze, an exempt row, or a duplicate):");
+  for (const n of ew.notCounted) lines.push(`  ${n.alert.number} ${n.alert.launch ?? "-"}: ${n.outcome} ${n.event ?? ""}: ${n.note}`);
+  if (ew.missed.length > 0) lines.push("", "Reported events with pieces that no early warning flagged:");
+  for (const m of ew.missed) lines.push(`  ${named(m)}`);
   return `${lines.join("\n")}\n`;
 }
 
@@ -185,8 +284,8 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
  * The score as the results page's "The live test" section summarises it,
  * between its `prospective:score` markers: the alerts logged since the
  * freeze, the confirmed alerts landing on reported events, the false
- * confirmations, when the truth last changed, and the caveat about recent
- * events. It names no date of its own, so the weekly maintenance changes
+ * confirmations, the early warnings flagging reported events and the false
+ * ones, when the truth last changed, and the caveat about recent events. It names no date of its own, so the weekly maintenance changes
  * it only when the score or the truth does.
  */
 export function resultsSummary(score: ProspectiveScore, truthChangedOn: string): string {
@@ -200,6 +299,8 @@ export function resultsSummary(score: ProspectiveScore, truthChangedOn: string):
     `So far: ${plural(logged, "alert", "alerts")} logged since the freeze${logged === 0 ? "" : ` (${byState})`};`,
     `${plural(score.detections.length, "confirmed alert matches", "confirmed alerts match")} a reported event after the freeze, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
     `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}.`,
+    `Early warning: ${plural(score.earlyWarning.flagged.length, "suspected alert flags", "suspected alerts flag")} a reported event after the freeze before the first sign of its fragments, and ${score.earlyWarning.late.length} after it, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
+    `${plural(score.earlyWarning.falseAlarms.length, "false early warning", "false early warnings")} of ${plural(score.earlyWarning.suspected, "suspected alert", "suspected alerts")}.`,
     `The truth last changed on ${truthChangedOn}.`,
     `The agencies report an event months after it, so the events of the last ${TRUTH_LAG_DAYS} days or so may not be in the truth yet, and the score is not final for them.`,
     "The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.",

@@ -7,7 +7,7 @@ This is the detector `confirmed-v10`, the twelfth phase of its build, as `src/` 
 A breakup leaves two traces in public data. The parent's own orbit jumps, by metres to kilometres, in the element sets the catalogue publishes for it. Days to weeks later, new objects appear under the parent's launch. The detector reads both for what each gives.
 
 - **The pieces** are the target. Fresh pieces in the plane of one body of a launch name that body as the parent, confirm the breakup and time it by their convergence on it. A Confirmed alert is such a breakup, with or without a step seen first on the parent ([the seventh decision record](../decisions/0007-the-target-is-on-confirmed-alerts.md)).
-- **The parent's step** is early and imprecise. Alone it was wrong more than 99% of the time, so it is logged as a suspected alert and scored on secondary lines. It helps name the parent where the pieces cannot, and it times the event where the pieces confirm it.
+- **The parent's step** is early. It is raised as a suspected alert, the early warning, weeks before the first fragment when it is right and precise in time, but most early warnings are manoeuvres it cannot tell apart, so it is measured beside the target rather than targeted ([its accuracy](#the-early-warnings-accuracy)). It helps name the parent where the pieces cannot, and it times the event where the pieces confirm it.
 
 ## What it reads
 
@@ -137,6 +137,12 @@ The scoped line is the point nearest the target the step layer reached. It is a 
 
 Every persistent step's row and verdict carry whether its parent was in the scope (`scopeIn`) and whether the step also passed the gates (`scoped`). An open alert that is both raises one `scoped` verdict when its step reaches the tier still holding. The scorecard scores the scoped line on the reported events whose parent was in the scope at the event, beside the whole catalogue's lines, with the headline events it leaves out counted.
 
+### The early warning's accuracy
+
+The suspected verdict is the early warning, and its accuracy is measured on every split, with the Confirmed line's, on the [results page](../results.md#early-warning-suspected): the reported breakups it flags before the first fragment is catalogued and those it flags only after, the false alarms (a year, per ten thousand object-years, and as a share of all early warnings, each rate with its Wilson 95% interval), the lead over the first fragment and the timing error. On the held-out years it flags about a third of the reported breakups before their first fragment, typically weeks ahead and to within the hour when right, and more than ninety-nine early warnings in a hundred are something else, mostly manoeuvres. [The life of an alert](../results.md#the-life-of-an-alert) follows every step that held to its end (confirmed, dismissed, expired, or cleared as a manoeuvre) with the probability at each end that it was a reported breakup's.
+
+Regression tests on real orbit histories (`test/early-warning.test.ts`, fixtures cut from the Archive by `npm run kpi:fixtures`, `scripts/kpi/early-warning-fixtures.ts`) hold the layer to its record case by case. Eight reported breakups the full replay flags (USA 32, Meteor 2-7, Cosmos 2491, NOAA 17, Cosmos 2499, DMSP 5D-2 F8, and near the geostationary ring a Titan IIIC Transtage and the rocket body of LES 8 and 9) must each raise a suspected verdict on the same step bracket and instant as the full replay, before the first fragment and any notice, the instant within three times the held-out median timing error (at least two hours; a day and a half near the ring). A station's reboost, a constellation satellite's orbit raise and a geosynchronous satellite's station-keeping must raise none, each still seen and cleared as a manoeuvre, and a quiet rocket body nothing at all. Each fixture is one object's sets alone, a hundred days before the instant to ten after: every positive case was raised in the full replay with its band's live scale at its floor, which is what a run with no band-mates reads, and a window of sixty days made three old payloads young to the detector, whose first raise is then read as a campaign.
+
 ## One run (`run.ts`)
 
 A run makes three passes over the sets, then one over the launches.
@@ -178,7 +184,7 @@ Fitted values were read off the training split, the even years, and never touche
 
 ## The KPIs
 
-The current numbers are on the results page, read from `kpi/latest.json` and checked by its test cell by cell: the headline in [The headline](../results.md#the-headline), and every table of the held-out years under [The Confirmed line](../results.md#the-confirmed-line-the-target) and [The parent's step](../results.md#the-parents-step-a-secondary-measurement). The README carries a summary of the held-out years. `kpi/latest.md` carries every split, and `events.md` the outcome and cause of every reported event.
+The current numbers are on the results page, read from `kpi/latest.json` and checked by its test cell by cell: the headline in [The headline](../results.md#the-headline), and every table of the held-out years under [The Confirmed line](../results.md#the-confirmed-line-the-target) and [Early warning (suspected)](../results.md#early-warning-suspected), with [the life of an alert](../results.md#the-life-of-an-alert) on both splits. The README carries a summary of the held-out years. `kpi/latest.md` carries every split, and `events.md` the outcome and cause of every reported event.
 
 ## How it got here
 
@@ -233,4 +239,4 @@ D6 tested everything else public about the object and its company: where it flew
 
 D7 tested the last lever, the population: whether restricting to dead satellites, to low orbit, to old or quiet objects or to low drag, with every strict gate the log allows, reaches the target on what remains. It does not, on either split. A perigee under 400 kilometres is never caught and can be excluded for nothing, but every population keeps false alarms whose steps are as large, as kicked and as lasting as the breakups'. With three to five headline detections a split, the target allows none.
 
-What separates a breakup from a manoeuvre at the first sets is the pieces. So the parent's step stays a secondary line: it catches about a third to a half of the headline events before the catalogue, at a precision the data do not allow to rise. On 2026-10-10 the owner put the target on the Confirmed line, which the pieces make precise enough to show.
+What separates a breakup from a manoeuvre at the first sets is the pieces. So the parent's step is not the target but the early warning, measured beside it: it catches about a third to a half of the headline events before the catalogue, at a precision the data do not allow to rise. On 2026-10-10 the owner put the target on the Confirmed line, which the pieces make precise enough to show.

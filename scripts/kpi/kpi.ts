@@ -1,6 +1,6 @@
 import { BODY_CLASSES, BREAKUP_KINDS, DETECTOR_PARAMETERS, REGIMES, type BodyClass, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type ScopeParameters, type Verdict } from "../../src/index.ts";
 import type { Manifest } from "../archive/archive.ts";
-import { LINES, type ConfirmedLanding, type Line, type ScoredEvent, type YearScore } from "./match.ts";
+import { LINES, brackets, marginDaysOf, type ConfirmedLanding, type Line, type ScoredEvent, type YearScore } from "./match.ts";
 import { DAY_MS, type TimeBasis } from "./replay.ts";
 
 /**
@@ -75,6 +75,8 @@ export interface LineCells {
   missed: number;
   /** Detected over targets; null where there is no target. */
   detectionRate: number | null;
+  /** The detection rate's Wilson 95% interval; null where there is no target. */
+  detectionInterval: [number, number] | null;
 }
 
 export interface Spread {
@@ -346,6 +348,8 @@ export interface Cells {
   confirmed: ConfirmedCells;
   /** False alarms over false alarms plus detections on every line; null where both are zero. */
   falseAlarmRate: number | null;
+  /** The false-alarm rate's Wilson 95% interval; null where it is. */
+  falseAlarmInterval: [number, number] | null;
   bodyYears: number;
   falseAlarmsPer10kBodyYears: number | null;
   leadHours: Spread | null;
@@ -358,6 +362,8 @@ export interface Cells {
   byKind: Record<BreakupKind, LineCells>;
   /** The scoped line, where the year files carry the scope's readings. */
   scoped: ScopedCells;
+  /** What became of the persistent steps the detector judged, and of the reported breakups: the life of an alert. */
+  lifecycle: LifecycleCells;
 }
 
 /** What a year's file carries: the replay's record, the matched score, every verdict and log row. */
@@ -390,7 +396,7 @@ export interface Latest {
   splits: Record<SplitName, Cells>;
 }
 
-const emptyLine = (): LineCells => ({ targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, detectionRate: null });
+const emptyLine = (): LineCells => ({ targets: 0, undetectable: 0, detected: 0, late: 0, missed: 0, detectionRate: null, detectionInterval: null });
 
 function fill<K extends string>(keys: readonly K[]): Record<K, LineCells> {
   return Object.fromEntries(keys.map((key) => [key, emptyLine()])) as Record<K, LineCells>;
@@ -406,6 +412,13 @@ const spread = (values: number[], tail: number): Spread | null => (values.length
 
 function rate(line: LineCells): void {
   line.detectionRate = line.targets === 0 ? null : line.detected / line.targets;
+  line.detectionInterval = wilson(line.detected, line.targets);
+}
+
+/** A false-alarm rate's Wilson 95% interval: one less the precision's, the precision being the detections over the detections and the false alarms. */
+export function falseAlarmIntervalOf(detections: number, falseAlarms: number): [number, number] | null {
+  const precision = wilson(detections, detections + falseAlarms);
+  return precision === null ? null : [1 - precision[1], 1 - precision[0]];
 }
 
 /** The alert rows of the log, keyed by object and the step's second edge, over every year file: an alert raised in December closes in the next year's file. */
@@ -501,12 +514,157 @@ export function scopedCellsOf(years: Pick<YearFile, "score">[], rows: AlertRows,
   return c;
 }
 
+/**
+ * The life of an alert, read off the verdicts. A jump in an object's
+ * orbit that holds over the sets after it is judged once: raised as a
+ * suspected breakup (the early warning), or cleared as a manoeuvre the
+ * object's record, its status or its siblings explain. A suspected alert
+ * then ends one way: confirmed (fragments in the parent's plane, or a
+ * notice), dismissed (the new bodies under its launch were all old
+ * pieces), or expired (nothing confirmed it within the alert's time to
+ * live, thirty days); or it is still open where the Archive ends. A
+ * cleared step is watched as long, and fragments may still confirm it.
+ *
+ * For each end, its share of the suspected alerts and the probability
+ * that the alert was on a reported breakup's step: the alerts the matcher
+ * landed on a reported event's step (a detection or a late alert) over
+ * those and the false alarms, the duplicates and the alerts inside an
+ * exempt window left out of both, each with its Wilson 95% interval. A
+ * cleared step is on a reported breakup where its bracket covers the
+ * window of a scoreable reported event on the same object, each widened
+ * by the matcher's margin. And from the other side, the reported
+ * breakups of confidence A and B whose launch gained fresh pieces in the
+ * parent's plane (the Confirmed line's targets), by the path they took:
+ * suspected, then confirmed; suspected and never confirmed; confirmed with
+ * no suspected step first (attributed from the pieces, or a cleared step
+ * the pieces confirmed); never flagged.
+ */
+export const ALERT_ENDS = ["confirmed", "dismissed", "expired", "open"] as const;
+export type AlertEnd = (typeof ALERT_ENDS)[number];
+
+/** A share of a count, and the probability that those alerts were real, each with its Wilson 95% interval. */
+export interface EndCells {
+  alerts: number;
+  /** On a reported breakup's step (a detection or a late alert), a false alarm, or neither (a duplicate, or inside an exempt window). */
+  real: number;
+  falseAlarms: number;
+  neither: number;
+  share: number | null;
+  shareInterval: [number, number] | null;
+  realRate: number | null;
+  realInterval: [number, number] | null;
+  /** Days from the raising to the end: median, ninetieth percentile. */
+  days: Spread | null;
+}
+
+/** One path of the reported breakups, with its share of them and the interval. */
+export interface PathCells {
+  count: number;
+  share: number | null;
+  interval: [number, number] | null;
+}
+
+export const BREAKUP_PATHS = ["suspectedThenConfirmed", "suspectedNotConfirmed", "confirmedWithoutSuspected", "neverFlagged"] as const;
+export type BreakupPath = (typeof BREAKUP_PATHS)[number];
+
+export interface LifecycleCells {
+  /** Every suspected alert the scorecard counts (a raised step, not a later verdict on it), with the probability it was real. */
+  suspected: EndCells;
+  /** What each suspected alert ended as. */
+  ends: Record<AlertEnd, EndCells>;
+  /** The steps cleared as manoeuvres, how many were on a reported breakup, and how many of either fragments confirmed later. */
+  cleared: { steps: number; real: number; realRate: number | null; realInterval: [number, number] | null; confirmedLater: number; confirmedLaterReal: number };
+  /** The Confirmed line's targets of confidence A and B by path, and how many were suspected before the first fragment. */
+  breakups: { targets: number; suspectedBeforeFragment: number } & Record<BreakupPath, PathCells>;
+}
+
+/** What the lifecycle reads over every year file: the end verdicts on each step, by object and bracket, and every scored event. */
+export interface LifecycleIndex {
+  ends: Map<string, { state: Verdict["state"]; raisedAt: number }[]>;
+  events: Pick<ScoredEvent, "parent" | "from" | "to" | "regime">[];
+}
+
+const stepKey = (number: number, step: { beforeEpoch: number; afterEpoch: number }): string => `${number}|${step.beforeEpoch}|${step.afterEpoch}`;
+
+/** The lifecycle's index over the year files: an end may come in the next year's file. */
+export function lifecycleIndexOf(files: (Pick<YearFile, "score"> & Partial<Pick<YearFile, "verdicts">>)[]): LifecycleIndex {
+  const ends: LifecycleIndex["ends"] = new Map();
+  for (const file of files) {
+    for (const v of file.verdicts ?? []) {
+      if (v.number === null || v.step === null || (v.state !== "confirmed" && v.state !== "dismissed" && v.state !== "expired")) continue;
+      const key = stepKey(v.number, v.step);
+      (ends.get(key) ?? ends.set(key, []).get(key)!).push({ state: v.state, raisedAt: v.raisedAt });
+    }
+  }
+  return { ends, events: files.flatMap((file) => file.score.events) };
+}
+
+const ratio = (k: number, n: number): number | null => (n === 0 ? null : k / n);
+
+function endCellsOf(counts: { real: number; falseAlarms: number; neither: number; days: number[] }, of: number): EndCells {
+  const alerts = counts.real + counts.falseAlarms + counts.neither;
+  return { alerts, real: counts.real, falseAlarms: counts.falseAlarms, neither: counts.neither, share: ratio(alerts, of), shareInterval: wilson(alerts, of), realRate: ratio(counts.real, counts.real + counts.falseAlarms), realInterval: wilson(counts.real, counts.real + counts.falseAlarms), days: spread(counts.days, 90) };
+}
+
+/** The lifecycle over a set of scored years. */
+export function lifecycleCellsOf(years: (Pick<YearFile, "score"> & Partial<Pick<YearFile, "verdicts">>)[], index: LifecycleIndex = lifecycleIndexOf(years), first: FirstConfirmations = firstConfirmationsOf(years as Pick<YearFile, "year" | "score">[])): LifecycleCells {
+  const blank = () => ({ real: 0, falseAlarms: 0, neither: 0, days: [] as number[] });
+  const all = blank();
+  const ends = Object.fromEntries(ALERT_ENDS.map((end) => [end, blank()])) as Record<AlertEnd, ReturnType<typeof blank>>;
+  const cleared = { steps: 0, real: 0, realRate: null as number | null, realInterval: null as [number, number] | null, confirmedLater: 0, confirmedLaterReal: 0 };
+  const paths = { suspectedThenConfirmed: 0, suspectedNotConfirmed: 0, confirmedWithoutSuspected: 0, neverFlagged: 0 };
+  let targets = 0;
+  let suspectedBeforeFragment = 0;
+  for (const { score, verdicts } of years) {
+    for (const alert of score.alerts) {
+      if (alert.outcome === "confirmation" || alert.state !== "suspected") continue;
+      const step = verdicts?.[alert.verdict]?.step ?? null;
+      const later = step === null || alert.number === null ? [] : (index.ends.get(stepKey(alert.number, step)) ?? []).filter((e) => e.raisedAt >= alert.raisedAt);
+      const end = alert.confirmedAt !== null ? { state: "confirmed" as const, raisedAt: alert.confirmedAt } : later.find((e) => e.state === "dismissed" || e.state === "expired");
+      const into = ends[end === undefined ? "open" : (end.state as AlertEnd)];
+      for (const counts of [all, into]) {
+        if (alert.outcome === "detection" || alert.outcome === "late") counts.real++;
+        else if (alert.outcome === "false-alarm") counts.falseAlarms++;
+        else counts.neither++;
+      }
+      if (end !== undefined) into.days.push((end.raisedAt - alert.raisedAt) / DAY_MS);
+    }
+    for (const v of verdicts ?? []) {
+      if (v.state !== "manoeuvre" || v.number === null || v.step === null) continue;
+      cleared.steps++;
+      const real = index.events.some((event) => event.parent === v.number && brackets(v.step, event.from, event.to, marginDaysOf(event.regime)));
+      if (real) cleared.real++;
+      if ((index.ends.get(stepKey(v.number, v.step)) ?? []).some((e) => e.state === "confirmed" && e.raisedAt >= v.raisedAt)) {
+        cleared.confirmedLater++;
+        if (real) cleared.confirmedLaterReal++;
+      }
+    }
+    for (const event of score.events) {
+      if (event.line !== "breakups A-B" || !isConfirmedTarget(event)) continue;
+      targets++;
+      const suspected = event.status === "detected" || event.status === "late";
+      if (event.status === "detected") suspectedBeforeFragment++;
+      const confirmed = first.has(event.id);
+      paths[suspected ? (confirmed ? "suspectedThenConfirmed" : "suspectedNotConfirmed") : confirmed ? "confirmedWithoutSuspected" : "neverFlagged"]++;
+    }
+  }
+  const suspected = endCellsOf(all, all.real + all.falseAlarms + all.neither);
+  cleared.realRate = ratio(cleared.real, cleared.steps);
+  cleared.realInterval = wilson(cleared.real, cleared.steps);
+  return {
+    suspected,
+    ends: Object.fromEntries(ALERT_ENDS.map((end) => [end, endCellsOf(ends[end], suspected.alerts)])) as Record<AlertEnd, EndCells>,
+    cleared,
+    breakups: { targets, suspectedBeforeFragment, ...(Object.fromEntries(BREAKUP_PATHS.map((path) => [path, { count: paths[path], share: ratio(paths[path], targets), interval: wilson(paths[path], targets) }])) as Record<BreakupPath, PathCells>) },
+  };
+}
+
 /** The cells over a set of scored years; the alert rows, where given, feed the persistence tiers and the scoped line's tier. */
-export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope, first: FirstConfirmations = firstConfirmationsOf(years), firstTwins: FirstConfirmations = firstConfirmationsOf(years, true)): Cells {
+export function cellsOf(years: (Pick<YearFile, "year" | "score" | "bodyYears"> & Partial<Pick<YearFile, "verdicts">>)[], rows: AlertRows = new Map(), scope: ScopeParameters = DETECTOR_PARAMETERS.scope, first: FirstConfirmations = firstConfirmationsOf(years), firstTwins: FirstConfirmations = firstConfirmationsOf(years, true), lifecycle: LifecycleIndex = lifecycleIndexOf(years)): Cells {
   const lines = fill(LINES);
   const byRegime = fill(REGIMES);
   const byKind = fill(BREAKUP_KINDS);
-  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), confirmedLine: confirmedCellsOf(years, first), confirmedLineTwins: confirmedCellsOf(years, firstTwins, true), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope) };
+  const cells: Cells = { years: years.map((y) => y.year).sort((a, b) => a - b), confirmedLine: confirmedCellsOf(years, first), confirmedLineTwins: confirmedCellsOf(years, firstTwins, true), lines, alerts: 0, duplicates: 0, exempt: 0, falseAlarms: 0, review: 0, tiers: [], confirmed: { confirmations: 0, ofTrue: 0, ofExempt: 0, ofFalseAlarms: 0, ofNearEvent: 0, daysToConfirmation: null, precision: null, precisionByParent: null, reported: 0, reportedAlerted: 0, reportedConfirmed: 0, confirmedRate: null, daysFromEvent: null, daysFromAlert: null, withStatement: 0, beforeStatement: 0 }, falseAlarmRate: null, bodyYears: 0, falseAlarmsPer10kBodyYears: null, leadHours: null, latencyHours: null, confirmedShare: null, daysToConfirmation: null, timingErrorMinutes: null, byRegime, byKind, scoped: scopedCellsOf(years, rows, scope), falseAlarmInterval: null, lifecycle: lifecycleCellsOf(years, lifecycle, first) };
   const leads: number[] = [];
   const latencies: number[] = [];
   const confirmations: number[] = [];
@@ -588,6 +746,7 @@ export function cellsOf(years: Pick<YearFile, "year" | "score" | "bodyYears">[],
   cells.confirmed.daysFromAlert = spread(reportedFromAlert, 90);
   for (const group of [lines, byRegime, byKind]) for (const line of Object.values(group) as LineCells[]) rate(line);
   cells.falseAlarmRate = cells.falseAlarms + detections === 0 ? null : cells.falseAlarms / (cells.falseAlarms + detections);
+  cells.falseAlarmInterval = falseAlarmIntervalOf(detections, cells.falseAlarms);
   cells.falseAlarmsPer10kBodyYears = cells.bodyYears === 0 ? null : (cells.falseAlarms / cells.bodyYears) * 10_000;
   cells.leadHours = spread(leads, 10);
   cells.latencyHours = spread(latencies, 90);
@@ -624,7 +783,9 @@ export function aggregate(files: YearFile[], meta: Pick<Latest, "package" | "tru
   // An event's first confirmation may be in the next year's file, whatever split that year is in.
   const first = firstConfirmationsOf(files);
   const firstTwins = firstConfirmationsOf(files, true);
-  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope, first, firstTwins)])) as Record<SplitName, Cells>;
+  // A step's end, like an event's confirmation, may be in the next year's file.
+  const lifecycle = lifecycleIndexOf(files);
+  const splits = Object.fromEntries(SPLITS.map((split) => [split, cellsOf(files.filter((f) => splitYears(years, split).includes(f.year)), rows, scope, first, firstTwins, lifecycle)])) as Record<SplitName, Cells>;
   const archive = Object.fromEntries(files.sort((a, b) => a.year - b.year).map((f) => [String(f.year), { ...f.archive, timeBasis: f.timeBasis }]));
   return { format: 1, ...meta, archive, years, splits };
 }
@@ -638,9 +799,104 @@ function table(headers: string[], rows: (string | number)[][]): string {
   return [`| ${headers.join(" | ")} |`, `| ${headers.map(() => "---").join(" | ")} |`, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
 }
 
-/** The per-line table of a split: targets, undetectable, detected, late, missed and the rate. */
+/** The per-line table of a split: targets, undetectable, detected, late, missed and the rate with its Wilson 95% interval. */
 export function linesTable(cells: Cells, title: string): string {
-  return table([title, "Targets", "Undetectable", "Detected", "Late", "Missed", "Detection rate"], LINES.map((line) => [LINE_LABELS[line], ...countsOf(cells.lines[line])]));
+  return table(
+    [title, "Targets", "Undetectable", "Detected", "Late", "Missed", "Detection rate (95% interval)"],
+    LINES.map((line) => {
+      const l = cells.lines[line];
+      return [LINE_LABELS[line], l.targets, l.undetectable, l.detected, l.late, l.missed, intervalCell(l.detectionRate, l.detectionInterval ?? wilson(l.detected, l.targets))];
+    }),
+  );
+}
+
+/** The early warnings raised on every line, the detections the false-alarm rate is read against. */
+export const detectedAllLines = (cells: Pick<Cells, "lines">): number => (Object.values(cells.lines) as LineCells[]).reduce((sum, line) => sum + line.detected, 0);
+
+/** False alarms a year over a split: the false alarms over the years it holds. */
+export const falseAlarmsPerYear = (cells: Pick<Cells, "falseAlarms" | "years">): number | null => (cells.years.length === 0 ? null : cells.falseAlarms / cells.years.length);
+
+/**
+ * The early warning's headline table, the first of its section on the
+ * results page: per split, the headline line's targets (breakups A and B
+ * whose parent had public sets to be judged on), those undetectable, the
+ * flagged before the first fragment, the late and the missed, the
+ * detection rate and the false-alarm rate with their Wilson 95%
+ * intervals, the false alarms a year and per ten thousand object-years,
+ * the lead over the first catalogued fragment in days and the timing
+ * error, both over every line's detections.
+ */
+export function earlyWarningHeadlineTable(latest: Pick<Latest, "splits">, title = "Early warning (suspected): breakups A and B"): string {
+  return table(
+    [title, "Targets", "Undetectable", "Flagged before the first fragment", "Late", "Missed", "Detection rate (95% interval)", "False alarms", "False-alarm rate (95% interval)", "False alarms a year", "False alarms per 10,000 object-years", "Lead over the first catalogued fragment, days: median (10th percentile)", "Timing error, minutes, median"],
+    SPLITS.map((split) => {
+      const cells = latest.splits[split];
+      const l = cells.lines["breakups A-B"];
+      const lead = cells.leadHours === null ? null : { ...cells.leadHours, median: cells.leadHours.median / 24, tail: cells.leadHours.tail / 24 };
+      return [`${SPLIT_TITLES[split]} (${yearsOf(cells)})`, l.targets, l.undetectable, l.detected, l.late, l.missed, intervalCell(l.detectionRate, l.detectionInterval ?? wilson(l.detected, l.targets)), cells.falseAlarms, intervalCell(cells.falseAlarmRate, cells.falseAlarmInterval ?? falseAlarmIntervalOf(detectedAllLines(cells), cells.falseAlarms)), one(falseAlarmsPerYear(cells)), one(cells.falseAlarmsPer10kBodyYears), spreadCell(lead), one(cells.timingErrorMinutes)];
+    }),
+  );
+}
+
+/** A small probability as the lifecycle prints it: to a hundredth of a percent under one percent, a tenth under ten, else whole. */
+export function chance(rate: number | null | undefined): string {
+  if (rate === null || rate === undefined) return DASH;
+  const percent = rate * 100;
+  if (percent === 0 || percent >= 10) return `${Math.round(percent)}%`;
+  return percent < 1 ? `${percent.toFixed(2)}%` : `${percent.toFixed(1)}%`;
+}
+
+/** A probability with its Wilson 95% interval and its counts, as the lifecycle prints it: "0.8% (0.5% to 1.2%), 19 of 2463". */
+export const chanceCell = (rate: number | null, interval: [number, number] | null, k: number, n: number): string => (rate === null ? DASH : `${chance(rate)} (${interval === null ? DASH : `${chance(interval[0])} to ${chance(interval[1])}`}), ${k} of ${n}`);
+
+/** The end states' labels on the results page. */
+export const END_LABELS: Record<AlertEnd, string> = {
+  confirmed: "Ended confirmed (fragments in the parent's plane, or a notice)",
+  dismissed: "Ended dismissed (the new bodies under its launch were all old pieces)",
+  expired: `Ended expired (nothing confirmed it in ${DETECTOR_PARAMETERS.alertTtlDays} days)`,
+  open: "Still open where the Archive ends",
+};
+
+/** The breakups' paths' labels on the results page. */
+export const PATH_LABELS: Record<BreakupPath, string> = {
+  suspectedThenConfirmed: "An early warning, then confirmed",
+  suspectedNotConfirmed: "An early warning, never confirmed",
+  confirmedWithoutSuspected: "Confirmed with no early warning first (from the fragments, or a cleared step the fragments confirmed)",
+  neverFlagged: "Never flagged",
+};
+
+/** The splits the lifecycle tables show side by side: the held-out years and the training years. */
+export const LIFECYCLE_SPLITS: readonly SplitName[] = ["validation", "train"];
+
+/**
+ * The life of an alert on the results page: the steps cleared as
+ * manoeuvres and the suspected alerts, what each suspected alert ended
+ * as, with each end's share, the probability it was on a reported
+ * breakup and the days it took; then the reported breakups by the path
+ * they took. One column per split of `LIFECYCLE_SPLITS`.
+ */
+export function lifecycleTables(latest: Pick<Latest, "splits">): string[] {
+  const columns = LIFECYCLE_SPLITS.map((split) => latest.splits[split]);
+  const heads = LIFECYCLE_SPLITS.map((split) => `${SPLIT_TITLES[split]} (${yearsOf(latest.splits[split])})`);
+  const stages: (string | number)[][] = [
+    ["Steps that held, cleared as manoeuvres", ...columns.map((c) => c.lifecycle.cleared.steps)],
+    ["Of those, on a reported breakup's step (95% interval)", ...columns.map((c) => chanceCell(c.lifecycle.cleared.realRate, c.lifecycle.cleared.realInterval, c.lifecycle.cleared.real, c.lifecycle.cleared.steps))],
+    ["Of those, confirmed later by fragments (of which on a reported breakup)", ...columns.map((c) => `${c.lifecycle.cleared.confirmedLater} (${c.lifecycle.cleared.confirmedLaterReal})`)],
+    ["Steps that held, raised as early warnings (suspected alerts)", ...columns.map((c) => c.lifecycle.suspected.alerts)],
+    ["Of those, on a reported breakup's step (95% interval)", ...columns.map((c) => chanceCell(c.lifecycle.suspected.realRate, c.lifecycle.suspected.realInterval, c.lifecycle.suspected.real, c.lifecycle.suspected.real + c.lifecycle.suspected.falseAlarms))],
+    ["Of those, duplicates or inside an exempt window (in neither count)", ...columns.map((c) => c.lifecycle.suspected.neither)],
+  ];
+  for (const end of ALERT_ENDS) {
+    stages.push([`${END_LABELS[end]}, share of the early warnings (95% interval)`, ...columns.map((c) => chanceCell(c.lifecycle.ends[end].share, c.lifecycle.ends[end].shareInterval, c.lifecycle.ends[end].alerts, c.lifecycle.suspected.alerts))]);
+    stages.push([`${end === "open" ? "Still open" : `Ended ${end}`}: on a reported breakup's step (95% interval)`, ...columns.map((c) => chanceCell(c.lifecycle.ends[end].realRate, c.lifecycle.ends[end].realInterval, c.lifecycle.ends[end].real, c.lifecycle.ends[end].real + c.lifecycle.ends[end].falseAlarms))]);
+    if (end !== "open") stages.push([`Ended ${end}: days after the early warning, median (90th percentile)`, ...columns.map((c) => spreadCell(c.lifecycle.ends[end].days))]);
+  }
+  const paths: (string | number)[][] = [
+    ["Reported breakups A and B with fragments catalogued (the Confirmed line's targets)", ...columns.map((c) => c.lifecycle.breakups.targets)],
+    ["Of those, flagged by an early warning before the first fragment", ...columns.map((c) => fraction(c.lifecycle.breakups.suspectedBeforeFragment, c.lifecycle.breakups.targets))],
+    ...BREAKUP_PATHS.map((path) => [`${PATH_LABELS[path]} (95% interval)`, ...columns.map((c) => chanceCell(c.lifecycle.breakups[path].share, c.lifecycle.breakups[path].interval, c.lifecycle.breakups[path].count, c.lifecycle.breakups.targets))]),
+  ];
+  return [table(["The life of an alert", ...heads], stages), table(["The reported breakups' paths", ...heads], paths)];
 }
 
 const countsOf = (line: LineCells): (string | number)[] => [line.targets, line.undetectable, line.detected, line.late, line.missed, pct(line.detectionRate)];
@@ -655,7 +911,7 @@ export function alertsTable(cells: Cells, title: string): string {
       ["Exempt", cells.exempt],
       ["False alarms", cells.falseAlarms],
       ["False-alarm rate", pct(cells.falseAlarmRate)],
-      ["False alarms per 10,000 body-years", one(cells.falseAlarmsPer10kBodyYears)],
+      ["False alarms per 10,000 object-years", one(cells.falseAlarmsPer10kBodyYears)],
       ["Lead over the catalogue, hours: median (10th percentile)", spreadCell(cells.leadHours)],
       ["Latency from the event, hours: median (90th percentile)", spreadCell(cells.latencyHours)],
       ["Confirmed share of the detections", pct(cells.confirmedShare)],
@@ -801,12 +1057,15 @@ export function breakdownTable(cells: Cells, title: string): string {
 
 const yearsOf = (cells: Cells): string => (cells.years.length === 0 ? "no year" : cells.years.length === 1 ? String(cells.years[0]) : `${cells.years[0]} to ${cells.years.at(-1)}, ${cells.years.length} years`);
 
-/** The tables the results page (`docs/results.md`) carries: the Confirmed headline over the splits and its lines on the validation split, then the parent-step tables of the validation split as secondary measurements. */
+/** How many of `resultsTables`' tables are the Confirmed line's; the rest are the early warning's. */
+export const CONFIRMED_TABLES = 3;
+
+/** The tables the results page (`docs/results.md`) carries: the Confirmed headline over the splits and its lines on the validation split, then the early warning's headline over the splits and its tables on the validation split. */
 export function resultsTables(latest: Latest): string[] {
   const cells = latest.splits.validation;
   const title = `${SPLIT_TITLES.validation} (${yearsOf(cells)})`;
   const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-  return [confirmedHeadlineTable(latest), confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), linesTable(cells, `Parent step: ${lower}`), scopedTable(cells, `Breakups A and B, scoped, ${lower}`), alertsTable(cells, `Alerts, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The step alerts confirmed, ${lower}`)];
+  return [confirmedHeadlineTable(latest), confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), earlyWarningHeadlineTable(latest), linesTable(cells, `Early warning, every line, ${lower}`), scopedTable(cells, `Early warning on breakups A and B, scoped, ${lower}`), alertsTable(cells, `Early warnings, ${lower}`), tiersTable(cells, `Precision per persistence tier, ${lower}`), confirmedTable(cells, `The early warnings confirmed, ${lower}`)];
 }
 
 /** The whole report: every split's tables, with the breakdown. */
@@ -820,14 +1079,19 @@ export function renderLatest(latest: Latest): string {
     "",
     confirmedHeadlineTable(latest),
     "",
-    "The parent-step lines follow each split's Confirmed tables as secondary measurements, as the scorecard measured them before that decision. A target there is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line. The scoped table is the headline line restricted to the detector's scope (\`DETECTOR_PARAMETERS.scope\`, \`docs/detector/d7-scope.md\`); both its rates carry their Wilson 95% intervals, and the headline events the scope leaves out are counted beside them. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The last table is the step alerts confirmed: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many alerts on the parent's step the fragments or a notice confirmed and how long after; and of every step alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing.",
+    "**The early warning** is measured and reported beside the target: a suspected verdict on the parent's own step, raised before the fragments are catalogued. Its headline over every split, then the life of an alert (what each step that held became, the probability at each end that it was a reported breakup's, and the reported breakups by the path they took, each with its Wilson 95% interval):",
+    "",
+    earlyWarningHeadlineTable(latest),
+    "",
+    ...lifecycleTables(latest).flatMap((t) => [t, ""]),
+    "The early warning's lines follow each split's Confirmed tables, as the scorecard measured them before the target moved to the Confirmed line. A target there is a scoreable reported event whose parent had at least five public element sets in the sixty days before it; an event with fewer is undetectable and out of the denominator. Detected: an alert on the parent's own step before the first fragment's set was published and before any notice. Late: the same alert after that. The false-alarm rate is false alarms over false alarms plus detections on every line, with its Wilson 95% interval, as the detection rate has. The scoped table is the headline line restricted to the detector's scope (\`DETECTOR_PARAMETERS.scope\`, \`docs/detector/d7-scope.md\`); both its rates carry their Wilson 95% intervals, and the headline events the scope leaves out are counted beside them. A year with no publication times (one stripped from a yearly bundle) times the catalogue by the first fragment's epoch, a lower bound. The tier table reads every alert's later sets: what raising only once the step had held for that many post sets or days would have left of the false alarms and of the detections that still beat the catalogue. The last table is the step alerts confirmed: of the targets the catalogue itself reported (new bodies under the launch within ninety days of the event), how many alerts on the parent's step the fragments or a notice confirmed and how long after; and of every step alert confirmed, how many were on a reported event's step, how many on the right object with the step late, and how many on nothing.",
     "",
   ];
   for (const split of SPLITS) {
     const cells = latest.splits[split];
     const title = `${SPLIT_TITLES[split]} (${yearsOf(cells)})`;
     const lower = `${title.charAt(0).toLowerCase()}${title.slice(1)}`;
-    sections.push(`## ${SPLIT_TITLES[split]}`, "", confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), "", confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), "", linesTable(cells, `Parent step: ${lower}`), "", scopedTable(cells, `Breakups A and B, scoped, ${lower}`), "", alertsTable(cells, `Alerts, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The step alerts confirmed, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
+    sections.push(`## ${SPLIT_TITLES[split]}`, "", confirmedLinesTable(cells, `Confirmed, every line, ${lower}`), "", confirmedVerdictsTable(cells, `Confirmed verdicts, ${lower}`), "", linesTable(cells, `Early warning, every line, ${lower}`), "", scopedTable(cells, `Early warning on breakups A and B, scoped, ${lower}`), "", alertsTable(cells, `Early warnings, ${lower}`), "", tiersTable(cells, `Precision per persistence tier, ${lower}`), "", confirmedTable(cells, `The early warnings confirmed, ${lower}`), "", breakdownTable(cells, `By regime and kind, ${lower}`), "");
   }
   sections.push("## The years", "", table(["Year", "Source", "Built", "Sets", "Bodies", "Timed by"], latest.years.map((year) => {
     const record = latest.archive[String(year)]!;

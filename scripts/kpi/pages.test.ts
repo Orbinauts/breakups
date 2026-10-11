@@ -59,7 +59,7 @@ describe("npm run kpi:readme", () => {
   });
 
   test("writes the same pages twice over", async () => {
-    for (const [page, part] of [[README, "kpi:summary"], [RESULTS, "kpi:current"], [GROUND_TRUTH, "truth:counts"]] as const) {
+    for (const [page, part] of [[README, "kpi:summary"], [README, "kpi:early-warning"], [README, "kpi:lifecycle"], [RESULTS, "kpi:current"], [RESULTS, "kpi:current-early-warning"], [RESULTS, "kpi:early-warning-tables"], [RESULTS, "kpi:lifecycle-full"], [GROUND_TRUTH, "truth:counts"]] as const) {
       const once = await renderPage(page, replacePart(PAGES[page]!, part, "| stale |"), inputs);
       expect(once).toBe(PAGES[page]);
       expect(await renderPage(page, once, inputs)).toBe(once);

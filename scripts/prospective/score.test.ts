@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Breakup, Verdict } from "../../src/index.ts";
 import { FREEZE_MS, alertKey, jsonl, parseJsonl, type LoggedAlert } from "./alerts.ts";
-import { committedAtOf, renderScore, scoreProspective } from "./score.ts";
+import { committedAtOf, renderScore, resultsSummary, scoreProspective } from "./score.ts";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -111,5 +111,45 @@ describe("the prospective score on a synthetic log", () => {
     expect(text).toContain("1 of 2 reported events with pieces confirmed; 1 false confirmation of 4 confirmed alerts.");
     expect(text).toContain(`${caught.id} SAT 40001`);
     expect(text).toContain(`${missed.id} SAT 40002: 12 pieces`);
+  });
+});
+
+describe("the early warning's line of the prospective score", () => {
+  // A suspected alert on the caught event raised after its confirmation by pieces (late), one on no reported event (false), one on an event before the freeze (not counted), and the one on the missed event's step, raised long before its first agency statement (flagged), timed against the truth's instant.
+  const late = alert(40001, "2015-010", T + 13 * DAY, "suspected");
+  const falseWarning = alert(41001, "2021-001", T + 30 * DAY, "suspected");
+  const beforeFreeze = alert(40004, "2018-040", T - 19 * DAY + 2 * DAY, "suspected");
+  const timed: LoggedAlert = { ...suspected, verdict: { ...suspected.verdict, event: { at: T + 20 * DAY + 30 * 60_000, from: T + 20 * DAY, to: T + 20 * DAY + HOUR } } };
+  const all = [...logged.filter((a) => a.key !== suspected.key), timed, late, falseWarning, beforeFreeze];
+  const at = committedAtOf(gitLog([{ at: T + 40 * DAY, alerts: all }]));
+  const truthTimed = truth.map((b) => (b.id === missed.id ? ({ ...b, event: { ...b.event, at: new Date(T + 20 * DAY).toISOString(), precision: "minute" } } as Breakup) : b));
+  const score = scoreProspective(parseJsonl<LoggedAlert>(jsonl(all)), at, truthTimed);
+  const ew = score.earlyWarning;
+
+  test("lands each suspected alert since the freeze: flagged, late, false or not counted", () => {
+    expect(ew.suspected).toBe(4);
+    expect(ew.flagged.map((w) => w.breakup.id)).toEqual([missed.id]);
+    expect(ew.late.map((w) => w.breakup.id)).toEqual([caught.id]);
+    expect(ew.falseAlarms.map((f) => f.alert.number)).toEqual([41001]);
+    expect(ew.notCounted).toMatchObject([{ outcome: "before the freeze", event: before.id }]);
+    expect(ew.missed).toEqual([]);
+  });
+
+  test("reads the first sign of the fragments off the log and the truth: a confirmation by pieces, else the first agency statement", () => {
+    const flagged = ew.flagged[0]!;
+    expect(flagged.firstSignAt).toBe(T + 60 * DAY);
+    expect(flagged.leadDays).toBeCloseTo(60 - 20.5, 1);
+    expect(flagged.timingMinutes).toBe(30);
+    expect(ew.late[0]!.firstSignAt).toBe(Date.parse(onCaught.raisedAt));
+    expect(ew.late[0]!.timingMinutes).toBeNull();
+  });
+
+  test("prints the early warning's line beside the Confirmed headline, and the results page's summary says both", () => {
+    const text = renderScore(score, "2027-02-01T10:00:00+01:00", T + 120 * DAY);
+    expect(text).toContain("Early warning (suspected), events after the freeze: 1 of 2 reported events with pieces flagged before the first sign of their fragments, 1 late; 1 false alarm of 4 suspected alerts.");
+    expect(text).toContain(`${missed.id} SAT 40002: flagged`);
+    const summary = resultsSummary(score, "2027-02-01");
+    expect(summary).toContain("1 confirmed alert matches a reported event after the freeze, of 2 reported events with pieces;");
+    expect(summary).toContain("Early warning: 1 suspected alert flags a reported event after the freeze before the first sign of its fragments, and 1 after it, of 2 reported events with pieces; 1 false early warning of 4 suspected alerts.");
   });
 });

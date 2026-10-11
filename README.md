@@ -8,6 +8,8 @@ When a satellite or a spent rocket stage breaks up in orbit, its fragments appea
 
 ## How well it works
 
+The detector raises two kinds of alert. A **confirmed** breakup is named once its fragments are catalogued. An **early warning** (a "suspected" breakup) comes before that, from the satellite's or stage's own orbit alone.
+
 The detector's settings were tuned on the even years from 2006 to 2026. They were tested on the odd years from 2007 to 2025, which were held back for that. On those held-back years, the current version, `confirmed-v10`, scores:
 
 <!-- kpi:summary:begin -->
@@ -21,7 +23,23 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 <!-- kpi:summary:end -->
 
-A false confirmation is an alert for a breakup that no one reported. The lead counts the days from the detector's alert to the first report by NASA, ESA or the U.S. Space Force. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end --> The held-out years were also looked at during development, so the cleanest measure is the [live test](https://github.com/Orbinauts/breakups#live-test), which runs every day on new data.
+<!-- kpi:early-warning:begin -->
+
+| Early warning (suspected), the same years | Result |
+| --- | --- |
+| Reported breakups flagged before the first fragment was catalogued | 36% (10 of 28) |
+| Flagged only after the first fragment (late) | 2 of 28 |
+| False alarms | 245 a year, 99% of all early warnings (2448 of 2464) |
+| Median lead over the first catalogued fragment | 20 days |
+| Median error in the time of the breakup | 35 minutes |
+
+<!-- kpi:early-warning:end -->
+
+A false confirmation is an alert for a breakup that no one reported. The lead of a confirmation counts the days from the detector's alert to the first report by NASA, ESA or the U.S. Space Force. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end -->
+
+An early warning is raised when a satellite or a rocket stage jumps to a new orbit and stays there, and nothing it is known to do explains the jump. When it is right, it comes weeks before the first fragment is catalogued, and it typically places the moment of the breakup to within the hour. But most early warnings are other orbit changes, mostly satellites firing their own engines (manoeuvres) in ways the detector cannot tell apart from a breakup. So an early warning is a watch list, not a confirmation. The target is set on confirmed breakups; the early warning is measured and reported beside it, and [tests on real orbit histories](https://github.com/Orbinauts/breakups/blob/main/test/early-warning.test.ts) check that it still flags known breakups and stays quiet on known manoeuvres.
+
+The held-out years were also looked at during development, so the cleanest measure is the [live test](https://github.com/Orbinauts/breakups#live-test), which runs every day on new data.
 
 The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md) give every table, the training years and how each number is defined.
 
@@ -35,7 +53,40 @@ It reads only public data: the orbits the catalogue publishes for every tracked 
 4. **Look-alikes are left out.** Space stations and their visiting craft, objects that already fell back, and routine late cataloguing confirm nothing.
 5. **The parent is named and the moment found.** The fragments' orbits are traced back to the instant they met their parent.
 
-A second layer watches each object's own orbit for a sudden, lasting jump, and logs it as an early "suspected" alert. These alerts are not scored against the target, because on their own they were wrong more than 99% of the time. [How the detector works](https://github.com/Orbinauts/breakups/blob/main/docs/detector/README.md) describes every rule and where each threshold comes from.
+A second layer watches each object's own orbit for a sudden, lasting jump, and raises it as an early warning, a "suspected" breakup, before any fragment is catalogued. [How the detector works](https://github.com/Orbinauts/breakups/blob/main/docs/detector/README.md) describes every rule and where each threshold comes from.
+
+## The life of an alert
+
+Every alert goes through the same stages.
+
+1. **A jump.** One new orbit of an object lands far from where its own past orbits said it would be. The detector notes it and waits for the next ones. A jump that the next orbits undo was a bad measurement, and is dropped.
+2. **The jump holds.** If the next orbits stay where the jump put them, the detector judges it once. It is cleared as a manoeuvre where the object's past, its being in working order, or its neighbours making the same move explain it. Otherwise it is raised as an early warning.
+3. **The early warning ends** in one of four ways. It is confirmed when fragments appear in the object's orbital plane, or an agency announces the breakup. It is dismissed when the new objects catalogued under its launch all turn out to be old pieces. It expires when nothing confirms it within 30 days. Or it is still open when the data ends.
+4. **A breakup can also be confirmed with no early warning first**, straight from its fragments, a few hours after the first one is catalogued, and even from a jump that was cleared as a manoeuvre.
+
+On the held-out years, this is how often each stage came, and how likely each was to be a real breakup:
+
+<!-- kpi:lifecycle:begin -->
+
+| What became of each orbit jump that held, on the held-out years | How many | Chance it was a reported breakup |
+| --- | --- | --- |
+| Cleared as a manoeuvre | 69179 | 0.04% (28 of 69179) |
+| Raised as an early warning, a median of six days after the breakup and three weeks before the first fragment | 2633 | 0.77% (19 of 2463) |
+| ... then confirmed by fragments or a notice, a median of four days later | 8 (0.30%) | 75% (6 of 8) |
+| ... then dismissed: the new pieces under its launch were all old | 110 (4.2%) | 1.0% (1 of 96) |
+| ... then expired: nothing confirmed it within 30 days | 2488 (94%) | 0.47% (11 of 2335) |
+| ... still open where the data ends | 27 (1.0%) | 4.2% (1 of 24) |
+
+| What happened to the 23 reported breakups whose fragments were catalogued, on the held-out years | Share |
+| --- | --- |
+| An early warning first, then confirmed | 39% (9 of 23) |
+| An early warning, never confirmed | 4% (1 of 23) |
+| Confirmed from the fragments, with no early warning first | 35% (8 of 23) |
+| Never flagged | 22% (5 of 23) |
+
+<!-- kpi:lifecycle:end -->
+
+<!-- kpi:lifecycle-caveat:begin -->A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, 0.47% of the expired early warnings (11) and 0.04% of the jumps cleared as manoeuvres (28) were on a reported breakup.<!-- kpi:lifecycle-caveat:end --> The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-life-of-an-alert) give the same on the training years, with the uncertainty of each number.
 
 ## Install
 

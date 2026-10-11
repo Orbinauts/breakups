@@ -931,7 +931,11 @@
           "detected": 10,
           "late": 2,
           "missed": 16,
-          "detectionRate": 0.35714285714285715
+          "detectionRate": 0.35714285714285715,
+          "detectionInterval": [
+            0.20705611972458876,
+            0.5417002241777278
+          ]
         },
         "breakups C": {
           "targets": 33,
@@ -939,7 +943,11 @@
           "detected": 3,
           "late": 0,
           "missed": 30,
-          "detectionRate": 0.09090909090909091
+          "detectionRate": 0.09090909090909091,
+          "detectionInterval": [
+            0.03140337104926305,
+            0.23572943534351032
+          ]
         },
         "breakups D": {
           "targets": 12,
@@ -947,7 +955,11 @@
           "detected": 0,
           "late": 0,
           "missed": 12,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.2425007574992425
+          ]
         },
         "anomalous A-B": {
           "targets": 8,
@@ -955,7 +967,11 @@
           "detected": 0,
           "late": 1,
           "missed": 7,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.3244156195108769
+          ]
         },
         "anomalous C-D": {
           "targets": 68,
@@ -963,7 +979,11 @@
           "detected": 3,
           "late": 0,
           "missed": 65,
-          "detectionRate": 0.04411764705882353
+          "detectionRate": 0.04411764705882353,
+          "detectionInterval": [
+            0.0151163456535321,
+            0.12187392182380694
+          ]
         }
       },
       "alerts": 2638,
@@ -1113,7 +1133,11 @@
           "detected": 9,
           "late": 3,
           "missed": 18,
-          "detectionRate": 0.3
+          "detectionRate": 0.3,
+          "detectionInterval": [
+            0.16664562643958933,
+            0.4787612101166018
+          ]
         },
         "MEO": {
           "targets": 2,
@@ -1121,7 +1145,11 @@
           "detected": 1,
           "late": 0,
           "missed": 1,
-          "detectionRate": 0.5
+          "detectionRate": 0.5,
+          "detectionInterval": [
+            0.09452865480086614,
+            0.9054713451991339
+          ]
         },
         "GEO": {
           "targets": 3,
@@ -1129,7 +1157,11 @@
           "detected": 1,
           "late": 0,
           "missed": 2,
-          "detectionRate": 0.3333333333333333
+          "detectionRate": 0.3333333333333333,
+          "detectionInterval": [
+            0.0614903152761605,
+            0.7923450448735121
+          ]
         },
         "HEO": {
           "targets": 12,
@@ -1137,7 +1169,11 @@
           "detected": 1,
           "late": 0,
           "missed": 11,
-          "detectionRate": 0.08333333333333333
+          "detectionRate": 0.08333333333333333,
+          "detectionInterval": [
+            0.014864709450773478,
+            0.35388592179859524
+          ]
         },
         "unknown": {
           "targets": 102,
@@ -1145,7 +1181,11 @@
           "detected": 4,
           "late": 0,
           "missed": 98,
-          "detectionRate": 0.0392156862745098
+          "detectionRate": 0.0392156862745098,
+          "detectionInterval": [
+            0.015353823095438889,
+            0.09652657175875834
+          ]
         }
       },
       "byKind": {
@@ -1155,7 +1195,11 @@
           "detected": 13,
           "late": 2,
           "missed": 58,
-          "detectionRate": 0.1780821917808219
+          "detectionRate": 0.1780821917808219,
+          "detectionInterval": [
+            0.10713272068797698,
+            0.2812194219014537
+          ]
         },
         "anomalous": {
           "targets": 76,
@@ -1163,7 +1207,11 @@
           "detected": 3,
           "late": 1,
           "missed": 72,
-          "detectionRate": 0.039473684210526314
+          "detectionRate": 0.039473684210526314,
+          "detectionInterval": [
+            0.013514390129808602,
+            0.10974967271462335
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -1171,7 +1219,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -1179,7 +1228,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -1187,7 +1237,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -1210,6 +1261,158 @@
           0.8514670569551007,
           0.9812771240324999
         ]
+      },
+      "falseAlarmInterval": [
+        0.9894774819063011,
+        0.9959990575928305
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 2633,
+          "real": 19,
+          "falseAlarms": 2444,
+          "neither": 170,
+          "share": 1,
+          "shareInterval": [
+            0.9985431055092578,
+            1
+          ],
+          "realRate": 0.007714169711733658,
+          "realInterval": [
+            0.004944097359149281,
+            0.012017510552765294
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 8,
+            "real": 6,
+            "falseAlarms": 2,
+            "neither": 0,
+            "share": 0.0030383592859855677,
+            "shareInterval": [
+              0.0015403706605222741,
+              0.0059843892643818225
+            ],
+            "realRate": 0.75,
+            "realInterval": [
+              0.40926987910258916,
+              0.9285223111419724
+            ],
+            "days": {
+              "median": 4,
+              "tail": 24.166666666666668,
+              "count": 8
+            }
+          },
+          "dismissed": {
+            "alerts": 110,
+            "real": 1,
+            "falseAlarms": 95,
+            "neither": 14,
+            "share": 0.041777440182301555,
+            "shareInterval": [
+              0.034778980708569704,
+              0.05011106350189784
+            ],
+            "realRate": 0.010416666666666666,
+            "realInterval": [
+              0.001841122818436635,
+              0.056667554927112326
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 110
+            }
+          },
+          "expired": {
+            "alerts": 2488,
+            "real": 11,
+            "falseAlarms": 2324,
+            "neither": 153,
+            "share": 0.9449297379415116,
+            "shareInterval": [
+              0.9355503498357938,
+              0.9530126946792807
+            ],
+            "realRate": 0.004710920770877944,
+            "realInterval": [
+              0.0026325310720147913,
+              0.008416357403374052
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 2488
+            }
+          },
+          "open": {
+            "alerts": 27,
+            "real": 1,
+            "falseAlarms": 23,
+            "neither": 3,
+            "share": 0.010254462590201291,
+            "shareInterval": [
+              0.0070570157007430745,
+              0.014878924630295394
+            ],
+            "realRate": 0.041666666666666664,
+            "realInterval": [
+              0.007393265354805126,
+              0.20242226248842232
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 69179,
+          "real": 28,
+          "realRate": 0.0004047471053354342,
+          "realInterval": [
+            0.0002800571564962499,
+            0.000584920323700227
+          ],
+          "confirmedLater": 5,
+          "confirmedLaterReal": 1
+        },
+        "breakups": {
+          "targets": 23,
+          "suspectedBeforeFragment": 8,
+          "suspectedThenConfirmed": {
+            "count": 9,
+            "share": 0.391304347826087,
+            "interval": [
+              0.22157377982382145,
+              0.5921482039625402
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 1,
+            "share": 0.043478260869565216,
+            "interval": [
+              0.0077164669621267445,
+              0.20991586494059142
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 8,
+            "share": 0.34782608695652173,
+            "interval": [
+              0.18811054636982238,
+              0.5511002309310836
+            ]
+          },
+          "neverFlagged": {
+            "count": 5,
+            "share": 0.21739130434782608,
+            "interval": [
+              0.09663835601719065,
+              0.4190388018273492
+            ]
+          }
+        }
       }
     },
     "train": {
@@ -1441,7 +1644,11 @@
           "detected": 18,
           "late": 5,
           "missed": 20,
-          "detectionRate": 0.4186046511627907
+          "detectionRate": 0.4186046511627907,
+          "detectionInterval": [
+            0.2838433433748524,
+            0.5667168424428823
+          ]
         },
         "breakups C": {
           "targets": 32,
@@ -1449,7 +1656,11 @@
           "detected": 4,
           "late": 1,
           "missed": 27,
-          "detectionRate": 0.125
+          "detectionRate": 0.125,
+          "detectionInterval": [
+            0.04970053844474301,
+            0.2806864978482796
+          ]
         },
         "breakups D": {
           "targets": 16,
@@ -1457,7 +1668,11 @@
           "detected": 0,
           "late": 1,
           "missed": 15,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.19361341827271994
+          ]
         },
         "anomalous A-B": {
           "targets": 5,
@@ -1465,7 +1680,11 @@
           "detected": 1,
           "late": 0,
           "missed": 4,
-          "detectionRate": 0.2
+          "detectionRate": 0.2,
+          "detectionInterval": [
+            0.03622316096978745,
+            0.6244717358814613
+          ]
         },
         "anomalous C-D": {
           "targets": 50,
@@ -1473,7 +1692,11 @@
           "detected": 1,
           "late": 3,
           "missed": 46,
-          "detectionRate": 0.02
+          "detectionRate": 0.02,
+          "detectionInterval": [
+            0.0035391680889764604,
+            0.10495686471836953
+          ]
         }
       },
       "alerts": 3158,
@@ -1623,7 +1846,11 @@
           "detected": 13,
           "late": 5,
           "missed": 24,
-          "detectionRate": 0.30952380952380953
+          "detectionRate": 0.30952380952380953,
+          "detectionInterval": [
+            0.1907092651972273,
+            0.46026277766340595
+          ]
         },
         "MEO": {
           "targets": 4,
@@ -1631,7 +1858,11 @@
           "detected": 0,
           "late": 1,
           "missed": 3,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.48990002040399916
+          ]
         },
         "GEO": {
           "targets": 3,
@@ -1639,7 +1870,11 @@
           "detected": 3,
           "late": 0,
           "missed": 0,
-          "detectionRate": 1
+          "detectionRate": 1,
+          "detectionInterval": [
+            0.43849391955098227,
+            1
+          ]
         },
         "HEO": {
           "targets": 17,
@@ -1647,7 +1882,11 @@
           "detected": 7,
           "late": 2,
           "missed": 8,
-          "detectionRate": 0.4117647058823529
+          "detectionRate": 0.4117647058823529,
+          "detectionInterval": [
+            0.21610786039131383,
+            0.6399492561448447
+          ]
         },
         "unknown": {
           "targets": 80,
@@ -1655,7 +1894,11 @@
           "detected": 1,
           "late": 2,
           "missed": 77,
-          "detectionRate": 0.0125
+          "detectionRate": 0.0125,
+          "detectionInterval": [
+            0.002209918618306224,
+            0.06746432423965451
+          ]
         }
       },
       "byKind": {
@@ -1665,7 +1908,11 @@
           "detected": 22,
           "late": 7,
           "missed": 62,
-          "detectionRate": 0.24175824175824176
+          "detectionRate": 0.24175824175824176,
+          "detectionInterval": [
+            0.16541685277480106,
+            0.33902001880897653
+          ]
         },
         "anomalous": {
           "targets": 55,
@@ -1673,7 +1920,11 @@
           "detected": 2,
           "late": 3,
           "missed": 50,
-          "detectionRate": 0.03636363636363636
+          "detectionRate": 0.03636363636363636,
+          "detectionInterval": [
+            0.010029330855724924,
+            0.1232369297490173
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -1681,7 +1932,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -1689,7 +1941,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -1697,7 +1950,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -1720,6 +1974,158 @@
           0.6736529727502113,
           0.9290748009456007
         ]
+      },
+      "falseAlarmInterval": [
+        0.9878403805150304,
+        0.9944894085233417
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 3146,
+          "real": 28,
+          "falseAlarms": 2901,
+          "neither": 217,
+          "share": 1,
+          "shareInterval": [
+            0.9987803831151381,
+            0.9999999999999998
+          ],
+          "realRate": 0.009559576647319904,
+          "realInterval": [
+            0.006622227051655635,
+            0.013781738849537255
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 10,
+            "real": 8,
+            "falseAlarms": 0,
+            "neither": 2,
+            "share": 0.003178639542275906,
+            "shareInterval": [
+              0.0017274973689189429,
+              0.005841645155581336
+            ],
+            "realRate": 1,
+            "realInterval": [
+              0.6755843804891231,
+              1
+            ],
+            "days": {
+              "median": 2.3333333333333335,
+              "tail": 19.333333333333332,
+              "count": 10
+            }
+          },
+          "dismissed": {
+            "alerts": 152,
+            "real": 1,
+            "falseAlarms": 133,
+            "neither": 18,
+            "share": 0.04831532104259377,
+            "shareInterval": [
+              0.04135736749263137,
+              0.05637503911473579
+            ],
+            "realRate": 0.007462686567164179,
+            "realInterval": [
+              0.0013185304171489005,
+              0.04106054817741181
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 152
+            }
+          },
+          "expired": {
+            "alerts": 2905,
+            "real": 18,
+            "falseAlarms": 2701,
+            "neither": 186,
+            "share": 0.9233947870311506,
+            "shareInterval": [
+              0.9135757999213552,
+              0.9321810152784948
+            ],
+            "realRate": 0.0066200809121000365,
+            "realInterval": [
+              0.004191623514108771,
+              0.010440737031579968
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 2905
+            }
+          },
+          "open": {
+            "alerts": 79,
+            "real": 1,
+            "falseAlarms": 67,
+            "neither": 11,
+            "share": 0.025111252383979658,
+            "shareInterval": [
+              0.020195664507967732,
+              0.03118520493003829
+            ],
+            "realRate": 0.014705882352941176,
+            "realInterval": [
+              0.0026006166023507804,
+              0.07871160361546173
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 95629,
+          "real": 23,
+          "realRate": 0.00024051281515021593,
+          "realInterval": [
+            0.00016027791749641335,
+            0.00036089869051938355
+          ],
+          "confirmedLater": 11,
+          "confirmedLaterReal": 6
+        },
+        "breakups": {
+          "targets": 35,
+          "suspectedBeforeFragment": 14,
+          "suspectedThenConfirmed": {
+            "count": 15,
+            "share": 0.42857142857142855,
+            "interval": [
+              0.27984333081678914,
+              0.5914287074102662
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 4,
+            "share": 0.11428571428571428,
+            "interval": [
+              0.0453510585448975,
+              0.2595179478812023
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 7,
+            "share": 0.2,
+            "interval": [
+              0.10042319445900802,
+              0.35891936609462516
+            ]
+          },
+          "neverFlagged": {
+            "count": 9,
+            "share": 0.2571428571428571,
+            "interval": [
+              0.1416286872655014,
+              0.4206962427064873
+            ]
+          }
+        }
       }
     },
     "all": {
@@ -1961,7 +2367,11 @@
           "detected": 28,
           "late": 7,
           "missed": 36,
-          "detectionRate": 0.39436619718309857
+          "detectionRate": 0.39436619718309857,
+          "detectionInterval": [
+            0.28893226488668644,
+            0.5106444411163921
+          ]
         },
         "breakups C": {
           "targets": 65,
@@ -1969,7 +2379,11 @@
           "detected": 7,
           "late": 1,
           "missed": 57,
-          "detectionRate": 0.1076923076923077
+          "detectionRate": 0.1076923076923077,
+          "detectionInterval": [
+            0.05315354431925605,
+            0.20601533031468616
+          ]
         },
         "breakups D": {
           "targets": 28,
@@ -1977,7 +2391,11 @@
           "detected": 0,
           "late": 1,
           "missed": 27,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.12064720365810762
+          ]
         },
         "anomalous A-B": {
           "targets": 13,
@@ -1985,7 +2403,11 @@
           "detected": 1,
           "late": 1,
           "missed": 11,
-          "detectionRate": 0.07692307692307693
+          "detectionRate": 0.07692307692307693,
+          "detectionInterval": [
+            0.013710066379696323,
+            0.3331453392824736
+          ]
         },
         "anomalous C-D": {
           "targets": 118,
@@ -1993,7 +2415,11 @@
           "detected": 4,
           "late": 3,
           "missed": 111,
-          "detectionRate": 0.03389830508474576
+          "detectionRate": 0.03389830508474576,
+          "detectionInterval": [
+            0.01325961911756434,
+            0.08392886166404062
+          ]
         }
       },
       "alerts": 5796,
@@ -2143,7 +2569,11 @@
           "detected": 22,
           "late": 8,
           "missed": 42,
-          "detectionRate": 0.3055555555555556
+          "detectionRate": 0.3055555555555556,
+          "detectionInterval": [
+            0.21126482045921047,
+            0.4195446561341104
+          ]
         },
         "MEO": {
           "targets": 6,
@@ -2151,7 +2581,11 @@
           "detected": 1,
           "late": 1,
           "missed": 4,
-          "detectionRate": 0.16666666666666666
+          "detectionRate": 0.16666666666666666,
+          "detectionInterval": [
+            0.03005258587173032,
+            0.563509436563646
+          ]
         },
         "GEO": {
           "targets": 6,
@@ -2159,7 +2593,11 @@
           "detected": 4,
           "late": 0,
           "missed": 2,
-          "detectionRate": 0.6666666666666666
+          "detectionRate": 0.6666666666666666,
+          "detectionInterval": [
+            0.29998832134152864,
+            0.9032306674407831
+          ]
         },
         "HEO": {
           "targets": 29,
@@ -2167,7 +2605,11 @@
           "detected": 8,
           "late": 2,
           "missed": 19,
-          "detectionRate": 0.27586206896551724
+          "detectionRate": 0.27586206896551724,
+          "detectionInterval": [
+            0.1469858133850274,
+            0.4571747634443597
+          ]
         },
         "unknown": {
           "targets": 182,
@@ -2175,7 +2617,11 @@
           "detected": 5,
           "late": 2,
           "missed": 175,
-          "detectionRate": 0.027472527472527472
+          "detectionRate": 0.027472527472527472,
+          "detectionInterval": [
+            0.01179030844597875,
+            0.06269032452317347
+          ]
         }
       },
       "byKind": {
@@ -2185,7 +2631,11 @@
           "detected": 35,
           "late": 9,
           "missed": 120,
-          "detectionRate": 0.21341463414634146
+          "detectionRate": 0.21341463414634146,
+          "detectionInterval": [
+            0.15764230190761339,
+            0.2823058396734964
+          ]
         },
         "anomalous": {
           "targets": 131,
@@ -2193,7 +2643,11 @@
           "detected": 5,
           "late": 4,
           "missed": 122,
-          "detectionRate": 0.03816793893129771
+          "detectionRate": 0.03816793893129771,
+          "detectionInterval": [
+            0.016411091437379455,
+            0.08623972255474167
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -2201,7 +2655,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -2209,7 +2664,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -2217,7 +2673,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -2240,6 +2697,158 @@
           0.8270407914425884,
           0.9521082887162691
         ]
+      },
+      "falseAlarmInterval": [
+        0.9899183114037434,
+        0.9945492580039992
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 5779,
+          "real": 47,
+          "falseAlarms": 5345,
+          "neither": 387,
+          "share": 1,
+          "shareInterval": [
+            0.9993356899141073,
+            1
+          ],
+          "realRate": 0.008716617210682493,
+          "realInterval": [
+            0.0065615755369995196,
+            0.011571202860350021
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 18,
+            "real": 14,
+            "falseAlarms": 2,
+            "neither": 2,
+            "share": 0.0031147257310953453,
+            "shareInterval": [
+              0.00197115780270819,
+              0.004918465457939308
+            ],
+            "realRate": 0.875,
+            "realInterval": [
+              0.6397666856325173,
+              0.9650232506629428
+            ],
+            "days": {
+              "median": 4,
+              "tail": 24.166666666666668,
+              "count": 18
+            }
+          },
+          "dismissed": {
+            "alerts": 262,
+            "real": 2,
+            "falseAlarms": 228,
+            "neither": 32,
+            "share": 0.04533656341927669,
+            "shareInterval": [
+              0.04026800157401766,
+              0.051009200277750154
+            ],
+            "realRate": 0.008695652173913044,
+            "realInterval": [
+              0.002387859558887871,
+              0.031145951362693235
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 262
+            }
+          },
+          "expired": {
+            "alerts": 5393,
+            "real": 29,
+            "falseAlarms": 5025,
+            "neither": 339,
+            "share": 0.9332064370998443,
+            "shareInterval": [
+              0.9264773248691623,
+              0.939359982519648
+            ],
+            "realRate": 0.005738029283735655,
+            "realInterval": [
+              0.003998219310049548,
+              0.008228656280518571
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 5393
+            }
+          },
+          "open": {
+            "alerts": 106,
+            "real": 2,
+            "falseAlarms": 90,
+            "neither": 14,
+            "share": 0.0183422737497837,
+            "shareInterval": [
+              0.015188940151376281,
+              0.022135547519183462
+            ],
+            "realRate": 0.021739130434782608,
+            "realInterval": [
+              0.005981915837670909,
+              0.0758364177460756
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 164808,
+          "real": 51,
+          "realRate": 0.00030945099752439204,
+          "realInterval": [
+            0.0002353870154491753,
+            0.0004068095583678848
+          ],
+          "confirmedLater": 16,
+          "confirmedLaterReal": 7
+        },
+        "breakups": {
+          "targets": 58,
+          "suspectedBeforeFragment": 22,
+          "suspectedThenConfirmed": {
+            "count": 24,
+            "share": 0.41379310344827586,
+            "interval": [
+              0.29627832678138283,
+              0.5420182244074607
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 5,
+            "share": 0.08620689655172414,
+            "interval": [
+              0.03738483193379338,
+              0.18643861377265664
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 15,
+            "share": 0.25862068965517243,
+            "interval": [
+              0.16345403519517457,
+              0.383776308133588
+            ]
+          },
+          "neverFlagged": {
+            "count": 14,
+            "share": 0.2413793103448276,
+            "interval": [
+              0.14958739726966278,
+              0.3653022562968685
+            ]
+          }
+        }
       }
     },
     "recent": {
@@ -2457,7 +3066,11 @@
           "detected": 3,
           "late": 0,
           "missed": 1,
-          "detectionRate": 0.75
+          "detectionRate": 0.75,
+          "detectionInterval": [
+            0.3006360524426366,
+            0.9544139373553637
+          ]
         },
         "breakups C": {
           "targets": 7,
@@ -2465,7 +3078,11 @@
           "detected": 3,
           "late": 0,
           "missed": 4,
-          "detectionRate": 0.42857142857142855
+          "detectionRate": 0.42857142857142855,
+          "detectionInterval": [
+            0.15821692226262685,
+            0.7495457695909742
+          ]
         },
         "breakups D": {
           "targets": 6,
@@ -2473,7 +3090,11 @@
           "detected": 0,
           "late": 1,
           "missed": 5,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.3903430336530645
+          ]
         },
         "anomalous A-B": {
           "targets": 0,
@@ -2481,7 +3102,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "anomalous C-D": {
           "targets": 3,
@@ -2489,7 +3111,11 @@
           "detected": 0,
           "late": 0,
           "missed": 3,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.5615060804490177
+          ]
         }
       },
       "alerts": 976,
@@ -2639,7 +3265,11 @@
           "detected": 4,
           "late": 0,
           "missed": 4,
-          "detectionRate": 0.5
+          "detectionRate": 0.5,
+          "detectionInterval": [
+            0.21521252682444186,
+            0.7847874731755582
+          ]
         },
         "MEO": {
           "targets": 0,
@@ -2647,7 +3277,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "GEO": {
           "targets": 1,
@@ -2655,7 +3286,11 @@
           "detected": 1,
           "late": 0,
           "missed": 0,
-          "detectionRate": 1
+          "detectionRate": 1,
+          "detectionInterval": [
+            0.20654329147389294,
+            1
+          ]
         },
         "HEO": {
           "targets": 1,
@@ -2663,7 +3298,11 @@
           "detected": 1,
           "late": 0,
           "missed": 0,
-          "detectionRate": 1
+          "detectionRate": 1,
+          "detectionInterval": [
+            0.20654329147389294,
+            1
+          ]
         },
         "unknown": {
           "targets": 10,
@@ -2671,7 +3310,11 @@
           "detected": 0,
           "late": 1,
           "missed": 9,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.2775401687666166
+          ]
         }
       },
       "byKind": {
@@ -2681,7 +3324,11 @@
           "detected": 6,
           "late": 1,
           "missed": 10,
-          "detectionRate": 0.35294117647058826
+          "detectionRate": 0.35294117647058826,
+          "detectionInterval": [
+            0.17309486143904904,
+            0.5870003327878818
+          ]
         },
         "anomalous": {
           "targets": 3,
@@ -2689,7 +3336,11 @@
           "detected": 0,
           "late": 0,
           "missed": 3,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.5615060804490177
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -2697,7 +3348,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -2705,7 +3357,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -2713,7 +3366,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -2736,6 +3390,158 @@
           0.5649937852319399,
           0.9801096286728694
         ]
+      },
+      "falseAlarmInterval": [
+        0.9860409368651175,
+        0.9970494809813999
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 975,
+          "real": 6,
+          "falseAlarms": 927,
+          "neither": 42,
+          "share": 1,
+          "shareInterval": [
+            0.9960753609164139,
+            1
+          ],
+          "realRate": 0.006430868167202572,
+          "realInterval": [
+            0.00295051901860007,
+            0.013959063134882441
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 3,
+            "real": 2,
+            "falseAlarms": 0,
+            "neither": 1,
+            "share": 0.003076923076923077,
+            "shareInterval": [
+              0.0010469523870626626,
+              0.00900738122523988
+            ],
+            "realRate": 1,
+            "realInterval": [
+              0.34237195288961925,
+              1
+            ],
+            "days": {
+              "median": 4.333333333333333,
+              "tail": 19.333333333333332,
+              "count": 3
+            }
+          },
+          "dismissed": {
+            "alerts": 80,
+            "real": 0,
+            "falseAlarms": 79,
+            "neither": 1,
+            "share": 0.08205128205128205,
+            "shareInterval": [
+              0.06642050715052704,
+              0.10096265269882958
+            ],
+            "realRate": 0,
+            "realInterval": [
+              0,
+              0.04637283683559951
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 80
+            }
+          },
+          "expired": {
+            "alerts": 846,
+            "real": 3,
+            "falseAlarms": 804,
+            "neither": 39,
+            "share": 0.8676923076923077,
+            "shareInterval": [
+              0.8449739037482146,
+              0.8875245924333942
+            ],
+            "realRate": 0.0037174721189591076,
+            "realInterval": [
+              0.001265041251678218,
+              0.010872471179849713
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 846
+            }
+          },
+          "open": {
+            "alerts": 46,
+            "real": 1,
+            "falseAlarms": 44,
+            "neither": 1,
+            "share": 0.04717948717948718,
+            "shareInterval": [
+              0.03555571605723706,
+              0.06235757246666712
+            ],
+            "realRate": 0.022222222222222223,
+            "realInterval": [
+              0.003933497522757505,
+              0.11566946388718813
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 85877,
+          "real": 7,
+          "realRate": 0.00008151192985316208,
+          "realInterval": [
+            0.000039485159735273096,
+            0.0001682631537139514
+          ],
+          "confirmedLater": 1,
+          "confirmedLaterReal": 1
+        },
+        "breakups": {
+          "targets": 2,
+          "suspectedBeforeFragment": 1,
+          "suspectedThenConfirmed": {
+            "count": 1,
+            "share": 0.5,
+            "interval": [
+              0.09452865480086614,
+              0.9054713451991339
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 0,
+            "share": 0,
+            "interval": [
+              0,
+              0.6576280471103807
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 1,
+            "share": 0.5,
+            "interval": [
+              0.09452865480086614,
+              0.9054713451991339
+            ]
+          },
+          "neverFlagged": {
+            "count": 0,
+            "share": 0,
+            "interval": [
+              0,
+              0.6576280471103807
+            ]
+          }
+        }
       }
     },
     "chronologicalTrain": {
@@ -2968,7 +3774,11 @@
           "detected": 15,
           "late": 4,
           "missed": 21,
-          "detectionRate": 0.375
+          "detectionRate": 0.375,
+          "detectionInterval": [
+            0.2422277353579172,
+            0.529678399454681
+          ]
         },
         "breakups C": {
           "targets": 36,
@@ -2976,7 +3786,11 @@
           "detected": 1,
           "late": 0,
           "missed": 35,
-          "detectionRate": 0.027777777777777776
+          "detectionRate": 0.027777777777777776,
+          "detectionInterval": [
+            0.004920280295569679,
+            0.141700337350308
+          ]
         },
         "breakups D": {
           "targets": 13,
@@ -2984,7 +3798,11 @@
           "detected": 0,
           "late": 0,
           "missed": 13,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.22810184305529166
+          ]
         },
         "anomalous A-B": {
           "targets": 11,
@@ -2992,7 +3810,11 @@
           "detected": 1,
           "late": 1,
           "missed": 9,
-          "detectionRate": 0.09090909090909091
+          "detectionRate": 0.09090909090909091,
+          "detectionInterval": [
+            0.01623175226282597,
+            0.3773646254862038
+          ]
         },
         "anomalous C-D": {
           "targets": 90,
@@ -3000,7 +3822,11 @@
           "detected": 3,
           "late": 3,
           "missed": 84,
-          "detectionRate": 0.03333333333333333
+          "detectionRate": 0.03333333333333333,
+          "detectionInterval": [
+            0.011400183632439498,
+            0.09347441356112923
+          ]
         }
       },
       "alerts": 2733,
@@ -3150,7 +3976,11 @@
           "detected": 11,
           "late": 5,
           "missed": 24,
-          "detectionRate": 0.275
+          "detectionRate": 0.275,
+          "detectionInterval": [
+            0.1610785343314309,
+            0.4283525083312457
+          ]
         },
         "MEO": {
           "targets": 4,
@@ -3158,7 +3988,11 @@
           "detected": 1,
           "late": 0,
           "missed": 3,
-          "detectionRate": 0.25
+          "detectionRate": 0.25,
+          "detectionInterval": [
+            0.045586062644636216,
+            0.6993639475573634
+          ]
         },
         "GEO": {
           "targets": 3,
@@ -3166,7 +4000,11 @@
           "detected": 1,
           "late": 0,
           "missed": 2,
-          "detectionRate": 0.3333333333333333
+          "detectionRate": 0.3333333333333333,
+          "detectionInterval": [
+            0.0614903152761605,
+            0.7923450448735121
+          ]
         },
         "HEO": {
           "targets": 21,
@@ -3174,7 +4012,11 @@
           "detected": 5,
           "late": 2,
           "missed": 14,
-          "detectionRate": 0.23809523809523808
+          "detectionRate": 0.23809523809523808,
+          "detectionInterval": [
+            0.10627856389112261,
+            0.45091581972345923
+          ]
         },
         "unknown": {
           "targets": 122,
@@ -3182,7 +4024,11 @@
           "detected": 2,
           "late": 1,
           "missed": 119,
-          "detectionRate": 0.01639344262295082
+          "detectionRate": 0.01639344262295082,
+          "detectionInterval": [
+            0.0045071521687355225,
+            0.05780610513250667
+          ]
         }
       },
       "byKind": {
@@ -3192,7 +4038,11 @@
           "detected": 16,
           "late": 4,
           "missed": 69,
-          "detectionRate": 0.1797752808988764
+          "detectionRate": 0.1797752808988764,
+          "detectionInterval": [
+            0.11379795967440831,
+            0.2722531208756899
+          ]
         },
         "anomalous": {
           "targets": 101,
@@ -3200,7 +4050,11 @@
           "detected": 4,
           "late": 4,
           "missed": 93,
-          "detectionRate": 0.039603960396039604
+          "detectionRate": 0.039603960396039604,
+          "detectionInterval": [
+            0.015506895291526046,
+            0.09744063698573793
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -3208,7 +4062,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -3216,7 +4071,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -3224,7 +4080,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -3247,6 +4104,158 @@
           0.7642084129775517,
           0.9593873444171301
         ]
+      },
+      "falseAlarmInterval": [
+        0.9875908357436269,
+        0.9947797342194942
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 2723,
+          "real": 24,
+          "falseAlarms": 2457,
+          "neither": 242,
+          "share": 1,
+          "shareInterval": [
+            0.9985911906287479,
+            1
+          ],
+          "realRate": 0.009673518742442563,
+          "realInterval": [
+            0.006509151883945503,
+            0.01435398884904931
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 11,
+            "real": 9,
+            "falseAlarms": 2,
+            "neither": 0,
+            "share": 0.004039662137348513,
+            "shareInterval": [
+              0.002257181570403969,
+              0.0072195698477935544
+            ],
+            "realRate": 0.8181818181818182,
+            "realInterval": [
+              0.5230138624217553,
+              0.9486333993289995
+            ],
+            "days": {
+              "median": 4,
+              "tail": 10.5,
+              "count": 11
+            }
+          },
+          "dismissed": {
+            "alerts": 72,
+            "real": 0,
+            "falseAlarms": 53,
+            "neither": 19,
+            "share": 0.026441424899008446,
+            "shareInterval": [
+              0.021049613916607084,
+              0.03316754339828792
+            ],
+            "realRate": 0,
+            "realInterval": [
+              0,
+              0.06758430445307662
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 72
+            }
+          },
+          "expired": {
+            "alerts": 2602,
+            "real": 15,
+            "falseAlarms": 2374,
+            "neither": 213,
+            "share": 0.9555637164891664,
+            "shareInterval": [
+              0.9471609636278937,
+              0.9626828644844543
+            ],
+            "realRate": 0.006278777731268313,
+            "realInterval": [
+              0.0038087123318571972,
+              0.010334137742297314
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 2602
+            }
+          },
+          "open": {
+            "alerts": 38,
+            "real": 0,
+            "falseAlarms": 28,
+            "neither": 10,
+            "share": 0.01395519647447668,
+            "shareInterval": [
+              0.010184076896470311,
+              0.019095805000593307
+            ],
+            "realRate": 0,
+            "realInterval": [
+              0,
+              0.12064720365810762
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 16661,
+          "real": 32,
+          "realRate": 0.0019206530220274892,
+          "realInterval": [
+            0.0013608716825597724,
+            0.0027100701018493876
+          ],
+          "confirmedLater": 10,
+          "confirmedLaterReal": 4
+        },
+        "breakups": {
+          "targets": 29,
+          "suspectedBeforeFragment": 12,
+          "suspectedThenConfirmed": {
+            "count": 15,
+            "share": 0.5172413793103449,
+            "interval": [
+              0.3443073797056916,
+              0.6861418066920478
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 1,
+            "share": 0.034482758620689655,
+            "interval": [
+              0.006113056614032261,
+              0.1717589106470025
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 8,
+            "share": 0.27586206896551724,
+            "interval": [
+              0.1469858133850274,
+              0.4571747634443597
+            ]
+          },
+          "neverFlagged": {
+            "count": 5,
+            "share": 0.1724137931034483,
+            "interval": [
+              0.07597745271479928,
+              0.34548800572815114
+            ]
+          }
+        }
       }
     },
     "chronologicalValidation": {
@@ -3476,7 +4485,11 @@
           "detected": 13,
           "late": 3,
           "missed": 15,
-          "detectionRate": 0.41935483870967744
+          "detectionRate": 0.41935483870967744,
+          "detectionInterval": [
+            0.26415303073549257,
+            0.5923403564797902
+          ]
         },
         "breakups C": {
           "targets": 29,
@@ -3484,7 +4497,11 @@
           "detected": 6,
           "late": 1,
           "missed": 22,
-          "detectionRate": 0.20689655172413793
+          "detectionRate": 0.20689655172413793,
+          "detectionInterval": [
+            0.09845936515585207,
+            0.3839044660825772
+          ]
         },
         "breakups D": {
           "targets": 15,
@@ -3492,7 +4509,11 @@
           "detected": 0,
           "late": 1,
           "missed": 14,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.20388926630434784
+          ]
         },
         "anomalous A-B": {
           "targets": 2,
@@ -3500,7 +4521,11 @@
           "detected": 0,
           "late": 0,
           "missed": 2,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.6576280471103807
+          ]
         },
         "anomalous C-D": {
           "targets": 28,
@@ -3508,7 +4533,11 @@
           "detected": 1,
           "late": 0,
           "missed": 27,
-          "detectionRate": 0.03571428571428571
+          "detectionRate": 0.03571428571428571,
+          "detectionInterval": [
+            0.00633235649754188,
+            0.17712576118498663
+          ]
         }
       },
       "alerts": 3063,
@@ -3658,7 +4687,11 @@
           "detected": 11,
           "late": 3,
           "missed": 18,
-          "detectionRate": 0.34375
+          "detectionRate": 0.34375,
+          "detectionInterval": [
+            0.20410233354328552,
+            0.5168922649121406
+          ]
         },
         "MEO": {
           "targets": 2,
@@ -3666,7 +4699,11 @@
           "detected": 0,
           "late": 1,
           "missed": 1,
-          "detectionRate": 0
+          "detectionRate": 0,
+          "detectionInterval": [
+            0,
+            0.6576280471103807
+          ]
         },
         "GEO": {
           "targets": 3,
@@ -3674,7 +4711,11 @@
           "detected": 3,
           "late": 0,
           "missed": 0,
-          "detectionRate": 1
+          "detectionRate": 1,
+          "detectionInterval": [
+            0.43849391955098227,
+            1
+          ]
         },
         "HEO": {
           "targets": 8,
@@ -3682,7 +4723,11 @@
           "detected": 3,
           "late": 0,
           "missed": 5,
-          "detectionRate": 0.375
+          "detectionRate": 0.375,
+          "detectionInterval": [
+            0.13684175946152105,
+            0.6942621454161981
+          ]
         },
         "unknown": {
           "targets": 60,
@@ -3690,7 +4735,11 @@
           "detected": 3,
           "late": 1,
           "missed": 56,
-          "detectionRate": 0.05
+          "detectionRate": 0.05,
+          "detectionInterval": [
+            0.01714919117914121,
+            0.13700734625099836
+          ]
         }
       },
       "byKind": {
@@ -3700,7 +4749,11 @@
           "detected": 19,
           "late": 5,
           "missed": 51,
-          "detectionRate": 0.25333333333333335
+          "detectionRate": 0.25333333333333335,
+          "detectionInterval": [
+            0.16859919647948146,
+            0.36210540616683723
+          ]
         },
         "anomalous": {
           "targets": 30,
@@ -3708,7 +4761,11 @@
           "detected": 1,
           "late": 0,
           "missed": 29,
-          "detectionRate": 0.03333333333333333
+          "detectionRate": 0.03333333333333333,
+          "detectionInterval": [
+            0.0059084379948573795,
+            0.16670751396958874
+          ]
         },
         "aerodynamic": {
           "targets": 0,
@@ -3716,7 +4773,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "release": {
           "targets": 0,
@@ -3724,7 +4782,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         },
         "unnamed": {
           "targets": 0,
@@ -3732,7 +4791,8 @@
           "detected": 0,
           "late": 0,
           "missed": 0,
-          "detectionRate": null
+          "detectionRate": null,
+          "detectionInterval": null
         }
       },
       "scoped": {
@@ -3755,6 +4815,158 @@
           0.8006819480497736,
           0.9664064205302869
         ]
+      },
+      "falseAlarmInterval": [
+        0.9894111865017805,
+        0.9955479961858825
+      ],
+      "lifecycle": {
+        "suspected": {
+          "alerts": 3056,
+          "real": 23,
+          "falseAlarms": 2888,
+          "neither": 145,
+          "share": 1,
+          "shareInterval": [
+            0.998744510173337,
+            1
+          ],
+          "realRate": 0.00790106492614222,
+          "realInterval": [
+            0.00527067298394107,
+            0.011828575222205021
+          ],
+          "days": null
+        },
+        "ends": {
+          "confirmed": {
+            "alerts": 7,
+            "real": 5,
+            "falseAlarms": 0,
+            "neither": 2,
+            "share": 0.0022905759162303663,
+            "shareInterval": [
+              0.0011099897046556266,
+              0.004720900364947976
+            ],
+            "realRate": 1,
+            "realInterval": [
+              0.5655085052479191,
+              1
+            ],
+            "days": {
+              "median": 8.666666666666666,
+              "tail": 30,
+              "count": 7
+            }
+          },
+          "dismissed": {
+            "alerts": 190,
+            "real": 2,
+            "falseAlarms": 175,
+            "neither": 13,
+            "share": 0.06217277486910995,
+            "shareInterval": [
+              0.054148874872465426,
+              0.07129605011973024
+            ],
+            "realRate": 0.011299435028248588,
+            "realInterval": [
+              0.0031041368075416624,
+              0.04025756757905964
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 190
+            }
+          },
+          "expired": {
+            "alerts": 2791,
+            "real": 14,
+            "falseAlarms": 2651,
+            "neither": 126,
+            "share": 0.9132853403141361,
+            "shareInterval": [
+              0.9027815744765444,
+              0.9227513550711812
+            ],
+            "realRate": 0.00525328330206379,
+            "realInterval": [
+              0.003131859423534063,
+              0.008799009759560205
+            ],
+            "days": {
+              "median": 30,
+              "tail": 30,
+              "count": 2791
+            }
+          },
+          "open": {
+            "alerts": 68,
+            "real": 2,
+            "falseAlarms": 62,
+            "neither": 4,
+            "share": 0.02225130890052356,
+            "shareInterval": [
+              0.01759046706069287,
+              0.028111767983108087
+            ],
+            "realRate": 0.03125,
+            "realInterval": [
+              0.00861195771251659,
+              0.10697493882294247
+            ],
+            "days": null
+          }
+        },
+        "cleared": {
+          "steps": 148147,
+          "real": 19,
+          "realRate": 0.00012825099394520308,
+          "realInterval": [
+            0.00008210976026483895,
+            0.00020031590501062586
+          ],
+          "confirmedLater": 6,
+          "confirmedLaterReal": 3
+        },
+        "breakups": {
+          "targets": 29,
+          "suspectedBeforeFragment": 10,
+          "suspectedThenConfirmed": {
+            "count": 9,
+            "share": 0.3103448275862069,
+            "interval": [
+              0.17275424489768068,
+              0.49230470472718546
+            ]
+          },
+          "suspectedNotConfirmed": {
+            "count": 4,
+            "share": 0.13793103448275862,
+            "interval": [
+              0.05497350852047822,
+              0.30559357712699325
+            ]
+          },
+          "confirmedWithoutSuspected": {
+            "count": 7,
+            "share": 0.2413793103448276,
+            "interval": [
+              0.12218268185062131,
+              0.4210795221832869
+            ]
+          },
+          "neverFlagged": {
+            "count": 9,
+            "share": 0.3103448275862069,
+            "interval": [
+              0.17275424489768068,
+              0.49230470472718546
+            ]
+          }
+        }
       }
     }
   }
