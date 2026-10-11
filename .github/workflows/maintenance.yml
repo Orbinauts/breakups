@@ -298,7 +298,8 @@ jobs:
           git switch -q -c "$branch"
           git add -A
           { cat "$out/title.txt"; echo; cat "$out/message.txt"; } > "$out/commit.txt"
-          git commit -q -F "$out/commit.txt"
+          # A branch folded in with nothing generated beside it is the change itself: there is nothing more to commit.
+          if ! git diff --cached --quiet; then git commit -q -F "$out/commit.txt"; fi
           git push -q origin "$branch"
           url=$(gh pr create --base main --head "$branch" --title "$title" --body-file "$out/body.md" --label maintenance)
           echo "url=$url" >> "$GITHUB_OUTPUT"
