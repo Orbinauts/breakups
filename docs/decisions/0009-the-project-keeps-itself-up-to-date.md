@@ -66,8 +66,8 @@ merge is safe.
   `maintenance/<date>`, opens a pull request saying what moved and why
   (each source refreshed with its hashes, each event added, removed or
   changed by id, each cell of the aggregate with its old and new value,
-  the prospective score), uploads the release's side files, squashes the
-  pull request into main, runs CI, the KPI workflow and the docs on main,
+  the prospective score), waits for CI to pass on the pull request,
+  uploads the release's side files, squashes the pull request into main, runs CI, the KPI workflow and the docs on main,
   and links their runs on the pull request. A week with nothing new opens
   no pull request.
 - **The closed year is promoted once a year.** On the first weekly run
@@ -128,7 +128,9 @@ safe for three reasons. Every check that guards a person's change runs on
 the tree before the merge: the typecheck, the whole test suite (which
 rebuilds the truth from its snapshots and fails on any difference, and
 checks every README cell against the files) and the documentation build;
-a failure stops the run with an issue and nothing is merged. The tree is
+a failure stops the run with an issue and nothing is merged. CI then runs
+on the pull request itself, with the configuration a person's pull request
+meets, on Node 22 and 24, and the merge waits for it to pass. The tree is
 merged only onto the main it was checked against: a main that moved
 during the run is left alone and the next run starts again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
