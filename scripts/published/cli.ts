@@ -42,8 +42,8 @@ export function publishedRun(options: PublishedRunOptions): string {
   const files = options.yearFiles.map((path) => ({ path, file: readYearFile(path) })).sort((a, b) => a.file.year - b.file.year);
   const detectors = [...new Set(files.map(({ file }) => file.detector.name))];
   if (detectors.length > 1) throw new Error(`the year files come from two detectors: ${detectors.join(" and ")}`);
-  const fresh = files.find(({ file }) => !file.carried);
-  if (fresh !== undefined) throw new Error(`${fresh.path} was not carried from the states at the end of ${fresh.file.year - 1}, so it is not the detector's run`);
+  const uncarried = files.find(({ file }) => !file.carried);
+  if (uncarried !== undefined) throw new Error(`${uncarried.path} was not carried from the states at the end of ${uncarried.file.year - 1}, so it is not the detector's run`);
   const verdicts = files.flatMap(({ file }) => file.verdicts);
 
   const truthBytes = readFileSync(options.truth);

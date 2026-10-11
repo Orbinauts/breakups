@@ -1,6 +1,7 @@
 import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
+import { PUBLISHED_DIR } from "../published/files.ts";
 
 /**
  * The tree GitHub Pages serves, put together by the Pages workflow
@@ -11,9 +12,6 @@ import { parseArgs } from "node:util";
  * yet, gives the reference alone: the reference deploys before the first
  * publish.
  */
-
-/** The directory of the published files, on the `published` branch and on Pages alike. */
-export const PUBLISHED_DIR = "v1";
 
 /** Where the Pages tree's parts are read from and where it is written. */
 export interface SiteDirs {

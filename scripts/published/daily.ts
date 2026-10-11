@@ -6,6 +6,7 @@ import { archiveHome } from "../archive/archive.ts";
 import { readJsonl } from "../prospective/alerts.ts";
 import { placesOf, runUrlOf, type RunLine } from "../prospective/run.ts";
 import { publishedRun } from "./cli.ts";
+import { PUBLISHED_DIR } from "./files.ts";
 
 /**
  * The daily job's publishing, run after the prospective test has logged and
@@ -79,12 +80,12 @@ function commitPublished(checkout: string, write: () => string, message: (summar
   try {
     summary = write();
     const { title, body } = message(summary);
-    git(checkout, "add", "--all", "--", "v1");
+    git(checkout, "add", "--all", "--", PUBLISHED_DIR);
     git(checkout, "commit", "-q", "-m", title, "-m", body);
   } catch (error) {
     try {
       git(checkout, "reset", "-q", "--hard", "HEAD");
-      git(checkout, "clean", "-q", "-fd", "--", "v1");
+      git(checkout, "clean", "-q", "-fd", "--", PUBLISHED_DIR);
     } catch {
       // A worktree left changed is refused by the next run's check.
     }

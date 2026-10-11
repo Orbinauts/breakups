@@ -2,11 +2,12 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual, parseArgs } from "node:util";
-import { gunzipSync, gzipSync } from "node:zlib";
+import { gzipSync } from "node:zlib";
 import { readBreakups, type Breakup, type Verdict } from "../../src/index.ts";
 import { archiveHome, readBodies } from "../archive/archive.ts";
 import type { YearFile } from "../kpi/kpi.ts";
 import { overlaps } from "../kpi/match.ts";
+import { readYearFile } from "../prospective/run.ts";
 import { selectPublished, type BodyIdentity, type BodyOf } from "./select.ts";
 
 /**
@@ -33,7 +34,7 @@ import { selectPublished, type BodyIdentity, type BodyOf } from "./select.ts";
  * Provenance: the year, the detector's name, the Archive's build time and
  * how many verdicts the year file held. Regenerate with
  *
- *     node --max-old-space-size=8192 --experimental-strip-types scripts/published/real-fixtures.ts --year-file <year file> [--year-file <year file> ...] [--archive <dir>]
+ *     npm run published:fixtures -- --year-file <year file> [--year-file <year file> ...] [--archive <dir>]
  *
  * where a year file is the frozen detector's replay of a year (`npm run kpi
  * -- --year <Y>` writes `<out>/years/<Y>.json.gz`; the live test's daily
@@ -83,13 +84,13 @@ export function fixtureOf(file: YearFile, breakups: readonly Breakup[], bodyOf: 
 function main(): void {
   const { values } = parseArgs({ options: { "year-file": { type: "string", multiple: true }, archive: { type: "string" } } });
   const paths = values["year-file"] ?? [];
-  if (paths.length === 0) throw new Error("usage: real-fixtures.ts --year-file <year file> [--year-file ...] [--archive <dir>]");
+  if (paths.length === 0) throw new Error("usage: npm run published:fixtures -- --year-file <year file> [--year-file ...] [--archive <dir>]");
   const archive = values.archive === undefined ? archiveHome() : resolve(values.archive);
   const breakups = readBreakups(JSON.parse(readFileSync(resolve(ROOT, "data/breakups.json"), "utf8")));
   const out = resolve(ROOT, "test/fixtures/published");
   mkdirSync(out, { recursive: true });
   for (const path of paths) {
-    const file = JSON.parse(gunzipSync(readFileSync(path)).toString("utf8")) as YearFile;
+    const file = readYearFile(path);
     const table = new Map(readBodies(archive, file.year).map((body) => [body.number, body]));
     const fixture = fixtureOf(file, breakups, (number) => table.get(number));
     const target = resolve(out, `${file.year}.json.gz`);

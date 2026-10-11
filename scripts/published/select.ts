@@ -22,8 +22,9 @@ interface Landed {
 }
 
 const iso = (ms: number): string => new Date(ms).toISOString();
-const stepOut = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: iso(step.beforeEpoch), afterEpoch: iso(step.afterEpoch) });
-const eventOut = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: iso(event.at), from: iso(event.from), to: iso(event.to) });
+/** The detector's step, estimate and verdict in their published shape: instants in milliseconds become ISO strings. */
+const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: iso(step.beforeEpoch), afterEpoch: iso(step.afterEpoch) });
+const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: iso(event.at), from: iso(event.from), to: iso(event.to) });
 const canLand = (row: Breakup): boolean => row.kind === "breakup" || row.kind === "anomalous";
 
 /** The day an event starts on, which an agency notice must not precede. */
@@ -43,8 +44,8 @@ function reportsOf(row: Breakup | null): PublishedReport[] {
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
-function verdictOut(verdict: Verdict): PublishedVerdict {
-  return { state: verdict.state as PublishedState, raisedAt: iso(verdict.raisedAt), step: stepOut(verdict.step), event: eventOut(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
+function publishedVerdictOf(verdict: Verdict): PublishedVerdict {
+  return { state: verdict.state as PublishedState, raisedAt: iso(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
 }
 
 /** The row a suspected verdict lands on by its step: a breakup or anomalous row of its object whose window, widened by the regime's margin, the step brackets; the latest such. */
@@ -142,15 +143,15 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
     raisedAt: iso(raisedAt),
     confirmedAt,
     parent: { catalogueNumber: number, designator: row?.parent.designator ?? body?.designator ?? null, name: row?.parent.name ?? body?.name ?? null, launchedOn: row?.parent.launchedOn ?? body?.launch ?? null },
-    event: eventOut(latest.event),
-    step: stepOut(latest.step),
+    event: publishedEventOf(latest.event),
+    step: publishedStepOf(latest.step),
     reasons: latest.reasons,
     reports,
     evidence: latest.evidence,
     bodies: latest.bodies ?? [],
     candidates: latest.candidates ?? [],
     row: row?.id ?? null,
-    verdicts: cluster.map(({ verdict }) => verdictOut(verdict)),
+    verdicts: cluster.map(({ verdict }) => publishedVerdictOf(verdict)),
   };
 }
 

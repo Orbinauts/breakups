@@ -74,7 +74,8 @@
     "maintenance:alert-issues": "node --experimental-strip-types scripts/maintenance/alert-issues.ts",
     "pages:site": "node --experimental-strip-types scripts/pages/site.ts",
     "published": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/cli.ts",
-    "published:daily": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/daily.ts"
+    "published:daily": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/daily.ts",
+    "published:fixtures": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/real-fixtures.ts"
   },
   "dependencies": {
     "@orbinauts/engine": "^0.1.2"

@@ -76,7 +76,7 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
 /**
  * The published list after a run: the breakups already published
  * (`previous`, as the files hold them) merged with the run's selection
- * (`fresh`, from `selectPublished`), in the light of the run's verdicts,
+ * (`selected`, from `selectPublished`), in the light of the run's verdicts,
  * earliest raised first.
  *
  * A run's breakup is every published one on the same object that
@@ -97,10 +97,10 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
  * does not find stays until the latest verdict on its step expired or
  * dismissed it. A run's breakup with no published match is added.
  */
-export function mergePublished(previous: readonly PublishedBreakup[], fresh: readonly PublishedBreakup[], verdicts: readonly Verdict[]): PublishedBreakup[] {
+export function mergePublished(previous: readonly PublishedBreakup[], selected: readonly PublishedBreakup[], verdicts: readonly Verdict[]): PublishedBreakup[] {
   let unmatched = [...previous];
   const merged: PublishedBreakup[] = [];
-  for (const breakup of fresh) {
+  for (const breakup of selected) {
     const matches = matchesOf(unmatched, breakup);
     unmatched = unmatched.filter((published) => !matches.includes(published));
     merged.push([...matches, breakup].reduce(mergeOne));
