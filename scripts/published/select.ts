@@ -15,11 +15,10 @@ export type BodyOf = (number: number) => BodyIdentity | undefined;
 
 type ObjectVerdict = Verdict & { number: number };
 
-/** A suspected or confirmed object verdict, with the ground-truth row it lands on (null for none), and whether it is a confirmation exempt as a release on purpose. */
+/** A suspected or confirmed object verdict, with the ground-truth row it lands on (null for none). */
 interface Landed {
   verdict: ObjectVerdict;
   row: Breakup | null;
-  exempt: boolean;
 }
 
 const iso = (ms: number): string => new Date(ms).toISOString();
@@ -59,40 +58,60 @@ function landSuspected(verdict: ObjectVerdict, breakups: readonly Breakup[]): Br
  * it (`landConfirmed`): on the row of a detection. It is exempt, a release
  * on purpose, under a crewed station's launch, under a crewed or cargo
  * craft's launch other than on its rocket body, or inside a release row's
- * window. Any other landing (a row naming the launch alone or no object,
- * an aerodynamic row, no row at all) is a breakup on no row.
+ * window: then it lands nowhere and is left out (null), on its own. Any
+ * other landing (a row naming the launch alone or no object, an
+ * aerodynamic row, no row at all) is a breakup on no row.
  */
-function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>): Landed {
+function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>): Landed | null {
   const landing = landConfirmed(verdict, i, rows);
   const on = landing.event === null ? null : (byId.get(landing.event) ?? null);
   const exempt = landing.outcome === "exempt" && (landing.note.startsWith("a crewed") || on?.kind === "release");
-  return { verdict, row: landing.outcome === "detection" ? on : null, exempt };
+  return exempt ? null : { verdict, row: landing.outcome === "detection" ? on : null };
 }
 
 /** One breakup: the verdicts merged into it, in the order raised. */
 type Cluster = Landed[];
 
-/** Whether a landed verdict belongs to a breakup: the same object, and an overlapping step or the same landed row. */
+/** The steps a breakup's verdicts measured. */
+const stepsOf = (cluster: Cluster): Step[] => cluster.flatMap(({ verdict }) => (verdict.step === null ? [] : [verdict.step]));
+
+/**
+ * Whether a landed verdict belongs to a breakup of the same object: its
+ * step overlaps one of the breakup's, or it lands on one of the breakup's
+ * rows and one side measured no step (the verdict has none, or the
+ * breakup's verdicts have none). Two verdicts with steps that do not
+ * overlap are two breakups, whatever row they land on.
+ */
 function joins(cluster: Cluster, landed: Landed): boolean {
-  return cluster.some(({ verdict, row }) => {
-    if (verdict.number !== landed.verdict.number) return false;
-    const a = verdict.step;
-    const b = landed.verdict.step;
-    if (a !== null && b !== null && overlaps(a, b)) return true;
-    return row !== null && row === landed.row;
-  });
+  if (cluster[0]!.verdict.number !== landed.verdict.number) return false;
+  const step = landed.verdict.step;
+  const steps = stepsOf(cluster);
+  if (step !== null && steps.some((s) => overlaps(s, step))) return true;
+  const onRow = landed.row !== null && cluster.some(({ row }) => row === landed.row);
+  return onRow && (step === null || steps.length === 0);
 }
 
-/** The verdicts merged into breakups: each joins every breakup it belongs to, which then become one. */
+const lastRaisedOf = (cluster: Cluster): number => Math.max(...cluster.map(({ verdict }) => verdict.raisedAt));
+
+/**
+ * The verdicts merged into breakups: a verdict with a step joins every
+ * breakup it belongs to, which then become one; a verdict with no step
+ * joins only the breakup on its row raised to last, so it never makes one
+ * of two breakups its row holds.
+ */
 function clustersOf(landed: readonly Landed[]): Cluster[] {
   let clusters: Cluster[] = [];
   for (const one of landed) {
-    const into = clusters.filter((cluster) => joins(cluster, one));
+    const joined = clusters.filter((cluster) => joins(cluster, one));
+    const into = one.verdict.step === null ? joined.sort((a, b) => lastRaisedOf(a) - lastRaisedOf(b)).slice(-1) : joined;
     const merged = [...into.flat(), one];
     clusters = [...clusters.filter((cluster) => !into.includes(cluster)), merged];
   }
   return clusters.map((cluster) => [...cluster].sort((a, b) => a.verdict.raisedAt - b.verdict.raisedAt));
 }
+
+/** The order of the published list: earliest raised first, then by id. */
+export const byFirstRaised = (a: PublishedBreakup, b: PublishedBreakup): number => Date.parse(a.raisedAt) - Date.parse(b.raisedAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** The states that decide a suspected step's fate: raised (again), confirmed, or let go. */
 const FATES: readonly Verdict["state"][] = ["suspected", "confirmed", "expired", "dismissed"];
@@ -105,7 +124,6 @@ export function isLetGo(number: number, step: Step | null, verdicts: readonly Ve
 }
 
 function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: BodyOf): PublishedBreakup | null {
-  if (cluster.some((landed) => landed.exempt)) return null;
   const latest = cluster[cluster.length - 1]!.verdict;
   const row = [...cluster].reverse().find((landed) => landed.row !== null)?.row ?? null;
   const confirmedVerdict = cluster.find(({ verdict }) => verdict.state === "confirmed")?.verdict;
@@ -145,12 +163,16 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * A suspected verdict lands by its step on a `breakup` or `anomalous` row
  * of its object, the window widened by the regime's margin; a confirmed one
  * as the scorecard's Confirmed line lands it. Verdicts on one object whose
- * steps overlap, or that land on one row, are one breakup. It is published
+ * steps overlap are one breakup; a verdict with no step joins the breakup
+ * of the row it lands on (the latest raised where the row holds two), and
+ * two whose steps do not overlap are two breakups, whatever row they land
+ * on. It is published
  * confirmed when the detector confirmed it or an agency notice on its row,
  * dated no earlier than the event, did; suspected when a dated outside
  * report (news, an analyst) names its row and no later verdict on its step
  * expired or dismissed it. A confirmation exempt as a release on purpose
- * takes its breakup out. GCAT, the catalogue and undated statements never
+ * is left out on its own; the breakup's other verdicts are published if
+ * they qualify without it. GCAT, the catalogue and undated statements never
  * count. The id is the object and the day of the latest verdict's estimate
  * (of the first raising where it made none); merging with what is already
  * published, which may fix an earlier id, is the caller's.
@@ -162,11 +184,14 @@ export function selectPublished(verdicts: readonly Verdict[], breakups: readonly
   verdicts.forEach((verdict, i) => {
     if (verdict.kind !== "object" || verdict.number === null) return;
     const object = verdict as ObjectVerdict;
-    if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups), exempt: false });
-    if (verdict.state === "confirmed") landed.push(landedConfirmation(object, i, rows, byId));
+    if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups) });
+    if (verdict.state === "confirmed") {
+      const confirmation = landedConfirmation(object, i, rows, byId);
+      if (confirmation !== null) landed.push(confirmation);
+    }
   });
   return clustersOf(landed)
     .map((cluster) => publishedOf(cluster, verdicts, bodyOf))
     .filter((published) => published !== null)
-    .sort((a, b) => Date.parse(a.raisedAt) - Date.parse(b.raisedAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    .sort(byFirstRaised);
 }

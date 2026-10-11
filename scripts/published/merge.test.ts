@@ -118,6 +118,25 @@ describe("a run merged into what is already published", () => {
     expect(mergePublished([fromPieces], [onStep], []).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2]]);
   });
 
+  test("keeps apart two breakups on one row whose steps do not overlap", () => {
+    const first = published(41000, "suspected", "2026-05-04T12:00:00.000Z", step("2026-05-03T00:00:00.000Z", "2026-05-04T00:00:00.000Z"), { row: "41000:2026-05-01" });
+    const second = published(41000, "suspected", "2026-05-13T12:00:00.000Z", step("2026-05-12T00:00:00.000Z", "2026-05-13T00:00:00.000Z"), { row: "41000:2026-05-01" });
+    expect(mergePublished([first], [second], []).map((b) => [b.id, b.verdicts.length])).toEqual([
+      [first.id, 1],
+      [second.id, 1],
+    ]);
+  });
+
+  test("merges a breakup with no step into the latest raised of the breakups on its row", () => {
+    const first = published(41000, "suspected", "2026-05-04T12:00:00.000Z", step("2026-05-03T00:00:00.000Z", "2026-05-04T00:00:00.000Z"), { row: "41000:2026-05-01" });
+    const second = published(41000, "suspected", "2026-05-13T12:00:00.000Z", step("2026-05-12T00:00:00.000Z", "2026-05-13T00:00:00.000Z"), { row: "41000:2026-05-01" });
+    const fromPieces = published(41000, "confirmed", "2026-05-25T00:00:00.000Z", null, { row: "41000:2026-05-01" });
+    expect(mergePublished([first, second], [fromPieces], []).map((b) => [b.id, b.state, b.verdicts.length])).toEqual([
+      [first.id, "suspected", 1],
+      [second.id, "confirmed", 2],
+    ]);
+  });
+
   test("adds a breakup published for the first time, and keeps two on one object apart, earliest raised first", () => {
     const another = published(12456, "suspected", "2026-08-01T04:00:00.000Z", step("2026-07-30T00:00:00.000Z", "2026-07-31T00:00:00.000Z"), { row: "12456:2026-07-30" });
     expect(mergePublished([meteor], [another, luch], []).map((b) => b.id)).toEqual([luch.id, another.id, meteor.id]);

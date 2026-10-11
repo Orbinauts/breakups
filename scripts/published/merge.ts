@@ -1,6 +1,6 @@
 import type { PublishedBreakup, PublishedStep, PublishedVerdict, Step, Verdict } from "../../src/index.ts";
 import { overlaps } from "../kpi/match.ts";
-import { isLetGo } from "./select.ts";
+import { byFirstRaised, isLetGo } from "./select.ts";
 
 /** A published step back in milliseconds, as the detector's verdicts carry it. */
 const stepIn = (step: PublishedStep | null): Step | null => (step === null ? null : { ...step, beforeEpoch: Date.parse(step.beforeEpoch), afterEpoch: Date.parse(step.afterEpoch) });
@@ -14,19 +14,30 @@ const verdictKey = (v: PublishedVerdict): string => `${v.state}|${v.raisedAt}|${
 /** Every step a breakup's verdicts measured. */
 const stepsOf = (breakup: PublishedBreakup): Step[] => [breakup.step, ...breakup.verdicts.map((v) => v.step)].map(stepIn).filter((step) => step !== null);
 
-/**
- * Whether two published breakups are one: the same object, and the same
- * landed row, an overlapping step, or a verdict both carry (a confirmation
- * from the pieces alone that lands on no row has neither, and each day's
- * replay of the year raises it again the same).
- */
-function isSame(a: PublishedBreakup, b: PublishedBreakup): boolean {
-  if (a.parent.catalogueNumber !== b.parent.catalogueNumber) return false;
-  if (a.row !== null && a.row === b.row) return true;
+/** Whether two published breakups on one object are one by what they measured: an overlapping step, or a verdict both carry (a confirmation from the pieces alone that lands on no row has neither, and each day's replay of the year raises it again the same). */
+function sharesStepOrVerdict(a: PublishedBreakup, b: PublishedBreakup): boolean {
   const steps = stepsOf(b);
   if (stepsOf(a).some((x) => steps.some((y) => overlaps(x, y)))) return true;
   const keys = new Set(b.verdicts.map(verdictKey));
   return a.verdicts.some((v) => keys.has(verdictKey(v)));
+}
+
+/** Whether two published breakups on one object are one by their row: the same landed row, where one of them measured no step (as a verdict with no step joins the breakup of its row). */
+const sharesRow = (a: PublishedBreakup, b: PublishedBreakup): boolean => a.row !== null && a.row === b.row && (stepsOf(a).length === 0 || stepsOf(b).length === 0);
+
+/**
+ * The published breakups a run's breakup is: those on its object that
+ * share a step or a verdict with it, and those that share its row where
+ * one side measured no step. A run's breakup with no step matched by row
+ * alone takes only the latest raised of them, as the selection joins a
+ * verdict with no step to the latest breakup on its row; earliest raised
+ * first.
+ */
+function matchesOf(previous: readonly PublishedBreakup[], breakup: PublishedBreakup): PublishedBreakup[] {
+  const onObject = previous.filter((published) => published.parent.catalogueNumber === breakup.parent.catalogueNumber);
+  const measured = onObject.filter((published) => sharesStepOrVerdict(published, breakup));
+  const onRow = onObject.filter((published) => !measured.includes(published) && sharesRow(published, breakup)).sort(byFirstRaised);
+  return [...measured, ...(stepsOf(breakup).length === 0 ? onRow.slice(-1) : onRow)].sort(byFirstRaised);
 }
 
 const earlier = (a: string, b: string): string => (Date.parse(a) <= Date.parse(b) ? a : b);
@@ -62,18 +73,26 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
   };
 }
 
-const byRaised = (a: PublishedBreakup, b: PublishedBreakup): number => Date.parse(a.raisedAt) - Date.parse(b.raisedAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-
 /**
  * The published list after a run: the breakups already published
  * (`previous`, as the files hold them) merged with the run's selection
  * (`fresh`, from `selectPublished`), in the light of the run's verdicts,
  * earliest raised first.
  *
- * A run's breakup is the published one on the same object with the same
- * landed row or an overlapping step: it keeps the id fixed when it was
- * first published, the earlier raising and confirmation, and every verdict
- * of both, and takes the latest verdict's fields. A confirmed breakup stays
+ * A run's breakup is every published one on the same object that
+ *
+ * - measured a step overlapping one of its steps (the breakup's own step or
+ *   any of its verdicts'), or
+ * - carries a verdict it carries too (the same state, raising and step), or
+ * - landed on the same row, where one of the two measured no step at all;
+ *   a run's breakup with no step matched by its row alone is the latest
+ *   raised of those, as the selection joins a verdict with no step to the
+ *   latest breakup on its row.
+ *
+ * Two breakups whose steps do not overlap stay two, whatever row they land
+ * on. The merged breakup keeps the id fixed when it was first published,
+ * the earlier raising and confirmation, and every verdict of both, and
+ * takes the latest verdict's fields. A confirmed breakup stays
  * for good, whether or not the run finds it again; a suspected one the run
  * does not find stays until the latest verdict on its step expired or
  * dismissed it. A run's breakup with no published match is added.
@@ -82,9 +101,9 @@ export function mergePublished(previous: readonly PublishedBreakup[], fresh: rea
   let unmatched = [...previous];
   const merged: PublishedBreakup[] = [];
   for (const breakup of fresh) {
-    const matches = unmatched.filter((published) => isSame(published, breakup)).sort(byRaised);
+    const matches = matchesOf(unmatched, breakup);
     unmatched = unmatched.filter((published) => !matches.includes(published));
     merged.push([...matches, breakup].reduce(mergeOne));
   }
-  return [...merged, ...unmatched.filter((breakup) => stays(breakup, verdicts))].sort(byRaised);
+  return [...merged, ...unmatched.filter((breakup) => stays(breakup, verdicts))].sort(byFirstRaised);
 }

@@ -53,7 +53,7 @@ The verdicts are the frozen detector's, the one the [live test](../README.md#liv
 - **A breakup is confirmed** when the detector confirmed it, or when it raised an early warning that lands on a row with an agency notice. A breakup the detector confirmed is shown even with no report yet: that is the detector's own news, typically weeks before the first official report.
 - **A breakup is suspected** when the detector raised an early warning that lands on a row with an outside report.
 - **Nothing else is shown**: early warnings no report names, manoeuvres, alerts that expired or were dismissed, and confirmations that land on a crewed station's launch, a crewed or cargo craft's launch other than its rocket body, or the window of a release on purpose.
-- **One breakup, many verdicts.** Verdicts on one object whose steps overlap are one breakup, and a verdict with no step joins the breakup of the row it lands on.
+- **One breakup, many verdicts.** Verdicts on one object whose steps overlap are one breakup, and a verdict with no step joins the breakup of the row it lands on. Two verdicts whose steps do not overlap are two breakups, even on one row.
 - **The list grows.** Each day's run merges into the list already published, so it does not empty on 1 January. A confirmed breakup stays for good. A suspected one leaves when its early warning expires or is dismissed.
 
 [docs/decisions/0010](decisions/0010-the-breakups-fit-to-show-are-published-as-static-json.md) states each rule in full, and `scripts/published/` holds the code, with a test for each.

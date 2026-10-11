@@ -57,7 +57,8 @@ is new. Issue #8 is the specification.
   marks exempt as a release on purpose.
 - **One breakup, many verdicts.** Verdicts on one object whose steps
   overlap are one breakup; a verdict with no step joins the breakup of the
-  row it lands on. `raisedAt` is the earliest verdict's, `confirmedAt` the
+  row it lands on (the latest raised, where the row holds two whose steps
+  do not overlap). `raisedAt` is the earliest verdict's, `confirmedAt` the
   earlier of the first confirmation and the first agency notice, the
   step, estimate, reasons and evidence the latest verdict's, and the `id`
   `<catalogue number>-<UTC day of the event estimate>`, fixed the first

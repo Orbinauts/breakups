@@ -274,3 +274,41 @@ describe("a suspected verdict", () => {
     expect(selectPublished([suspected], [unreported], noBodies)).toEqual([]);
   });
 });
+
+describe("verdicts on one row whose steps do not overlap", () => {
+  const wide = row(41000, "2026-05-01T00:00Z", "2026-05-20T00:00Z", { statements: [["news", "2026-05-21"]] });
+  const first = verdict(41000, "suspected", "2026-05-04T12:00Z", { step: step("2026-05-03T00:00Z", "2026-05-04T00:00Z") });
+  const second = verdict(41000, "suspected", "2026-05-13T12:00Z", { step: step("2026-05-12T00:00Z", "2026-05-13T00:00Z") });
+
+  test("are two breakups", () => {
+    expect(selectPublished([first, second], [wide], noBodies).map((b) => [b.id, b.verdicts.length])).toEqual([
+      ["41000-2026-05-04", 1],
+      ["41000-2026-05-13", 1],
+    ]);
+  });
+
+  test("and a confirmation with no step on that row joins only the latest of them", () => {
+    const pieces = verdict(41000, "confirmed", "2026-05-25T00:00Z");
+    expect(selectPublished([first, second, pieces], [wide], noBodies).map((b) => [b.id, b.state, b.verdicts.length])).toEqual([
+      ["41000-2026-05-04", "suspected", 1],
+      ["41000-2026-05-13", "confirmed", 2],
+    ]);
+  });
+
+  test("are joined, where a confirmation with no step was raised first, by the one landing on its row", () => {
+    const pieces = verdict(41000, "confirmed", "2026-05-02T00:00Z");
+    expect(selectPublished([pieces, first], [wide], noBodies).map((b) => [b.id, b.state, b.verdicts.length])).toEqual([["41000-2026-05-02", "confirmed", 2]]);
+  });
+});
+
+describe("an exempt confirmation on the step of a reported suspected verdict", () => {
+  test("is left out alone, and the suspected verdict is published on its own report", () => {
+    const stationStep = step("2026-03-01T00:00Z", "2026-03-01T12:00Z");
+    const stationRow = row(25544, "2026-03-01T00:00Z", "2026-03-02T00:00Z", { regime: "LEO", statements: [["news", "2026-03-02"]] });
+    const suspected = verdict(25544, "suspected", "2026-03-01T20:00Z", { launch: "1998-067", step: stationStep });
+    const exempt = verdict(25544, "confirmed", "2026-03-03T00:00Z", { launch: "1998-067", step: stationStep });
+    const published = selectPublished([suspected, exempt], [stationRow], noBodies);
+    expect(published).toMatchObject([{ id: "25544-2026-03-01", state: "suspected", confirmedAt: null, row: "25544:2026-03-01" }]);
+    expect(published[0]!.verdicts.map((v) => v.state)).toEqual(["suspected"]);
+  });
+});
