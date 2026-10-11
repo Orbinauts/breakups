@@ -90,10 +90,56 @@ seven are kept.
 
 ## Stopping it
 
-The job is the launchd agent `com.orbinauts.breakups.prospective` of the
-owner's account, at 04:37 local time each day. It stops with
-`launchctl bootout gui/$(id -u)/com.orbinauts.breakups.prospective`, and
-stays stopped once its plist is removed from `~/Library/LaunchAgents/`.
-Stopping it ends the record; a gap in `runs.jsonl` shows when it was not
-running, and a run after a gap logs the alerts of the gap with the
-commit time of that run.
+The job is the scheduled workflow `.github/workflows/prospective.yml`
+("Prospective"), at 02:37 UTC each day. It pauses with
+`gh workflow disable prospective.yml` and resumes with
+`gh workflow enable prospective.yml`; `gh workflow run prospective.yml`
+runs it at once. Stopping it ends the record; a gap in `runs.jsonl` shows
+when it was not running, and a run after a gap logs the alerts of the gap
+with the commit time of that run.
+
+## As built
+
+On 2026-10-11, the day it began, the job moved from a launchd agent of the
+owner's account (`com.orbinauts.breakups.prospective`, at 04:37 local time,
+over the Archive and the worktrees beside the repository) to the scheduled
+GitHub Actions workflow `prospective.yml`, with the owner's approval; the
+agent was removed once the workflow had run and pushed its first line. Two
+reasons. The test no longer depends on one machine being awake, online and
+unchanged every day for years. And each run's line in `runs.jsonl` names
+the Actions run that made it (`runUrl`), whose log GitHub keeps with its
+own timestamps, a second record of when each alert was known held by
+another party than the branch.
+
+The decision stands; what changed is where its parts live.
+
+- **The runner starts empty each day.** The catalogue's login is kept as
+  the repository's secrets `SPACETRACK_IDENTITY` and `SPACETRACK_PASSWORD`,
+  given only to the run's step. The test's own data are kept as assets of
+  the release `prospective-data` (`npm run prospective:data`,
+  `scripts/prospective/data.ts`): the frozen states at the end of each
+  closed year with their provenance (`states-2025.json.gz`, the starting
+  states above, its hash the one its provenance names), the day slices
+  pulled from the history class for each year replayed
+  (`history-2026.tar`, the days with their modification times, which say
+  which were kept for good), and a manifest of hashes. The run downloads
+  them and the Archive's released years before the year it replays,
+  verifying every hash, and afterwards uploads the year's slices again, and
+  a closed year's end states with their provenance once it settles. The
+  ledger `requests.log` is printed in the run's log and kept as its
+  artifact, which keeps it for ninety days.
+- **The frozen detector is a checkout of the tag**, not a worktree: the
+  workflow checks out main, the tag beside it and the `prospective` branch
+  in a third directory, and refuses to run where the tag no longer names
+  `8729987`, as `npm run prospective` itself now does wherever it runs
+  (`FROZEN_COMMIT`). No lockfile is committed, so the tag's runtime
+  dependencies are installed at the versions the local runs used
+  (`@orbinauts/engine` 0.1.2, `satellite.js` 7.1.0,
+  `astronomy-engine` 2.1.19) and checked.
+- **The commit is the Actions bot's** (`github-actions[bot]`), pushed with
+  the run's token, so the branch says which commits a run made; the first
+  two lines of `runs.jsonl`, made by the launchd agent on the test's first
+  day, carry the owner's identity and no run URL.
+- **The view and its own index are as above**, built on the runner each
+  day over the whole Archive: every released year before the one replayed,
+  and the year rebuilt from the slices. The decoded-column cache is off.
