@@ -82,3 +82,73 @@ describe("the Pages workflow", () => {
     for (const action of uses) expect(action).toMatch(/^[\w-]+\/[\w-]+@[0-9a-f]{40}$/);
   });
 });
+
+interface CallingJob extends Partial<Job> {
+  if?: string;
+  uses?: string;
+  outputs?: Record<string, string>;
+}
+
+const prospective = parse(readFileSync(resolve(ROOT, ".github/workflows/prospective.yml"), "utf8")) as Omit<Workflow, "jobs" | "concurrency"> & {
+  concurrency: { group: string; "cancel-in-progress": boolean };
+  env: Record<string, string>;
+  jobs: Record<string, CallingJob>;
+};
+const daily = prospective.jobs["daily"] as CallingJob & Job;
+const running = (pattern: RegExp): Step => {
+  const found = daily.steps.find((step) => pattern.test(step.run ?? ""));
+  if (found === undefined) throw new Error(`no step of the daily job runs ${pattern}`);
+  return found;
+};
+
+describe("the daily job's publishing", () => {
+  const replay = running(/^\s*npm run prospective$/m);
+  const upload = running(/prospective:data -- upload/);
+  const issues = running(/maintenance:alert-issues/);
+  const exists = running(/git -C "\$BREAKUPS_PROSPECTIVE" ls-remote --heads origin refs\/heads\/published/);
+  const checkout = daily.steps.find((step) => step.with?.["ref"] === "published")!;
+  const publish = running(/npm run -s published:daily/);
+  const publishing = [exists, checkout, publish];
+
+  test("comes after the replay's log, its data and its issues, and runs whenever the replay succeeded", () => {
+    expect(replay.id).toBeDefined();
+    const order = [replay, upload, issues, ...publishing].map((step) => daily.steps.indexOf(step));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    for (const step of publishing) expect(step.if).toBe(`\${{ !cancelled() && steps.${replay.id}.outcome == 'success' }}`);
+    for (const step of [replay, upload, issues]) expect(step.if).toBeUndefined();
+  });
+
+  test("fails with a clear message while the published branch does not exist on the remote", () => {
+    expect(exists.run).toMatch(/::error::.*published/);
+    expect(exists.run).toMatch(/exit 1/);
+  });
+
+  test("checks out the published branch whole, with the credentials to push it, where the publishing reads it", () => {
+    expect(checkout.uses).toMatch(/^actions\/checkout@/);
+    expect(checkout.with).toEqual({ ref: "published", path: "published", "fetch-depth": 0 });
+    expect(prospective.env["BREAKUPS_PUBLISHED"]).toBe("${{ github.workspace }}/published");
+  });
+
+  test("commits as the Actions bot, and says it pushed for the deploy to follow", () => {
+    expect(publish.run).toContain('git -C "$BREAKUPS_PUBLISHED" config user.name "github-actions[bot]"');
+    expect(publish.run).toContain('git -C "$BREAKUPS_PUBLISHED" config user.email "41898282+github-actions[bot]@users.noreply.github.com"');
+    expect(publish.run).toMatch(/npm run -s published:daily\n\s*echo "pushed=true" >> "\$GITHUB_OUTPUT"/);
+    expect(daily.outputs).toEqual({ published: `\${{ steps.${publish.id}.outputs.pushed }}` });
+  });
+
+  test("then calls the Pages workflow from main only, with the deploy's permissions and no concurrency group of its own", () => {
+    const pages = prospective.jobs["pages"]!;
+    expect(pages.needs).toBe("daily");
+    expect(pages.uses).toBe("./.github/workflows/docs.yml");
+    expect(pages.if).toBe("${{ !cancelled() && needs.daily.outputs.published == 'true' && github.ref == 'refs/heads/main' }}");
+    expect(pages.permissions).toEqual({ contents: "read", pages: "write", "id-token": "write" });
+    expect(pages.concurrency).toBeUndefined();
+    // The caller's run holds its workflow-level group while it waits on the deploy: the deploy's group must be another.
+    expect(prospective.concurrency.group).not.toBe(deploy.concurrency!.group);
+  });
+
+  test("pins every action by its commit", () => {
+    const uses = daily.steps.flatMap((step) => (step.uses === undefined ? [] : [step.uses]));
+    for (const action of uses) expect(action).toMatch(/^[\w-]+\/[\w-]+@[0-9a-f]{40}$/);
+  });
+});

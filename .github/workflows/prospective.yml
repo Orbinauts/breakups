@@ -26,6 +26,16 @@ name: Prospective
 # line in its body, and its key in a hidden line, so an alert gets one
 # issue however many runs see it.
 #
+# Last, the breakups fit to show are published (scripts/published/daily.ts):
+# the same replay's verdicts, landed on main's ground truth, are merged into
+# `v1/` on the orphan branch `published`, committed and pushed by the bot;
+# then the job `pages` calls the Pages workflow (docs.yml), which deploys the
+# reference with that `v1/`. Publishing reads only what the replay left and
+# runs whenever the replay succeeded, so the test's log, score, checks,
+# data and issues are what they were without it, and a publishing failure
+# fails the run without touching the alerts commit. Until the 2025 seed has
+# made the branch `published`, the publishing fails with that message.
+#
 # Any failing step fails the run, and the run commits whole or not at all.
 # To pause the test: gh workflow disable prospective.yml; to resume it:
 # gh workflow enable prospective.yml. A gap in `runs.jsonl` shows when it
@@ -43,7 +53,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  # The push to the `prospective` branch and the upload to the release `prospective-data`.
+  # The pushes to the `prospective` and `published` branches and the upload to the release `prospective-data`.
   contents: write
   # An issue for each new alert, and its label where missing.
   issues: write
@@ -54,6 +64,7 @@ env:
   FROZEN_COMMIT: 8729987b9d9890f071aff9a1df594f2daada8ed3
   BREAKUPS_FROZEN: ${{ github.workspace }}/frozen
   BREAKUPS_PROSPECTIVE: ${{ github.workspace }}/prospective
+  BREAKUPS_PUBLISHED: ${{ github.workspace }}/published
   # The decoded-column cache would keep every year unpacked beside the Archive for replays to come; this run reads each year once.
   BREAKUPS_DECODED: "off"
 
@@ -62,6 +73,9 @@ jobs:
     name: replay the year with the frozen detector
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    outputs:
+      # "true" once the published files are committed and pushed: the Pages deploy follows only then.
+      published: ${{ steps.publish.outputs.pushed }}
     steps:
       - name: Check out main (the scripts)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -139,6 +153,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: npm run prospective:data -- download
       - name: Pull, replay with the frozen detector, and log the alerts
+        id: replay
         working-directory: main
         env:
           SPACETRACK_IDENTITY: ${{ secrets.SPACETRACK_IDENTITY }}
@@ -162,6 +177,33 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: npm run -s maintenance:alert-issues -- "$BREAKUPS_PROSPECTIVE"
+      # The publishing reads the replay's year files from the day's scratch directory, so it runs whenever the replay
+      # succeeded, even if keeping the data or opening an issue failed; it changes nothing those steps read.
+      - name: The published branch must exist
+        if: ${{ !cancelled() && steps.replay.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git -C "$BREAKUPS_PROSPECTIVE" ls-remote --heads origin refs/heads/published)" ]; then
+            echo "::error::No branch 'published' on the remote: the 2025 seed makes it once (docs/published.md). Nothing is published until then; the alerts are committed."
+            exit 1
+          fi
+      - name: Check out the published branch (the published breakups)
+        if: ${{ !cancelled() && steps.replay.outcome == 'success' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: published
+          path: published
+          fetch-depth: 0
+      - name: Publish the breakups fit to show, and commit them to the published branch
+        id: publish
+        if: ${{ !cancelled() && steps.replay.outcome == 'success' }}
+        working-directory: main
+        run: |
+          set -euo pipefail
+          git -C "$BREAKUPS_PUBLISHED" config user.name "github-actions[bot]"
+          git -C "$BREAKUPS_PUBLISHED" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm run -s published:daily
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
       - name: The request ledger and the run's log
         if: always()
         run: |
@@ -179,3 +221,17 @@ jobs:
             ${{ env.BREAKUPS_ARCHIVE }}/prospective/prospective.log
           if-no-files-found: warn
           retention-days: 90
+
+  # A push made with the workflow's token starts no workflow, so the deploy is called here. Its concurrency group
+  # (`pages`) sits on docs.yml's deploy job alone: this run holds the group `prospective` while it waits, and the two
+  # differ, so neither waits on the other. The `github-pages` environment accepts main only: a run started by hand
+  # from another branch publishes to `published` but leaves the deploy to the next run from main or push to main.
+  pages:
+    name: deploy the reference and the published files
+    needs: daily
+    if: ${{ !cancelled() && needs.daily.outputs.published == 'true' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
