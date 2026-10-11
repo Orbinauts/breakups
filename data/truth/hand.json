@@ -167,17 +167,6 @@
       "note": "LeoLabs reported a debris-generating event with an estimated tens of fragments. The first event of this object was in 2004 (GCAT entry 269)."
     },
     {
-      "source": "analyst", "ref": "J. McDowell, GCAT satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv (file headed 'Updated 2026 Oct 9', read 2026-10-10), rows 40065 to 40068 (2009-021G, H, J, K): type 'D J', name 'deb Yaogan 6', parent 'S34839', separation date '2014 Jul?'",
-      "kind": "anomalous",
-      "parent": { "catalogueNumber": 34839, "designator": "2009-021A", "name": "Yaogan-6" },
-      "event": { "stated": "2014 Jul? (the separation date GCAT gives the four pieces)", "at": null, "from": "2014-06-01T00:00Z", "to": "2014-09-01T00:00Z", "precision": "month" },
-      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": null, "causeStated": "GCAT's type DJ: anomalous debris (insulation, soft material, ablated material)",
-      "piecesCatalogued": 4, "piecesStatedOn": "2026-10",
-      "preEventElements": null,
-      "note": "GCAT attributes four pieces to Yaogan-6, separated about July 2014 (GCAT's '?' widens the month by one either side). No narrative report was found: NASA's history (16th edition), the quarterly news of 2012 to 2015 and Jonathan's Space Report are silent. Entered under the owner's rule of the eleventh phase: a tight-origin false confirmation enters the truth only with an independent source."
-    },
-    {
       "source": "news", "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'",
       "kind": "breakup",
       "parent": { "catalogueNumber": 40258, "designator": "2014-058A", "name": "Luch (Olymp-K 1)" },

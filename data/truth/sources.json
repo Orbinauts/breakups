@@ -20,6 +20,56 @@
       "madeWith": "fetched as served",
       "snapshotSha256": "4920c18e78a96e86f8c43a4b00c70cd6c9adcbf2522222f80a5fcd4224fc9469",
       "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    },
+    "gcat-satcat": {
+      "url": "https://planet4589.org/space/gcat/tsv/cat/satcat.tsv",
+      "fetchedOn": "2026-10-10",
+      "originalSha256": "7c242e30102eab324a1ce05dfafd3c80a4f6b6630149070911650a0e3100b929",
+      "originalBytes": 19296210,
+      "snapshot": "sources/gcat-satcat.tsv",
+      "madeWith": "reduced to the rows typed C or D (components and fragmentation debris) and the rows they name as parent, in the columns JCAT, Satcat, Launch_Tag, Piece, Type, Name, LDate, Parent, SDate, DDate, Status, every kept cell verbatim",
+      "snapshotSha256": "5278bc199ca7244d79038ff68b92d1b1398220cef1e515ad51d100c56dd85732",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    },
+    "gcat-satcat-columns": {
+      "url": "https://planet4589.org/space/gcat/web/cat/cols.html",
+      "fetchedOn": "2026-10-10",
+      "originalSha256": "b3d9d82c7596abce010ff293fc9f8ffe9d6157c7b81a0650afdc2616902ce4f8",
+      "originalBytes": 26532,
+      "snapshot": "sources/gcat-satcat-columns.html",
+      "madeWith": "fetched as served",
+      "snapshotSha256": "b3d9d82c7596abce010ff293fc9f8ffe9d6157c7b81a0650afdc2616902ce4f8",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    },
+    "gcat-sattype": {
+      "url": "https://planet4589.org/space/gcat/web/intro/type.html",
+      "fetchedOn": "2026-10-10",
+      "originalSha256": "eb4d670a6c33e08983e616af69eb25a1b2d3eaa00cc243885f051dd026101988",
+      "originalBytes": 21797,
+      "snapshot": "sources/gcat-sattype.html",
+      "madeWith": "fetched as served",
+      "snapshotSha256": "eb4d670a6c33e08983e616af69eb25a1b2d3eaa00cc243885f051dd026101988",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    },
+    "gcat-phases": {
+      "url": "https://planet4589.org/space/gcat/web/intro/phases.html",
+      "fetchedOn": "2026-10-10",
+      "originalSha256": "b7d440f7489acd27e0aa83bba5aad202f29f6b52340a912bf2756a280110c284",
+      "originalBytes": 18045,
+      "snapshot": "sources/gcat-phases.html",
+      "madeWith": "fetched as served",
+      "snapshotSha256": "b7d440f7489acd27e0aa83bba5aad202f29f6b52340a912bf2756a280110c284",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
+    },
+    "gcat-vague-dates": {
+      "url": "https://planet4589.org/space/gcat/web/intro/vague.html",
+      "fetchedOn": "2026-10-10",
+      "originalSha256": "4629f6b72a0e2d950b038fea1330b6705ee7210646fcf202cece4710b332e1ea",
+      "originalBytes": 11528,
+      "snapshot": "sources/gcat-vague-dates.html",
+      "madeWith": "fetched as served",
+      "snapshotSha256": "4629f6b72a0e2d950b038fea1330b6705ee7210646fcf202cece4710b332e1ea",
+      "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
     }
   }
 }

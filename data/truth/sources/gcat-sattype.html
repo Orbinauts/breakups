@@ -1,0 +1,381 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="description" content="Jonathan McDowell's new homepage">
+<meta name="keywords" content="Jonathan, McDowell, space, astronomy, Chandra">
+<title>Jonathan's Space Report | GCAT</title>
+<link rel="stylesheet" type="text/css" href="../../css/style.css">
+</head>
+<body>
+<header>
+<H1>GCAT: General Catalog of Artificial Space Objects</H1>
+<H3>Jonathan C. McDowell</H3>
+<H2> Definitions  </H2>
+</header>
+<section style="font-size: 20px">
+<nav style="width:30%;">
+<UL id="navul">
+<LI><A HREF="../../index.html">Introduction</A>
+<LI><A HREF="../intro/index.html">I. Definitions and Conventions</A>
+<UL>
+<LI><A HREF="../intro/vague.html">Time Representations and Vague Date Format</A>
+<LI><A HREF="../intro/space.html">Space and Orbit</A>
+<LI><A HREF="../intro/frames.html">Orbital Parameters and Coordinate Frames</A>
+<LI><A HREF="../intro/jcat.html">JCAT catalog identifiers</A>
+<LI><A HREF="../intro/desig.html">Launch and Piece Designations</A>
+<LI><A HREF="../intro/type.html">SatType scheme</A>
+<LI><A HREF="../intro/phases.html">Phases and Status values</A>
+<LI><A HREF="../intro/success.html">Launch Success Fractions</A>
+<LI><A HREF="../intro/orbits.html">Orbit Category values</A>
+<LI><A HREF="../intro/u.html">Uncataloged ('U') Launches</A>
+<LI><A HREF="../intro/analyst.html">Space Force 'Analyst' Objects</A>
+<LI><A HREF="../intro/nom.html">Nomenclature Codes</A>
+<LI><A HREF="../intro/service.html">Launch Service Codes</A>
+<LI><A HREF="../intro/profile.html">Launch Profile Codes</A>
+</UL>
+<LI><A HREF="../orgs/index.html">II: Organizations Database</A>
+<LI><A HREF="../sites/index.html">III: Launch Origins Database</A>
+<LI><A HREF="../platforms/index.html">IV: Launch Platforms</A>
+<LI><A HREF="../lvs/index.html">V: Launch Vehicles</A>
+<LI><A HREF="../launch/index.html">VI: Launch Lists</A>
+<LI><A HREF="../worlds/index.html">VII: Worlds in the Solar System</A>
+<LI><A HREF="../cat/index.html">VIII: Object Catalogs</A>
+<LI><A HREF="../intro/ack.html">Acknowledgements</A>
+</UL>
+</nav>
+<div class="core">
+
+<H2>SatType scheme</H2>
+Associated with each object in the General Catalog is a 12 byte SatType string
+that provides a classification of the object. Each byte in the string
+has a set of defined meanings.
+(As of late 2022, byte 12 is unused). The SatType data in principle allows one to
+select subsets of certain kinds of object.
+<P><BR>
+The SatType string can be found in the table column called simply `Type'.
+<P><BR>
+For each object, the SatType string in the entry for the first phase for that object
+applies to the whole history of the object. If the type is different in a later phase, that's
+probably a data entry error.
+<P><BR>
+The byte layout is as follows:
+<TABLE BORDER=1>
+<TR><TH>Byte<TH>Contents</TR>
+<TR><TD>Byte 1<TD>Coarse Type (payload, rocket, debris)</TR>
+<TR><TD>Byte 2<TD>Type modifier</TR>
+<TR><TD>Byte 3<TD>Attach flag</TR>
+<TR><TD>Byte 4<TD>Subtype</TR>
+<TR><TD>Byte 5<TD>Orbit flag</TR>
+<TR><TD>Byte 6<TD>Human spaceflight subset</TR>
+<TR><TD>Byte 7<TD>UN registration flag</TR>
+<TR><TD>Byte 8<TD>Failure flag</TR>
+<TR><TD>Byte 9<TD>Uncertain ID flag</TR>
+<TR><TD>Byte 10<TD>Annotation flag</TR>
+<TR><TD>Byte 11<TD>Group control flag</TR>
+<TR><TD>Byte 12<TD>Supplementary orbit flag</TR>
+</TABLE>
+In each byte, an empty (null) value is represented
+by blank or dash (the dash is used to help me
+visually line up the elds during data entry).
+
+<H2>Byte 1 (Coarse type)</H2>
+The coarse type allows us to divide the catalog into payloads, rocket stages, and debris.
+We consider two kinds of debris: components, which are subsystems of the parent object,
+usually but not necessarily designed to separate, and fragmentation debris, pieces
+resulting from an object breakup (propellant explosion, weapons test, self-destruct,
+collision, insulation blanket separation).
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>P<TD WIDTH=600>Payload (for orbital attempt)</TR>
+<TR><TD>C<TD WIDTH=600>Component</TR>
+<TR><TD>R<TD WIDTH=600>Launch vehicle stage</TR>
+<TR><TD>D<TD WIDTH=600>Fragmentation debris</TR>
+<TR><TD>S<TD WIDTH=600>Suborbital payload (e.g. sounding rocket payload or missile reentry vehicle)</TR>
+<TR><TD>X<TD WIDTH=600>Catalog entry that has been deleted (used in auxcat etc.)</TR>
+<TR><TD>Z<TD WIDTH=600>Spurious catalog entry (was in SATCAT, perhaps in TLEs, but there was no real object)</TR>
+</TABLE>
+
+<H2>Byte 2 (Type modifier)</H2>
+<P><BR>
+The Byte 2 entries modify the Byte 1 entries (and are not independent of them).
+Here I tabulate the combined byte 1/2 values and their meanings.
+(cases where byte 2 is blank are not listed).
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Byte 1-2 Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>PA<TD WIDTH=600>Alias entry.</TR>
+<TR><TD>PH<TD WIDTH=600>Spaceship with humans aboard at launch.</TR>
+<TR><TD>SH<TD WIDTH=600>Spaceship with humans aboard at launch (suborbital).</TR>
+<TR><TD>SX<TD WIDTH=600>Suborbital, special cases not currently further defined</TR>
+<TR><TD>PP or CP or SP<TD WIDTH=600>Spaceship with pressurized cabin, but without humans at launch.</TR>
+<TR><TD>PX: Not in standard list of satellites.</TR>
+<TR><TD>R1 to R5<TD WIDTH=600>Stage number for launch vehicle stage.</TR>
+<TR><TD>CC<TD WIDTH=600>Cargo placeholder for mass accounting.</TR>
+<TR><TD>CX<TD WIDTH=600>Component not to be included in certain standard lists</TR>
+<TR><TD>CD<TD WIDTH=600>Deployer for separately integrated payload</TR>
+</TABLE>
+<P><BR>
+PA: The A (alias) modifier is used for special records representing a phase where the satellite
+is leased temporarily or jointly owned. This phase type is special in that its
+time period overlaps another phase. An example is object S23779 (Palapa C1, renamed HGS-3
+in Nov 2000) From Dec 2000 to Jan 2003 its capacity was leased to Turk Telecom
+which called it Anatolia 1. The HGS-3 entry is tagged with SatFlag equal to P  (standard
+payload) while the Anatolia 1 entry covering an overlapping time period
+is tagged with SatFlag equal to PA
+to denote that it's a secondary or alias entry that may be ignored.
+<P><BR>
+PP: The P modifier is used for spaceship test flights without crews, pressurized sections
+of cargo ships, and space station modules.
+<P><BR>
+PX: The X modifier is used to denote `non-standard payloads'. What is a payload and what
+is just a component? I take a broader view of `payload' than most satellite lists do.
+Some examples of `PX' types:
+<UL>
+<LI> Small passive calibration satellites. Some (e.g. the NRL Calspheres) are included as
+payloads in standard lists, but others (the ESO test objects released from Soviet Romb payloads)
+are not - they are given the X modifier. West Ford dipole clumps, however, are counted as components
+(C).
+<LI> Attached payloads. There is a subtle (and perhaps false) distinction between multiple experiments in a single
+spacecraft and multiple spacecraft permanently attached to each other. Agena spacecraft
+have a main payload attached to the front end of the rocket and small secondary
+payloads attached to the back end, integrated separately. I treat these as separate payloads
+with separate entries, and label the secondary ones with the X modifier.
+<LI> Recovery capsules. CORONA missions ejected film capsules with deorbit motors.
+For the brief moments when they were orbiting the Earth separately I consider them
+to be payloads.
+<LI> There are a few other cases, such as the E-8-5 Luna ascent vehicles and the LRVs.
+</UL>
+<P><BR>
+CC is used for `down cargo' for space stations
+returned to Earth or destroyed in cargo ship reentry.
+Note that we usually don't know the launch date of `down cargo'.
+<P><BR>
+The D modifier (CD) is used for separately integrated deployers.
+The D flag has been added to reflect the emergence of intermediary companies
+like Nanoracks and Spaceflight which sit between the payload owner and the launch provider
+and manage the integration of customer payloads
+Note that byte 4 has a V value for 'deployer/clamp band' which is more general and does not
+imply a separate integration - it includes things like the CRRES canisters
+or the Shuttle PAM-D ASE. (Well, it's an interesting question whether those count as equivalent
+to a Nanoracks deployer, but I think the hardware and integration were done by NASA - I could be wrong.)
+<P><BR>
+Objects with a D flag in byte 2 are usually not separate satellites but attached to a parent object
+(e.g. launch vehicle stage). They are therefore usually in the A (auxiliary) catalog.
+
+<H2>Byte 3 (Attach flag)</H2>
+This flag describes why this object is attached to its parent object:
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Byte 3 Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>A<TD WIDTH=600>Permanently attached component or payload</TR>
+<TR><TD>F<TD WIDTH=600>Stuck attached by mistake</TR>
+<TR><TD>S<TD WIDTH=600>Expected to separate in future</TR>
+<TR><TD>T<TD WIDTH=600>Never flew free but transferred</TR>
+<TR><TD>I<TD WIDTH=600>Internal</TR>
+</TABLE>
+<P><BR>
+F indicates that the object was intended to separate but failed to do so.
+S denotes that the object is expected to separate at a later date.
+T is mostly used for hardware that is transferred from the exterior of
+one object to another during a spacewalk or using robotic arms.
+<P><BR>
+I is used for entries representing hardware that remains internal to
+one or more host spacecraft, possibly being transferred between them.
+Entries of this sort that I keep track of include EVA spacesuits not actually
+used on an EVA; cubesat dispensers used on ISS; and special entries used
+to do mass accounting of upward and downward space station cargo.
+In the future I'm considered adding entries for human space travellers, who
+would also be internal (either to a spaceship or a spacesuit).
+
+<H2>Byte 4 (subtype flag)</H2>
+This byte is used to categorize objects more finely than the byte 1-2 specification.
+It is useful for gathering statistics about different kinds of debris.
+Each value is usually only used with a subset of possible byte 1 values as listed below (however,
+these restrictions are not absolute).
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning<TH>Allowed B1 values</TR>
+<TR><TD>A<TD WIDTH=600>Payload adapter (e.g. SYLDA)., support structures, interfaces<TD>C</TR>
+<TR><TD>B<TD WIDTH=600>Battery explosion debris<TD>D</TR>
+<TR><TD>C<TD WIDTH=600>Passive calibration satellites, test objects or chaff<TD>P, C</TR>
+<TR><TD>D<TD WIDTH=600>Dummy satellite<TD>P</TR>
+<TR><TD>E<TD WIDTH=600>Spacesuit on tethered spacewalk<TD>P (PX)</TR>
+<TR><TD>F<TD WIDTH=600>Fairings and other covers<TD>C</TR>
+<TR><TD>G<TD WIDTH=600>General, miscellaneous debris<TD>C, D</TR>
+<TR><TD>H<TD WIDTH=600>Human spaceflight related<TD>P,C</TR>
+<TR><TD>I<TD WIDTH=600>Impact (accidental collision)<TD>D</TR>
+<TR><TD>J<TD WIDTH=600>Anomalous debris (insulation, soft material, ablated material)<TD>C, D</TR>
+<TR><TD>K<TD WIDTH=600>Possible solid motor slag<TD>D</TR>
+<TR><TD>L<TD WIDTH=600>Separated from vehicle after landing (rovers, etc)<TD>P, C</TR>
+<TR><TD>M<TD WIDTH=600>Jettisoned motor or tank<TD>C</TR>
+<TR><TD>N<TD WIDTH=600>Nuclear reactor, reactor core, RTG or coolant blob<TD>P, C, D</TR>
+<TR><TD>O<TD WIDTH=600>Unknown debris released at orbit insertion</TR>
+<TR><TD>P<TD WIDTH=600>Propulsion related, residual-propellant breakup<TD>D</TR>
+<TR><TD>Q<TD WIDTH=600>Aerodynamic breakup at low perigee<TD>D</TR>
+<TR><TD>R<TD WIDTH=600>Reentry vehicle<TD>P</TR>
+<TR><TD>S<TD WIDTH=600>Subsatellite or subpayload<TD>P</TR>
+<TR><TD>T<TD WIDTH=600>Ejected section of payload<TD>C</TR>
+<TR><TD>U<TD WIDTH=600>Untethered EVA<TD>P (PX)</TR>
+<TR><TD>V<TD WIDTH=600>Ejection mechanism (deploy canister, clamp band)<TD>C</TR>
+<TR><TD>W<TD WIDTH=600>Weapons test, ASAT debris<TD>D</TR>
+<TR><TD>X<TD WIDTH=600>Debris of unknown nature<TD>C, D</TR>
+<TR><TD>Y<TD WIDTH=600>Despin (yo-yo) device<TD>C</TR>
+<TR><TD>Z<TD WIDTH=600>Breakup debris from on-board destruct device<TD>D</TR>
+</TABLE>
+Note that code K used to be used for interstages but that meaning has now been
+merged with code A.
+
+<H2>Byte 5 (orbit flag)</H2>
+This flag is used to note special cases related to the object's trajectory. The flag
+is blank for normal SATCAT entries except for the deep space ones.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>meaning</TR>
+<TR><TD>D<TD WIDTH=600>Deep Space or escape (see also byte 12)</TR>
+<TR><TD>E<TD WIDTH=600>Destroyed in pad explosion</TR>
+<TR><TD>F<TD WIDTH=600>Failed to reach orbit</TR>
+<TR><TD>G<TD WIDTH=600>GEO flag: was in 23 to 25 hour period orbit at some point</TR>
+<TR><TD>L<TD WIDTH=600>Active on planet surface during this phase</TR>
+<TR><TD>M<TD WIDTH=600>Missing from SATCAT by mistake (EXPRESS, IXV)</TR>
+<TR><TD>O<TD WIDTH=600>Orbital-Energy but Non-Orbit</TR>
+<TR><TD>P<TD WIDTH=600>Partial orbit - reached legit orbit but deorbited after less than 1 rev</TR>
+<TR><TD>R<TD WIDTH=600>Reentry orbit: objects that were attached and separated in post-deorbit-burn suborbital trajectory</TR>
+<TR><TD>S<TD WIDTH=600>Near-Orbit  (marginally suborbital)</TR>
+<TR><TD>T<TD WIDTH=600>Transient orbit - separated just (perhaps seconds) before deorbit</TR>
+<TR><TD>V<TD WIDTH=600>Escape energy but not deep space</TR>
+<TR><TD>X<TD WIDTH=600>Extra catalog entry for extraterrestrially launched object</TR>
+<TR><TD>Z<TD WIDTH=600>Launch from extraterrestrial object, recataloged with new D series number.</TR>
+</TABLE>
+Note that some objects with value G (geosync) should also have D (deep space) set, since some deep space objects spent
+brief times in the 24 hour Earth orbit regime before departing the Earth's vicinity, and at least one (Asiasat-3/HGS-1) reached GEO
+via a lunar transfer.
+I have therefore repeated the D values in byte 12.
+
+<H2>Byte 6 (human spaceflight/special group flag)</H2>
+This flag is present to support easily identifying all objects in the given categories, such as all
+satellite deployments from ISS. As such it serves a somewhat different purpose from the byte 2 values.
+At the moment I've only filled in values for space stations and Shuttle. `Station' refers to any space station,
+or indeed any composite space object.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>meaning</TR>
+<TR><TD>I<TD WIDTH=600>Station program, general</TR>
+<TR><TD>C<TD WIDTH=600>Station major non-module component</TR>
+<TR><TD>D<TD WIDTH=600>Station deployable subsatellite</TR>
+<TR><TD>E<TD WIDTH=600>Station EVA related equipment</TR>
+<TR><TD>G<TD WIDTH=600>Pseudo-entry used for station generic cargo mass accounting</TR>
+<TR><TD>M<TD WIDTH=600>Station module</TR>
+<TR><TD>S<TD WIDTH=600>Space Shuttle program or Shuttle payload or component</TR>
+<TR><TD>T<TD WIDTH=600>Piece of visiting vehicle</TR>
+<TR><TD>U<TD WIDTH=600>Visiting vehicle or rocket stage deployed satellite</TR>
+<TR><TD>V<TD WIDTH=600>Station visiting vehicle</TR>
+</TABLE>
+
+<H2>Byte 7 (UN registration flag)</H2>
+This flag notes issues with UN registration for objects that are not standard payloads. Standard payloads (Byte 1-2 = P) should be
+registered, and the presence of a UNReg entry in the corresponding payload catalog tells you
+if they are or not (as of the last time I checked the UN site, at least). Non-standard
+payloads (Byte 1-2 = PX, see the byte 2 discussion) are more complicated. I have attempted
+to decide whether standard practice implies they should have been registered based on comparison with similar payloads.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>U<TD WIDTH=600>Is, or should be, UN registered even though not a standard payload.</TR>
+<TR><TD>X<TD WIDTH=600>Was UN registered but should not have been.</TR>
+</TABLE>
+<P><BR>
+For example, object A06499, the Canadarm-2 on the ISS, is not a standard payload and has
+no SATCAT entry. Nevertheless it was registered with the UN.
+A05668 Fasat-Alfa was a satellite that failed to separate from its
+parent satellite. It doesn't have a separate SATCAT number from its parent
+S23657 Sich-1, so it is a `PX' nonstandard payload; but it was registered by Chile, while Sich-1 was registered by Ukraine.
+Byte 7 is set to U.
+<P><BR>
+Object A05597 EXPRESS completed several orbits of the Earth. It is a
+`PX' nonstandard payload because the US tracking system failed to
+catch it, and it doesn't have a SATCAT number. Nevertheless Germany should
+have registered it with the UN and did not. Byte 7 is set to U.
+<P><BR>
+On the other hand, A06874 Celestis-04 Error was registered with the UN
+but should not have been, since it was removed from the rocket before launch
+and never got to space.  Byte 7 is set to X.
+<P><BR>
+Object A07634 ELC-1 is a logistics carrier launched on the Shuttle
+and later attached to the ISS.  Although the US has usually
+registered ISS pressurized modules, other similar minor ISS components
+(such as the other ELCs and the major truss segments) have not been registered,
+so for consistency ELC-1 shouldn't have been registered either. Byte 7 is set to X.
+
+<H2>Byte 8 (Failure flag/Constellation status flag)</H2>
+An asterisk in this field records which rocket stage was to blame in an orbital launch failure.
+An asterisk in byte 8 says that this object was, broadly speaking, the culprit.
+<P><BR>
+For a debris object, a numeric value in this field (1,2, etc) groups objects in a particular
+debris cloud for a launch which has multiple associated debris events. (I have only used this a few times.)
+<P><BR>
+Other values indicate different kinds of payload failure (or success) and have been added to support
+analysis of the Starlink constellation.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>*<TD WIDTH=600>This object was the one that failed during launch.</TR>
+<TR><TD>A<TD WIDTH=600>Satellite ascending: orbit raising to op orbit (or lowering from high drift orbit)</TR>
+<TR><TD>D<TD WIDTH=600>Satellite in plane drift orbit</TR>
+<TR><TD>F<TD WIDTH=600>Satellite failed early in mission, before reaching operational orbit ("screened")</TR>
+<TR><TD>G<TD WIDTH=600>Satellite retired to a graveyard orbit of some kind</TR>
+<TR><TD>L<TD WIDTH=600>Satellite removed far from operational constellation by lowering or raising orbit</TR>
+<TR><TD>M<TD WIDTH=600>Satellite failed in operational orbit and is undergoing uncontrolled decay - non manueverable</TR>
+<TR><TD>O<TD WIDTH=600>Satellite is active in operational orbit</TR>
+<TR><TD>R<TD WIDTH=600>Satellite active orbit lowering to reentry</TR>
+<TR><TD>S<TD WIDTH=600>Satellite was used for special tests outside of main constellation</TR>
+<TR><TD>T<TD WIDTH=600>Satellite removed slighly (and possibly temporarily) from operational constellation by lowering or raising orbit a little</TR>
+<TR><TD>U<TD WIDTH=600>Satellite apparently malfunctioning, held in intermediate orbit for debugging?</TR>
+</TABLE>
+
+<H2>Byte 9 (ID flag)</H2>
+This flag notes problems with the identification of the object.
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>?<TD WIDTH=600>The association of this satellite with this catalog number is a guess because JSpOC has not yet assigned a name. ID may change in future.</TR>
+<TR><TD>+<TD WIDTH=600>Starlink filing with FCC reports this satellite is out of service but could still maneuver, at the time of filing.</TR>
+<TR><TD>*<TD WIDTH=600>Starlink filing with FCC reports this satellite is out of service and can not maneuver.</TR>
+<TR><TD>m<TD WIDTH=600>Multiple objects. This entry is a placeholder for a known debris event where no debris has yet been cataloged by DoD.</TR>
+<TR><TD>C<TD WIDTH=600>US government orbital data for this object are secret.</TR>
+<TR><TD>c<TD WIDTH=600>Older US government orbital data for this object were secret, but current data is public.</TR>
+<TR><TD>U<TD WIDTH=600>This object is a cargo item on ISS (or other station) and has been assigned to a likely cargo launch but the actual launch for this object is not known.</TR>
+<TR><TD>D<TD WIDTH=600>This object is a cargo item on ISS (or other station). The return date is uncertain and I've made a guess at which ship it went down on.</TR>
+<TR><TD>X<TD WIDTH=600>We don't know which launch this object is from, so the launch date is unknown (and other parameters may also be unknown).</TR>
+<TR><TD>s<TD WIDTH=600>Disagreement between TLE and SupTLE data (true for S45139)</TR>
+</TABLE>
+
+<H2>Byte 10 (Annotation flag)</H2>
+This byte is used to control display options in certain software associated with
+the database. It should be ignored by other software.
+<P><BR>
+At present, possible values of this byte are  r,g,b,c,m,y,k indicating
+colors chosen for data associated with the specific satellite in automated plots,
+e.g. of altitude vs time.
+
+<H2>Byte 11 (Group control flag)</H2>
+This byte is used to define membership of certain groups:
+1) to include or exclude objects from the debris clouds in the debris cloud catalog and
+2) to label satellites as being part of a `megaconstellation', loosely defined.
+<TABLE BORDER=1>
+<TR><TH>Value<TH WIDTH=600>Meaning</TR>
+<TR><TD>+<TD WIDTH=600>Object included in debris cloud analysis</TR>
+<TR><TD>-<TD WIDTH=600>Debris object not counted as part of debris cloud</TR>
+<TR><TD>1 to 9<TD WIDTH=600>Object included in a particular debris cloud (used for cases with multiple clouds from one launch)</TR>
+<TR><TD>M<TD WIDTH=600>payload is a megaconstellation satellite</TR>
+<TR><TD>m<TD WIDTH=600>payload is a satellite in a constellation that may or may not be considered a megacon.</TR>
+</TABLE>
+
+<H2>Byte 12 (Supplementary orbit flag)</H2>
+This byte contains 'D' for objects in the deep space catalog. It is redundant
+with the D values in byte 5 except for the cases where byte 5 is G and should also
+be D. Tests for deep space objects should now preferentially use this entry.
+</div>
+</section>
+<footer>
+<br/>
+<br/>
+</footer>

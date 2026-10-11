@@ -22,9 +22,9 @@ const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
 
 describe("the committed truth", () => {
   test("is what the sources build, byte for byte, and the report beside it", () => {
-    const { file, statements } = buildTruth();
+    const { file, statements, skipped } = buildTruth();
     expect(`${JSON.stringify(file, null, 1)}\n`).toBe(committed);
-    expect(renderReport(file, statements)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
+    expect(renderReport(file, statements, skipped)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
   });
 
   test("reads back, every row checked", () => {
@@ -62,10 +62,10 @@ describe("the committed truth", () => {
     }
   });
 
-  test("every NASA minute is confidence A, every GCAT-only minute C, every catalogue-only row D", () => {
+  test("every NASA minute is confidence A, every GCAT-only date to the month or finer C and coarser D, every catalogue-only row D", () => {
     for (const b of scoring) {
       if (b.resolvedFrom.event === "hoosf-16e" && b.event.precision === "minute") expect(b.confidence, b.id).toBe("A");
-      if (b.statements.every((s) => s.source === "gcat")) expect(b.confidence, b.id).toBe("C");
+      if (b.statements.every((s) => s.source === "gcat")) expect(b.confidence, b.id).toBe(b.event.precision === "year" || b.event.precision === "none" ? "D" : "C");
       if (b.statements.every((s) => s.source === "catalogue")) expect(b.confidence, b.id).toBe("D");
     }
   });

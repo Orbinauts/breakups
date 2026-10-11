@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type BreakupsFile, type Cause, type Confidence, type Conflict, type Parent, type Precision, type Regime, type ResolvedFrom, type SourceId, type SourceRecord, type StatedOrbit, type StatedTime, type Statement } from "../../src/truth.ts";
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
+import { isSatcatStatement, parseSatcat, satcatStatements, separationsOf, type Skipped } from "./parse-gcat-satcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
 import { renderReport } from "./report.ts";
 import { statedOnFromRef } from "./stated.ts";
@@ -11,7 +12,9 @@ import { statedOnFromRef } from "./stated.ts";
 /**
  * Builds the ground truth, `data/breakups.json`, from every statement the
  * sources make: NASA's history read from its text, GCAT's clouds read from
- * its table, and the hand-entered statements. Statements about one parent
+ * its table, GCAT's satellite catalogue read for every piece's parent and
+ * separation date, the catalogue's own bursts, and the hand-entered
+ * statements. Statements about one parent
  * whose windows fall within a month of each other are one event; a
  * reviewer's overrides merge or separate what the rule gets wrong. Each
  * field is then resolved by a fixed order of sources, every disagreement is
@@ -36,7 +39,7 @@ interface Override {
   name: string;
   merge?: { catalogueNumber: number }[];
   between?: [string, string];
-  /** Every catalogue-only event of this launch is exempt with the reason given. */
+  /** Every event of this launch stated by the catalogues alone (its bursts, GCAT's satellite catalogue) is exempt with the reason given. */
   exemptLaunch?: string;
   event?: SourceId;
   kind?: BreakupKind;
@@ -47,12 +50,23 @@ interface Override {
 const PRECISION_RANK: Record<Precision, number> = { second: 0, minute: 1, hour: 2, day: 3, month: 4, year: 5, none: 6 };
 /** Authorities first, then the analyst, GCAT, the news and the catalogue. */
 const SOURCE_RANK: Record<SourceId, number> = { "hoosf-16e": 0, odqn: 1, "s4s-notice": 2, "esa-ser": 3, analyst: 4, gcat: 5, news: 6, catalogue: 7 };
+/**
+ * GCAT's satellite catalogue ranks after the news and before the
+ * catalogue's bursts: it dates every piece's separation, so it makes an
+ * event where no one else reported one and names the parent, the kind and
+ * the date of a burst the catalogue alone saw; where another source states
+ * the event, that source's instant, kind, orbit, cause and count stand,
+ * and the satellite catalogue's statement is kept beside them, its
+ * disagreements listed as conflicts.
+ */
+const SATCAT_RANK = 6.5;
+const rankOf = (statement: Statement): number => (isSatcatStatement(statement) ? SATCAT_RANK : SOURCE_RANK[statement.source]);
 const AUTHORITIES = new Set<SourceId>(["hoosf-16e", "odqn", "s4s-notice", "esa-ser"]);
 
 const SOURCES: Partial<Record<SourceId, SourceRecord>> = {
   "hoosf-16e": { citation: "Anz-Meador, P., Opiela, J., Liou, J.-C., History of On-Orbit Satellite Fragmentations, 16th Edition, NASA/TP-20220019160, December 2022, https://orbitaldebris.jsc.nasa.gov/library/HOOSF_16e.pdf", licence: "US Government work", version: "16th edition, events to 1 May 2022" },
   odqn: { citation: "NASA Orbital Debris Program Office, Orbital Debris Quarterly News, https://orbitaldebris.jsc.nasa.gov/quarterly-news/", licence: "US Government work", version: "volume 26 issue 3 (September 2022) to volume 30 issue 3 (September 2026)" },
-  gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects, Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html", licence: "CC-BY-4.0", version: "data last updated 2025 Jun 22" },
+  gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects: Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html, and the satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv", licence: "CC-BY-4.0", version: "debris clouds data last updated 2025 Jun 22; satellite catalogue updated 2026 Oct 9" },
   "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025, Table 3.7", licence: "ESA", version: "2025 edition, events of 2024" },
   "s4s-notice": { citation: "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page", licence: "public announcement", version: "as seen on 2026-09-17" },
   analyst: { citation: "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report", licence: "cited reports", version: "to 2026-10-10" },
@@ -64,14 +78,21 @@ function parseJson<T>(path: string): T {
   return JSON.parse(read(path)) as T;
 }
 
+/** What the satellite catalogue's rule left out, counted for the report. */
+function satcatSkipped(): Skipped {
+  return separationsOf(parseSatcat(read("data/truth/sources/gcat-satcat.tsv"))).skipped;
+}
+
 /** Every statement, from every source. */
 function allStatements(): Statement[] {
   const hoosf = hoosfStatements(parseHoosf(read("data/truth/sources/hoosf-16e.txt")));
   const gcat = gcatStatements(parseGcat(read("data/truth/sources/gcat-debriscat.html")));
   const hand = readStatements(parseJson<{ statements: unknown }>("data/truth/hand.json").statements);
   const catalogue = existsSync(resolve(ROOT, "data/truth/catalogue.json")) ? readStatements(parseJson<{ statements: unknown }>("data/truth/catalogue.json").statements) : [];
+  const satcat = satcatStatements(parseSatcat(read("data/truth/sources/gcat-satcat.tsv")));
   // Each statement dated by when it can first have been public: NASA's history by the quarterly news it cites, a hand-entered one by its reference where it does not say.
-  return [...hoosf, ...gcat, ...hand, ...catalogue].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
+  // The satellite catalogue's come last, so the events the other sources make are grouped as before and its statements join them.
+  return [...hoosf, ...gcat, ...hand, ...catalogue, ...satcat].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
 }
 
 const lower = (time: StatedTime): number => Date.parse(time.from ?? time.to);
@@ -159,14 +180,21 @@ export function groupStatements(statements: Statement[], overrides: Override[]):
   return kept;
 }
 
-/** The statement whose time is stated most finely, authorities before the rest on a tie; an override names a source to win instead. */
+/**
+ * The statement whose time is stated most finely, authorities before the
+ * rest on a tie; an override names a source to win instead. The satellite
+ * catalogue's statements are weighed only where the catalogue's bursts are
+ * all the event has besides them.
+ */
 function pickEvent(group: Group, forced: SourceId | undefined): Statement {
-  const forcedStatement = forced === undefined ? undefined : group.statements.find((s) => s.source === forced);
+  const forcedStatement = forced === undefined ? undefined : group.statements.find((s) => s.source === forced && !isSatcatStatement(s));
   if (forcedStatement !== undefined) return forcedStatement;
-  return [...group.statements].sort((a, b) => PRECISION_RANK[a.event.precision] - PRECISION_RANK[b.event.precision] || SOURCE_RANK[a.source] - SOURCE_RANK[b.source])[0]!;
+  const reported = group.statements.filter((s) => !isSatcatStatement(s));
+  const pool = reported.some((s) => s.source !== "catalogue") ? reported : group.statements;
+  return [...pool].sort((a, b) => PRECISION_RANK[a.event.precision] - PRECISION_RANK[b.event.precision] || rankOf(a) - rankOf(b))[0]!;
 }
 
-const bySource = (statements: Statement[]): Statement[] => [...statements].sort((a, b) => SOURCE_RANK[a.source] - SOURCE_RANK[b.source]);
+const bySource = (statements: Statement[]): Statement[] => [...statements].sort((a, b) => rankOf(a) - rankOf(b));
 
 function pickKind(group: Group, forced: BreakupKind | undefined): { kind: BreakupKind; source: SourceId } {
   if (forced !== undefined) return { kind: forced, source: pickEvent(group, undefined).source };
@@ -192,10 +220,17 @@ function pickCause(group: Group): { cause: Cause; source: SourceId | null } {
   return stated === undefined ? { cause: "unknown", source: null } : { cause: stated.cause!, source: stated.source };
 }
 
-/** The latest count an authority or GCAT states; the catalogue's own count of a burst only where no one else counted. */
+/**
+ * The latest count an authority or GCAT's cloud table states; where none
+ * did, the pieces the satellite catalogue's separations of the event
+ * count together; the catalogue's own count of a burst only where no one
+ * else counted.
+ */
 function pickPieces(group: Group): { pieces: number | null; source: SourceId | null } {
-  const reported = group.statements.filter((s) => s.piecesCatalogued !== null && s.source !== "catalogue");
-  const counted = (reported.length > 0 ? reported : group.statements.filter((s) => s.piecesCatalogued !== null)).sort((a, b) => (b.piecesStatedOn ?? "").localeCompare(a.piecesStatedOn ?? "") || SOURCE_RANK[a.source] - SOURCE_RANK[b.source]);
+  const reported = group.statements.filter((s) => s.piecesCatalogued !== null && s.source !== "catalogue" && !isSatcatStatement(s));
+  const separated = group.statements.filter((s) => s.piecesCatalogued !== null && isSatcatStatement(s));
+  if (reported.length === 0 && separated.length > 0) return { pieces: separated.reduce((sum, s) => sum + s.piecesCatalogued!, 0), source: "gcat" };
+  const counted = (reported.length > 0 ? reported : group.statements.filter((s) => s.piecesCatalogued !== null)).sort((a, b) => (b.piecesStatedOn ?? "").localeCompare(a.piecesStatedOn ?? "") || rankOf(a) - rankOf(b));
   return counted.length === 0 ? { pieces: null, source: null } : { pieces: counted[0]!.piecesCatalogued, source: counted[0]!.source };
 }
 
@@ -257,12 +292,15 @@ export function regimeOf(orbit: StatedOrbit): Regime {
   return "MEO";
 }
 
+/** The precisions of GCAT's dates it is trusted at, C: a year or none is no finer than the catalogue's own burst, D. */
+const GCAT_DATED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute", "hour", "day", "month"]);
+
 function confidenceOf(event: Statement, time: StatedTime): Confidence {
   const authority = AUTHORITIES.has(event.source);
   const width = upper(time) - lower(time);
   if (authority && (time.precision === "second" || time.precision === "minute")) return "A";
   if (authority && time.from !== null && width <= 3 * DAY_MS) return "B";
-  if (event.source === "analyst" || event.source === "gcat" || (authority && time.precision !== "none")) return "C";
+  if (event.source === "analyst" || (event.source === "gcat" && GCAT_DATED.has(time.precision)) || (authority && time.precision !== "none")) return "C";
   return "D";
 }
 
@@ -281,6 +319,8 @@ function conflictsOf(group: Group): Conflict[] {
   for (let i = 0; i < s.length; i++) {
     for (let j = i + 1; j < s.length; j++) {
       const [a, b] = [s[i]!, s[j]!];
+      // Two separations the satellite catalogue dates apart within one event are two batches of its pieces, not two sources disagreeing.
+      if (isSatcatStatement(a) && isSatcatStatement(b)) continue;
       const timed = a.source !== "catalogue" && b.source !== "catalogue";
       if (timed && a.event.at !== null && b.event.at !== null && Math.abs(Date.parse(a.event.at) - Date.parse(b.event.at)) > CONFLICT_MINUTES * 60_000) {
         add({ field: "event", sources: [a.source, b.source], detail: `${a.source} ${a.event.stated} against ${b.source} ${b.event.stated}` });
@@ -312,7 +352,8 @@ function idOf(parent: Parent, time: StatedTime, unnamedIndex: number): string {
 /** One group resolved into a Known Breakup. */
 function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Breakup {
   const launch = group.statements.map((s) => s.parent.designator?.slice(0, 8)).find((l) => l !== undefined) ?? null;
-  for (const o of overrides) if (o.exemptLaunch !== undefined && o.exemptLaunch === launch && group.statements.every((s) => s.source === "catalogue") && !group.overrides.includes(o.name)) group.overrides.push(o.name);
+  // An exempt launch's events that only the catalogues (its bursts, GCAT's satellite catalogue) state are exempt; a report's own event stays scoreable.
+  for (const o of overrides) if (o.exemptLaunch !== undefined && o.exemptLaunch === launch && group.statements.every((s) => s.source === "catalogue" || isSatcatStatement(s)) && !group.overrides.includes(o.name)) group.overrides.push(o.name);
   const applied = overrides.filter((o) => group.overrides.includes(o.name));
   const forcedEvent = applied.find((o) => o.event !== undefined)?.event;
   const forcedKind = applied.find((o) => o.kind !== undefined)?.kind;
@@ -345,7 +386,7 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
   };
 }
 
-export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[] } {
+export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[]; skipped: Skipped } {
   const statements = allStatements();
   const overrides = parseJson<{ overrides: Override[] }>("data/truth/overrides.json").overrides;
   const groups = groupStatements(statements, overrides);
@@ -359,14 +400,14 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
     if (n > 1) throw new Error(`two events share the id ${breakup.id}: ${breakup.parent.name}; separate or merge them with an override`);
   }
   for (const override of overrides) if (!breakups.some((b) => b.overrides.includes(override.name))) throw new Error(`override ${override.name} applied to nothing`);
-  return { file: { format: 1, sources: SOURCES, breakups }, groups, statements };
+  return { file: { format: 1, sources: SOURCES, breakups }, groups, statements, skipped: satcatSkipped() };
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { file, statements } = buildTruth();
+  const { file, statements, skipped } = buildTruth();
   const json = `${JSON.stringify(file, null, 1)}\n`;
   writeFileSync(resolve(ROOT, "data/breakups.json"), json);
-  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements));
+  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped));
   const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
   console.log(`data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written`);
 }

@@ -73,7 +73,7 @@ export const QUIET_AFTER_CLOSE_DAYS = 30;
 export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
-export const DETECTOR_NAME = "confirmed-v9";
+export const DETECTOR_NAME = "confirmed-v10";
 
 /** A set accepted in the measure pass, with what was predicted for it, carried to the decide pass. */
 interface Pending {
@@ -1115,12 +1115,15 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
     }
     const byCentre = converged !== null && converged.ratio > params.attributionAmbiguityRatio ? converged.number : centred;
     // The stage preference: a body of a better rank in the pieces' plane whose offset from their centre the pieces cannot tell from the named body's is named instead, unless the named body alone made a persistent step in the window.
+    // In its narrower form only a rocket body is preferred, and only over a payload operating at the time.
     const rank = (n: number): number => rankOf(context, launch, n);
-    const alternative = sharing.filter((n) => n !== byCentre && rank(n) < rank(byCentre)).reduce<number | null>((best, n) => (best === null || centreOf(n) < centreOf(best) ? n : best), null);
+    const narrow = params.attributionPrefersStageOverWorking && !params.attributionPrefersStage;
+    const better = (n: number, than: number): boolean => (narrow ? rank(n) === 0 && rank(than) === 2 : rank(n) < rank(than));
+    const alternative = sharing.filter((n) => n !== byCentre && better(n, byCentre)).reduce<number | null>((best, n) => (best === null || centreOf(n) < centreOf(best) ? n : best), null);
     const preferRatio = alternative === null ? Number.NaN : centreOf(alternative) / Math.max(centreOf(byCentre), params.attributionCentreFloorKm);
     const searchFrom = now - params.attributionSearchDays * DAY_MS;
     const namedStepped = alternative !== null && steppedWithin(context, byCentre, searchFrom, now) && !steppedWithin(context, alternative, searchFrom, now);
-    const preferred = params.attributionPrefersStage && alternative !== null && preferRatio <= params.attributionPreferCentreRatio && !namedStepped;
+    const preferred = (params.attributionPrefersStage || narrow) && alternative !== null && preferRatio <= params.attributionPreferCentreRatio && !namedStepped;
     const number = preferred ? alternative : byCentre;
     if (named.has(number)) continue;
     const centre = centreOf(number);
@@ -1214,8 +1217,8 @@ function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, parents: re
           if (twins.length > 0) {
             const stepNames = params.attributionStepBreaksTies && stepped === 1;
             // The rank breaks a tie no step does: a rocket body among payloads, a dead payload among working ones.
-            priorBreaks = twins.every((t) => rank(number) < rank(t)) ? 1 : 0;
-            const priorNames = !stepNames && params.attributionPrefersStage && priorBreaks === 1;
+            priorBreaks = twins.every((t) => better(number, t)) ? 1 : 0;
+            const priorNames = !stepNames && (params.attributionPrefersStage || narrow) && priorBreaks === 1;
             const why = stepNames ? `, which alone made a persistent step in the window` : priorNames ? `, ${RANK_WORDS[rank(number)]}, the likelier parent of the ${twins.length + 1}` : ", on the centre";
             if (params.attributionTwins && (stepNames || priorNames || params.attributionTwinsUnresolved)) reasons.push(`the pieces cannot be told from ${twins.length} other bod${twins.length === 1 ? "y" : "ies"} of the launch (${twins.join(", ")}): their axes centre ${centre.toFixed(1)} km from ${number}'s and ${twins.map((r) => centreOf(r).toFixed(1)).join(", ")} km from theirs, and they converge on them within ${params.attributionAmbiguityRatio} times their miss of ${number} (${twins.map((r) => misses.get(r)!.toFixed(1)).join(", ")} km against ${timed.missKm.toFixed(1)}): the launch is named with its candidates, ${number} first${why}`);
             else if (stepNames || priorNames) reasons.push(`the pieces converge on ${number} and on another body of the launch alike, and ${number}${why}: it is named`);

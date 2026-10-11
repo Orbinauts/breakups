@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { OUTCOMES, PHASES, REFUSALS } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
-import { DETECTOR_PARAMETERS } from "./params.ts";
+import { DETECTOR_PARAMETERS, type DetectorParameters } from "./params.ts";
 import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
@@ -1146,5 +1146,26 @@ describe("the eleventh phase's rules", () => {
     expect(preferred[0]!.reasons.join(" ")).toContain("the likelier parent");
     // The rule off, the same factor names the payload.
     expect(feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6 } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number)).toEqual([2]);
+  });
+
+  test("in its narrower form a rocket body is preferred only over a payload operating at the time", () => {
+    // The scene above, the payload operating or not by its status.
+    const runsWith = (status: Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
+      const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload", status));
+      const stage = decaying(7210, 0.02, 0.004, 48, 8, 3).map((s) => ({ ...setOf(7, s, "rocket body"), designator: "2010-002B" }));
+      const at = quiet[110]!.epochMs;
+      const pieces = Array.from({ length: 6 }, (_, i) => ({ ...setOf(50011 + i, { epochMs: at + HOUR, aKm: 7200 + (i - 2.5) * 3, raanDeg: 100 }, "debris"), designator: `2010-002${"CDEFGH"[i]}` }));
+      const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, stage[from + i]!]));
+      return [...both(0, 115), pieces, ...both(115, quiet.length)];
+    };
+    const named = (runs: ElementSet[][], parameters: Partial<DetectorParameters>): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
+    const working = runsWith({ opsStatus: "operational" });
+    expect(named(working, { attributionPrefersStageOverWorking: true })).toEqual([7]);
+    expect(named(working, { attributionPrefersStageOverWorking: false })).toEqual([2]);
+    // A payload not operating at the time is left to the centre: the narrower rule prefers the stage over a working payload alone.
+    expect(named(runsWith({}), { attributionPrefersStageOverWorking: true })).toEqual([2]);
+    const row = feed(runsWith({}), { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, attributionPrefersStageOverWorking: true } }).log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
+    expect(row.signals.preferNamedRank).toBe(1);
+    expect(Number.isFinite(row.signals.preferAlternative)).toBe(false);
   });
 });

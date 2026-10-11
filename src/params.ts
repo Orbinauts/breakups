@@ -273,6 +273,25 @@ export interface DetectorParameters {
    */
   attributionPrefersStage: boolean;
   attributionPreferCentreRatio: number;
+  /**
+   * The stage preferred over an operating payload, the narrower form of
+   * `attributionPrefersStage`, which leaves every other tie as the centre
+   * of the pieces or a step resolves it: where the pieces of an attribution
+   * share the plane of a rocket body of the launch and the body their
+   * centre named is a payload operating at the time (by its dated status),
+   * and the rocket body's offset from their centre is within
+   * `attributionPreferCentreRatio` of the payload's, the rocket body is
+   * named, unless the payload alone made a persistent step in the search
+   * window; and among twins no step tells apart, a rocket body is named
+   * before payloads that were all operating. A working payload is
+   * commanded and watched by its owner, and of the payload breakups the
+   * truth holds since 2005 few were on one operating at the time
+   * (`d11-confirmed.md`), so where the pieces cannot tell a launch's stage
+   * from its working payload the stage is the likelier parent. Read only
+   * where `attributionPrefersStage` is off. Fitted on the training split
+   * (`d12-confirmed.md`).
+   */
+  attributionPrefersStageOverWorking: boolean;
   /** Whether the body an attribution names is the one the pieces converge on, propagated back, where they converge on it better by `attributionAmbiguityRatio` than on the body the centre of their semi-major axes names: a breakup's pieces left their parent's place at one instant, and the centre of their axes is the weaker cue where two bodies of the launch share their plane (a twin ullage motor named for its sibling's pieces). Fitted on the training split (`d11-confirmed.md`). */
   attributionConvergenceNames: boolean;
   /** A small batch: an attribution, or a confirmation of an alert on the parent's step, resting on at least `smallBatchMinPieces` and at most `smallBatchMaxPieces` pieces needs them to share a tight common origin: at least two of them crossing the parent in the window, and `smallBatchOriginShare` of them (a half or three quarters) within `smallBatchOriginHours` of their median crossing. A handful of pieces under an old launch is as often the cataloguing of an old cloud as a new event, and a new event's pieces were made at one instant. A value of the hours beyond reach turns the rule off. Fitted on the training split (`d11-confirmed.md`). */
@@ -443,6 +462,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   reentryAfterPiecesDays: 0,
   attributionPrefersStage: false,
   attributionPreferCentreRatio: 3,
+  attributionPrefersStageOverWorking: true,
   attributionConvergenceNames: false,
   smallBatchMinPieces: 3,
   smallBatchMaxPieces: 4,
@@ -611,6 +631,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   reentryAfterPiecesDays: { kind: "fitted", source: "d11-confirmed.md, the reentry rule on the training split" },
   attributionPrefersStage: { kind: "fitted", source: "d11-confirmed.md, the stage preference on the training split" },
   attributionPreferCentreRatio: { kind: "fitted", source: "d11-confirmed.md, the stage preference on the training split" },
+  attributionPrefersStageOverWorking: { kind: "fitted", source: "d12-confirmed.md, the stage preferred over an operating payload on the training split: no training confirmation changed, kept on its prior by the criterion decided before the look" },
   attributionConvergenceNames: { kind: "fitted", source: "d11-confirmed.md, the replays of the training split" },
   smallBatchMinPieces: { kind: "policy", source: "d11-confirmed.md: the small batches of three and four pieces the coordinator named; one and two pieces are the single-piece rule's" },
   smallBatchMaxPieces: { kind: "policy", source: "as smallBatchMinPieces" },

@@ -1,0 +1,220 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="description" content="Jonathan McDowell's new homepage">
+<meta name="keywords" content="Jonathan, McDowell, space, astronomy, Chandra">
+<title>Jonathan's Space Report | GCAT</title>
+<link rel="stylesheet" type="text/css" href="../../css/style.css">
+</head>
+<body>
+<header>
+<H1>GCAT: General Catalog of Artificial Space Objects</H1>
+<H3>Jonathan C. McDowell</H3>
+<H2> Definitions  </H2>
+</header>
+<section style="font-size: 20px">
+<nav style="width:30%;">
+<UL id="navul">
+<LI><A HREF="../../index.html">Introduction</A>
+<LI><A HREF="../intro/index.html">I. Definitions and Conventions</A>
+<UL>
+<LI><A HREF="../intro/vague.html">Time Representations and Vague Date Format</A>
+<LI><A HREF="../intro/space.html">Space and Orbit</A>
+<LI><A HREF="../intro/frames.html">Orbital Parameters and Coordinate Frames</A>
+<LI><A HREF="../intro/jcat.html">JCAT catalog identifiers</A>
+<LI><A HREF="../intro/desig.html">Launch and Piece Designations</A>
+<LI><A HREF="../intro/type.html">SatType scheme</A>
+<LI><A HREF="../intro/phases.html">Phases and Status values</A>
+<LI><A HREF="../intro/success.html">Launch Success Fractions</A>
+<LI><A HREF="../intro/orbits.html">Orbit Category values</A>
+<LI><A HREF="../intro/u.html">Uncataloged ('U') Launches</A>
+<LI><A HREF="../intro/analyst.html">Space Force 'Analyst' Objects</A>
+<LI><A HREF="../intro/nom.html">Nomenclature Codes</A>
+<LI><A HREF="../intro/service.html">Launch Service Codes</A>
+<LI><A HREF="../intro/profile.html">Launch Profile Codes</A>
+</UL>
+<LI><A HREF="../orgs/index.html">II: Organizations Database</A>
+<LI><A HREF="../sites/index.html">III: Launch Origins Database</A>
+<LI><A HREF="../platforms/index.html">IV: Launch Platforms</A>
+<LI><A HREF="../lvs/index.html">V: Launch Vehicles</A>
+<LI><A HREF="../launch/index.html">VI: Launch Lists</A>
+<LI><A HREF="../worlds/index.html">VII: Worlds in the Solar System</A>
+<LI><A HREF="../cat/index.html">VIII: Object Catalogs</A>
+<LI><A HREF="../intro/ack.html">Acknowledgements</A>
+</UL>
+</nav>
+<div class="core">
+
+<H2>Time Representations and Vague Date Format</H2>
+
+<H2>Time Scales</H2>
+All dates in GCAT are at least nominally in Coordinated Universal Time (UTC).
+Comparing launches and orbital events occuring across the world
+requires a global timescale - local time zones are useless.
+UTC, like local times, has the bad feature that it is not continuous -
+there are occasional leap seconds.
+<P><BR>
+An even better choice of timescale would be a continuous one, such
+as TT, TDB or TCB. JPL Horizons data is expressed in TDB, but
+most data in the space community is in UTC, and (at least for this release)
+I have relunctantly decided to go with the crowd.
+<P><BR>
+Nontechnical readers may be more familiar with UTC by the essentially equivalent name
+GMT (Greenwich Mean Time). The US military tags time zones with the phonetic alphabet,
+with UTC/GMT as zone 24 known as Z (Zulu) time.
+<P><BR>
+Note, however that UTC is not a time zone per se - it is not restricted to a particular
+range of longitudes; and of course, it never has daylight savings time.
+
+<H2>Julian Date</H2>
+We can express dates numerically using the Julian Date (JD). The JD day number
+is a continuous count of days starting at noon UTC on BC 4713 Jan 1 Old Style/Julian calendar,
+which is noon UTC on BC 4714 Nov 24 New Style/Gregorian calendar.
+<P><BR>
+Times within a day are expressed as decimal days. Remember that the JD always starts at noon.
+For example, 0600 UTC on 2020 Aug 1 is JD 2459062.7500; 1800 UTC on 2020 Aug 1 is JD JD 2459063.2500.
+<P><BR>
+Note that 12:00 UTC on Jan 1, 2000 is JD 2451545.0. This special epoch is the fundamental
+epoch of modern astronomy, known as J2000.0 for short.
+<P><BR>
+Estimated launch times of rockets are provided as JD values to make it easy to sort the data and carry out
+computations. However, some launch times are uncertain  - even only known to the nearest year or so.
+This uncertainty is incorporated in a human-readable date field that uses what I call the Vague
+Date Format, defined in the next section.
+
+<H2>Vague Date Format</H2>
+Dates in the General Catalog are usually recorded as strings
+in what I call the 'Vague Date' format. A Vague Date string
+defines a time range within which an event is believed to lie.
+<P><BR>
+Many astronautical databases include dates which are actually
+approximate but are given as if they are precise. For example, a
+rocket which is only known to have launched sometime in 1984 may be
+entered with a date of 1984 Jan 1 0000:00 as if it was known to the
+nearest second. This is particularly common if the date is stored as a
+single real number (e.g. Julian Day value).
+<P><BR>
+To fix this, every date field should actually be a pair of values
+- either two dates as a confidence interval
+or a date and an uncertainty value. This adds storage, maintenance
+and I/O software overhead to the handling of dates.
+<P><BR>
+As a compromise between this additional overhead and
+following the common practice of ignoring the problem, the Vague Date
+string format translates to a time confidence interval with a particular
+precision.
+A maximal-precision Vague Date is of the form
+<PRE style="display:inline-block">
+2016 Jun  8 2359:57.345
+</PRE>
+which is interpreted as UTC in a geocenter-fixed frame, lying
+in the millisecond between 2359:57.3450 and 2359:57.3460 UTC.
+Note that there must be two spaces between "Jun" and "8" here.
+<P><BR>
+We provide the ability to encode greater uncertainty
+by allowing rightmost fields to be omitted, and optionally
+a question mark symbol to be appended.
+<P><BR>
+In the General Catalog we only allow 1 second precision, so e.g.
+<PRE style="display:inline-block">
+2016 Jun  8 2359:57
+</PRE>
+<P><BR>
+The full specification of the format is as a series of
+fields increasing in precision from left to right,
+with a possible question-mark suffix.  The only mandatory
+field is the year, but if a field is present so must
+all the fields to the left of it, except for the optional
+leftmost 'domain' field.
+<P><BR>
+The fields are:
+<UL>
+<LI class="blix"> <B>Domain, consisting of the string AD or BC.</B>
+This is usually omitted and the value AD is assumed. Of course, we don't normally
+need BC for space events! But I use the same format for astronomy,
+where we do have observations of supernovae and comets before 1 AD.
+<P><BR>
+It's true that nowadays academic historians would advocate using the
+'common era' designations CE and BCE to avoid Christian associations,
+but, having grown up with BC and AD, I find this overly precious
+despite my atheism - if you are going to worry about that, perhaps you should
+change the zero point (to the Space Era of 1957, for example).
+<LI class="blix"> <B>Year field.</B>
+<P><BR>
+This can be either:
+<UL>
+<LI> The (Gregorian) year, as an integer; or
+<LI> A century descriptor, format: integer followed by letter. The
+letter can be C or M for century or millenium. For example,
+20C  means between 1901 Jan 1 and 2001 Jan 1; M indicates a millenium;
+3M means between 2001 Jan 1 and 3001 Jan 1.
+Usually for astronautical applications we know the date more accurately than a century!
+</UL>
+<LI class="blix"> <B>Month (generalized month), consisting of the (case sensitive) strings</B>
+Jan, Feb, .... Dec, and the special strings Q1, Q2, Q3, Q4 indicating
+the year-quarters   Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec respectively.
+<LI class="blix"> <B>Day, an integer in the range 1, 31 always right justfied</B>
+in a two byte field.
+<LI class="blix"> <B>Time, in one of three formats:</B>
+<LI class="blix"> <B>(1) Centiday: A day decimal fraction with one or two significant digits.</B>
+This format was used by the RAE table of Earth Satellites and
+related satellite tabulations.
+<LI class="blix"> <B>(2) Hour:  A two-digit hour value with a trailing letter 'h'.</B>
+<LI class="blix"> <B>(3)  HMS: A time in the format  hhmm:ss.sss (where trailing items can be omitted)</B>
+parsed as:
+<UL>
+<LI> The hour, 00 to 23  (leading zeroes required)
+<LI> Minute, 00 to 59 (leading zeroes required), appended to the hour value
+without any separator.
+<LI> Second, 00 to 60 (leading zeroes required), appended to the minutes
+with a colon separator. (Note that during a UTC leap second, the second value may be 60).
+<LI> Millisecond, 000 to 999, appended to the seconds with a decimal point
+</UL>
+<LI class="blix"> <B>Schedule flag, an optional trailing 's' to indicate a scheduled date,</B>
+where the actual time is not confirmed (or has not happened yet).
+<LI class="blix"> <B>Flag, An optional trailing question mark to indicate uncertainty.</B>
+</UL>
+<P><BR>
+Here are a selection of valid Vague Date strings and their
+mapping to a date confidence interval.
+<P><BR>
+<TABLE BORDER=1 style="background-color: #DDEEFB;">
+<TR><TH>Precision<TH>Vague Date<TH>Range implied (semi-open interval)<TH>Width</TR>
+<TR><TD>Millisec<TD>2016 Jun  8 2355:57.345 <TD>2016 Jun 8 2355:57.345 to 57.346  <TD>1ms</TR>
+<TR><TD>Second  <TD>2016 Jun  8 2355:57     <TD>2016 Jun 8 2355:57.0 to 2355:58.0 <TD>1s</TR>
+<TR><TD>Seconds <TD>2016 Jun  8 2355:57?    <TD>2016 Jun 8 2355:56.0 to 2355:59.0 <TD>3s</TR>
+<TR><TD>Minute  <TD>2016 Jun  8 2355        <TD>2016 Jun 8 2355:00 to 2356:00      <TD>1m</TR>
+<TR><TD>Minutes <TD>2016 Jun  8 2355?       <TD>2016 Jun 8 2354:00 to 2357:00      <TD>3m</TR>
+<TR><TD>Centiday<TD>2016 Jun  8.98          <TD>2016 Jun 8 2331:12 to Jun 8 2345:36      <TD>0.01d</TR>
+<TR><TD>Centidays<TD>2016 Jun  8.98?        <TD>2016 Jun 8 2316:48 to Jun 9 0000:00      <TD>0.03d</TR>
+<TR><TD>Hour    <TD>2016 Jun  8 23h         <TD>2016 Jun 8 2300:00 to Jun 9 0000:00      <TD>1h</TR>
+<TR><TD>Hours   <TD>2016 Jun  8.9           <TD>2016 Jun 8 2136:00 to Jun 9 0000:00      <TD>2.4h</TR>
+<TR><TD>Day     <TD>2016 Jun  8             <TD>2016 Jun 8 0000 to 2016 Jun 9 0000 <TD>1d</TR>
+<TR><TD>Day (scheduled)  <TD>2016 Jun  8s   <TD>2016 Jun 8 0000 to 2016 Jun 9 0000 <TD>1d</TR>
+<TR><TD>Days    <TD>2016 Jun  8?            <TD>2016 Jun 7 0000 to 2016 Jun 10 0000<TD>3d</TR>
+<TR><TD>Month   <TD>2016 Jun                <TD>2016 Jun 1 0000 to 2016 Jul 1 0000 <TD>1mo</TR>
+<TR><TD>Months  <TD>2016 Jun?               <TD>2016 May 1 0000 to 2016 Aug 1 0000 <TD>3mo</TR>
+<TR><TD>Quarter <TD>2016 Q2                 <TD>2016 Apr 1 0000 to 2016 Jul 1 0000 <TD>3mo</TR>
+<TR><TD>Quarters<TD>2016 Q2?                <TD>2016 Jan 1 0000 to 2016 Oct 1 0000 <TD>9mo</TR>
+<TR><TD>Year    <TD>2016                    <TD>2016 Jan 1 0000 to 2017 Jan 1 0000 <TD>1y</TR>
+<TR><TD>Years   <TD>2016?                   <TD>2015 Jan 1 0000 to 2018 Jan 1 0000 <TD>3y</TR>
+<TR><TD>Decade   <TD>2010s                   <TD>2010 Jan 1 0000 to 2020 Jan 1 0000 <TD>10y</TR>
+<TR><TD>Decades   <TD>2010s?                  <TD>2000 Jan 1 0000 to 2030 Jan 1 0000 <TD>30y</TR>
+<TR><TD>Century  <TD>21C                     <TD>2001 Jan 1 0000 to 2101 Jan 1 0000 <TD>100y</TR>
+<TR><TD>Centuries<TD>21C?                    <TD>1901 Jan 1 0000 to 2201 Jan 1 0000 <TD>300y</TR>
+<TR><TD>Millenium<TD>3M                      <TD>2001 Jan 1 0000 to 3001 Jan 1 0000 <TD>1000y</TR>
+<TR><TD>Millenia <TD>3M?                     <TD>1001 Jan 1 0000 to 4001 Jan 1 0000 <TD>3000y</TR>
+</TABLE>
+<P><BR>
+Some additional special values:
+<P><BR>
+<TABLE BORDER=1 style="background-color: #DDEEFB;">
+<TR><TD>Unknown<TD>?<TD>Date entirely unknown</TR>
+<TR><TD>Current<TD>*<TD>Now (for an end date, indicating still active, etc.)</TR>
+</TABLE>
+<P><BR>
+</div>
+</section>
+<footer>
+<br/>
+<br/>
+</footer>

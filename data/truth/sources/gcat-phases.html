@@ -1,0 +1,234 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="description" content="Jonathan McDowell's new homepage">
+<meta name="keywords" content="Jonathan, McDowell, space, astronomy, Chandra">
+<title>Jonathan's Space Report | GCAT</title>
+<link rel="stylesheet" type="text/css" href="../../css/style.css">
+</head>
+<body>
+<header>
+<H1>GCAT: General Catalog of Artificial Space Objects</H1>
+<H3>Jonathan C. McDowell</H3>
+<H2> Definitions  </H2>
+</header>
+<section style="font-size: 20px">
+<nav style="width:30%;">
+<UL id="navul">
+<LI><A HREF="../../index.html">Introduction</A>
+<LI><A HREF="../intro/index.html">I. Definitions and Conventions</A>
+<UL>
+<LI><A HREF="../intro/vague.html">Time Representations and Vague Date Format</A>
+<LI><A HREF="../intro/space.html">Space and Orbit</A>
+<LI><A HREF="../intro/frames.html">Orbital Parameters and Coordinate Frames</A>
+<LI><A HREF="../intro/jcat.html">JCAT catalog identifiers</A>
+<LI><A HREF="../intro/desig.html">Launch and Piece Designations</A>
+<LI><A HREF="../intro/type.html">SatType scheme</A>
+<LI><A HREF="../intro/phases.html">Phases and Status values</A>
+<LI><A HREF="../intro/success.html">Launch Success Fractions</A>
+<LI><A HREF="../intro/orbits.html">Orbit Category values</A>
+<LI><A HREF="../intro/u.html">Uncataloged ('U') Launches</A>
+<LI><A HREF="../intro/analyst.html">Space Force 'Analyst' Objects</A>
+<LI><A HREF="../intro/nom.html">Nomenclature Codes</A>
+<LI><A HREF="../intro/service.html">Launch Service Codes</A>
+<LI><A HREF="../intro/profile.html">Launch Profile Codes</A>
+</UL>
+<LI><A HREF="../orgs/index.html">II: Organizations Database</A>
+<LI><A HREF="../sites/index.html">III: Launch Origins Database</A>
+<LI><A HREF="../platforms/index.html">IV: Launch Platforms</A>
+<LI><A HREF="../lvs/index.html">V: Launch Vehicles</A>
+<LI><A HREF="../launch/index.html">VI: Launch Lists</A>
+<LI><A HREF="../worlds/index.html">VII: Worlds in the Solar System</A>
+<LI><A HREF="../cat/index.html">VIII: Object Catalogs</A>
+<LI><A HREF="../intro/ack.html">Acknowledgements</A>
+</UL>
+</nav>
+<div class="core">
+
+<H2>Phases and Status Values</H2>
+Each entry in the General Catalog represents a time period or phase in
+the flight history of an object. The  !b status value  describes the
+status of the object at the end of the phase. Typical values of the
+status are 'O' (still in orbit) and 'R' (reentered). But it can get a
+lot more complicated.
+
+<H2>Phases</H2>
+Each time an object transitions to another state (undocks, is attached to something, reenters,
+changes which body it is orbiting, etc.) marks the beginning or end of a
+<B>phase.</B>
+Most objects in GCAT have only a single phase - they separate from an object (launch vehicle) and
+then are either still in free flight or have reentered. However, some objects go through many phases.
+<P><BR>
+The phase is defined by a set of fields in the object catalog entry.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Field<TH>Symbol<TH>Format<TH WIDTH=500>Description</TR>
+<TR><TD>Parent<TD>P<TD>EJCAT/Body<TD WIDTH=500>the parent can be an extended JCAT ID (EJCAT) or a body name.</TR>
+<TR><TD>SDate<TD>t1<TD>VagueDate<TD WIDTH=500>the phase start time. This can be the time the object separated from the parent EJCAT or the time the object departed the parent body's gravitational sphere of influence (SOI)</TR>
+<TR><TD>Primary<TD>C<TD>Body<TD WIDTH=500>the name of the central body for this phase</TR>
+<TR><TD>DDate<TD>t2<TD>VagueDate<TD WIDTH=500>the phase end time</TR>
+<TR><TD>Status<TD>S<TD>Phase Status Code<TD WIDTH=500>a code describing the event that ends the phase</TR>
+<TR><TD>Dest<TD>D<TD>Location/Body/JCAT<TD WIDTH=500>`destination', a string whose definition depends on the Status value. It can be empty, a Location, a body, or a JCAT.</TR>
+</TABLE>
+<P><BR>
+Also relevant is te, the orbit epoch ODate, mentioned in a few cases below.
+<P><BR>
+The symbols in the table above are used in the discussion below for conciseness.
+A
+<B>location</B>
+can be expressed as a string (uncontrolled text, e.g. 'W Atlantic') or
+as longitude/latitude coordinates (e.g. 74W 22S).
+The Dest field may be blank if reentry location is unknown.
+<P><BR>
+The different kinds of phases are defined by the Status field.
+They are given in a somewhat arbitrary order that makes sense to me, and grouped
+by what kind of Dest field is used.
+The state of an object includes its `externality' - is it free, attached to a parent
+object externally, or is it inside its parent object. This externality is also described
+in the following table defining the different Status codes. The table assumes
+(in the interpretation of t1 and t2) that P is a EJCAT rather than a body.
+If P is a body then t1 represents the time the object went from P's SOI to C's SOI;
+if D is a body then t2 represents the time the object went from C's SOI to D's SOI.
+<P><BR>
+(Added 2021 Oct:) For cases where a vehicle is reused in a new launch (e.g. Space Shuttle Orbiter),
+the REFLT status is used to connect the objects. For example, the Space Shuttle OV-102
+Columbia flew on mission STS-1 as orbital launch 1981-034, catalog S12399, piece designation 1981-034A.
+When it flew again on STS-2, NORAD gave it a new launch number 1981-111, catalog number S12953, and
+piece designation 1981-111A. Understandably the NORAD (now Space Force) tracking system cannot
+know from tracking data that the objects are the same vehicle - but historians do. I add an extra
+phase to S12399 (STS-1) after the landing, with zero duration, status REFLT, and dest equal to S12953,
+to signal that S12399 later got relaunched as S12953. Note that only a few entries of this kind
+have been added at the time of this writing.
+<P><BR>
+I acknowledge that there is a bit of a `ship of Theseus' problem here: is the orbiter that flew on
+STS-93 really the `same object' as the one that flew STS-1?
+<P><BR>
+The case of re-launches from other worlds is slightly different, in that Space Force does NOT assign
+a new catalog number, but I do - when the launch is from a world, not a small rock.
+For Apollo 11, three objects get new catalog numbers: the LM 5 Eagle
+ascent stage and the two EVA suits. EVA suit A7L-056 was given auxiliary catalog A01625 for its
+launch from Earth (launch designation 1969-059). On reaching deep space aboard Eagle it is given
+designation D00265.  The last A01625 phase has status DSA with dest D00265 to tie the two together.
+The suit retains its D00265 designation through the lunar surface EVAs. Then it has a phase
+with the REFLT tag reassigning it to a new catalog number D01053 associated with a new launch,
+1969-U01, corresponding to the launch of Eagle from the lunar surface. This follows the spirit
+of what NORAD did with STS-1 - when relaunching the same thing it gets new launch designations and catalog numbers -
+even though NORAD does not actually do this when the launch is not from Earth. Suit A7L-056
+retains the new D01053 catalog number and 1969-U01 launch designation
+through its landing in the Pacific aboard D00273/1969-059A Columbia.
+<P><BR>
+For the actual extraterrestrial re-launching itself, I retain the `LO'
+status tag used previously but add a dest value. `LO' should now be
+considered as equivalent to REFLT for such cases. Thus, for Eagle's ascent stage we
+have: launched from Earth as 1969-059C, catalog S04041. Reached deep
+space and reassigned as 1969-059C, catalog D00274, via a DSA status tag
+to connect the catalog numbers. Relaunched from the Moon as new launch
+1969-U01, catalog D01052. The final D00274 phase has status LO with dest
+D01052 to connect it to the new catalog number.
+<P><BR>
+For `launches' (departures) from low gravity objects that I don't count as worlds, I don't
+give new launch designations. I think of it more like an undocking in such cases! In these
+cases, the LO status tag does not have a new catalog number in the Dest field.
+<P><BR>
+In earlier versions of the catalog, I did not distinguish between planetary flybys and orbital missions.
+Both used the 'EO' take for a swich of sphere of influence. For an orbital mission, however, the
+phase within the planetary sphere of influence includes three sub-phases: hyperbolic approach
+from sphere of influence to orbit insertion, elliptical bound orbit phase, and (hyperbolic) departure
+from orbit escape to sphere of influence (or to impact/landing).
+<P><BR>
+In versions prior to 1.4, suborbital objects were given status 'R'. However their reentry, although it doesn't
+involve a deorbit burn, is at a predictable time and targeted location, which is importantly different from
+uncontrolled reentries of orbital objects. The new status value 'S' is now used for suborbital targeted reentries
+and also (a bit more questionably) for launch failures. The 'LF' code for failed landing has not been used
+generally - some 'D' should really be 'LF'. I have extended the LF code to include Earth atmosphere reentries
+where an intact touchdown was followed immediately by vehicle destruction, even where that outcome was
+intended by design (e.g. Starship test flights); thus for Earth reentries S, L and LF indicate no significant
+ablation, while D and R imply destructive reentry ablation and breakup; this distinction is important for
+atmospheric chemistry studies.
+<P><BR>
+<TABLE BORDER=1>
+<TR><TH>Status value<TH>Description<TH WIDTH=600>Interpretation<TH WIDTH=200>Externality</TR>
+<TR><TD COLSPAN=4><B>Cases with t2 and Dest both empty</B></TR>
+<TR><TD>O<TD>In orbit<TD WIDTH=600>Sep from P at t1, still in free flight<TD WIDTH=200>Free</TR>
+<TR><TD>AO<TD>Attached in orbit<TD WIDTH=600>Attached to P from t1 to present<TD WIDTH=200>External</TR>
+<TR><TD>AO IN<TD>Attached inside<TD WIDTH=600>Inside P from t1 to present<TD WIDTH=200>Internal</TR>
+<TR><TD>UDK<TD>Undocked<TD WIDTH=600>Docked to P from t1 to t2, sep from P at t2<TD WIDTH=200>External to free</TR>
+<TR><TD>REL<TD>Released<TD WIDTH=600>Attached to P from t1 to t2, sep from P at t2<TD WIDTH=200>External to free</TR>
+<TR><TD>DEP<TD>Deployed<TD WIDTH=600>Same as REL but for objects on planetary surface<TD WIDTH=200>External to free</TR>
+<TR><TD>TO<TD>Takeoff<TD WIDTH=600>Launch from C surface (C is a small body, not a world)<TD WIDTH=200>Free</TR>
+<TR><TD>TOA (was ALO)<TD>Attached at takeoff<TD WIDTH=600>Attached to P from t1 to t2 including at launch from C surface.<TD WIDTH=200>External</TR>
+<TR><TD>OX<TD>In orbit (probably) but lost<TD WIDTH=600>As O, but no recent tracking data<TD WIDTH=200>Free</TR>
+<TR><TD COLSPAN=4><B>Dest is always blank but t2 is not</B></TR>
+<TR><TD>E<TD>Exploded<TD WIDTH=600>Sep from P at t1, free in orbit until breakup at t2. Next phase of this object is a debris fragment.<TD WIDTH=200>Free</TR>
+<TR><TD>N<TD>Renamed<TD WIDTH=600>In orbit from t1 to t2, name or owner changed at t2. Next phase reflects new name and owner<TD WIDTH=200>Free</TR>
+<TR><TD>NA<TD>Renamed attached<TD WIDTH=600>Attached to P from t1 to t2, name or owner changed at t2. Next phase reflects new name and owner<TD WIDTH=200>External</TR>
+<TR><TD>LEASE<TD>Lease<TD WIDTH=600>Temporary lease from main owner from t1 to t2. SatType code is PA. <TD WIDTH=200>Free</TR>
+<TR><TD COLSPAN=4><B>Dest is a location on C, or C itself, or blank (see also 'Dest is a body name' below)</B></TR>
+<TR><TD>S<TD>Targeted suborbital entry/impact<TD WIDTH=600>Sep from P at t1, crashed or destroyed in atmosphere at t2 at end of launch trajectory<TD WIDTH=200>Free</TR>
+<TR><TD>R<TD>Reentered<TD WIDTH=600>Sep from P at t1, destroyed in C's atmosphere at t2 after natural decay<TD WIDTH=200>Free</TR>
+<TR><TD>D<TD>Deorbited<TD WIDTH=600>Sep from P at t1, destroyed in C's atmosphere at t2 via active deorbit maneuver<TD WIDTH=200>Free</TR>
+<TR><TD>L<TD>Landed<TD WIDTH=600>Sep from P at t1, landed or splashed down on C's surface at t2<TD WIDTH=200>Free</TR>
+<TR><TD>LF<TD>Failed landing<TD WIDTH=600>Intact on reaching Earth surface but actually destroyed on or immediately after impact<TD WIDTH=200>Free</TR>
+<TR><TD>AS<TD>Suborbital reentered attached<TD WIDTH=600>Attached to P from t1 to t2 when P reentered<TD WIDTH=200>External</TR>
+<TR><TD>AR<TD>Reentered attached<TD WIDTH=600>Attached to P from t1 to t2 when P reentered<TD WIDTH=200>External</TR>
+<TR><TD>AR IN<TD>Reentered inside<TD WIDTH=600>Inside P from t1 to t2 when P reentered<TD WIDTH=200>Internal</TR>
+<TR><TD>AL<TD>Landed attached<TD WIDTH=600>Attached to P from t1 to t2 when P landed<TD WIDTH=200>External</TR>
+<TR><TD>AL IN<TD>Landed inside<TD WIDTH=600>Inside  P from t1 to t2 when P landed<TD WIDTH=200>Internal</TR>
+<TR><TD>TX<TD>Transmission ended<TD WIDTH=600>Operated on C's surface from t1 to t2<TD WIDTH=200>Free</TR>
+<TR><TD>F<TD>Failed<TD WIDTH=600>Sep from P at t1, crashed or destroyed at t2 during launch failure<TD WIDTH=200>Free</TR>
+<TR><TD>AF<TD>Failed attached<TD WIDTH=600>Attached to P at all times until it and P crashed or destroyed at t2 during launch failure<TD WIDTH=200>External or internal.</TR>
+<TR><TD COLSPAN=4><B>Dest is a JCAT from D catalog (deep space). JCAT ID used in deep space catalog for this object is given by the Dest value.</B></TR>
+<TR><TD>DSO<TD>Deep space<TD WIDTH=600>Sep from P at t1, passed deep space boundary at t2. <TD WIDTH=200>Free</TR>
+<TR><TD>DSA<TD>Deep space attached<TD WIDTH=600>Attached to P since t1, passed deep space boundary at t2.<TD WIDTH=200>External</TR>
+<TR><TD>DSA IN<TD>Deep space inside <TD WIDTH=600>Inside P since t1, passed deep space boundary at t2. <TD WIDTH=200>Internal</TR>
+<TR><TD>LO<TD>Liftoff<TD WIDTH=600>Launch from C surface (C is a world but not Earth), catalog reassigned to dest<TD WIDTH=200>Free</TR>
+<TR><TD>LOA<TD>Reflight attached<TD WIDTH=600>Launch from C surface (C is a world but not Earth) aboard parent object, catalog reassigned to dest<TD WIDTH=200>External or Internal</TR>
+<TR><TD COLSPAN=4><B>Dest is a JCAT from the main catalogs (not from D catalog)</B></TR>
+<TR><TD>DK<TD>Docked<TD WIDTH=600>Sep from P at t1, docked with D at t2<TD WIDTH=200>Free to External</TR>
+<TR><TD>GRP<TD>Grappled<TD WIDTH=600>Sep from P at t1, docked with D at t2<TD WIDTH=200>Free to External</TR>
+<TR><TD>ATT<TD>Attached<TD WIDTH=600>Was attached to P at t1, then attached to D at t2<TD WIDTH=200>External.</TR>
+<TR><TD>TFR<TD>Transfer<TD WIDTH=600>Inside P at t1, moved inside D at t2<TD WIDTH=200>Internal</TR>
+<TR><TD>TFR E<TD>Transfer external<TD WIDTH=600>Inside P at t1, moved to exterior of D at t2<TD WIDTH=200>Internal to External</TR>
+<TR><TD>TFR IN<TD>Transfer in<TD WIDTH=600>Outside P at t1, moved to interior of D at t2<TD WIDTH=200>External to Internal (same as RET)</TR>
+<TR><TD>C<TD>Collided<TD WIDTH=600>Collided with D at t2<TD WIDTH=200>Free</TR>
+<TR><TD>EVA DP<TD>Spacewalk (depress)<TD WIDTH=600>Inside P at t1, began depressurization of airlock of D at t2<TD WIDTH=200>Internal to External</TR>
+<TR><TD>EVA RP<TD>Spacewalk (repress)<TD WIDTH=600>Depressurized airlock of P at t1, repressurized airlock of D at t2<TD WIDTH=200>Internal to tethered or free to Internal</TR>
+<TR><TD>REFLT<TD>Reflight<TD WIDTH=600>Object reassigned to a new catalog number on its next flight<TD WIDTH=200>Not applicable</TR>
+<TR><TD COLSPAN=4><B>Dest is a body name</B></TR>
+<TR><TD>EO<TD>Escape<TD WIDTH=600>Left P's SOI at t1, In C's SOI from t1 to t2, entered D's SOI at t2<TD WIDTH=200>Free</TR>
+<TR><TD>EAO<TD>Escape attached<TD WIDTH=600>Attached to P from t1 to t2. In C's SOI till t2, then in D's SOI<TD WIDTH=200>External</TR>
+<TR><TD>EN<TD>Encounter<TD WIDTH=600>same as EO, but denotes specifically a single flyby of the central body P with periapsis time equal to te (ODate value), before departing the SOI at t2.</TR>
+<TR><TD>OI<TD>Orbit insertion<TD WIDTH=600>Left P's SOI at t1, entered C's SOI at t1 and entered a bound orbit around C at t2. This will be paired with a next phase with an empty Parent (implied equal to C) describing the phase that begins with orbit insertion and ending with landing, impact or orbit departure OE.</TR>
+<TR><TD>OE<TD>Orbit escape<TD WIDTH=600>In orbit around C at t1, performed escape burn at t2. Next phase will describe the phase from escape burn to departing sphere of influence.</TR>
+<TR><TD COLSPAN=4><B>Special cases</B></TR>
+<TR><TD>ERR<TD>Error<TD WIDTH=600>No object corresponding to this entry (tracking or cataloging errors)<TD WIDTH=200>-</TR>
+</TABLE>
+<P><BR>
+For case C (Collision) the collision can result in the destruction of the object, in which case there is no
+subsequent phase; or the object can survive, in which case t2 starts a new phase. If object A collides with object B,
+there is a C status for each of the objects A and B. That is, A has a phase that ends with 'A collides with B',
+and B has a phase that ends with 'B collides with A'. If A survives, B is the parent object for A's next phase,
+and vice versa.
+<P><BR>
+For cases R, D, AR, AR IN: if C has no atmosphere, t2 is the time of impact on C's surface.
+Natural decay includes orbit perturbation due to mascons, and direct impact without first
+entering bound orbit.
+<P><BR>
+For cases DSO, DSA, DSA IN; the object is considered to have left the main part of GCAT
+at t2. Its old JCAT ID no longer applies and the Deep Space Catalog JCAT ID is used for
+further phases of its history.
+<P><BR>
+For case LO, when taking off from a world a new launch designation and catalog number are assigned - it is treated as a new launch.
+For case TO, when taking off/departing from a small body, I don't consider it a new launch and no reassignment is made.
+<P><BR>
+For case EVA RP, P and D are usually the same airlock. The phase may involve moving outside airlock and returning (`spacewalk'),
+but sometimes the `EVA' may be entirely internal, working inside the depressurized airlock for the duration. Sometimes I use
+the phrase `depressurization activity' rather than 'EVA', since the initial E is not necessarily applicable.
+<P><BR>
+The cases OI, OE, EN, EO and EAO are only used in the Deep Space Catalog and the heliocentric and
+lunar-planetary registers.
+</div>
+</section>
+<footer>
+<br/>
+<br/>
+</footer>

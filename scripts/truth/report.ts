@@ -1,5 +1,6 @@
 import type { Breakup, BreakupsFile, FirstStatement, SourceId, Statement } from "../../src/truth.ts";
 import { AGENCY_SOURCES, firstAgencyStatement, yearOf } from "../../src/truth.ts";
+import { AT_LAUNCH_DAYS, SAME_SEPARATION_DAYS, isSatcatStatement, type Skipped } from "./parse-gcat-satcat.ts";
 
 /**
  * The report a reviewer reads beside the generated truth: what was built
@@ -60,7 +61,44 @@ function firstStatements(scoreable: Breakup[]): string[] {
   ];
 }
 
-export function renderReport(file: BreakupsFile, statements: Statement[]): string {
+/**
+ * The satellite catalogue's section: its rule and constants, what it left
+ * out, and per year from the scoring span the events it alone states, by
+ * kind, and the events of other sources it joined.
+ */
+function satcatSection(breakups: Breakup[], statements: Statement[], skipped: Skipped | undefined): string[] {
+  const satcat = statements.filter(isSatcatStatement);
+  if (satcat.length === 0) return [];
+  const alone = (b: Breakup): boolean => b.statements.every((s) => isSatcatStatement(s) || s.source === "catalogue") && b.statements.some(isSatcatStatement);
+  const joined = (b: Breakup): boolean => !alone(b) && b.statements.some(isSatcatStatement);
+  const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
+  const years = [...new Set(scoring.filter((b) => b.statements.some(isSatcatStatement)).map(yearOf))].sort();
+  const kinds = ["breakup", "anomalous", "aerodynamic", "release"] as const;
+  const rows: (string | number)[][] = years.map((year) => {
+    const inYear = scoring.filter((b) => yearOf(b) === year);
+    const own = inYear.filter(alone);
+    return [year, ...kinds.map((k) => own.filter((b) => b.kind === k).length), own.filter((b) => b.scoreable).length, own.filter((b) => b.scoreable && b.statements.some((s) => s.source === "catalogue")).length, inYear.filter(joined).length];
+  });
+  const total = (i: number): number => rows.reduce((sum, row) => sum + (row[i] as number), 0);
+  rows.push(["All", ...kinds.map((_, i) => total(i + 1)), total(5), total(6), total(7)]);
+  const conflicted = scoring.filter(joined).filter((b) => b.conflicts.some((c) => c.detail.includes("gcat")));
+  return [
+    "## GCAT's satellite catalogue",
+    "",
+    `Read uniformly, for every object and every year, with no regard to the detector (\`scripts/truth/parse-gcat-satcat.ts\`). A piece is a row typed as a component (\`C\`) or fragmentation debris (\`D\`) whose parent is a standard-catalogue object (\`S\`) or an auxiliary-catalogue one (\`A\`, keyed by its launch) and whose separation date is stated. Its kind is its SatType's: fragmentation debris is a breakup, anomalous debris (subtype \`J\`) an anomalous event, an aerodynamic breakup (\`Q\`) aerodynamic, slag (\`K\`), coolant (\`N\`), debris released at orbit insertion (\`O\`) and every other component a release. A release separated by the end of the ${AT_LAUNCH_DAYS === 1 ? "day" : `${AT_LAUNCH_DAYS} days`} after its launch day is the launch's own staging and makes no statement; a separation dated before its parent's launch is a slip and makes none. The pieces of one parent whose separation windows lie within ${SAME_SEPARATION_DAYS} days of each other (GCAT's own \`?\` on a day) are one separation and one statement, dated as GCAT dates most of them, its kind the first of breakup, anomalous, aerodynamic and release among them. The statements then join the other sources' events by the build's rule (same parent, windows within thirty days, \`SAME_EVENT_DAYS\`); where another source states the event, that source's instant, kind, orbit, cause and count stand, and the satellite catalogue's are kept beside them. An event it alone states is of confidence C where GCAT dates it to the month or finer, D where to a year.`,
+    "",
+    `${statements.filter(isSatcatStatement).length} statements${skipped === undefined ? "" : `; left out: ${skipped.releasedAtLaunch} releases at launch, ${skipped.separatedBeforeLaunch} separations dated before the parent's launch, ${skipped.parentNotACatalogueObject} pieces whose parent is not a catalogue object, ${skipped.noSeparationDate} with no separation date (and ${skipped.notAPiece} parent rows, kept to name the parents)`}.`,
+    "",
+    `Columns, from ${SCORING_FROM}: the events the satellite catalogue alone states (with the catalogue's bursts at most), by kind; how many of them are scoreable, and of those how many absorbed a burst the catalogue alone had reported; and the events of other sources it joined.`,
+    "",
+    table(["Year", "Breakup", "Anomalous", "Aerodynamic", "Release", "Scoreable", "Of which with a burst", "Joined"], rows),
+    "",
+    `Of the events it joined from ${SCORING_FROM}, ${conflicted.length} disagree with it on the day, the cause or the parent; each is in the conflicts above.`,
+    "",
+  ];
+}
+
+export function renderReport(file: BreakupsFile, statements: Statement[], skipped?: Skipped): string {
   const breakups = file.breakups;
   const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   const years = [...new Set(scoring.map(yearOf))].sort();
@@ -101,6 +139,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[]): strin
     conflicts.length === 0 ? "None." : table(["Event", "Field", "Disagreement", "Resolved from"], conflicts.flatMap((b) => b.conflicts.map((c) => [line(b), c.field, c.detail, c.field === "event" || c.field === "day" ? b.resolvedFrom.event : c.field === "cause" ? (b.resolvedFrom.cause ?? "none") : c.field === "kind" ? b.resolvedFrom.kind : b.parent.catalogueNumber ?? "none"]))),
     "",
     ...firstStatements(scoring.filter((b) => b.scoreable)),
+    ...satcatSection(breakups, statements, skipped),
     "## Possible duplicates",
     "",
     "Events of one parent within a year of each other that no statement joins: a second event, or one event two sources date months apart. A reviewer merges the latter with an override.",

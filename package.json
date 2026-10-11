@@ -57,7 +57,7 @@
     "archive:download": "node --experimental-strip-types scripts/archive/release.ts download",
     "archive:pull": "node --env-file-if-exists=.env --experimental-strip-types scripts/archive/pull.ts",
     "truth:catalogue": "node --experimental-strip-types scripts/truth/parse-catalogue.ts",
-    "kpi": "node --experimental-strip-types scripts/kpi/run.ts",
+    "kpi": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/run.ts",
     "kpi:year": "node --experimental-strip-types scripts/kpi/run.ts --year",
     "kpi:sweep": "node --experimental-strip-types scripts/kpi/sweep.ts"
   },

@@ -48,3 +48,37 @@ agency wrote the event up.
 - Every date and time form the sources use is listed in the parser; a
   form not listed throws, so a new edition cannot slip a date past the
   build unread.
+
+## As built
+
+The sources the build reads, as of the twelfth phase: NASA's history from
+its text, GCAT's Space Debris Clouds from its table, GCAT's satellite
+catalogue from its tab-separated file, the hand file, and the catalogue's
+own bursts read from the Archive (`data/truth/catalogue.json`).
+
+GCAT's satellite catalogue was added in the twelfth phase
+(`docs/detector/d12-confirmed.md`) by the coordinator's decision under the
+owner's delegation: the eleventh phase had found it dating debris for
+parents of the detector's false confirmations, and entering those rows one
+by one, after the held-out years had been read, would have chosen the
+truth by the detector's errors. It is read instead uniformly, every
+catalogued fragment and component with a parent and a separation date, in
+every year, by a rule written in the parser and in `docs/truth.md` before
+any re-scoring: pieces of one parent separated within three days of each
+other are one separation, its kind the pieces' GCAT type (fragmentation
+debris a breakup, anomalous debris an anomalous event, an aerodynamic
+breakup aerodynamic, components and the rest a release), a release at
+launch left out as the launch's own staging. Its statements join the other
+sources' events by the build's thirty-day rule and stand only where no
+other source states the event; an event it alone states is of confidence C,
+or D where GCAT dates it to a year. The whole file is some twenty megabytes,
+so the committed snapshot keeps the rows and columns read, every kept cell
+verbatim, and the sources record holds the whole file's hash beside the
+snapshot's, as it holds the PDF's beside the text of NASA's history. GCAT's
+pages documenting the columns and codes are kept beside it.
+
+It took the truth from 599 events to 2,433 (from 2005, 248 to 623, of them
+363 scoreable). The events reported to the day or better by an authority,
+the headline's, are unchanged; the hand row the eleventh phase had typed
+from the same catalogue (Yaogan-6, 2014) is now the parser's and was
+removed.
