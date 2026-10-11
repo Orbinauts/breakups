@@ -134,11 +134,14 @@ Each row also carries the parent's orbit, every source's statement and the date 
 
 Since 11 October 2026, a frozen copy of the detector runs once a day on GitHub Actions, on that day's public data. Every alert it raises is logged with a timestamp on the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), and each confirmed breakup opens an [issue labelled `prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Each week the log is scored against the official reports, and the score is on the [results page](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-live-test).
 
+The same run publishes the breakups fit to show, those the detector confirmed or a report names, as JSON on this project's GitHub Pages, at [orbinauts.github.io/breakups/v1/breakups.json](https://orbinauts.github.io/breakups/v1/breakups.json): the [published breakups page](https://github.com/Orbinauts/breakups/blob/main/docs/published.md) gives the files, their fields and the rules.
+
 ## Learn more
 
 - [Results in full](https://github.com/Orbinauts/breakups/blob/main/docs/results.md): every table, on the held-out and the training years, with the definitions.
 - [How the detector works](https://github.com/Orbinauts/breakups/blob/main/docs/detector/README.md): every rule, where each threshold was fitted, and how it got here.
 - [The ground truth](https://github.com/Orbinauts/breakups/blob/main/docs/ground-truth.md): what counts as a breakup, its sources and how they are reconciled.
+- [The published breakups](https://github.com/Orbinauts/breakups/blob/main/docs/published.md): the JSON files the daily run publishes, what is shown and why.
 - [The backtest Archive](https://github.com/Orbinauts/breakups/blob/main/docs/archive.md): every tracked object's orbits since 2005, and how to download them.
 - [Design decisions](https://github.com/Orbinauts/breakups/tree/main/docs/decisions): why the project is built the way it is.
 - [Contributing](https://github.com/Orbinauts/breakups/blob/main/CONTRIBUTING.md): how changes land, and how the project keeps itself up to date every week.
