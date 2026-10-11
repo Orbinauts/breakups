@@ -136,6 +136,8 @@ export interface Statement {
   note: string | null;
   /** When the statement can first have been public; null where the source gives no publication date (GCAT's table, the catalogue itself, NASA's history where its references name no quarterly news issue after the event). A hand-entered statement may leave it out, and the build reads it from the reference. */
   statedOn: StatedOn | null;
+  /** The page the statement is read from, where it has one: the article or post it is dated from. Left out where the source has no link (a table, a notice on a login page). */
+  url?: string;
 }
 
 /** The parent of a Known Breakup, resolved across its statements. */
@@ -315,16 +317,20 @@ function readOrbit(value: unknown, where: string): StatedOrbit {
   };
 }
 
+const HTTPS_LINK = /^https:\/\/\S+$/;
+
 const STATEMENT_FIELDS = ["source", "ref", "kind", "parent", "event", "orbit", "cause", "causeStated", "piecesCatalogued", "piecesStatedOn", "preEventElements", "note"] as const;
 
 /** One statement checked; `where` names it in any error. A statement with no `statedOn` (a hand-entered one the build dates from its reference) reads it as null. */
 export function readStatement(value: unknown, where: string): Statement {
   const fields = object(value, where);
-  known(fields, STATEMENT_FIELDS, where, ["statedOn"]);
+  known(fields, STATEMENT_FIELDS, where, ["statedOn", "url"]);
   const piecesStatedOn = textOrNull(fields, "piecesStatedOn", where);
   if (piecesStatedOn !== null && !DAY.test(piecesStatedOn)) fail(where, "piecesStatedOn is not a day");
   const elements = fields.preEventElements;
   if (elements !== null && (typeof elements !== "object" || Array.isArray(elements))) fail(where, "preEventElements is not an object or null");
+  const url = fields.url;
+  if (url !== undefined && (typeof url !== "string" || !HTTPS_LINK.test(url))) fail(where, "url is not an https:// link");
   return {
     source: oneOf(fields, "source", SOURCE_IDS, where),
     ref: text(fields, "ref", where),
@@ -339,6 +345,7 @@ export function readStatement(value: unknown, where: string): Statement {
     preEventElements: elements as Omm | null,
     note: textOrNull(fields, "note", where),
     statedOn: readStatedOn(fields.statedOn, `${where} statedOn`),
+    ...(url === undefined ? {} : { url }),
   };
 }
 

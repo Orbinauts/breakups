@@ -157,6 +157,7 @@
     },
     {
       "source": "analyst", "ref": "Jim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/) and by LeoLabs' public notification of 2026-10-07",
+      "url": "https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/",
       "kind": "breakup",
       "parent": { "catalogueNumber": 12456, "designator": "1981-043A", "name": "Meteor 2-7 (second event)" },
       "event": { "stated": "5 October 2026, about 09:45 UTC, plus or minus 10 minutes", "at": "2026-10-05T09:45Z", "from": "2026-10-05T09:35Z", "to": "2026-10-05T09:55Z", "precision": "minute" },
@@ -168,6 +169,7 @@
     },
     {
       "source": "news", "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'",
+      "url": "https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/",
       "kind": "breakup",
       "parent": { "catalogueNumber": 40258, "designator": "2014-058A", "name": "Luch (Olymp-K 1)" },
       "event": { "stated": "2026-01-30 from 06:09:03.486 UTC", "at": "2026-01-30T06:09Z", "from": "2026-01-30T06:09Z", "to": "2026-01-30T06:10Z", "precision": "minute" },
@@ -179,6 +181,7 @@
     },
     {
       "source": "analyst", "ref": "J. McDowell, Jonathan's Space Report No. 853, 2026-02-15 (https://planet4589.org/space/jsr/back/news.853.txt): 'On Jan 30 the retired Olimp satellite, in the GEO graveyard, underwent a breakup event, according to optical monitoring by the Swiss company s2a Systems.'",
+      "url": "https://planet4589.org/space/jsr/back/news.853.txt",
       "kind": "breakup",
       "parent": { "catalogueNumber": 40258, "designator": "2014-058A", "name": "Luch (Olymp-K 1)" },
       "event": { "stated": "Jan 30 (2026)", "at": null, "from": "2026-01-30T00:00Z", "to": "2026-01-31T00:00Z", "precision": "day" },
@@ -190,6 +193,7 @@
     },
     {
       "source": "news", "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
+      "url": "https://x.com/LeoLabs_Space/status/2001760505954754671",
       "kind": "breakup",
       "parent": { "catalogueNumber": 66629, "designator": "2025-271N", "name": "Starlink-35956" },
       "event": { "stated": "17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")", "at": null, "from": "2025-12-17T00:00Z", "to": "2025-12-18T00:00Z", "precision": "day" },
@@ -201,6 +205,7 @@
     },
     {
       "source": "news", "ref": "LeoLabs' detection posted 2026-03-30; EarthSky (https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/); Gizmodo (https://gizmodo.com/spacex-starlink-satellite-malfunctions-breaks-apart-in-orbit-2000740250)",
+      "url": "https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/",
       "kind": "breakup",
       "parent": { "catalogueNumber": 64157, "designator": "2025-112M", "name": "Starlink-34343" },
       "event": { "stated": "29 March 2026 (LeoLabs: \"fragment creation event ... on 29 March 2026\")", "at": null, "from": "2026-03-29T00:00Z", "to": "2026-03-30T00:00Z", "precision": "day" },
@@ -212,6 +217,7 @@
     },
     {
       "source": "news", "ref": "LeoLabs on X, 2026-08-28; Space.com (https://www.space.com/china-megaconstellation-launch-space-junk); KeepTrack space brief 2026-09-05 (https://keeptrack.space/space-brief/space-brief-2026-09-05)",
+      "url": "https://www.space.com/china-megaconstellation-launch-space-junk",
       "kind": "breakup",
       "parent": { "catalogueNumber": 100472, "designator": "2026-195H", "name": "CZ-6C R/B" },
       "event": { "stated": "less than two days after the launch of 24/25 August 2026 (LeoLabs)", "at": null, "from": "2026-08-25T00:00Z", "to": "2026-08-27T00:00Z", "precision": "day" },

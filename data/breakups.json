@@ -213433,7 +213433,8 @@
       "on": "2025-12-18",
       "precision": "day",
       "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)"
-     }
+     },
+     "url": "https://x.com/LeoLabs_Space/status/2001760505954754671"
     }
    ],
    "conflicts": [],
@@ -213807,7 +213808,8 @@
       "on": "2026-02-15",
       "precision": "day",
       "ref": "J. McDowell, Jonathan's Space Report No. 853, 2026-02-15 (https://planet4589.org/space/jsr/back/news.853.txt): 'On Jan 30 the retired Olimp satellite, in the GEO graveyard, underwent a breakup event, according to optical monitoring by the Swiss company s2a Systems.'"
-     }
+     },
+     "url": "https://planet4589.org/space/jsr/back/news.853.txt"
     },
     {
      "source": "news",
@@ -213841,7 +213843,8 @@
       "on": "2026-02-02",
       "precision": "day",
       "ref": "s2a systems' optical observation, as quoted by Universe Magazine on 2026-02-02 (https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/): 'A short time lapse of the fragmentation event on LUCH (OLYMP) #40258 ... that took place today, 2026-01-30 from 06:09:03.486 UTC'"
-     }
+     },
+     "url": "https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/"
     },
     {
      "source": "gcat",
@@ -213962,7 +213965,8 @@
       "on": "2026-03-30",
       "precision": "day",
       "ref": "LeoLabs' detection posted 2026-03-30; EarthSky (https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/); Gizmodo (https://gizmodo.com/spacex-starlink-satellite-malfunctions-breaks-apart-in-orbit-2000740250)"
-     }
+     },
+     "url": "https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/"
     },
     {
      "source": "gcat",
@@ -214854,7 +214858,8 @@
       "on": "2026-08-28",
       "precision": "day",
       "ref": "LeoLabs on X, 2026-08-28; Space.com (https://www.space.com/china-megaconstellation-launch-space-junk); KeepTrack space brief 2026-09-05 (https://keeptrack.space/space-brief/space-brief-2026-09-05)"
-     }
+     },
+     "url": "https://www.space.com/china-megaconstellation-launch-space-junk"
     }
    ],
    "conflicts": [],
@@ -215121,7 +215126,8 @@
       "on": "2026-10-07",
       "precision": "day",
       "ref": "Jim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/) and by LeoLabs' public notification of 2026-10-07"
-     }
+     },
+     "url": "https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/"
     }
    ],
    "conflicts": [],
