@@ -66,13 +66,32 @@ const AUTHORITIES = new Set<SourceId>(["hoosf-16e", "odqn", "s4s-notice", "esa-s
 const SOURCES: Partial<Record<SourceId, SourceRecord>> = {
   "hoosf-16e": { citation: "Anz-Meador, P., Opiela, J., Liou, J.-C., History of On-Orbit Satellite Fragmentations, 16th Edition, NASA/TP-20220019160, December 2022, https://orbitaldebris.jsc.nasa.gov/library/HOOSF_16e.pdf", licence: "US Government work", version: "16th edition, events to 1 May 2022" },
   odqn: { citation: "NASA Orbital Debris Program Office, Orbital Debris Quarterly News, https://orbitaldebris.jsc.nasa.gov/quarterly-news/", licence: "US Government work", version: "volume 26 issue 3 (September 2022) to volume 30 issue 3 (September 2026)" },
-  gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects: Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html, and the satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv", licence: "CC-BY-4.0", version: "debris clouds data last updated 2025 Jun 22; satellite catalogue updated 2026 Oct 9" },
+  // The version is read from the two snapshots' own update lines (`gcatVersion`), so a refreshed snapshot states its edition.
+  gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects: Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html, and the satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv", licence: "CC-BY-4.0", version: "" },
   "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025, Table 3.7", licence: "ESA", version: "2025 edition, events of 2024" },
   "s4s-notice": { citation: "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page", licence: "public announcement", version: "as seen on 2026-09-17" },
   analyst: { citation: "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report", licence: "cited reports", version: "to 2026-10-10" },
   news: { citation: "LeoLabs' public notifications and the news reports cited on each statement", licence: "cited reports", version: "to 2026-10-09" },
   catalogue: { citation: "The public catalogue's own listing of new objects under a parent's launch", licence: "public catalogue", version: "as seen on 2026-10-09" },
 };
+
+/** The day of a GCAT update line (`2025 Jun 22 2314:45`, `2026 Oct  9 1800:46`): its year, month and day, the whitespace folded. */
+export function gcatDay(updated: string): string {
+  const day = /^(\d{4})\s+([A-Z][a-z]{2})\s+(\d{1,2})\b/.exec(updated.trim());
+  if (day === null) throw new Error(`GCAT's update line "${updated}" names no day`);
+  return `${day[1]} ${day[2]} ${Number(day[3])}`;
+}
+
+/** GCAT's version as the truth records it: the day of each snapshot's own update line. */
+export function gcatVersion(debrisUpdated: string, satcatUpdated: string): string {
+  return `debris clouds data last updated ${gcatDay(debrisUpdated)}; satellite catalogue updated ${gcatDay(satcatUpdated)}`;
+}
+
+/** The sources' records, GCAT's version read from its snapshots. */
+function sourcesOf(): Partial<Record<SourceId, SourceRecord>> {
+  const version = gcatVersion(parseGcat(read("data/truth/sources/gcat-debriscat.html")).updated, parseSatcat(read("data/truth/sources/gcat-satcat.tsv")).updated);
+  return { ...SOURCES, gcat: { ...SOURCES.gcat!, version } };
+}
 
 function parseJson<T>(path: string): T {
   return JSON.parse(read(path)) as T;
@@ -400,7 +419,7 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
     if (n > 1) throw new Error(`two events share the id ${breakup.id}: ${breakup.parent.name}; separate or merge them with an override`);
   }
   for (const override of overrides) if (!breakups.some((b) => b.overrides.includes(override.name))) throw new Error(`override ${override.name} applied to nothing`);
-  return { file: { format: 1, sources: SOURCES, breakups }, groups, statements, skipped: satcatSkipped() };
+  return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped() };
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

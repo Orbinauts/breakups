@@ -12,6 +12,9 @@ import { readmeTables, type Latest } from "../scripts/kpi/kpi.ts";
  * built truth must give, its scorecard tables state the cells of the
  * committed aggregate, and its quick start prints what the library
  * answers; all three are read here, so the README cannot drift from any.
+ * `npm run kpi:readme` writes those parts between their markers
+ * (`scripts/kpi/readme.ts`); these tests compute every cell on their own,
+ * so a fault in the generator is caught here rather than copied.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");

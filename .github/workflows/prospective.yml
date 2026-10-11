@@ -18,7 +18,12 @@ name: Prospective
 # branch is committed and pushed by the Actions bot: the commit time is the
 # proof of when each alert was known, and this run's log a second,
 # independent timestamp. The updated day slices, and a closed year's end
-# states once it has settled, go back to the release afterwards.
+# states once it has settled, go back to the release afterwards. Then
+# every alert of the log with no issue yet gets one, labelled
+# `prospective-alert` (scripts/maintenance/alert-issues.ts): the parent's
+# name, number and state in its title, the evidence, the run and the log's
+# line in its body, and its key in a hidden line, so an alert gets one
+# issue however many runs see it.
 #
 # Any failing step fails the run, and the run commits whole or not at all.
 # To pause the test: gh workflow disable prospective.yml; to resume it:
@@ -39,6 +44,8 @@ concurrency:
 permissions:
   # The push to the `prospective` branch and the upload to the release `prospective-data`.
   contents: write
+  # An issue for each new alert, and its label where missing.
+  issues: write
 
 env:
   FROZEN_TAG: frozen-confirmed-v10
@@ -147,6 +154,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: npm run prospective:data -- upload
+      # After the data are kept, so an issue that cannot be opened never costs the day's slices; the next run opens what this one could not.
+      - name: Open an issue for each new alert
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: npm run -s maintenance:alert-issues -- "$BREAKUPS_PROSPECTIVE"
       - name: The request ledger and the run's log
         if: always()
         run: |

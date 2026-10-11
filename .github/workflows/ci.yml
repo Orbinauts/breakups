@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, "release/**"]
   pull_request:
+  # The maintenance workflow runs it on main after a merge it made, which its token's push does not trigger.
+  workflow_dispatch:
 
 # A new push supersedes the run of the last one: the older run is cancelled rather than finished for nobody.
 concurrency:

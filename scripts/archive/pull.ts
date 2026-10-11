@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
-import { archiveHome, writeYear, type ArchivedBody, type ColumnArray, type ColumnName, type Columns, type Manifest, COLUMN_TYPES, REQUIRED_COLUMNS } from "./archive.ts";
+import { archiveHome, writeYear, type ArchivedBody, type ArchiveYear, type ColumnArray, type ColumnName, type Columns, type HistorySource, type Manifest, COLUMN_TYPES, REQUIRED_COLUMNS } from "./archive.ts";
 import { latestSatcat } from "./satcat.ts";
 import { parsePair } from "./strip.ts";
 import { credentialsFromEnv, SpaceTrack } from "./space-track.ts";
@@ -212,6 +212,39 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
   return { columns: columns as unknown as Columns, bodies, sets: n, withoutSatcat, from: kept[0]!, through: kept.at(-1)!, missing };
 }
 
+/**
+ * A year built from its kept days as the Archive writes it: the columns,
+ * the body table (named from the latest satellite catalogue under the
+ * Archive) and the manifest, not yet written. The pull writes it in place;
+ * the weekly maintenance promotes a closed year of the prospective test's
+ * day slices with it (`scripts/maintenance/promote.ts`).
+ */
+export function historyYear(archive: string, year: number): ArchiveYear {
+  const started = Date.now();
+  const built = buildFromHistory(archive, year);
+  const columnSha256: Manifest["columnSha256"] = {};
+  for (const name of [...REQUIRED_COLUMNS, "created"] as const) {
+    const column = built.columns[name]!;
+    columnSha256[name] = createHash("sha256").update(new Uint8Array(column.buffer, column.byteOffset, column.byteLength)).digest("hex");
+  }
+  const manifest: Manifest = {
+    format: 1,
+    year,
+    source: { kind: "history", from: built.from, through: built.through, missing: built.missing },
+    columns: [...REQUIRED_COLUMNS, "created"],
+    sets: built.sets,
+    bodies: built.bodies.length,
+    withoutSatcat: built.withoutSatcat,
+    satcat: latestSatcat(archive)?.day ?? null,
+    rejects: 0,
+    rejectSamples: [],
+    columnSha256,
+    builtAt: new Date().toISOString(),
+    buildSeconds: Math.round((Date.now() - started) / 10) / 100,
+  };
+  return { manifest, bodies: built.bodies, columns: built.columns };
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const year = Number(args.find((a) => /^\d{4}$/.test(a)));
@@ -235,30 +268,10 @@ async function main(): Promise<void> {
     if (!cached) pulled++;
     console.log(`${day}: ${rows.length} sets${cached ? " (kept)" : again ? " (again, not yet settled when kept)" : ""}`);
   }
-  const started = Date.now();
-  const built = buildFromHistory(archive, year);
-  const columnSha256: Manifest["columnSha256"] = {};
-  for (const name of [...REQUIRED_COLUMNS, "created"] as const) {
-    const column = built.columns[name]!;
-    columnSha256[name] = createHash("sha256").update(new Uint8Array(column.buffer, column.byteOffset, column.byteLength)).digest("hex");
-  }
-  const manifest: Manifest = {
-    format: 1,
-    year,
-    source: { kind: "history", from: built.from, through: built.through, missing: built.missing },
-    columns: [...REQUIRED_COLUMNS, "created"],
-    sets: built.sets,
-    bodies: built.bodies.length,
-    withoutSatcat: built.withoutSatcat,
-    satcat: latestSatcat(archive)?.day ?? null,
-    rejects: 0,
-    rejectSamples: [],
-    columnSha256,
-    builtAt: new Date().toISOString(),
-    buildSeconds: Math.round((Date.now() - started) / 10) / 100,
-  };
-  writeYear(archive, { manifest, bodies: built.bodies, columns: built.columns });
-  console.log(`${year}: ${built.sets} sets of ${built.bodies.length} objects from ${built.from} through ${built.through} (${built.missing.length} days missing), ${pulled} requests this run`);
+  const built = historyYear(archive, year);
+  writeYear(archive, built);
+  const source = built.manifest.source as HistorySource;
+  console.log(`${year}: ${built.manifest.sets} sets of ${built.bodies.length} objects from ${source.from} through ${source.through} (${source.missing.length} days missing), ${pulled} requests this run`);
 }
 
 if (process.argv[1] !== undefined && process.argv[1].endsWith("pull.ts")) await main();

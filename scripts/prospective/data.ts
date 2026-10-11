@@ -171,12 +171,12 @@ export function localStates(archive: string): DataAsset[] {
 const localPathOf = (archive: string, asset: DataAsset): string => (asset.kind === "states" ? statesFileOf(archive, asset.year) : provenanceFileOf(archive, asset.year));
 
 /** A release asset fetched to a path with the GitHub CLI. */
-function fetchAsset(file: string, path: string): void {
+export function fetchAsset(file: string, path: string): void {
   execFileSync("gh", ["release", "download", DATA_TAG, "--repo", repository(), "--pattern", file, "--output", path, "--clobber"], { stdio: ["ignore", "inherit", "inherit"] });
 }
 
 /** An asset fetched to a path and checked against the manifest's hash, put in place only once it matches. */
-function fetchVerified(asset: DataAsset, path: string): void {
+export function fetchVerified(asset: DataAsset, path: string): void {
   const partial = `${path}.partial`;
   fetchAsset(asset.file, partial);
   const sha = sha256File(partial);

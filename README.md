@@ -6,7 +6,9 @@ The detector behind [Orbinauts](https://orbinauts.com), the live satellite map.
 
 ## Current results
 
-The detector is `confirmed-v10`, the twelfth phase of its build. Its target is to confirm 90% of reported breakups, with fewer than 10% of its confirmations false. **It does not reach that target on the held-out years.** Those years have also been read during development, so they are no longer a blind test: the clean test is the [prospective one](#prospective-test).
+The detector is `confirmed-v10`, the twelfth phase of its build. Its target is to confirm 90% of reported breakups, with fewer than 10% of its confirmations false. <!-- kpi:target:begin -->**It does not reach that target on the held-out years.**<!-- kpi:target:end --> Those years have also been read during development, so they are no longer a blind test: the clean test is the [prospective one](#prospective-test).
+
+<!-- kpi:current:begin -->
 
 | Headline: breakups reported to the day | Held-out years (odd, 2007 to 2025) | Training years (even, 2006 to 2026) | Target |
 | --- | --- | --- | --- |
@@ -17,7 +19,9 @@ The detector is `confirmed-v10`, the twelfth phase of its build. Its target is t
 | Median lead over the first agency statement | 42 days, 17 of 17 before it | 36 days, 14 of 21 before it |  |
 | Median timing error | 41 minutes | 19 hours |  |
 
-A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead counts the days from the detector's confirmation to the first statement by an agency: NASA, ESA or U.S. Space Forces-Space. The timing error compares the detector's instant of the breakup with the one the ground truth gives. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, and a test fails if any cell here differs from that file. The full tables are under [How well it does](#how-well-it-does).
+<!-- kpi:current:end -->
+
+A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead counts the days from the detector's confirmation to the first statement by an agency: NASA, ESA or U.S. Space Forces-Space. The timing error compares the detector's instant of the breakup with the one the ground truth gives. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, `npm run kpi:readme` writes this table and the README's others from it, and a test fails if any cell here differs from that file. The full tables are under [How well it does](#how-well-it-does).
 
 ## How it works
 
@@ -44,7 +48,13 @@ A second layer watches every object's own orbit. Each new element set is compare
 
 ## Prospective test
 
-The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub. Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
+The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new alert opens an issue labelled `prospective-alert`. Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
+
+<!-- prospective:score:begin -->So far: 0 alerts logged since the freeze; 0 confirmed alerts match a reported event after the freeze, of 0 reported events with pieces; 0 false confirmations of 0 confirmed alerts. The truth last changed on 2026-10-11. The agencies report an event months after it, so the events of the last 90 days or so may not be in the truth yet, and the score is not final for them. The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.<!-- prospective:score:end -->
+
+## Kept up to date
+
+A weekly workflow, `.github/workflows/maintenance.yml`, keeps the project current with no one at the keyboard. Every Monday it fetches GCAT's tables and NASA's history again, rebuilds the truth, replays the scorecard over the whole Archive when the truth or the Archive changed, rewrites the README's tables and the prospective score, and runs every check. If anything changed, it opens a pull request saying what moved and why, merges it as the Actions bot, and runs CI and the KPI workflow again on main. Each January it promotes the closed year of the prospective test into the Archive, and each quarter it opens an issue listing the sources a person must read by hand. A failure opens an issue with the log, and nothing is merged. `gh workflow disable maintenance.yml` pauses it, and [docs/decisions/0009](docs/decisions/0009-the-project-keeps-itself-up-to-date.md) says what still needs a person.
 
 ## What this repository holds
 
@@ -85,11 +95,15 @@ for (const breakup of scoreable.slice(-3)) {
 
 It prints:
 
+<!-- truth:quick-start:begin -->
+
 ```text
 by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
 2026-09-13T21:13Z USA 32 (19460), breakup, confidence A, LEO
 2026-10-05T09:45Z Meteor 2-7 (second event) (12456), breakup, confidence C, LEO
 ```
+
+<!-- truth:quick-start:end -->
 
 ## How well it does
 
@@ -103,7 +117,9 @@ The scorecard replays the detector over the Archive. It feeds the detector every
 
 [kpi/latest.md](kpi/latest.md) carries every split. The per-year files under `kpi/years/`, every verdict and logged candidate, are tens of megabytes a run; they are artifacts of the KPI workflow, made again by `npm run kpi -- --all`, and only the aggregate is committed.
 
-The target is not reached on either split. The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. Every held-out confirmation with an agency's statement came before that statement, by a median of six weeks. It came a median of three hours after the catalogue published the first fresh piece. What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](docs/detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](docs/detector/README.md) what each phase changed.
+<!-- kpi:splits:begin -->The target is not reached on either split.<!-- kpi:splits:end --> The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. Every held-out confirmation with an agency's statement came before that statement, by a median of six weeks. It came a median of three hours after the catalogue published the first fresh piece. What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](docs/detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](docs/detector/README.md) what each phase changed.
+
+<!-- kpi:confirmed:begin -->
 
 | Confirmed: the target, breakups A and B | Targets (fragments catalogued) | No fragments catalogued | Confirmed | Missed | Recall (95% interval) | False confirmations | False-alarm rate (95% interval) | Lead over the first agency statement, days: median (10th percentile) | Confirmed before it | Lag after the first fragment, days: median (90th percentile) | Timing error, minutes: median (90th percentile) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -145,7 +161,11 @@ The target is not reached on either split. The held-out years were read while ea
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.0) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 40.6 (21342.4) |
 
+<!-- kpi:confirmed:end -->
+
 The tables below measure the second layer, the step on the parent's own orbit, as the scorecard measured it before the target moved. They are kept as secondary measurements. A target there is an event whose parent had at least five public sets in the sixty days before it. Detected means an alert on the parent's step before the first fragment's set was published, and late means after it. The scoped line keeps only old objects with large, kicked steps that change the drag term and hold for a week ([docs/detector/d7-scope.md](docs/detector/d7-scope.md)). The tier table shows that waiting longer before raising a step does not make it precise.
+
+<!-- kpi:parent-step:begin -->
 
 | Parent step: validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -203,9 +223,13 @@ The tables below measure the second layer, the step on the parent's own orbit, a
 | Targets with an agency's statement dated in the truth (the notices) | 0 |
 | Of which confirmed before that statement | 0 |
 
+<!-- kpi:parent-step:end -->
+
 ## Ground truth
 
 A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.
+
+<!-- truth:counts:begin -->
 
 | Events from 2005 | Count |
 | --- | --- |
@@ -221,11 +245,13 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 | Confidence C (GCAT alone, an authority's month, or an analyst's dating) | 225 |
 | Confidence D (pieces in the catalogue, or news with no time) | 33 |
 
+<!-- truth:counts:end -->
+
 The sources, and what each gives:
 
 - **NASA, History of On-Orbit Satellite Fragmentations, 16th edition** (NASA/TP-20220019160, December 2022): every breakup and anomalous event to 1 May 2022, each with its date, time, altitude, assessed cause and the parent's pre-event element set. Read from the text of the PDF.
 - **NASA, Orbital Debris Quarterly News**: each breakup since the cut-off, in prose. Typed by hand with issue and page.
-- **GCAT, Space Debris Clouds** (Jonathan McDowell, planet4589.org, CC-BY-4.0): 402 debris clouds with the parent, the event date and the orbit. Read from its table.
+- **GCAT, Space Debris Clouds** (Jonathan McDowell, planet4589.org, CC-BY-4.0): <!-- truth:gcat-clouds:begin -->402<!-- truth:gcat-clouds:end --> debris clouds with the parent, the event date and the orbit. Read from its table.
 - **GCAT, the satellite catalogue** (Jonathan McDowell, planet4589.org, CC-BY-4.0): every catalogued fragment and component with its parent, its separation date and its type (fragmentation debris by cause, anomalous debris, aerodynamic breakup, or a component released on purpose). Read uniformly for every object and every year: the pieces of one parent separated within three days of each other are one separation, its kind the pieces' type (a release at launch is the launch's own staging and is left out); a separation no other source reports is an event of confidence C (D where GCAT dates it to a year only), one another source reports joins its event. Kept as a snapshot reduced to the rows and columns read, with the whole file's hash.
 - **ESA, Space Environment Report 2025**, Table 3.7: the fragmentations of 2024, the object unnamed.
 - **U.S. Space Forces-Space notices**, named analysts, LeoLabs' notifications and news reports for 2025 to 2026, and the public catalogue where fragments were published with no report.

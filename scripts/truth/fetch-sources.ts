@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,14 @@ import { reduceSatcat } from "./parse-gcat-satcat.ts";
  *
  * `--only <id>[,<id>…]` fetches the sources named alone and leaves every
  * other snapshot as it is.
+ *
+ * A source that has not changed keeps its snapshot and its record as they
+ * were, the day it was fetched included, so a fetch that finds nothing new
+ * makes no diff: NASA's PDF is unchanged when its hash is the recorded one
+ * (and `pdftotext` is then not run), a page kept as served likewise, and
+ * GCAT's satellite catalogue, whose whole file changes almost every day,
+ * when its reduction is the snapshot already kept. The weekly maintenance
+ * workflow runs it this way and opens a pull request only for a change.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -41,6 +49,28 @@ const SOURCES: Record<string, { url: string; snapshot: string; licence: string; 
 
 const sha256 = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 
+/** What the sources record keeps of a snapshot. */
+export interface SnapshotRecord {
+  url: string;
+  fetchedOn: string;
+  originalSha256: string;
+  originalBytes: number;
+  snapshot: string;
+  madeWith: string;
+  snapshotSha256: string;
+  licence: string;
+}
+
+/**
+ * Whether a fetched source is the one already kept: its original's hash is
+ * the recorded one and the kept snapshot is the recorded snapshot, or,
+ * where the original is reduced, the reduction is the kept snapshot.
+ */
+export function unchanged(record: SnapshotRecord | undefined, original: string, snapshot: string | null, kept: string | null): boolean {
+  if (record === undefined || kept !== record.snapshotSha256) return false;
+  return snapshot !== null ? snapshot === record.snapshotSha256 : original === record.originalSha256;
+}
+
 async function fetchBytes(url: string): Promise<Uint8Array> {
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
   if (!response.ok) throw new Error(`${url}: ${response.status}`);
@@ -59,11 +89,18 @@ function onlyArgument(): Set<string> | null {
 async function main(): Promise<void> {
   const only = onlyArgument();
   const today = new Date().toISOString().slice(0, 10);
-  const record = JSON.parse(readFileSync(resolve(ROOT, "data/truth/sources.json"), "utf8")) as { about: string; snapshots: Record<string, unknown> };
+  const record = JSON.parse(readFileSync(resolve(ROOT, "data/truth/sources.json"), "utf8")) as { about: string; snapshots: Record<string, SnapshotRecord> };
   const scratch = mkdtempSync(join(tmpdir(), "breakups-sources-"));
   for (const [id, source] of Object.entries(SOURCES)) {
     if (only !== null && !only.has(id)) continue;
     const original = await fetchBytes(source.url);
+    const path = resolve(ROOT, "data/truth", source.snapshot);
+    const kept = existsSync(path) ? sha256(readFileSync(path)) : null;
+    const reduced = source.made === "satcat" ? reduceSatcat(new TextDecoder().decode(original)) : null;
+    if (unchanged(record.snapshots[id], sha256(original), reduced === null ? null : sha256(new TextEncoder().encode(reduced.text)), kept)) {
+      console.log(`${id}: unchanged (sha256 ${sha256(original).slice(0, 12)}…), kept as fetched on ${record.snapshots[id]!.fetchedOn}`);
+      continue;
+    }
     let snapshot: Uint8Array;
     let madeWith: string;
     if (source.made === "pdftotext") {
@@ -74,19 +111,18 @@ async function main(): Promise<void> {
       const version = execFileSync("pdftotext", ["-v"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim().split("\n")[0] ?? "pdftotext";
       snapshot = readFileSync(text);
       madeWith = `pdftotext -layout, poppler ${version.replace(/^pdftotext version /, "")}`;
-    } else if (source.made === "satcat") {
-      const reduced = reduceSatcat(new TextDecoder().decode(original));
+    } else if (reduced !== null) {
       snapshot = new TextEncoder().encode(reduced.text);
       madeWith = reduced.madeWith;
     } else {
       snapshot = original;
       madeWith = "fetched as served";
     }
-    writeFileSync(resolve(ROOT, "data/truth", source.snapshot), snapshot);
+    writeFileSync(path, snapshot);
     record.snapshots[id] = { url: source.url, fetchedOn: today, originalSha256: sha256(original), originalBytes: original.byteLength, snapshot: source.snapshot, madeWith, snapshotSha256: sha256(snapshot), licence: source.licence };
     console.log(`${id}: ${original.byteLength} bytes, sha256 ${sha256(original).slice(0, 12)}…, snapshot ${snapshot.byteLength} bytes`);
   }
   writeFileSync(resolve(ROOT, "data/truth/sources.json"), `${JSON.stringify(record, null, 2)}\n`);
 }
 
-await main();
+if (process.argv[1] !== undefined && process.argv[1].endsWith("fetch-sources.ts")) await main();

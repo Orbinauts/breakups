@@ -1,11 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
 import { landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
+import { replacePart } from "../kpi/readme.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
+import { runUrlOf } from "./run.ts";
 
 /**
  * The prospective test's score: `npm run prospective:score`. It reads the
@@ -27,6 +29,14 @@ import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts"
  * fragments of an event are its reported count of catalogued pieces: an
  * event whose count is not yet stated is listed apart, neither confirmed
  * nor missed.
+ *
+ * `--markdown <path>` also writes the score as Markdown (the weekly
+ * maintenance writes it to `score.md` on the `prospective` branch), and
+ * `--readme` rewrites the README's summary of it between the
+ * `prospective:score` markers. The truth's last change is the last commit
+ * that changed it, or today where the working tree's truth differs from
+ * the base commit's (`--base`, the last commit by default), as it does in
+ * a maintenance run that rebuilt it.
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -170,7 +180,47 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * The score as the README's "Prospective test" section summarises it,
+ * between its `prospective:score` markers: the alerts logged since the
+ * freeze, the confirmed alerts landing on reported events, the false
+ * confirmations, when the truth last changed, and the caveat about recent
+ * events. It names no date of its own, so the weekly maintenance changes
+ * it only when the score or the truth does.
+ */
+export function readmeSummary(score: ProspectiveScore, truthChangedOn: string): string {
+  const logged = Object.values(score.logged).reduce((sum, count) => sum + count, 0);
+  const byState = Object.entries(score.logged)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([state, count]) => `${count} ${state === "cloud" ? (count === 1 ? "cloud" : "clouds") : state}`)
+    .join(", ");
+  const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+  return [
+    `So far: ${plural(logged, "alert", "alerts")} logged since the freeze${logged === 0 ? "" : ` (${byState})`};`,
+    `${plural(score.detections.length, "confirmed alert matches", "confirmed alerts match")} a reported event after the freeze, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
+    `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}.`,
+    `The truth last changed on ${truthChangedOn}.`,
+    `The agencies report an event months after it, so the events of the last ${TRUTH_LAG_DAYS} days or so may not be in the truth yet, and the score is not final for them.`,
+    "The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.",
+  ].join(" ");
+}
+
+/** The score as the Markdown file `score.md` on the `prospective` branch: the printed score, with the day it was scored and the run that scored it. */
+export function scoreMarkdown(printed: string, scoredOn: string, runUrl: string | null): string {
+  return [`# The prospective test's score`, "", `Scored on ${scoredOn}${runUrl === null ? "" : ` by ${runUrl}`}, by \`npm run prospective:score\` over this branch's \`alerts.jsonl\` and the truth on main.`, "", "```text", printed.trimEnd(), "```", ""].join("\n");
+}
+
 const git = (...args: string[]): string => execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 30 });
+
+/** When the truth last changed: now where the working tree's file differs from the base commit's (the last commit, or the commit a run started from), else when the last commit that changed it was made. */
+function truthChanged(base = "HEAD"): string {
+  try {
+    git("diff", "--quiet", base, "--", "data/breakups.json");
+  } catch {
+    return new Date().toISOString();
+  }
+  return git("log", "-1", "--format=%cI", "--", "data/breakups.json").trim() || "never committed";
+}
 
 function main(): void {
   const args = process.argv.slice(2);
@@ -187,9 +237,25 @@ function main(): void {
   const alerts = parseJsonl<LoggedAlert>(git("show", `${ref}:alerts.jsonl`), `${ref}:alerts.jsonl`);
   const committedAt = committedAtOf(git("log", "--reverse", "--format=commit %H %cI", "--unified=0", "-p", ref, "--", "alerts.jsonl"));
   const breakups = readBreakups(JSON.parse(readFileSync(join(ROOT, "data/breakups.json"), "utf8")));
-  const truthChangedAt = git("log", "-1", "--format=%cI", "--", "data/breakups.json").trim() || "never committed";
+  const base = args.indexOf("--base");
+  const truthChangedAt = truthChanged(base === -1 ? "HEAD" : args[base + 1]!);
+  const score = scoreProspective(alerts, committedAt, breakups);
+  const printed = renderScore(score, truthChangedAt);
   console.log(`Reading ${ref} (freeze ${FREEZE_AT}).`);
-  process.stdout.write(renderScore(scoreProspective(alerts, committedAt, breakups), truthChangedAt));
+  process.stdout.write(printed);
+  const markdown = args.indexOf("--markdown");
+  if (markdown !== -1) {
+    const path = resolve(args[markdown + 1]!);
+    writeFileSync(path, scoreMarkdown(printed, new Date().toISOString().slice(0, 10), runUrlOf(process.env)));
+    console.log(`${path} written`);
+  }
+  if (args.includes("--readme")) {
+    const path = join(ROOT, "README.md");
+    const before = readFileSync(path, "utf8");
+    const after = replacePart(before, "prospective:score", readmeSummary(score, Number.isNaN(Date.parse(truthChangedAt)) ? truthChangedAt : new Date(truthChangedAt).toISOString().slice(0, 10)), true);
+    if (after !== before) writeFileSync(path, after);
+    console.log(`README.md: the prospective score's summary ${after === before ? "is current" : "rewritten"}`);
+  }
 }
 
 if (process.argv[1] !== undefined && process.argv[1].endsWith("score.ts")) main();

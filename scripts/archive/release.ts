@@ -24,6 +24,12 @@ import { spaceDir } from "./space-weather.ts";
  * into the Archive, verifying each hash, from `ARCHIVE_BASE_URL` (default:
  * this repository's release), with an optional `ARCHIVE_AUTH_HEADER` for a
  * private store; with no years it fetches the side files alone.
+ *
+ * An upload starts from the release's own manifest, read with the CLI
+ * (which reads an asset by its id, never a stale copy of its public link),
+ * so a runner that holds only some of the years records them beside the
+ * rest; it refuses a tarball over GitHub's 2 GiB limit on an asset before
+ * it uploads anything.
  */
 
 export const RELEASE_TAG = "archive-v1";
@@ -36,7 +42,12 @@ export interface AssetRecord {
   /** For a year's tarball: the year's set count and build time, from its manifest. */
   sets?: number;
   builtAt?: string;
+  /** For a year's tarball: the last day it holds (a bundle year's last, a pulled year's last kept day); absent from the records written before it was kept. */
+  through?: string;
 }
+
+/** GitHub's limit on one release asset: a tarball larger than this is refused before anything is uploaded. */
+export const ASSET_LIMIT_BYTES = 2 * 1024 ** 3;
 
 export interface ReleaseManifest {
   format: 1;
@@ -80,7 +91,6 @@ export function upload(archive: string, years: number[], sideOnly = false): void
   const work = join(archive, "release");
   mkdirSync(work, { recursive: true });
   const manifestPath = join(work, "manifest.json");
-  const manifest: ReleaseManifest = existsSync(manifestPath) ? (JSON.parse(readFileSync(manifestPath, "utf8")) as ReleaseManifest) : { format: 1, tag: RELEASE_TAG, years: {}, side: null, citation: CITATION, writtenAt: "" };
   const exists = (() => {
     try {
       execFileSync("gh", ["release", "view", RELEASE_TAG, "--json", "tagName"], { stdio: ["ignore", "pipe", "pipe"] });
@@ -89,6 +99,9 @@ export function upload(archive: string, years: number[], sideOnly = false): void
       return false;
     }
   })();
+  // The release's manifest as it stands, so the years this Archive does not upload stay recorded as released.
+  if (exists) execFileSync("gh", ["release", "download", RELEASE_TAG, "--pattern", "manifest.json", "--output", manifestPath, "--clobber"], { stdio: ["ignore", "inherit", "inherit"] });
+  const manifest: ReleaseManifest = existsSync(manifestPath) ? (JSON.parse(readFileSync(manifestPath, "utf8")) as ReleaseManifest) : { format: 1, tag: RELEASE_TAG, years: {}, side: null, citation: CITATION, writtenAt: "" };
   if (sideOnly && !exists) throw new Error(`--side-only refreshes the side files of the release ${RELEASE_TAG}, which does not exist: upload the years first`);
   if (sideOnly) {
     // The years stay as released: the index must describe them, as the KPI workflow will read it beside them.
@@ -103,7 +116,7 @@ export function upload(archive: string, years: number[], sideOnly = false): void
     const yearManifest = readManifest(archive, year);
     const out = join(work, yearAsset(year));
     tar(out, String(year), archive);
-    manifest.years[String(year)] = { file: yearAsset(year), bytes: statSync(out).size, sha256: sha256File(out), sets: yearManifest.sets, builtAt: yearManifest.builtAt };
+    manifest.years[String(year)] = { file: yearAsset(year), bytes: statSync(out).size, sha256: sha256File(out), sets: yearManifest.sets, builtAt: yearManifest.builtAt, through: yearManifest.source.kind === "history" ? yearManifest.source.through : `${year}-12-31` };
     files.push(out);
     console.log(`${yearAsset(year)}: ${(statSync(out).size / 1e6).toFixed(0)} MB`);
   }
@@ -114,6 +127,11 @@ export function upload(archive: string, years: number[], sideOnly = false): void
     files.push(out);
     console.log(`${SIDE_ASSET}: ${(statSync(out).size / 1e6).toFixed(1)} MB, sha256 ${manifest.side.sha256}`);
   } else if (sideOnly) throw new Error(`no space-weather days under ${spaceDir(archive)}: the side files cannot be built`);
+  const oversize = files.map((file) => ({ file, bytes: statSync(file).size })).filter(({ bytes }) => bytes > ASSET_LIMIT_BYTES);
+  if (oversize.length > 0) {
+    for (const file of files) rmSync(file, { force: true });
+    throw new Error(`${oversize.map(({ file, bytes }) => `${file} is ${bytes} bytes`).join("; ")}: over GitHub's limit of ${ASSET_LIMIT_BYTES} bytes on a release asset; nothing was uploaded`);
+  }
   manifest.writtenAt = new Date().toISOString();
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const file of files) execFileSync("gh", ["release", "upload", RELEASE_TAG, file, "--clobber"], { stdio: "inherit" });
