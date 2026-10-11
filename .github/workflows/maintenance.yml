@@ -313,19 +313,24 @@ jobs:
             gh pr comment "$url" --body "Main moved while this run checked its tree, so it is not merged: the checks ran on a base that is no longer main. The next run starts again from main and supersedes this pull request."
             exit 0
           fi
-          # CI runs on the pull request too: it is waited for and must pass, a second check of the tree with the configuration a person's pull request meets.
-          # The KPI workflow's run on it, an hour's replay, is let run on and comments its scorecard on the pull request; both are started before the merge, since a run started after it finds no merge ref and fails.
+          # A pull request the bot opens starts CI and the KPI workflow, each held for approval as a first-time contributor's.
+          # The run approves CI's, waits for it and merges only once it has passed: a second check of the tree with the configuration a person's pull request meets.
+          # The KPI workflow's, an hour's replay of what this run has replayed already where anything moved, is left held; it runs on main after the merge.
+          # Both are waited for until they exist, since a run started after the merge finds no merge ref and fails.
           sha=$(git rev-parse HEAD)
           ci=""
-          kpi=""
-          for _ in $(seq 1 30); do
+          for _ in $(seq 1 12); do
             runs=$(gh run list --commit "$sha" --event pull_request --json databaseId,workflowName)
             ci=$(jq -r '[.[] | select(.workflowName == "CI")][0].databaseId // empty' <<< "$runs")
             kpi=$(jq -r '[.[] | select(.workflowName == "KPI")][0].databaseId // empty' <<< "$runs")
             if [ -n "$ci" ] && [ -n "$kpi" ]; then break; fi
-            sleep 10
+            sleep 5
           done
-          if [ -n "$ci" ]; then
+          if [ -n "$ci" ] && [ "$(gh run view "$ci" --json conclusion --jq .conclusion)" = action_required ]; then
+            gh api -X POST "repos/$GH_REPO/actions/runs/$ci/approve" > /dev/null || echo "::notice::CI's run on the pull request could not be approved by the workflow's token"
+            sleep 10
+          fi
+          if [ -n "$ci" ] && [ "$(gh run view "$ci" --json conclusion --jq .conclusion)" != action_required ]; then
             if ! gh run watch "$ci" --exit-status --interval 15 > /dev/null; then
               gh pr comment "$url" --body "CI failed on this pull request ($RUN_URL), so it is not merged."
               echo "::error::CI failed on the pull request"
@@ -333,7 +338,7 @@ jobs:
             fi
             echo "CI passed on the pull request"
           else
-            echo "no CI run on the pull request: the checks above stand alone"
+            echo "::notice::CI did not run on the pull request; the checks this run made stand alone"
           fi
           # The release's side files (and a promoted year) go up before the merge, so the KPI workflow on main finds the index the merged truth needs.
           if [ "$RESCORED" = true ]; then
