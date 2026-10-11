@@ -121,7 +121,10 @@ export function upload(archive: string, years: number[], sideOnly = false): void
   for (const file of files) rmSync(file);
 }
 
-/** A URL fetched to a file, following redirects, with `ARCHIVE_AUTH_HEADER` where one is set. */
+/** Times a fetch is tried before it fails: a connection the server closed while it idled, or a dropped transfer, is tried again. */
+export const FETCH_ATTEMPTS = 3;
+
+/** A URL fetched to a file, following redirects, with `ARCHIVE_AUTH_HEADER` where one is set, tried again on any failure up to `FETCH_ATTEMPTS` times. */
 export async function fetchTo(url: string, path: string): Promise<void> {
   const headers: Record<string, string> = { "User-Agent": "breakups-archive (https://github.com/Orbinauts/breakups)" };
   const auth = process.env.ARCHIVE_AUTH_HEADER;
@@ -129,9 +132,18 @@ export async function fetchTo(url: string, path: string): Promise<void> {
     const [name, ...value] = auth.split(":");
     headers[name!.trim()] = value.join(":").trim();
   }
-  const response = await fetch(url, { headers, redirect: "follow" });
-  if (!response.ok || response.body === null) throw new Error(`${url}: ${response.status}`);
-  await pipeline(response.body as unknown as NodeJS.ReadableStream, createWriteStream(path));
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(url, { headers, redirect: "follow" });
+      if (!response.ok || response.body === null) throw new Error(`${url}: ${response.status}`);
+      await pipeline(response.body as unknown as NodeJS.ReadableStream, createWriteStream(path));
+      return;
+    } catch (error) {
+      if (attempt >= FETCH_ATTEMPTS) throw error;
+      console.log(`${url}: ${(error as Error).message}; trying again (${attempt + 1} of ${FETCH_ATTEMPTS})`);
+      await new Promise((resolveWait) => setTimeout(resolveWait, 5000 * attempt));
+    }
+  }
 }
 
 export async function download(archive: string, years: number[], warmup: boolean): Promise<void> {
