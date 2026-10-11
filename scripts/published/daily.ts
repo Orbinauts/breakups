@@ -22,8 +22,11 @@ import { publishedRun } from "./cli.ts";
  * reads, so the run's own log, score and checks are what they were without
  * it, and a failure here leaves the alerts committed. The worktree must be
  * on the `published` branch and clean; a failure before the commit puts it
- * back as it was. A commit made but not pushed is whole: the next run's
- * push carries it.
+ * back as it was. A commit that could not be pushed fails the job and is
+ * lost with the runner: the next run checks out the remote's `published`
+ * afresh and rebuilds the files on it from that day's replay of the whole
+ * year, so the list catches up, but the lost commit's day never appears
+ * in the branch's history.
  *
  * Places, as the prospective run's: `BREAKUPS_ARCHIVE`, `BREAKUPS_PROSPECTIVE`,
  * and `BREAKUPS_PUBLISHED` (by default `../breakups-published`) for the
@@ -88,7 +91,7 @@ function commitPublished(checkout: string, write: () => string, message: (summar
     throw error;
   }
   const commit = git(checkout, "rev-parse", "HEAD");
-  // A commit made but not pushed is whole: the next run's push carries it.
+  // A failed push fails the job; on a fresh runner the commit is lost, and the next run rebuilds from the remote's `published`.
   git(checkout, "push", "-q");
   return { summary, commit };
 }
