@@ -31,9 +31,9 @@ name: Maintenance
 #    build. A failure anywhere opens an issue labelled `maintenance` with
 #    the log (or comments on the one open) and nothing is merged.
 # 6. Where anything changed, a branch `maintenance/<date>` is committed by
-#    the Actions bot, a pull request says what moved and why, the Archive's
-#    year and side files are uploaded, and the pull request is squashed
-#    into main. A merge made with the workflow's token starts no workflow,
+#    the Actions bot, a pull request says what moved and why, CI runs on it
+#    and must pass, the Archive's year and side files are uploaded, and the
+#    pull request is squashed into main. A merge made with the workflow's token starts no workflow,
 #    so CI, the KPI workflow and the docs are run on main by hand here, and
 #    their runs are linked on the pull request. Nothing changed: no pull
 #    request.
@@ -312,6 +312,28 @@ jobs:
           if [ "$(git ls-remote origin refs/heads/main | cut -f1)" != "$BASE" ]; then
             gh pr comment "$url" --body "Main moved while this run checked its tree, so it is not merged: the checks ran on a base that is no longer main. The next run starts again from main and supersedes this pull request."
             exit 0
+          fi
+          # CI runs on the pull request too: it is waited for and must pass, a second check of the tree with the configuration a person's pull request meets.
+          # The KPI workflow's run on it, an hour's replay, is let run on and comments its scorecard on the pull request; both are started before the merge, since a run started after it finds no merge ref and fails.
+          sha=$(git rev-parse HEAD)
+          ci=""
+          kpi=""
+          for _ in $(seq 1 30); do
+            runs=$(gh run list --commit "$sha" --event pull_request --json databaseId,workflowName)
+            ci=$(jq -r '[.[] | select(.workflowName == "CI")][0].databaseId // empty' <<< "$runs")
+            kpi=$(jq -r '[.[] | select(.workflowName == "KPI")][0].databaseId // empty' <<< "$runs")
+            if [ -n "$ci" ] && [ -n "$kpi" ]; then break; fi
+            sleep 10
+          done
+          if [ -n "$ci" ]; then
+            if ! gh run watch "$ci" --exit-status --interval 15 > /dev/null; then
+              gh pr comment "$url" --body "CI failed on this pull request ($RUN_URL), so it is not merged."
+              echo "::error::CI failed on the pull request"
+              exit 1
+            fi
+            echo "CI passed on the pull request"
+          else
+            echo "no CI run on the pull request: the checks above stand alone"
           fi
           # The release's side files (and a promoted year) go up before the merge, so the KPI workflow on main finds the index the merged truth needs.
           if [ "$RESCORED" = true ]; then
