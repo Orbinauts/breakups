@@ -110,6 +110,14 @@ merge is safe.
   tag, and never bumps the version or publishes the package.
 - **The issues.** An alert issue is a prompt to look at an alert; a
   failure or refusal issue is a prompt to fix what the run could not.
+- **The prospective test's history past 2 GiB.** The day slices of a year
+  are kept in one release asset, and GitHub refuses an asset over 2 GiB:
+  2026's is on course for some 1.93 GB by 31 December, and the catalogue
+  grows each year. The weekly plan projects the current year's history to
+  31 December and, past nine tenths of the limit, opens an issue once a
+  year; splitting the history across assets is a change to
+  `scripts/prospective/data.ts` and the promotion, for a person to make
+  before the daily upload fails.
 - **The repository's settings and secrets.** The workflow's token may
   open pull requests only while the repository lets GitHub Actions create
   them (Settings, Actions, General: "Allow GitHub Actions to create and
