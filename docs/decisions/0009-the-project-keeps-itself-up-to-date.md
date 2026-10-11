@@ -140,8 +140,9 @@ a failure stops the run with an issue and nothing is merged. CI then runs
 on the pull request itself, with the configuration a person's pull request
 meets, on Node 22 and 24, and the merge waits for it to pass: the bot
 counts as a first-time contributor, so its pull request's runs are held for
-approval, and the run approves CI's (the KPI workflow's is left held, since
-it runs on main after the merge). The tree is
+approval, and the run approves CI's (the KPI workflow's held run is
+deleted, never having run a job, since it runs on main after the merge).
+The tree is
 merged only onto the main it was checked against: a main that moved
 during the run is left alone and the next run starts again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow

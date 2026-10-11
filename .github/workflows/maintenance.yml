@@ -315,10 +315,12 @@ jobs:
           fi
           # A pull request the bot opens starts CI and the KPI workflow, each held for approval as a first-time contributor's.
           # The run approves CI's, waits for it and merges only once it has passed: a second check of the tree with the configuration a person's pull request meets.
-          # The KPI workflow's, an hour's replay of what this run has replayed already where anything moved, is left held; it runs on main after the merge.
+          # The KPI workflow's, an hour's replay of what this run has replayed already where anything moved, runs on main after the merge instead:
+          # its held run, which never ran a job, is deleted, since a held run whose pull request is merged ends as a failure.
           # Both are waited for until they exist, since a run started after the merge finds no merge ref and fails.
           sha=$(git rev-parse HEAD)
           ci=""
+          kpi=""
           for _ in $(seq 1 12); do
             runs=$(gh run list --commit "$sha" --event pull_request --json databaseId,workflowName)
             ci=$(jq -r '[.[] | select(.workflowName == "CI")][0].databaseId // empty' <<< "$runs")
@@ -329,6 +331,9 @@ jobs:
           if [ -n "$ci" ] && [ "$(gh run view "$ci" --json conclusion --jq .conclusion)" = action_required ]; then
             gh api -X POST "repos/$GH_REPO/actions/runs/$ci/approve" > /dev/null || echo "::notice::CI's run on the pull request could not be approved by the workflow's token"
             sleep 10
+          fi
+          if [ -n "$kpi" ] && [ "$(gh run view "$kpi" --json conclusion --jq .conclusion)" = action_required ]; then
+            gh run delete "$kpi" > /dev/null || echo "::notice::the KPI workflow's held run on the pull request could not be deleted"
           fi
           if [ -n "$ci" ] && [ "$(gh run view "$ci" --json conclusion --jq .conclusion)" != action_required ]; then
             if ! gh run watch "$ci" --exit-status --interval 15 > /dev/null; then
