@@ -34,15 +34,24 @@ added it, not from the detector's own clock.
 
 ## How it runs
 
-The job runs `npm run prospective` on `main` at 04:37 local time every day.
-It pulls the days of the current year the Archive does not yet hold from
-the catalogue's history class (about two requests a day, throttled and
-ledgered), refreshes the satellite catalogue and the space weather, and
-replays the year through the detector in a worktree checked out at the
-frozen tag, from the states the same detector ended the previous year with.
-The replay writes into a scratch directory under the Archive, never into
-the repository. See `scripts/prospective/run.ts` on `main`, and the
-decision record `docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md`.
+The job is the scheduled GitHub Actions workflow
+`.github/workflows/prospective.yml` on `main` ("Prospective"), at 02:37 UTC
+every day, on a fresh runner. It runs `npm run prospective` from `main`: it
+pulls the days of the current year not yet kept for good from the
+catalogue's history class (about two requests a day, throttled, every one
+written to a ledger the run prints and keeps as an artifact), onto the day
+slices kept in the release `prospective-data`, refreshes the satellite
+catalogue and the space weather, and replays the year through the detector
+in a checkout of the frozen tag, from the states the same detector ended the
+previous year with. It refuses to run if the tag no longer names the frozen
+commit `8729987`. The alerts and the run's line are committed here by
+`github-actions[bot]`, and each line of `runs.jsonl` names the run that made
+it (`runUrl`), whose log GitHub keeps: a second timestamp, held by another
+party than this branch. The first two lines, of 2026-10-11, were made by a
+launchd agent on the maintainer's machine before the job moved to the
+workflow the same day, and carry no run URL. See `scripts/prospective/run.ts`
+on `main`, and the decision record
+`docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md`.
 
 The scoring is `npm run prospective:score` on `main`: it reads this
 branch's `alerts.jsonl` and the commit that added each line, and the truth
@@ -52,20 +61,14 @@ event, so the score of the last three months or so is not yet final.
 
 ## Stopping the job
 
-The job is a launchd agent of the owner's account. To stop it:
+To pause it, disable the workflow:
 
 ```sh
-launchctl bootout gui/$(id -u)/com.orbinauts.breakups.prospective
+gh workflow disable prospective.yml --repo Orbinauts/breakups
 ```
 
-and, to keep it from loading at the next login, remove
-`~/Library/LaunchAgents/com.orbinauts.breakups.prospective.plist`. To start
-it again:
-
-```sh
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.orbinauts.breakups.prospective.plist
-```
-
-Each run writes a line to `prospective/prospective.log` under the Archive,
-`ok` or `FAILED` with the reason, and the job's output goes to
-`prospective/launchd.log` beside it.
+To resume it, `gh workflow enable prospective.yml --repo Orbinauts/breakups`;
+to run it at once, `gh workflow run prospective.yml --repo Orbinauts/breakups`.
+Each run's log, with its ledger of requests, is on the repository's Actions
+page. A gap in `runs.jsonl` shows when the job was not running, and a run
+after a gap logs the alerts of the gap with its own commit time.
