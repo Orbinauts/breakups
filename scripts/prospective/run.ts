@@ -84,7 +84,7 @@ const yearFilePath = (out: string, year: number): string => join(out, "years", `
 const endStatesPath = (out: string, year: number): string => join(out, "work", "states", `${year}.json.gz`);
 const statesFileName = (year: number): string => `${year}.json.gz`;
 
-const readYearFile = (path: string): YearFile => JSON.parse(gunzipSync(readFileSync(path)).toString("utf8")) as YearFile;
+export const readYearFile = (path: string): YearFile => JSON.parse(gunzipSync(readFileSync(path)).toString("utf8")) as YearFile;
 
 export interface Places {
   /** This repository. */
@@ -152,7 +152,7 @@ export function provenanceOf(year: number, context: { today: string; tagged: str
 }
 
 /** The last day a year of the Archive holds: a pulled year's last kept day, a bundle year's last. */
-const throughOf = (source: Manifest["source"], year: number): string => ("through" in source && typeof source.through === "string" ? source.through : `${year}-12-31`);
+export const throughOf = (source: Manifest["source"], year: number): string => ("through" in source && typeof source.through === "string" ? source.through : `${year}-12-31`);
 
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   console.log(`\n$ ${command} ${args.join(" ")}    (in ${cwd})`);

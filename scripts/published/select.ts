@@ -97,11 +97,10 @@ function clustersOf(landed: readonly Landed[]): Cluster[] {
 /** The states that decide a suspected step's fate: raised (again), confirmed, or let go. */
 const FATES: readonly Verdict["state"][] = ["suspected", "confirmed", "expired", "dismissed"];
 
-/** Whether a suspected breakup has left: the latest verdict on its object whose step overlaps its step expired or dismissed it. */
-function hasLeft(latest: ObjectVerdict, verdicts: readonly Verdict[]): boolean {
-  const step = latest.step;
+/** Whether a suspected step on an object has been let go: the latest verdict on the object whose step overlaps it expired or dismissed it. A breakup with no step is never let go. */
+export function isLetGo(number: number, step: Step | null, verdicts: readonly Verdict[]): boolean {
   if (step === null) return false;
-  const fate = verdicts.filter((v) => v.kind === "object" && v.number === latest.number && FATES.includes(v.state) && v.step !== null && overlaps(v.step, step)).at(-1);
+  const fate = verdicts.filter((v) => v.kind === "object" && v.number === number && FATES.includes(v.state) && v.step !== null && overlaps(v.step, step)).at(-1);
   return fate !== undefined && (fate.state === "expired" || fate.state === "dismissed");
 }
 
@@ -115,7 +114,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice.date}T00:00:00.000Z`)].filter((t) => t !== undefined);
   const confirmedAt = confirmedOn.length === 0 ? null : iso(Math.min(...confirmedOn));
   const state: PublishedState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
-  if (state === null || (state === "suspected" && hasLeft(cluster[cluster.length - 1]!.verdict, verdicts))) return null;
+  if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
   const raisedAt = cluster[0]!.verdict.raisedAt;
