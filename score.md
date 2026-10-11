@@ -1,6 +1,6 @@
 # The prospective test's score
 
-Scored on 2026-10-11 by https://github.com/Orbinauts/breakups/actions/runs/38137717809, by `npm run prospective:score` over this branch's `alerts.jsonl` and the truth on main.
+Scored on 2026-10-11 by https://github.com/Orbinauts/breakups/actions/runs/38143076707, by `npm run prospective:score` over this branch's `alerts.jsonl` and the truth on main.
 
 ```text
 The prospective test of the detector frozen at 2026-10-11T00:00:00.000Z
