@@ -80,3 +80,18 @@ export { EXPLANATION_BITS, SIGNATURE_BITS, damageOf, judgeStep, persistent, type
 export { ENVELOPE_MONTHS, heldLevel, isMaintenance, maintenanceToleranceKm, returnMissKm, monthOf, newEnvelope, noteLevel, snapshotEnvelope, type AltitudeEnvelope, type HeldLevel } from "./maintenance.ts";
 export { LEDGER_DAYS, LEDGER_MAX, isDeploying, matesOf, newLedger, noteLedgerStep, siblingsOf, similarSteps, towardsMates, type LedgerStep, type Mates, type Siblings, type StepLedger } from "./siblings.ts";
 export { OPEN_GATES, SCOPE_TIERS, WHOLE_CATALOGUE, foldedRatio, inScope, passesGates, type GatedStep, type ScopeGates, type ScopeParameters, type ScopePolicy, type ScopeSubject, type ScopeTier } from "./scope.ts";
+export {
+  PUBLISHED_STATES,
+  PUBLISHED_VERSION,
+  type PublishedBreakup,
+  type PublishedBreakupEntry,
+  type PublishedBreakupFile,
+  type PublishedBreakupsFile,
+  type PublishedEvent,
+  type PublishedParent,
+  type PublishedReport,
+  type PublishedState,
+  type PublishedStatusFile,
+  type PublishedStep,
+  type PublishedVerdict,
+} from "./published.ts";

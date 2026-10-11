@@ -255,7 +255,8 @@ export function brackets(step: Step | null, from: number, to: number, marginDays
   return step.beforeEpoch <= to + margin && step.afterEpoch >= from - margin;
 }
 
-const overlaps = (a: Step, b: Step): boolean => a.beforeEpoch <= b.afterEpoch && b.beforeEpoch <= a.afterEpoch;
+/** Whether two step brackets overlap: the scorecard's rule for one step raised again, and for a confirmation of an alert on the same step. */
+export const overlaps = (a: Step, b: Step): boolean => a.beforeEpoch <= b.afterEpoch && b.beforeEpoch <= a.afterEpoch;
 
 /** A row of the truth as the matcher holds it, scoreable or not. */
 export interface Row {
