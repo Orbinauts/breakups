@@ -65,6 +65,80 @@ describe("the README's ground-truth table", () => {
   });
 });
 
+/** A rate as the scorecard prints it, a whole percentage. */
+const percent = (rate: number): string => `${Math.round(rate * 100)}%`;
+/** A rate with its Wilson 95% interval, as the scorecard prints it. */
+const withInterval = (rate: number, interval: [number, number]): string => `${percent(rate)} (${percent(interval[0])} to ${percent(interval[1])})`;
+/** A timing error in plain units: minutes under two hours, else hours. */
+const duration = (minutes: number): string => (minutes < 120 ? `${Math.round(minutes)} minutes` : `${Math.round(minutes / 60)} hours`);
+
+describe("the README's current results", () => {
+  const latest = JSON.parse(readFileSync(resolve(ROOT, "kpi/latest.json"), "utf8")) as Latest;
+  const text = section("Current results");
+  const tables = text
+    .split("\n\n")
+    .filter((block) => block.startsWith("|"))
+    .map((block) => block.trim());
+  const held = latest.splits.validation;
+  const train = latest.splits.train;
+  const span = (years: number[], parity: string) => `${parity}, ${years[0]} to ${years.at(-1)}`;
+  const column = (c: Latest["splits"]["validation"]["confirmedLine"]) => {
+    const line = c.lines["breakups A-B"];
+    return {
+      confirmed: `${line.detected} of ${line.targets}`,
+      recall: withInterval(line.rate!, line.interval!),
+      falseConfirmations: `${c.falseAlarms} of ${c.falseAlarms + c.detectedAllLines}`,
+      falseAlarmRate: withInterval(c.falseAlarmRate!, c.falseAlarmInterval!),
+      lead: `${Math.round(c.lead!.median)} days, ${c.beforeStatement} of ${c.withStatement} before it`,
+      timing: duration(c.timing!.median),
+    };
+  };
+  const h = column(held.confirmedLine);
+  const t = column(train.confirmedLine);
+  const expected = [
+    ["Headline: breakups reported to the day", `Held-out years (${span(held.years, "odd")})`, `Training years (${span(train.years, "even")})`, "Target"],
+    ["---", "---", "---", "---"],
+    ["Confirmed, of the targets", h.confirmed, t.confirmed, ""],
+    ["Recall (95% interval)", h.recall, t.recall, "90% or more"],
+    ["False confirmations, of all events confirmed", h.falseConfirmations, t.falseConfirmations, ""],
+    ["False-alarm rate (95% interval)", h.falseAlarmRate, t.falseAlarmRate, "under 10%"],
+    ["Median lead over the first agency statement", h.lead, t.lead, ""],
+    ["Median timing error", h.timing, t.timing, ""],
+  ];
+
+  test("carries one table, every cell read from the aggregate", () => {
+    expect(tables).toHaveLength(1);
+    const rows = tables[0]!.split("\n").map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+    expect(rows).toEqual(expected);
+  });
+
+  test("names the detector the aggregate was run with", () => {
+    expect(text).toContain(`\`${DETECTOR_NAME}\``);
+  });
+
+  test("says plainly whether the held-out years reach the target, and points to the prospective test", () => {
+    const line = held.confirmedLine;
+    const reached = line.lines["breakups A-B"].rate! >= 0.9 && line.falseAlarmRate! < 0.1;
+    if (reached) expect(text).not.toContain("does not reach that target");
+    else expect(text).toContain("It does not reach that target on the held-out years.");
+    expect(text).toContain("(#prospective-test)");
+    expect(section("Prospective test")).toContain("npm run prospective:score");
+  });
+});
+
+describe("the README's statement of the version", () => {
+  test("names one detector version where it describes the current one", () => {
+    const current = ["Current results", "How it works", "How well it does"].map(section).join("\n");
+    const names = new Set([...current.matchAll(/`((?:step|fusion|scoped|confirmed)-v\d+)`/g)].map((match) => match[1]));
+    expect([...names]).toEqual([DETECTOR_NAME]);
+  });
+
+  test("states the build's phase once, never two phases as current", () => {
+    const ordinals = [...README.matchAll(/\bthe (\w+) phase of its build\b/g)].map((match) => match[1]);
+    expect(ordinals).toHaveLength(1);
+  });
+});
+
 describe("the README's scorecard table", () => {
   const latest = JSON.parse(readFileSync(resolve(ROOT, "kpi/latest.json"), "utf8")) as Latest;
   const text = section("How well it does");
