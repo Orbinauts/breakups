@@ -142,16 +142,16 @@ meets, on Node 22 and 24, and the merge waits for it to pass: the bot
 counts as a first-time contributor, so its pull request's runs are held for
 approval, and the run approves CI's (the KPI workflow's held run is
 deleted, never having run a job, since it runs on main after the merge).
-The tree is
-merged only onto the main it was checked against: a main that moved
-during the run is left alone and the next run starts again. And CI and
+The tree is merged only onto the main it was checked against: a main that
+moved during the run is left alone and the next run starts again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
 replaying the Archive from the release to make the committed aggregate
 again and failing where it cannot, so a merged change that only the
 release could expose is seen within the hour. What the workflow changes
 is generated: snapshots, the truth built from them, the aggregate, the
 README's marked parts and the score. It never edits code, a rule or the
-hand file.
+hand file; those reach main from a person, directly or in a branch the
+person asks it to fold in (`-f from=<branch>`), which meets the same checks.
 
 ## Considered options
 
