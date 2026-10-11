@@ -30,11 +30,13 @@ jobs:
         with:
           persist-credentials: false
       # A branch that is not there yet gives an empty answer and the reference deploys alone; a failed lookup fails the run rather than deploying a site with no `v1/`.
+      # The answer is taken into a variable first: a failing command inside `[ ]` would not stop the script.
       - id: published
         name: Check whether the published branch exists
         run: |
           set -euo pipefail
-          if [ -n "$(git ls-remote --heads origin refs/heads/published)" ]; then
+          heads="$(git ls-remote --heads origin refs/heads/published)"
+          if [ -n "$heads" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"

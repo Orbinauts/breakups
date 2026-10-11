@@ -1,5 +1,7 @@
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
@@ -74,6 +76,38 @@ describe("the Pages workflow", () => {
     expect(upload?.with?.["path"]).toBe("site");
     const order = [exists, checkout, site, upload].map((step) => build.steps.indexOf(step!));
     expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  describe("its check for the published branch, run against a stand-in git", () => {
+    const check = build.steps.find((step) => step.run?.includes("git ls-remote") === true)!;
+    /** Runs the step's script with a `git` that prints `stdout` and exits `status`; returns the exit status and what it wrote to `$GITHUB_OUTPUT`. */
+    function runCheck(stdout: string, status: number): { status: number | null; output: string } {
+      const dir = mkdtempSync(join(tmpdir(), "pages-check-"));
+      try {
+        mkdirSync(join(dir, "bin"));
+        writeFileSync(join(dir, "bin", "git"), `#!/bin/sh\nprintf '%s' '${stdout}'\nexit ${status}\n`, { mode: 0o755 });
+        const output = join(dir, "output");
+        writeFileSync(output, "");
+        const run = spawnSync("bash", ["-e", "-c", check.run!], { env: { PATH: `${join(dir, "bin")}:${process.env["PATH"]}`, GITHUB_OUTPUT: output }, encoding: "utf8" });
+        return { status: run.status, output: readFileSync(output, "utf8") };
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+
+    test("says the branch exists when the remote lists it", () => {
+      expect(runCheck("abc123\trefs/heads/published\n", 0)).toEqual({ status: 0, output: "exists=true\n" });
+    });
+
+    test("says it does not when the remote lists no such branch", () => {
+      expect(runCheck("", 0)).toEqual({ status: 0, output: "exists=false\n" });
+    });
+
+    test("fails the run when the lookup itself fails, rather than deploying a site with no v1/", () => {
+      const failed = runCheck("", 128);
+      expect(failed.status).not.toBe(0);
+      expect(failed.output).toBe("");
+    });
   });
 
   test("pins every action by its commit", () => {
