@@ -143,3 +143,11 @@ The decision stands; what changed is where its parts live.
 - **The view and its own index are as above**, built on the runner each
   day over the whole Archive: every released year before the one replayed,
   and the year rebuilt from the slices. The decoded-column cache is off.
+- **Each alert opens an issue, and the score is kept weekly.** Since the
+  ninth decision record, the daily run opens an issue labelled
+  `prospective-alert` for every alert of `alerts.jsonl` that has none, with
+  the parent, the state, the evidence, the run and the line of the log,
+  once per alert key; and the weekly maintenance workflow scores the log
+  against the truth on main, commits the score to the branch as `score.md`
+  and summarises it in the README. Neither touches `alerts.jsonl` or
+  `runs.jsonl`, whose commit times stay the test's evidence.
