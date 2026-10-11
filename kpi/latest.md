@@ -88,7 +88,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.0) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 40.6 (21342.4) |
 
-| Parent step: validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) |
 | Breakups, confidence C | 33 | 15 | 3 | 0 | 30 | 9% (3% to 24%) |
@@ -96,12 +96,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 8 | 1 | 0 | 1 | 7 | 0% (0% to 32%) |
 | Anomalous events, confidence C and D | 68 | 2 | 3 | 0 | 65 | 4% (2% to 12%) |
 
-| Breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2448 | 99% (99% to 100%) | 0 |
 | Scoped | 21 | 0 | 3 | 0 | 18 | 14% (5% to 35%) | 52 | 95% (85% to 98%) | 13 of 34 |
 
-| Alerts, validation: the odd years (2007 to 2025, 10 years) | Count |
+| Early warnings, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 2638 |
 | Duplicates | 121 |
@@ -126,7 +126,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 1432 | 10 | 1417 | 1% | 63% | 575.4 (156.0) |
 | 7 days of post sets | 1291 | 7 | 1281 | 1% | 44% | 404.1 (88.0) |
 
-| The step alerts confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
+| The early warnings confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 87 |
 | Of which alerted on the parent (detected or late) | 14 |
@@ -185,7 +185,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (5.9) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 1125.9 (173291.7) |
 
-| Parent step: training: the even years (2006 to 2026, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, training: the even years (2006 to 2026, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 43 | 7 | 18 | 5 | 20 | 42% (28% to 57%) |
 | Breakups, confidence C | 32 | 16 | 4 | 1 | 27 | 13% (5% to 28%) |
@@ -193,12 +193,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 5 | 2 | 1 | 0 | 4 | 20% (4% to 62%) |
 | Anomalous events, confidence C and D | 50 | 6 | 1 | 3 | 46 | 2% (0% to 10%) |
 
-| Breakups A and B, scoped, training: the even years (2006 to 2026, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, training: the even years (2006 to 2026, 11 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 43 | 7 | 18 | 5 | 20 | 42% (28% to 57%) | 2906 | 99% (99% to 99%) | 0 |
 | Scoped | 25 | 0 | 4 | 0 | 21 | 16% (6% to 35%) | 26 | 84% (67% to 93%) | 25 of 50 |
 
-| Alerts, training: the even years (2006 to 2026, 11 years) | Count |
+| Early warnings, training: the even years (2006 to 2026, 11 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 3158 |
 | Duplicates | 146 |
@@ -223,7 +223,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 1693 | 12 | 1674 | 1% | 50% | 410.5 (20.4) |
 | 7 days of post sets | 1464 | 9 | 1449 | 1% | 38% | 755.9 (254.7) |
 
-| The step alerts confirmed, training: the even years (2006 to 2026, 11 years) | Count |
+| The early warnings confirmed, training: the even years (2006 to 2026, 11 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 94 |
 | Of which alerted on the parent (detected or late) | 24 |
@@ -282,7 +282,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.5) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 583.0 (118847.1) |
 
-| Parent step: every year (2006 to 2026, 21 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, every year (2006 to 2026, 21 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 71 | 13 | 28 | 7 | 36 | 39% (29% to 51%) |
 | Breakups, confidence C | 65 | 31 | 7 | 1 | 57 | 11% (5% to 21%) |
@@ -290,12 +290,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 13 | 3 | 1 | 1 | 11 | 8% (1% to 33%) |
 | Anomalous events, confidence C and D | 118 | 8 | 4 | 3 | 111 | 3% (1% to 8%) |
 
-| Breakups A and B, scoped, every year (2006 to 2026, 21 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, every year (2006 to 2026, 21 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 71 | 13 | 28 | 7 | 36 | 39% (29% to 51%) | 5354 | 99% (99% to 99%) | 0 |
 | Scoped | 46 | 0 | 7 | 0 | 39 | 15% (8% to 28%) | 78 | 91% (83% to 95%) | 38 of 84 |
 
-| Alerts, every year (2006 to 2026, 21 years) | Count |
+| Early warnings, every year (2006 to 2026, 21 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 5796 |
 | Duplicates | 267 |
@@ -320,7 +320,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 3125 | 22 | 3091 | 1% | 55% | 575.4 (30.2) |
 | 7 days of post sets | 2755 | 16 | 2730 | 1% | 40% | 755.9 (88.0) |
 
-| The step alerts confirmed, every year (2006 to 2026, 21 years) | Count |
+| The early warnings confirmed, every year (2006 to 2026, 21 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 181 |
 | Of which alerted on the parent (detected or late) | 38 |
@@ -379,7 +379,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.0 (0.1) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 59.0 (232808.5) |
 
-| Parent step: the last 3 years (2024 to 2026, 3 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, the last 3 years (2024 to 2026, 3 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 4 | 2 | 3 | 0 | 1 | 75% (30% to 95%) |
 | Breakups, confidence C | 7 | 4 | 3 | 0 | 4 | 43% (16% to 75%) |
@@ -387,12 +387,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 0 | 0 | 0 | 0 | 0 | – |
 | Anomalous events, confidence C and D | 3 | 0 | 0 | 0 | 3 | 0% (0% to 56%) |
 
-| Breakups A and B, scoped, the last 3 years (2024 to 2026, 3 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, the last 3 years (2024 to 2026, 3 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 4 | 2 | 3 | 0 | 1 | 75% (30% to 95%) | 927 | 99% (99% to 100%) | 0 |
 | Scoped | 4 | 0 | 0 | 0 | 4 | 0% (0% to 49%) | 8 | 89% (56% to 98%) | 2 of 6 |
 
-| Alerts, the last 3 years (2024 to 2026, 3 years) | Count |
+| Early warnings, the last 3 years (2024 to 2026, 3 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 976 |
 | Duplicates | 13 |
@@ -417,7 +417,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 429 | 3 | 424 | 1% | 50% | 290.7 (290.7) |
 | 7 days of post sets | 353 | 2 | 350 | 1% | 33% | 254.7 (254.7) |
 
-| The step alerts confirmed, the last 3 years (2024 to 2026, 3 years) | Count |
+| The early warnings confirmed, the last 3 years (2024 to 2026, 3 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 9 |
 | Of which alerted on the parent (detected or late) | 3 |
@@ -475,7 +475,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (0.1) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 583.0 (118847.1) |
 
-| Parent step: fitted on the years to 2017 (2006 to 2017, 12 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, fitted on the years to 2017 (2006 to 2017, 12 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 40 | 7 | 15 | 4 | 21 | 38% (24% to 53%) |
 | Breakups, confidence C | 36 | 21 | 1 | 0 | 35 | 3% (0% to 14%) |
@@ -483,12 +483,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 11 | 0 | 1 | 1 | 9 | 9% (2% to 38%) |
 | Anomalous events, confidence C and D | 90 | 7 | 3 | 3 | 84 | 3% (1% to 9%) |
 
-| Breakups A and B, scoped, fitted on the years to 2017 (2006 to 2017, 12 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, fitted on the years to 2017 (2006 to 2017, 12 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 40 | 7 | 15 | 4 | 21 | 38% (24% to 53%) | 2463 | 99% (99% to 99%) | 0 |
 | Scoped | 23 | 0 | 4 | 0 | 19 | 17% (7% to 37%) | 35 | 90% (76% to 96%) | 24 of 47 |
 
-| Alerts, fitted on the years to 2017 (2006 to 2017, 12 years) | Count |
+| Early warnings, fitted on the years to 2017 (2006 to 2017, 12 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 2733 |
 | Duplicates | 179 |
@@ -513,7 +513,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 1571 | 8 | 1558 | 1% | 40% | 156.0 (20.4) |
 | 7 days of post sets | 1422 | 6 | 1413 | 0% | 30% | 769.9 (88.0) |
 
-| The step alerts confirmed, fitted on the years to 2017 (2006 to 2017, 12 years) | Count |
+| The early warnings confirmed, fitted on the years to 2017 (2006 to 2017, 12 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 119 |
 | Of which alerted on the parent (detected or late) | 23 |
@@ -572,7 +572,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (17.2) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 72.8 (40265.4) |
 
-| Parent step: validated on the years from 2018 (2018 to 2026, 9 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
+| Early warning, every line, validated on the years from 2018 (2018 to 2026, 9 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Breakups, confidence A and B (the headline line) | 31 | 6 | 13 | 3 | 15 | 42% (26% to 59%) |
 | Breakups, confidence C | 29 | 10 | 6 | 1 | 22 | 21% (10% to 38%) |
@@ -580,12 +580,12 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | Anomalous events, confidence A and B | 2 | 3 | 0 | 0 | 2 | 0% (0% to 66%) |
 | Anomalous events, confidence C and D | 28 | 1 | 1 | 0 | 27 | 4% (1% to 18%) |
 
-| Breakups A and B, scoped, validated on the years from 2018 (2018 to 2026, 9 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
+| Early warning on breakups A and B, scoped, validated on the years from 2018 (2018 to 2026, 9 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | The whole catalogue | 31 | 6 | 13 | 3 | 15 | 42% (26% to 59%) | 2891 | 99% (99% to 100%) | 0 |
 | Scoped | 23 | 0 | 3 | 0 | 20 | 13% (5% to 32%) | 43 | 91% (80% to 97%) | 14 of 37 |
 
-| Alerts, validated on the years from 2018 (2018 to 2026, 9 years) | Count |
+| Early warnings, validated on the years from 2018 (2018 to 2026, 9 years) | Count |
 | --- | --- |
 | Alerts (object verdicts, suspected or confirmed) | 3063 |
 | Duplicates | 88 |
@@ -610,7 +610,7 @@ The early warning's lines follow each split's Confirmed tables, as the scorecard
 | 5 days of post sets | 1554 | 14 | 1533 | 1% | 70% | 575.4 (290.7) |
 | 7 days of post sets | 1333 | 10 | 1317 | 1% | 50% | 410.5 (254.7) |
 
-| The step alerts confirmed, validated on the years from 2018 (2018 to 2026, 9 years) | Count |
+| The early warnings confirmed, validated on the years from 2018 (2018 to 2026, 9 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 62 |
 | Of which alerted on the parent (detected or late) | 15 |
