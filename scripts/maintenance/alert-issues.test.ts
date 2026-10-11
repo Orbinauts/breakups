@@ -22,15 +22,20 @@ describe("the issues of the prospective test's alerts", () => {
     expect(issuedKeys([`text\n${keyLine(suspected.key)}\n`, "no key here", `${keyLine(cloud.key)}`])).toEqual(new Set([suspected.key, cloud.key]));
   });
 
+  test("are opened only for confirmed verdicts on a named parent, never for a suspected step or a cloud", () => {
+    expect(alertsToIssue(log, new Set()).map((entry) => entry.alert.key)).toEqual([confirmed.key]);
+    const scoped = loggedLines(jsonl([alert(13552, "scoped", T + 3 * DAY)]));
+    expect(alertsToIssue(scoped, new Set())).toEqual([]);
+  });
+
   test("are opened only for the alerts no issue carries yet", () => {
-    expect(alertsToIssue(log, new Set()).map((entry) => entry.alert.key)).toEqual([suspected.key, confirmed.key, cloud.key]);
-    expect(alertsToIssue(log, new Set([suspected.key, cloud.key])).map((entry) => entry.alert.key)).toEqual([confirmed.key]);
+    expect(alertsToIssue(log, new Set([confirmed.key]))).toEqual([]);
     expect(alertsToIssue(log, new Set(log.map((entry) => entry.alert.key)))).toEqual([]);
   });
 
   test("never twice for one key, even where the log holds it twice", () => {
-    const twice = loggedLines(jsonl([suspected, confirmed, suspected]));
-    expect(alertsToIssue(twice, new Set()).map((entry) => entry.alert.key)).toEqual([suspected.key, confirmed.key]);
+    const twice = loggedLines(jsonl([confirmed, suspected, confirmed]));
+    expect(alertsToIssue(twice, new Set()).map((entry) => entry.alert.key)).toEqual([confirmed.key]);
   });
 
   test("an issue opened carries its key, so the next run opens none for it", () => {

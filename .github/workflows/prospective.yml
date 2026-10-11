@@ -19,7 +19,8 @@ name: Prospective
 # proof of when each alert was known, and this run's log a second,
 # independent timestamp. The updated day slices, and a closed year's end
 # states once it has settled, go back to the release afterwards. Then
-# every alert of the log with no issue yet gets one, labelled
+# every confirmed alert of the log with no issue yet gets one (the suspected
+# steps, the scoped alerts and the clouds stay in the log only), labelled
 # `prospective-alert` (scripts/maintenance/alert-issues.ts): the parent's
 # name, number and state in its title, the evidence, the run and the log's
 # line in its body, and its key in a hidden line, so an alert gets one

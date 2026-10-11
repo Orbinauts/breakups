@@ -8,11 +8,15 @@ import { runUrlOf, type RunLine } from "../prospective/run.ts";
 import { BODY_LIMIT, createIssue, ensureLabel, issuesLabelled } from "./github.ts";
 
 /**
- * One GitHub issue per alert of the prospective test:
+ * One GitHub issue per confirmed alert of the prospective test:
  * `npm run maintenance:alert-issues -- <prospective worktree>`, run by the
  * daily workflow once the run has appended its alerts to `alerts.jsonl`
- * and the branch is pushed. Every alert of the log with no issue yet gets
- * one, labelled `prospective-alert` (the label made where missing): the
+ * and the branch is pushed. Only a confirmed verdict on a named parent, the
+ * alert the target is measured on, opens an issue: the log also keeps the
+ * suspected steps, the scoped line's alerts and the clouds for review, but
+ * the backtest found the parent's step alone wrong more than ninety-nine
+ * times in a hundred, and an email for each would bury the ones that count.
+ * Every such alert of the log with no issue yet gets one, labelled `prospective-alert` (the label made where missing): the
  * title names the parent, its catalogue number and the alert's state; the
  * body gives the evidence, the run that logged it (its line in
  * `runs.jsonl`) and the line of
@@ -50,11 +54,14 @@ export function loggedLines(text: string): LoggedLine[] {
     .map((line, i) => ({ alert: parseJsonl<LoggedAlert>(line, `alerts.jsonl:${i + 1}`)[0]!, line }));
 }
 
-/** The logged alerts no issue names yet, in the log's order, each key once. */
+/** Whether an alert opens an issue: a confirmed verdict on a named parent. */
+export const opensIssue = (alert: Pick<LoggedAlert, "kind" | "state">): boolean => alert.kind === "object" && alert.state === "confirmed";
+
+/** The logged alerts that open an issue and no issue names yet, in the log's order, each key once. */
 export function alertsToIssue(logged: readonly LoggedLine[], issued: ReadonlySet<string>): LoggedLine[] {
   const seen = new Set(issued);
   return logged.filter(({ alert }) => {
-    if (seen.has(alert.key)) return false;
+    if (!opensIssue(alert) || seen.has(alert.key)) return false;
     seen.add(alert.key);
     return true;
   });

@@ -36,10 +36,14 @@ merge is safe.
   touched, and the command run on the files the README was written from
   changes nothing. `test/readme.test.ts` still checks every cell against
   the files, independently of the generator.
-- **The prospective test opens an issue per alert.** The daily workflow
-  `prospective.yml`, after it has logged the day's alerts and kept the day
-  slices, opens one issue, labelled `prospective-alert`, for every alert of
-  `alerts.jsonl` that has none: the parent's name, catalogue number and
+- **The prospective test opens an issue per confirmed alert.** The daily
+  workflow `prospective.yml`, after it has logged the day's alerts and kept
+  the day slices, opens one issue, labelled `prospective-alert`, for every
+  confirmed alert on a named parent in `alerts.jsonl` that has none. The
+  suspected steps, the scoped line's alerts and the clouds stay in the log
+  only: the backtest found the parent's step alone wrong more than
+  ninety-nine times in a hundred, which would be hundreds of emails a
+  year. Each issue carries the parent's name, catalogue number and
   state in the title; the evidence, the run that logged it and the line of
   the log in the body; and the alert's key in a hidden line. The issues of
   the label are read in every state first, so an alert never gets two,
