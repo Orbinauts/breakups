@@ -71,7 +71,8 @@
     "maintenance:promote": "node --max-old-space-size=8192 --experimental-strip-types scripts/maintenance/promote.ts",
     "maintenance:pr": "node --experimental-strip-types scripts/maintenance/pr-body.ts",
     "maintenance:reminder": "node --experimental-strip-types scripts/maintenance/reminder.ts",
-    "maintenance:alert-issues": "node --experimental-strip-types scripts/maintenance/alert-issues.ts"
+    "maintenance:alert-issues": "node --experimental-strip-types scripts/maintenance/alert-issues.ts",
+    "pages:site": "node --experimental-strip-types scripts/pages/site.ts"
   },
   "dependencies": {
     "@orbinauts/engine": "^0.1.2"
@@ -80,6 +81,7 @@
     "@types/node": "^26.4.1",
     "typedoc": "^0.28.20",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.1"
   }
 }

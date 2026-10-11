@@ -14,8 +14,8 @@ import { describe, expect, test } from "vitest";
  * own files, and no Node built-in, so it runs unchanged in Node, in a
  * browser and in Workers. The tests may also import vitest; the scripts and
  * this folder's support code, which run only under Node, may import Node's
- * built-ins, and the tests the TypeScript compiler they read the source
- * with.
+ * built-ins, the tests the TypeScript compiler they read the source with,
+ * and the scripts' tests the YAML parser they read the workflows with.
  *
  * The hygiene: a reader who has only this package finds no pointer to
  * something they cannot open (an issue number, a design record or glossary
@@ -103,7 +103,7 @@ function allowedImports(file: string): (specifier: string) => boolean {
   if (file.startsWith("src/") && !file.endsWith(".test.ts")) return library;
   if (file.startsWith("src/")) return (specifier) => library(specifier) || specifier === "vitest";
   if (file.startsWith("scripts/") && !file.endsWith(".test.ts")) return (specifier) => library(specifier) || node(specifier);
-  if (file.startsWith("scripts/")) return (specifier) => library(specifier) || node(specifier) || specifier === "vitest";
+  if (file.startsWith("scripts/")) return (specifier) => library(specifier) || node(specifier) || specifier === "vitest" || specifier === "yaml";
   if (file.startsWith("test/")) return (specifier) => library(specifier) || specifier === "vitest" || specifier === "typescript" || node(specifier);
   return (specifier) => specifier === "vitest/config";
 }
