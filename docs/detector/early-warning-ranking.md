@@ -17,7 +17,7 @@ The early warning, a suspected verdict on the parent's own orbit jump, flags abo
 
 **The bar.** The ranked list is useful if, on the held-out years, a monthly list of five or fewer reaches a precision of 20% or more (the point estimate). Only then is the ranking added to the scorecard and the live test.
 
-The bar is stated with what is already known of its reach. The held-out years hold 2,463 early warnings counted as real or false over ten years, 19 of them real (the results page's life of an alert); that is 1.6 real early warnings a year. A monthly list of one already has 120 entries over the ten years, so even a ranking that put every real early warning first in its month would be right at most 19 times in 120, 16%, and a list of five at most 3%. On the training years (28 real over eleven years, 132 months) the same ceilings are 21% and 4%. No ranking of these alerts can reach the bar with a list of a fixed size a month; it is kept because it is the owner's, and the note reports beside it how much of the ceiling the ranker reaches and how many of the real ones its lists hold, so the owner can judge a list by those.
+The bar is stated with what is already known of its reach. The held-out years hold 2,463 early warnings counted as real or false over ten years, 19 of them real (the results page's life of an alert); that is 1.6 real early warnings a year. A monthly list of one already has 120 entries over the ten years, so even a ranking that put every real early warning first in its month would be right at most 19 times in 120, 16%, and a list of five at most 3%. On the training years (28 real over eleven years, 130 months, the last year to October) the same ceilings are 21% and 4%. No ranking of these alerts can reach the bar with a list of a fixed size a month; it is kept because it is the owner's, and the note reports beside it how much of the ceiling the ranker reaches and how many of the real ones its lists hold, so the owner can judge a list by those.
 
 ## The training years, and the ranker frozen (2026-10-11T17:34:50Z)
 
@@ -80,3 +80,69 @@ The candidates, each training year scored by a ranker fitted on the other ten (t
 By the rule the logistic regression at the penalty 3 is frozen, refitted on every training year: the intercept −6.188, and the weights of the table above on each feature standardised by the training mean and deviation beside it (a missing value reads as the mean; the working status, constant on the training rows, is left out). Its score is the logistic of the sum, a number between 0 and 1. It is `FROZEN_RANKER` in `scripts/kpi/rank.ts`, frozen at 2026-10-11T17:34:50Z (`FROZEN_AT`), before any held-out year's early warnings were scored.
 
 Read on the training years, cross-validated, the chosen ranker's monthly top one is right 6.9% of the time against the 1.0% base rate, seven times it, and its top five 3.5%. The ceilings a perfect ranking would reach there are 21% and 4%: the training years already say that no ranked monthly list of these alerts comes near the bar.
+
+## The held-out years, read once
+
+`npm run kpi:rank` scores every year with the frozen ranker and writes the rows to `kpi/work/early-warnings.json.gz`. The odd years 2007 to 2025 hold 2,463 early warnings over 120 months, 19 of them real: a base rate of 0.77% (0.49% to 1.20%), the rate a list in no particular order is right at. Of the 28 headline targets, the early warning flags 10 before the first fragment and 2 after it, as the scorecard says. Each precision is pooled over the months (or years) with its Wilson 95% interval. A monthly or yearly list names its alerts when it is drawn up, at the period's end, so an alert it holds flagged its event only if the period ended before the first fragment's set or any notice; the live list names each alert when it is raised.
+
+| List | Entries a month | Precision (95% interval), real of entries | Real early warnings in the list, of 19 | Headline targets in the list / named before the first fragment, of 28 | Lead over the first fragment from the naming, days, median | Timing error, minutes, median |
+| --- | --- | --- | --- | --- | --- | --- |
+| Every early warning (no list) | 20.5 | 0.77% (0.49% to 1.2%), 19 of 2463 | 19 | 10 / 10 | 10.3 | 34.6 |
+| Ranked, top 1 a month | 1.0 | 3.3% (1.3% to 8.3%), 4 of 120 | 4 | 1 / 0 | – | – |
+| Ranked, top 3 a month | 3.0 | 1.9% (0.9% to 4.0%), 7 of 360 | 7 | 4 / 2 | 20.7 | 6.1 |
+| Ranked, top 5 a month | 5.0 | 1.8% (1.0% to 3.3%), 11 of 600 | 11 | 5 / 2 | 20.7 | 6.1 |
+| Ranked, top 10 a month | 9.8 | 1.3% (0.8% to 2.1%), 15 of 1179 | 15 | 9 / 5 | 20.7 | 6.1 |
+| Unranked, the first 1 raised each month | 1.0 | 0.0% (0.0% to 3.1%), 0 of 120 | 0 | 0 / 0 | – | – |
+| Unranked, the first 5 raised each month | 5.0 | 0.3% (0.1% to 1.2%), 2 of 600 | 2 | 0 / 0 | – | – |
+| Ranked, top 10 a year | 0.8 | 2.0% (0.6% to 7.0%), 2 of 100 | 2 | 0 / 0 | – | – |
+| Ranked, top 20 a year | 1.7 | 2.5% (1.1% to 5.7%), 5 of 200 | 5 | 3 / 0 | – | – |
+| Ranked, top 50 a year | 4.2 | 2.2% (1.2% to 3.9%), 11 of 500 | 11 | 5 / 0 | – | – |
+| Live: a running threshold for 1 a month | 0.9 | 2.7% (0.9% to 7.7%), 3 of 110 | 3 | 1 / 1 | 10.3 | 30.5 |
+| Live: a running threshold for 3 a month | 3.0 | 2.2% (1.1% to 4.3%), 8 of 358 | 8 | 4 / 4 | 10.3 | 30.5 |
+| Live: a running threshold for 5 a month | 4.9 | 2.1% (1.2% to 3.6%), 12 of 584 | 12 | 6 / 6 | 10.3 | 30.5 |
+| Live: a running threshold for 10 a month | 9.0 | 1.5% (0.9% to 2.4%), 16 of 1082 | 16 | 9 / 9 | 10.3 | 30.5 |
+
+The precision against the monthly list's size, held out:
+
+| Top k a month | 1 | 2 | 3 | 4 | 5 | 7 | 10 | 15 | 20 | 30 | all |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Entries | 120 | 240 | 360 | 480 | 600 | 836 | 1179 | 1655 | 1996 | 2331 | 2463 |
+| Real | 4 | 5 | 7 | 10 | 11 | 13 | 15 | 17 | 18 | 19 | 19 |
+| Precision | 3.3% | 2.1% | 1.9% | 2.1% | 1.8% | 1.6% | 1.3% | 1.0% | 0.9% | 0.8% | 0.77% |
+| Headline targets named before the first fragment, of 28 | 0 | 1 | 2 | 2 | 2 | 4 | 5 | 6 | 6 | 6 | 10 |
+
+What it says:
+
+- **The ranking concentrates the real alerts, a little.** The monthly top one is right 3.3% of the time, four times the base rate, and its interval (1.3% to 8.3%) clears the base rate; the top five, 1.8%, two and a half times it. The lists ordered by nothing (the first raised each month) are no better than the base rate. Half the real early warnings (11 of 19) are in their month's top five, a quarter of the list.
+- **The bar is not reached, nor approached.** The best monthly list of five or fewer is right 3.3% of the time against the bar of 20%, a fifth of the 16% even a perfect ranking could reach with one a month. The yearly lists are no better (2% to 2.5%).
+- **A list drawn up at the month's end loses the early warning's point.** The early warning is worth having because it comes before the first fragment, a median of ten days ahead on the held-out headline targets; a month-end list names an alert about two weeks after it was raised, by which time the first fragment is often catalogued. The monthly top five holds five of the 28 headline targets and names two of them in time. The live list, which names an alert when it is raised if it passes a threshold the year before set, keeps the timing: at five a month it names 6 of the 10 headline targets the early warning flags, every one before its first fragment, a median of ten days ahead and to half an hour, at 2.1% precision (1.2% to 3.6%), against 0.77% for the whole list of twenty a month.
+- **The training years overstated it.** Read on the training years by the frozen ranker, which was fitted on them, the monthly top one is right 11.5% of the time (15 of 130) and the top five 4.2%; cross-validated, 6.9% and 3.5%; held out, 3.3% and 1.8%. Seven of the fifteen training top-one hits are deep-space ullage motors and a Briz-M stage, steps of 0.4 to 36 kilometres in highly elliptical orbit, most with the drag term moved ten- to a thousand-fold: a family that makes eight of the training years' 28 real early warnings and one of the held-out years' 19. Fifteen of the held-out 19 are payloads in low orbit, eight of them dead (NOAA 12 and 17, Cosmos 192, 1408 and 2251, Meteor, CBERS 1, BLITS), whose steps look like the dead payloads' and old stages' false alarms.
+
+The training years, read with the frozen ranker (in sample, so better than the held-out reading can be), for comparison:
+
+| List | Precision (95% interval), real of entries | Real early warnings in the list, of 28 | Headline targets in the list / named before the first fragment, of 43 |
+| --- | --- | --- | --- |
+| Every early warning (no list) | 0.96% (0.66% to 1.4%), 28 of 2929 | 28 | 18 / 18 |
+| Ranked, top 1 a month | 11.5% (7.1% to 18.2%), 15 of 130 | 15 | 11 / 7 |
+| Ranked, top 3 a month | 5.6% (3.8% to 8.4%), 22 of 390 | 22 | 13 / 7 |
+| Ranked, top 5 a month | 4.2% (2.9% to 6.0%), 27 of 650 | 27 | 17 / 11 |
+| Ranked, top 10 a month | 2.2% (1.5% to 3.1%), 28 of 1279 | 28 | 18 / 12 |
+| Ranked, top 10 a year | 12.7% (7.7% to 20.2%), 14 of 110 | 14 | 9 / 2 |
+| Ranked, top 20 a year | 9.5% (6.3% to 14.2%), 21 of 220 | 21 | 12 / 3 |
+| Ranked, top 50 a year | 4.9% (3.4% to 7.0%), 27 of 550 | 27 | 17 / 4 |
+| Live: a running threshold for 1 a month | 12.1% (7.7% to 18.6%), 17 of 140 | 17 | 11 / 11 |
+| Live: a running threshold for 5 a month | 3.6% (2.5% to 5.2%), 27 of 752 | 27 | 17 / 17 |
+
+## Examples, held out
+
+The real early warnings the ranker put first in their month: Cosmos 192 (a payload of 1967, dead, a step of 1.3 kilometres at 151 sigma with the drag term moved six-fold, first of 19 in September 2009; confirmed by its fragments; the live list named it ten days before the first fragment, the month-end list after it); the Meteor of 1970 (first of 13 in October 2023, not a headline event); and two late alerts, NOAA 12 (first of 23 in October 2011, its drag term moved 43-fold) and Microsat-R (first of 32 in April 2019, the anti-satellite test's target, a 435-kilometre step).
+
+The real ones it ranked low: Intelsat 29e (22nd of 32; a geosynchronous payload, where no drag term is read), Kosmos-2528 (16th of 24; a young payload whose record held a step), the LES 8 and 9 stage near the geostationary ring (14th of 30), Orbcomm FM5 (12th of 40), CBERS 1 (10th of 20; a 14-metre step at 11 sigma) and Iridium 33 (8th of 26; a collision, a 5.8-kilometre step with the drag term moved two-fold).
+
+The false alarms it ranked highest are the steps the scope study found physically like the breakups': a rocket body of 1988 in highly elliptical orbit whose drag term moved nearly seven-thousand-fold (the held-out years' highest score, 0.49), a rocket body of 1981 in low orbit with a 19-metre step and the drag term moved 77-fold, a dead payload of 1979 with a 446-metre step and the drag term moved 640-fold, an old payload in medium orbit with a 1,200-kilometre step, and dead payloads of 2012 and 2014 whose small steps came with a hundred- to two-hundred-and-fifty-fold change in the drag term. Each was first in its month.
+
+## Plainly
+
+A ranked watch list of the early warnings is not useful by the bar written before the held-out years were read: no monthly list of five or fewer reaches 20% precision, or comes near it. The frozen ranker's best, the monthly top one, is right 3.3% of the time (1.3% to 8.3%) on the held-out years, four times the 0.77% base rate, and its top five 1.8% (1.0% to 3.3%), while holding half the real early warnings in a quarter of the list. Drawn up at the month's end, the list names only two of the 28 reported breakups before their first fragment, since a month's wait spends the early warning's lead; kept live, with a threshold the year before sets, five a month name six of them (of the ten the early warning flags at all), each a median of ten days before the first fragment and to half an hour, at 2.1% precision.
+
+The bar was out of any ranker's reach: with 1.6 real early warnings a year, a list of one a month can be right at most one time in six. What the ranking can do is shorten the list about four-fold while keeping more than half of what the early warning catches, at a precision still under one in forty. That is a measurement for the owner to weigh, not a list the scorecard or the live test now carries: by the rule, the ranking is not added to `kpi/latest.json`, the results page's tables, the README or the live test's alerts.
