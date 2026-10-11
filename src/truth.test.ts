@@ -63,6 +63,25 @@ describe("a statement", () => {
   });
 });
 
+describe("a statement's link", () => {
+  test("is read where given, and left out where not", () => {
+    const linked = { ...statement, url: "https://planet4589.org/space/jsr/back/news.853.txt" };
+    expect(readStatement(linked, "it")).toEqual(linked);
+    expect("url" in readStatement(statement, "it")).toBe(false);
+  });
+
+  test.each([
+    ["a plain http link", "http://example.com/a"],
+    ["a link with no scheme", "planet4589.org/space/jsr/back/news.853.txt"],
+    ["an empty link", ""],
+    ["a link that is not text", 853],
+    ["a null link", null],
+  ] as const)("is refused when %s", (_, url) => {
+    expect(() => readStatement({ ...statement, url }, "it")).toThrow(TruthError);
+    expect(() => readStatement({ ...statement, url }, "it")).toThrow("url is not an https:// link");
+  });
+});
+
 describe("a statement's publication day", () => {
   test("a hand-entered statement may leave it out, and reads it as null", () => {
     const { statedOn: _, ...undated } = statement;

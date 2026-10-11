@@ -79,6 +79,21 @@ describe("the committed truth", () => {
   });
 });
 
+describe("links to the statements' pages", () => {
+  test("the Luch event's news and analyst statements carry the pages they are read from", () => {
+    const luch = breakups.find((b) => b.id === "40258:2026-01-30")!;
+    expect(luch.statements.filter((s) => s.url !== undefined).map((s) => [s.source, s.url]).sort()).toEqual([
+      ["analyst", "https://planet4589.org/space/jsr/back/news.853.txt"],
+      ["news", "https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/"],
+    ]);
+  });
+
+  test("only news and analyst statements carry one: the Space Force notice and the tables have none", () => {
+    const linked = breakups.flatMap((b) => b.statements).filter((s) => s.url !== undefined);
+    expect(linked.map((s) => s.source).sort()).toEqual(["analyst", "analyst", "news", "news", "news", "news"]);
+  });
+});
+
 describe("events checked by hand", () => {
   const known = (JSON.parse(readFileSync(resolve(ROOT, "test/fixtures/truth-known.json"), "utf8")) as { events: Record<string, string>[] }).events;
 
