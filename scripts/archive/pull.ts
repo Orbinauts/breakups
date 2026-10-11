@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import { archiveHome, writeYear, type ArchivedBody, type ColumnArray, type ColumnName, type Columns, type Manifest, COLUMN_TYPES, REQUIRED_COLUMNS } from "./archive.ts";
@@ -12,10 +12,11 @@ import { credentialsFromEnv, SpaceTrack } from "./space-track.ts";
  * catalogue's history class, one day of epochs per request, each day's
  * answer kept under `history/<year>/<day>.json.gz`, then builds the year's
  * columns from the kept days: `npm run archive:pull -- 2026 [--through
- * YYYY-MM-DD]`. Days up to two before today are pulled once and kept for
- * good; the two most recent days are pulled again on a later run until
- * they have settled, since the catalogue publishes a set hours after its
- * epoch. A bundle year, once published, replaces a pulled one.
+ * YYYY-MM-DD]`. A day pulled once it has settled, two days after its
+ * end, is kept for good; a more recent day is pulled again on every later
+ * run, past the cache, until a pull after it has settled, since the
+ * catalogue publishes a set hours after its epoch. A bundle year, once
+ * published, replaces a pulled one.
  */
 
 export const SETTLE_DAYS = 2;
@@ -40,19 +41,22 @@ function fixed(text: string, decimals: number): number {
 
 const utcMs = (text: string): number => Date.parse(text.endsWith("Z") ? text : `${text}Z`);
 
-/** The days to pull: every day of the year to `through`, less those already kept and settled. */
+/** Whether a day kept at `keptAt` was kept for good: pulled once it had settled, `SETTLE_DAYS` after its end. */
+export const keptSettled = (day: string, keptAt: number): boolean => keptAt >= Date.parse(`${day}T00:00:00Z`) + (1 + SETTLE_DAYS) * 86_400_000;
+
+/**
+ * The days to pull: every day of the year to `through`, less those kept
+ * for good. A day kept before it settled is pulled again on every run
+ * until a pull after it has settled, so a run sees the sets the catalogue
+ * published for the recent days since the last run, not only those it had
+ * published when the day was first pulled.
+ */
 export function daysToPull(archive: string, year: number, through: string): string[] {
   const dir = historyDir(archive, year);
   const days: string[] = [];
-  const settled = Date.now() - SETTLE_DAYS * 86_400_000;
   for (let day = `${year}-01-01`; day <= through && day.startsWith(String(year)); day = dayAfter(day)) {
     const kept = join(dir, `${day}.json.gz`);
-    if (existsSync(kept)) {
-      // A day kept before it settled is pulled again once, when it has.
-      const keptAt = statSync(kept).mtimeMs;
-      const dayEnd = Date.parse(`${day}T00:00:00Z`) + 86_400_000;
-      if (keptAt >= dayEnd + SETTLE_DAYS * 86_400_000 || dayEnd > settled) continue;
-    }
+    if (existsSync(kept) && keptSettled(day, statSync(kept).mtimeMs)) continue;
     days.push(day);
   }
   return days;
@@ -221,9 +225,15 @@ async function main(): Promise<void> {
   console.log(`${days.length} days to pull for ${year} through ${through}`);
   let pulled = 0;
   for (const day of days) {
-    const { rows, cached } = await client.rows<KeptRow>(join(historyDir(archive, year), `${day}.json.gz`), dayQuery(day, dayAfter(day)));
+    // A day kept before it settled is asked for again, past the cache, and its answer replaces the kept one only once it has come.
+    const kept = join(historyDir(archive, year), `${day}.json.gz`);
+    const again = existsSync(kept);
+    const into = again ? `${kept}.again` : kept;
+    rmSync(`${kept}.again`, { force: true });
+    const { rows, cached } = await client.rows<KeptRow>(into, dayQuery(day, dayAfter(day)));
+    if (again) renameSync(into, kept);
     if (!cached) pulled++;
-    console.log(`${day}: ${rows.length} sets${cached ? " (kept)" : ""}`);
+    console.log(`${day}: ${rows.length} sets${cached ? " (kept)" : again ? " (again, not yet settled when kept)" : ""}`);
   }
   const started = Date.now();
   const built = buildFromHistory(archive, year);

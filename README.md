@@ -153,6 +153,10 @@ The scorecard replays the detector over the Archive, every element set of every 
 | Targets with an agency's statement dated in the truth (the notices) | 0 |
 | Of which confirmed before that statement | 0 |
 
+## Prospective test
+
+The scorecard above is a backtest. Since 2026-10-11 the detector `confirmed-v10` is also under a prospective test: frozen at the tag `frozen-confirmed-v10`, it is run once a day over the catalogue's newly published sets, and every alert it raises after the freeze is appended, with its whole evidence, to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time is the proof of when each alert was known. `npm run prospective:score` scores the log against the truth as it stands, once the agencies' reports have caught up. [docs/decisions/0008](docs/decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why.
+
 ## Ground truth
 
 A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.
