@@ -131,6 +131,8 @@ export interface RunReport {
   readme: string[];
   promoted: Promoted | null;
   prospective: string;
+  /** A branch the run folded in (`-f from=<branch>`), with the subjects of its commits; null where none was. */
+  folded: { branch: string; commits: string[] } | null;
   /** Every file the run changed, as git names it. */
   files: string[];
 }
@@ -144,13 +146,14 @@ export const MOVES_SHOWN = 120;
 
 /** The pull request's title: the day, and what changed. */
 export function prTitle(report: RunReport): string {
-  const parts = [report.sources.length > 0 ? "sources refreshed" : null, report.truth.added.length + report.truth.removed.length + report.truth.changed.length > 0 ? "truth updated" : null, report.promoted === null ? null : `${report.promoted.year} promoted`, report.rescored !== "" ? "scorecard replayed" : null, report.readme.includes("prospective:score") ? "prospective score" : null].filter((part) => part !== null);
+  const parts = [report.folded === null ? null : `${report.folded.branch} folded in`, report.sources.length > 0 ? "sources refreshed" : null, report.truth.added.length + report.truth.removed.length + report.truth.changed.length > 0 ? "truth updated" : null, report.promoted === null ? null : `${report.promoted.year} promoted`, report.rescored !== "" ? "scorecard replayed" : null, report.readme.includes("prospective:score") ? "prospective score" : null].filter((part) => part !== null);
   return `Maintenance of ${report.date}: ${parts.length === 0 ? "generated files brought up to date" : parts.join(", ")}`;
 }
 
 /** The commit's body, and the squash merge's: what changed and why, in sentences, with no trailer. */
 export function commitMessage(report: RunReport): string {
   const sentences: string[] = [];
+  if (report.folded !== null) sentences.push(`The branch ${report.folded.branch} is folded in: ${report.folded.commits.length === 0 ? "it adds no commit of its own" : report.folded.commits.map((subject) => subject.replace(/\.?$/, "")).join("; ")}.`);
   if (report.sources.length > 0) sentences.push(`The weekly fetch found a new edition of ${report.sources.map((s) => s.id).join(", ")}, and the snapshots and their hashes in data/truth/sources.json are refreshed.`);
   const { added, removed, changed } = report.truth;
   if (added.length + removed.length + changed.length > 0) sentences.push(`The truth rebuilt from them has ${plural(added.length, "event", "events")} added, ${removed.length} removed and ${changed.length} changed${added.length > 0 ? ` (added: ${added.slice(0, 10).map((row) => row.id).join(", ")}${added.length > 10 ? ", and more" : ""})` : ""}.`);
@@ -164,6 +167,7 @@ export function commitMessage(report: RunReport): string {
 /** The pull request's body: what changed and why, part by part. */
 export function prBody(report: RunReport): string {
   const lines = [`The weekly maintenance run of ${report.date}${report.runUrl === null ? "" : ` ([the run](${report.runUrl}))`}. Every check (typecheck, tests, documentation build) passed on this tree before the pull request was opened; CI and the KPI workflow run again on main after the merge.`, ""];
+  if (report.folded !== null) lines.push("## The branch folded in", "", `\`${report.folded.branch}\`, asked for by the run, with its commits:`, "", ...(report.folded.commits.length === 0 ? ["- none of its own"] : report.folded.commits.map((subject) => `- ${subject}`)), "");
   lines.push("## Sources", "");
   if (report.sources.length === 0) lines.push("No source the weekly fetch reads had a new edition.");
   else {
@@ -234,6 +238,7 @@ function main(): void {
     readme: readmeParts(atBase(base, "README.md") ?? "", read("README.md"), README_PARTS),
     promoted: existsSync(archiveHome()) ? readPromoted(archiveHome()) : null,
     prospective: markedPart(read("README.md"), "prospective:score"),
+    folded: process.env.FROM === undefined || process.env.FROM === "" ? null : { branch: process.env.FROM, commits: git("log", "--no-merges", "--reverse", "--format=%s", `${base}..HEAD`).split("\n").filter((line) => line !== "") },
     files,
   };
   writeFileSync(join(out, "title.txt"), `${prTitle(report)}\n`);

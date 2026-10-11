@@ -63,6 +63,7 @@ describe("the pull request and its commit", () => {
     readme: ["kpi:confirmed", "truth:counts"],
     promoted: null,
     prospective: "So far: 0 alerts logged since the freeze.",
+    folded: null,
     files: ["data/breakups.json", "kpi/latest.json", "README.md"],
   };
 
@@ -84,6 +85,13 @@ describe("the pull request and its commit", () => {
   test("the title names what changed", () => {
     expect(prTitle(report)).toBe("Maintenance of 2026-10-19: sources refreshed, truth updated, scorecard replayed");
     expect(prTitle({ ...report, sources: [], truth: { added: [], removed: [], changed: [] }, rescored: "", readme: ["prospective:score"] })).toBe("Maintenance of 2026-10-19: prospective score");
+  });
+
+  test("a branch folded in is named in the title, the body and the message, with its commits", () => {
+    const folded = { ...report, folded: { branch: "hand-row", commits: ["A breakup typed from the quarterly news."] } };
+    expect(prTitle(folded)).toBe("Maintenance of 2026-10-19: hand-row folded in, sources refreshed, truth updated, scorecard replayed");
+    expect(prBody(folded)).toContain("- A breakup typed from the quarterly news.");
+    expect(commitMessage(folded)).toContain("The branch hand-row is folded in: A breakup typed from the quarterly news.");
   });
 
   test("the commit message is sentences with no trailer", () => {

@@ -277,6 +277,7 @@ jobs:
           RESCORED: ${{ steps.plan.outputs.rescore }}
           RESCORE_REASONS: ${{ steps.plan.outputs.rescore == 'true' && steps.plan.outputs.reasons || '' }}
           PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FROM: ${{ inputs.from }}
         run: |
           set -euo pipefail
           exec > >(tee -a "$LOG") 2>&1
