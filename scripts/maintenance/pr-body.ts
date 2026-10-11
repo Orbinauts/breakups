@@ -222,10 +222,8 @@ function main(): void {
   const base = option("--base") ?? "HEAD";
   const out = resolve(option("--out") ?? ".");
   const read = (path: string): string => readFileSync(join(ROOT, path), "utf8");
-  const files = git("status", "--porcelain", "--untracked-files=all")
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map((line) => line.slice(3));
+  // The files that differ from the base: those committed by a branch folded in, those changed in the tree, and those new.
+  const files = [...new Set([...git("diff", "--name-only", base).split("\n"), ...git("ls-files", "--others", "--exclude-standard").split("\n")])].filter((line) => line.trim() !== "").sort();
   const truthRows = (text: string | null): TruthRow[] => (text === null ? [] : (JSON.parse(text) as { breakups: TruthRow[] }).breakups);
   const latestBefore = atBase(base, "kpi/latest.json");
   const report: RunReport = {
