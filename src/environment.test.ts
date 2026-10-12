@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { WEATHER_DAYS, apFactor, bandOf, environmentOf, fluxFactor, statsFor, weatherOf, type Measurement } from "./environment.ts";
-import { DETECTOR_PARAMETERS } from "./params.ts";
+import { DETECTOR_PARAMETERS, OFF } from "./params.ts";
 
 const params = DETECTOR_PARAMETERS;
 
@@ -87,5 +87,14 @@ describe("the weather", () => {
     expect(apFactor(5)).toBeCloseTo(0.67, 6);
     expect(apFactor(100)).toBeCloseTo(1.79, 6);
     expect(apFactor(400)).toBeCloseTo(1.79, 6);
+  });
+
+  test("the scatter tables and the band's width are the parameters', so a replay can change them and the scorecard records them", () => {
+    const flat = { ...params, fluxScatter: [[OFF, 2]] as [number, number][], apScatter: { quiet: 1, storm: 3, quietAp: 10, stormAp: 1000 }, leoBandKm: 100 };
+    expect(fluxFactor(250, flat)).toBe(2);
+    expect(apFactor(10, flat)).toBeCloseTo(1, 6);
+    expect(apFactor(100, flat)).toBeCloseTo(2, 6);
+    expect(bandOf("LEO", 812, flat)).toBe("LEO:8");
+    expect(weatherOf([day([1, 1, 1, 1, 1, 1, 1, 1], 4, 70)], now, flat).priorFactor).toBeCloseTo(2, 6);
   });
 });

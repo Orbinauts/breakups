@@ -104,6 +104,10 @@ export interface Candidate {
   zMean3: number;
   /** The object's envelope of held altitudes as it stood when the candidate opened, before the first post set was noted, so the post-step level is judged against where the object flew and never against itself. */
   envelope: AltitudeEnvelope;
+  /** The quantity whose residual opened the candidate and on which its persistence is judged, where the three-axis trigger opened it on the perigee radius or the inclination (`openOnThreeAxes`); absent for the semi-major axis. With it, the first post set's jump on that quantity, in its units (kilometres, degrees), and its normalised size. */
+  axis?: "rp" | "inc";
+  axisDelta1?: number;
+  axisZ1?: number;
 }
 
 export interface SeriesState {
@@ -450,6 +454,26 @@ export function refreshScatter(state: SeriesState): void {
   state.shortSigma = residuals.length >= 3 ? robustScale(residuals) : 0;
 }
 
+/**
+ * Forgets the residuals of a step that stayed: the set at the epoch and the
+ * sets after it whose trailing window could hold it (`windowSets`), each
+ * predicted across the step, so measuring the step and not the object's
+ * noise. The sets further on were predicted from windows past it, as a
+ * bundle of history brings them, and keep theirs.
+ */
+export function forgetResidualsAcross(state: SeriesState, epochMs: number, params: DetectorParameters): void {
+  const first = state.epochs.findIndex((epoch) => epoch >= epochMs);
+  if (first === -1) return;
+  const last = Math.min(state.epochs.length - 1, first + params.windowSets[regimeKey(state.regime)]);
+  let changed = false;
+  for (let i = first; i <= last; i++) {
+    if (!Number.isFinite(state.resid[i]!)) continue;
+    state.resid[i] = Number.NaN;
+    changed = true;
+  }
+  if (changed) refreshScatter(state);
+}
+
 /** The ring's values of a quantity. */
 export function valuesOf(state: SeriesState, series: Series): number[] {
   return series === "a" ? state.a : series === "rp" ? state.rp : state.inc;
@@ -475,13 +499,13 @@ export function windowOf(state: SeriesState, params: DetectorParameters, before 
   return [from, to];
 }
 
-/** The robust fit of a quantity over the trailing window, the fallback rate the last set's drag rate for the axis and the perigee radius and zero for the inclination. */
-export function fitOf(state: SeriesState, series: Series, params: DetectorParameters, before = Number.POSITIVE_INFINITY): Fit | null {
+/** The robust fit of a quantity over the trailing window, the fallback rate the last set's drag rate for the axis and the perigee radius and zero for the inclination; the residuals' scale is computed for the perigee radius and the inclination, and for the axis only where `withScale` asks (its hot path reads the coefficients alone). */
+export function fitOf(state: SeriesState, series: Series, params: DetectorParameters, before = Number.POSITIVE_INFINITY, withScale = series !== "a"): Fit | null {
   const [from, to] = windowOf(state, params, before);
   if (to === from) return null;
   const last = to - 1;
   const rate = series === "inc" ? 0 : dragRateKmPerDay(state.a[last]!, state.meanMotion[last]!, state.meanMotionDot[last]!) * (series === "rp" ? state.rp[last]! / state.a[last]! : 1);
-  return fitWindow(state.epochs, valuesOf(state, series), from, to, params, rate, series !== "a");
+  return fitWindow(state.epochs, valuesOf(state, series), from, to, params, rate, withScale);
 }
 
 /** The drag term the object's window agrees on, in inverse Earth radii: the median of the window's values, so one set whose fit absorbed an event into its B* (a breakup can move it seventyfold) does not set the drag term the prediction is judged by. */
@@ -528,13 +552,13 @@ export function ownNoise(state: SeriesState, prior: number, params: DetectorPara
 
 /**
  * Folds a residual into the long memory: an exponential average of the
- * residual's size, clipped at three times the current scatter so one
- * step does not become the object's noise, scaled to a Gaussian sigma
+ * residual's size, clipped at `longMemoryClipSigmas` times the current scatter so
+ * one step does not become the object's noise, scaled to a Gaussian sigma
  * (the mean absolute deviation is 0.798 of it), decaying with the
  * half-life in days.
  */
 export function rememberResidual(state: SeriesState, residual: number, sigma: number, epochMs: number, params: DetectorParameters): void {
-  const size = Math.min(Math.abs(residual), 3 * sigma) * 1.2533;
+  const size = Math.min(Math.abs(residual), params.longMemoryClipSigmas * sigma) * 1.2533;
   if (!Number.isFinite(state.longAt)) {
     state.longSigma = size;
     state.longAt = epochMs;

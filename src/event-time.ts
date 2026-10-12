@@ -1,6 +1,6 @@
 import { WGS84_E2, WGS84_EQUATORIAL_KM, propagate, readElements, type Elements } from "@orbinauts/engine";
 import type { ElementSet } from "./elements.ts";
-import type { DetectorParameters } from "./params.ts";
+import { isOn, type DetectorParameters, type LegacyParameters } from "./params.ts";
 
 /**
  * When the event happened, from the two sets either side of the step.
@@ -362,7 +362,7 @@ export function originOf(crossings: readonly PieceCrossing[]): PiecesOrigin {
  * along-track position, and with it the crossing, as the drag it
  * mispredicts accumulates.
  */
-export function originBoundHours(origin: Pick<PiecesOrigin, "ageDays">, params: Pick<DetectorParameters, "originHoursBase" | "originHoursPerDay">): number {
+export function originBoundHours(origin: Pick<PiecesOrigin, "ageDays">, params: Pick<LegacyParameters, "originHoursBase" | "originHoursPerDay">): number {
   return params.originHoursBase + params.originHoursPerDay * Math.max(0, Number.isFinite(origin.ageDays) ? origin.ageDays : 0);
 }
 
@@ -373,11 +373,11 @@ export function originDeviationHours(origin: Pick<PiecesOrigin, "dev50Hours" | "
 
 /** Whether the pieces share an origin closely enough to override the rules that read a launch's history as an old cloud: at least the parameter's count crossing the parent, three quarters of those tried within the parameter's hours of their median. */
 export function overridesHistory(origin: PiecesOrigin, params: Pick<DetectorParameters, "originOverrideHours" | "originOverrideMinPieces">): boolean {
-  return params.originOverrideHours < 1e8 && origin.timed >= params.originOverrideMinPieces && origin.dev75Hours <= params.originOverrideHours;
+  return isOn(params.originOverrideHours) && origin.timed >= params.originOverrideMinPieces && origin.dev75Hours <= params.originOverrideHours;
 }
 
 /** Whether the common-origin test is on: a bound in hours or in laps within reach. */
-export const originTested = (params: Pick<DetectorParameters, "originHoursBase" | "originPhaseMax">): boolean => params.originHoursBase < 1e8 || params.originPhaseMax < 1e8;
+export const originTested = (params: Pick<LegacyParameters, "originHoursBase" | "originPhaseMax">): boolean => isOn(params.originHoursBase) || isOn(params.originPhaseMax);
 
 /**
  * Whether the pieces pass the common-origin test: with at least the
@@ -386,7 +386,7 @@ export const originTested = (params: Pick<DetectorParameters, "originHoursBase" 
  * piece's lap. With fewer the test says nothing and passes, so a single
  * piece is judged by the other rules alone.
  */
-export function passesOrigin(origin: PiecesOrigin, params: Pick<DetectorParameters, "originHoursBase" | "originHoursPerDay" | "originShareMin" | "originMinPieces" | "originPhaseMax">): boolean {
+export function passesOrigin(origin: PiecesOrigin, params: Pick<LegacyParameters, "originHoursBase" | "originHoursPerDay" | "originShareMin" | "originMinPieces" | "originPhaseMax">): boolean {
   if (!originTested(params) || origin.tried < params.originMinPieces) return true;
   const deviation = originDeviationHours(origin, params.originShareMin);
   const phase = params.originShareMin <= 0.5 ? origin.phase50 : origin.phase75;
@@ -447,8 +447,6 @@ function relativeSpeedAt(parent: Elements, pieces: readonly Elements[], at: numb
   return Math.sqrt(sum / pieces.length);
 }
 
-/** The most crossings refined on the fine grid: the best few by the coarse cost, or a single piece's laps. */
-const REFINED_CROSSINGS = 8;
 
 /**
  * The event's time from the parent's set and the pieces' first sets,
@@ -515,13 +513,13 @@ export function eventFromPieces(parentSet: ElementSet, pieceSets: readonly Eleme
     // Each crossing's cost once, not once per comparison: the order is the same.
     const all = timed.flatMap((i) => crossings[i]!);
     const costs = all.map(cost);
-    candidates = all.map((_, k) => k).sort((a, b) => costs[a]! - costs[b]!).slice(0, REFINED_CROSSINGS).map((k) => all[k]!);
+    candidates = all.map((_, k) => k).sort((a, b) => costs[a]! - costs[b]!).slice(0, params.eventRefinedCrossings).map((k) => all[k]!);
   } else {
-    candidates = crossings[timed[0]!]!.slice(-REFINED_CROSSINGS);
+    candidates = crossings[timed[0]!]!.slice(-params.eventRefinedCrossings);
   }
   const used = timed.map((i) => pieces[i]!.elements);
   const fineMs = params.eventGridSeconds * 1000;
-  const reach = Math.max(gridMs, 30 * 60_000);
+  const reach = Math.max(gridMs, params.eventRefineReachMinutes * 60_000);
   const refined = candidates.map((t0) => {
     let best = { at: t0, miss: Number.POSITIVE_INFINITY };
     for (let t = Math.max(from - reach, t0 - reach); t <= Math.min(to, t0 + reach); t += fineMs) {
