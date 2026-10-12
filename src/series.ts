@@ -443,6 +443,26 @@ export function refreshScatter(state: SeriesState): void {
   state.shortSigma = residuals.length >= 3 ? robustScale(residuals) : 0;
 }
 
+/**
+ * Forgets the residuals of a step that stayed: the set at the epoch and the
+ * sets after it whose trailing window could hold it (`windowSets`), each
+ * predicted across the step, so measuring the step and not the object's
+ * noise. The sets further on were predicted from windows past it, as a
+ * bundle of history brings them, and keep theirs.
+ */
+export function forgetResidualsAcross(state: SeriesState, epochMs: number, params: DetectorParameters): void {
+  const first = state.epochs.findIndex((epoch) => epoch >= epochMs);
+  if (first === -1) return;
+  const last = Math.min(state.epochs.length - 1, first + params.windowSets[regimeKey(state.regime)]);
+  let changed = false;
+  for (let i = first; i <= last; i++) {
+    if (!Number.isFinite(state.resid[i]!)) continue;
+    state.resid[i] = Number.NaN;
+    changed = true;
+  }
+  if (changed) refreshScatter(state);
+}
+
 /** The ring's values of a quantity. */
 export function valuesOf(state: SeriesState, series: Series): number[] {
   return series === "a" ? state.a : series === "rp" ? state.rp : state.inc;

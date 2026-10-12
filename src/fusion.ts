@@ -365,10 +365,14 @@ export function cadenceAfter(alert: OpenAlert, now: number, params: DetectorPara
   return (sets + 1) / params.cadenceAfterDays;
 }
 
-/** How the alert ended, by what it saw: confirmed by pieces or a notice, dismissed when bodies came and every one was old, expired otherwise. */
+/**
+ * How an alert still open ends, by what it saw: never confirmed, since a
+ * confirmation closes the alert at once; dismissed when bodies came under
+ * the launch and none lay in the parent's plane; expired otherwise, pieces
+ * in the plane that the rules refused included.
+ */
 export function closingOutcome(alert: OpenAlert): number {
-  if (alert.noticed || alert.pieces.inPlane > 0) return OUTCOMES.confirmed;
-  if (alert.pieces.new > 0) return OUTCOMES.dismissed;
+  if (alert.pieces.new > 0 && alert.pieces.inPlane === 0) return OUTCOMES.dismissed;
   return OUTCOMES.expired;
 }
 

@@ -69,6 +69,27 @@ describe("the detector on synthetic series", () => {
     expect(suspected(alone).length).toBeGreaterThan(0);
   });
 
+  test("a storm's jump, taken off as common mode, opens no candidate and leaves the later sets of the same run their residuals", () => {
+    // The storm of the test above, each object's sets coming two to a run: the first of the pair at the storm's onset jumps before the common mode is taken off.
+    const objects = Array.from({ length: 40 }, (_, i) => ({ number: 100 + i, bstar: 2e-4 * (1 + (i % 5)), gauss: noise(10 + i) }));
+    const batches: ReturnType<typeof setOf>[][] = [];
+    for (let t = 0; t <= 24 * DAY; t += 16 * HOUR) {
+      const batch = [t, t + 8 * HOUR].flatMap((at) =>
+        objects.map((o) => setOf(o.number, { epochMs: T0 + at, aKm: 7100 - 0.05 * (at / DAY) * (o.bstar / 2e-4) + (at >= 20 * DAY ? -200 * o.bstar : 0) + 0.003 * o.gauss(), bstar: o.bstar })),
+      );
+      batches.push(batch);
+    }
+    const fed = feed(batches);
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.phase === PHASES.open)).toEqual([]);
+    for (const o of objects) {
+      const state = fed.states.get(o.number) as { epochs: number[]; resid: number[] };
+      const onset = state.epochs.findIndex((e) => e >= T0 + 20 * DAY);
+      expect(onset).toBeGreaterThan(0);
+      expect(state.resid.slice(onset).every(Number.isFinite)).toBe(true);
+    }
+  });
+
   test("a bad set is dismissed when the next sets are back where the model said", () => {
     const series = decaying(7200, 0.02, 0.004, 30);
     series[60]!.aKm += 0.5;
@@ -104,6 +125,34 @@ describe("the detector on synthetic series", () => {
     expect(watch!.raisedAt).toBeLessThan(verdict.raisedAt);
     // No second verdict on the same step, and the object's window restarted on the post sets.
     expect(fed.verdicts.filter((v) => v.state === "dismissed")).toEqual([]);
+  });
+
+  test("a step fifty times the object's noise leaves the object's own scatter as it was before it, whether its sets came one a run or the jump and the next two in one run", () => {
+    const series = decaying(7200, 0.02, 0.004, 24);
+    const stepAt = 24;
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.2;
+    const sets = series.map((s) => setOf(1, s, "rocket body"));
+    const scatter = (fed: ReturnType<typeof feed>) => fed.states.get(1) as { shortSigma: number; longSigma: number; residualCount: number };
+    const before = scatter(feed(one(sets.slice(0, stepAt))));
+    expect(before.residualCount).toBeGreaterThanOrEqual(params.residualsForScatter);
+    const apart = feed(one(sets.slice(0, stepAt + 3)));
+    const together = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 3)]);
+    for (const fed of [apart, together]) {
+      const closed = fed.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)!;
+      expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(closed.signals.outcome);
+      expect(Math.abs(closed.signals.z1!)).toBeGreaterThan(2 * params.zCand);
+      expect(scatter(fed).shortSigma).toBe(before.shortSigma);
+      expect(scatter(fed).residualCount).toBe(before.residualCount);
+    }
+    // The long memory took the jump's residual alone, clipped, in both: the sets after it in the same run are not the object's noise either.
+    expect(scatter(together).longSigma).toBe(scatter(apart).longSigma);
+    // A batch of twenty-eight sets after the jump in one run, as a bundle of history brings (among other objects' sets, so the band's common mode is not this object's alone): the sets whose trailing window no longer held the jump keep their residuals.
+    const bundled = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 29)], { parameters: { bandMinMembers: 1000 } });
+    expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(bundled.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)?.signals.outcome);
+    const state = bundled.states.get(1) as { epochs: number[]; resid: number[] };
+    const clear = state.epochs.map((e, i) => [e, state.resid[i]!] as const).filter(([e]) => e > series[stepAt + params.windowSets.LEO]!.epochMs);
+    expect(clear.length).toBeGreaterThan(10);
+    expect(clear.every(([, r]) => Number.isFinite(r))).toBe(true);
   });
 
   test("a drift that grows from nothing at a rate drag can produce opens no candidate: the drag term covers it", () => {
@@ -685,6 +734,29 @@ describe("the confirmation rules", () => {
     const row = alertRow(fed, 1)!;
     expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
     expect(row.signals.confirmRefused).toBe(1);
+  });
+
+  test("an alert whose pieces were refused, closed by a second persistent step before its time ran out, expires and says so", () => {
+    // The parent of the test above, stepping again ten days after its first step, while the first alert is still open.
+    const series = decaying(7200, 0.02, 0.004, 48);
+    for (let i = 105; i < series.length; i++) series[i]!.aKm += -0.3;
+    for (let i = 135; i < series.length; i++) series[i]!.aKm += -0.3;
+    const parent = series.map((s) => withNode(setOf(1, s, "rocket body")));
+    const stepEpoch = parent[105]!.epochMs;
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0, { aKm: 7199.7, spreadKm: 0.1 })]));
+    const raised = fed.verdicts.filter((v) => (v.state === "suspected" || v.state === "manoeuvre") && v.number === 1).map((v) => v.step!.afterEpoch);
+    expect(raised).toEqual([stepEpoch, parent[135]!.epochMs]);
+    expect(confirmedOn(fed, 1)).toEqual([]);
+    const first = fed.log.filter((r) => r.signals.phase === PHASES.alert && r.number === 1)[0]!;
+    expect(first.signals.afterEpoch).toBe(stepEpoch);
+    expect(first.signals.confirmRefused).toBe(1);
+    expect(first.signals.outcome).toBe(OUTCOMES.expired);
+    const expired = fed.verdicts.filter((v) => v.state === "expired" && v.number === 1);
+    expect(expired).toHaveLength(1);
+    expect(expired[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(expired[0]!.evidence.piecesInPlane).toBe(6);
+    expect(expired[0]!.reasons.join(" ")).toContain("refused");
+    expect(expired[0]!.reasons.join(" ")).toContain("a second persistent step");
   });
 });
 
