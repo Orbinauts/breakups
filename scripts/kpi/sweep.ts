@@ -1,6 +1,10 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, EXPLANATION_BITS, MANOEUVRE_CLASSES, OPS_STATUSES, OUTCOMES, REGIMES, SIGNATURE_BITS, atypicalTests, classify, judgeStep, launchOf, poissonTail, yearOf, type CurrentStep, type DetectorParameters, type HistoryFeatures, type LogRow, type ManoeuvreClass, type StepEvidence, type StepJudgement } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, OPS_STATUSES, REGIMES, launchOf, yearOf, type DetectorParameters, type LogRow } from "../../src/index.ts";
+import { poissonTail } from "../../src/fragments.ts";
+import { EXPLANATION_BITS, SIGNATURE_BITS, judgeStep, type StepEvidence, type StepJudgement } from "../../src/fusion.ts";
+import { OUTCOMES } from "../../src/log.ts";
+import { MANOEUVRE_CLASSES, atypicalTests, classify, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "../../src/manoeuvre.ts";
 import { brackets, marginDaysOf } from "./match.ts";
 import { readTruth, readYearFiles, yearsDir } from "./run.ts";
 import { DAY_MS } from "./replay.ts";

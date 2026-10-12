@@ -159,8 +159,11 @@ The decision stands; what changed is where its parts live.
   closed year with their provenance (`states-2025.json.gz`, the starting
   states above, its hash the one its provenance names), the day slices
   pulled from the history class for each year replayed
-  (`history-2026.tar`, the days with their modification times, which say
-  which were kept for good), and a manifest of hashes. The run downloads
+  (`history-2026.tar`, each day marked with the time it was pulled, which
+  says whether it was kept for good, so the reading does not hang on a
+  copy keeping file times; the days kept before the marks say it by their
+  modification times, which the tarball keeps, until the next pull marks
+  them), and a manifest of hashes. The run downloads
   them and the Archive's released years before the year it replays,
   verifying every hash, and afterwards uploads the year's slices again, and
   a closed year's end states with their provenance once it settles. The

@@ -96,6 +96,8 @@ npm install @orbinauts/breakups
 
 It needs Node 22 or later, and also runs in browsers through a bundler and in Cloudflare Workers. The package is ESM only, ships TypeScript types, and imports no Node built-in.
 
+A caller that runs the detector hands each run the states the last one returned. To keep them between runs in a key-value store or a file, write them with `serialiseStates` and read them back with `reviveStates`: plain `JSON.stringify` loses them, since they are kept in maps and hold the infinities and NaN, which JSON writes as `null`.
+
 ## Quick start
 
 Read the list of reported breakups the package ships, and print the three most recent ones:
