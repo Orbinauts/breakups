@@ -9,7 +9,7 @@ import type { ElementSet } from "./elements.ts";
 import type { PiecesEventTime } from "./event-time.ts";
 import { passesSmallBatch } from "./confirmation.ts";
 import type { DetectorInput, LogRow } from "./detector.ts";
-import { CATALOGUE_KEY, type CatalogueRecord } from "./fragments.ts";
+import { CATALOGUE_KEY, type CatalogueRecord, type LaunchRecord } from "./fragments.ts";
 import { runDetector } from "./run.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
@@ -753,6 +753,15 @@ describe("the Confirmed channel's attribution", () => {
     const confirmed = attributed(fed);
     expect(confirmed).toHaveLength(1);
     expect(confirmed[0]!.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+  });
+
+  test("a set whose drag derivative alone is junk still notes its body, when it was first published: its instant and orbit are sound", () => {
+    const first = { ...setOf(60001, { epochMs: T0, aKm: 7200, meanMotionDot: -2e-4 }, "debris"), designator: "2010-009C" };
+    const later = { ...setOf(60001, { epochMs: T0 + DAY, aKm: 7200 }, "debris"), designator: "2010-009C" };
+    const one = runDetector({ states: new Map(), launches: new Map(), sets: [first], now: T0 + HOUR });
+    const two = runDetector({ states: one.states, launches: one.launches, sets: [later], now: T0 + DAY + HOUR });
+    const launch = two.launches.get("2010-009") as LaunchRecord;
+    expect(launch.bodies.map((b) => [b.number, b.firstSeenAt])).toEqual([[60001, T0 + HOUR]]);
   });
 
   test("of two bodies of the launch in different planes, the pieces are attributed to the one whose plane they share", () => {
