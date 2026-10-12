@@ -20,7 +20,7 @@ import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
  * It is read two ways. `readCatalogue` reads every built year of the
  * Archive's columns, about a minute over twenty-two years, and is what the
  * catalogue index is built from (`catalogue-index.ts`) and what the truth
- * audit reads, since it wants every set of the bodies it asks for. The
+ * audit read, since it wanted every set of the bodies it asked for. The
  * scorecard reads it from the index alone, since a replay holds a year
  * and the one before it, not the whole Archive: a year downloaded with its
  * predecessor, as the KPI workflow does, must score as it does beside
