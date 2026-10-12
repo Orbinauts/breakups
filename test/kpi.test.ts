@@ -329,11 +329,13 @@ describe("the scorecard on the synthetic year", () => {
     const [headline, confirmedLines, confirmedVerdicts, earlyHeadline, lines, scoped, alertsTable, tiers, confirmed] = resultsTables(latest);
     // The early warning's headline: one detection, one late, one false alarm in the one year, the rates with their intervals.
     expect(earlyHeadline).toContain(`| Validation: the odd years (${YEAR}) | 2 | 1 | 1 | 1 | 0 | 50% (9% to 91%) | 1 | 50% (9% to 91%) | 1.0 |`);
-    // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body a false confirmation.
-    expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 1 | 50% (9% to 91%) | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
-    expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – |");
+    // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body on no row, raised under 90 days before the truth's date (its last statement, 1 April 2013): unreported and pending, in neither count.
+    expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 0 | 0% (0% to 79%) | – | – | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
+    expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – | – | – |");
     expect(confirmedLines).toContain("| Breakups, confidence A and B (the target is 90%) | 1 | 2 | 0 | 1 | 0 | 100% (21% to 100%) |");
-    expect(confirmedVerdicts).toContain("| False confirmations (matching no reported event) | 1 |");
+    expect(confirmedVerdicts).toContain("| False confirmations (matching no reported event) | 0 |");
+    expect(confirmedVerdicts).toContain("| Unreported and pending (no reported event yet, raised under 90 days before the truth's date; in neither count) | 1 |");
+    expect(latest.truthAsOf).toBe("2013-04-01");
     expect(confirmedVerdicts).toContain("| Of which the statement dated to the day / to the month | 0 / 1 |");
     // The scoped line: the synthetic bodies carry no launch day, so no parent is known to be five years old and the scope leaves every headline event out, which the table says.
     expect(scoped).toContain("| The whole catalogue | 2 | 1 | 1 | 1 | 0 |");

@@ -170,3 +170,10 @@ launch, `A:1998-037:2026-06-19`, and carries the row's dating; the
 published parent stays the body the verdict names (its number,
 designator and name from the catalogue), since the row names only the
 launch.
+
+## Amended on 2026-10-12: an unreported confirmation, and the nearest row
+
+The seventh decision record's amendment of 2026-10-12 (issue #17) changed two readings the published files share with the scorecard:
+
+- **An unreported confirmation.** A detector confirmation that lands on no row is the detector's own news, as before, and is shown with no report. It now has one name everywhere: unreported. The scorecard and the live test's score count it pending, neither true nor false, while it was raised less than 90 days before the truth's date (the latest day the ground truth knows of), and false once 90 days pass with no report. The published list keeps it after that, since a confirmed breakup stays for good and the site may already show it; its `reports` stay empty and its `row` null, so a reader can apply the same reading from `raisedAt`. The files' shape is unchanged. Dropping a confirmation from the list once it turns false is left to the owner: it would change "a confirmed breakup stays for good".
+- **The nearest row.** A confirmation lands as `landConfirmed` lands it, now on the row of its object nearest the detector's instant of the event, else its raising, rather than the latest scoreable row in the window; and a confirmation inside a report naming no object, no launch and no regime lands as `unnamed`, which, like every landing other than a detection or a release on purpose, the selection publishes as a breakup on no row.

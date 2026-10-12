@@ -115,18 +115,28 @@ describe("the medians in words", () => {
     expect(inWords(200)).toBe("29 weeks");
   });
 
-  test("the sentence says how many confirmations came before the statement, and how long after the first piece", () => {
+  test("the sentences say how many confirmations came before each statement, the notice and the quarterly news, and how long after the first piece", () => {
     const latest = JSON.parse(JSON.stringify(inputs.latest)) as Latest;
     const c = latest.splits.validation.confirmedLine;
-    c.withStatement = 17;
-    c.beforeStatement = 17;
-    c.lead = { median: 41.7, tail: 9.8, count: 17 };
+    c.withNotice = 0;
+    c.beforeNotice = 0;
+    c.leadNotice = null;
+    c.withQuarterly = 17;
+    c.beforeQuarterly = 17;
+    c.leadQuarterly = { median: 41.7, tail: 9.8, count: 17 };
     c.lag = { median: 0.1117, tail: 4, count: 17 };
-    expect(mediansSentence(latest)).toBe("Every held-out confirmation with an agency's statement came before that statement, and the median one by six weeks. The median confirmation came three hours after the catalogue published the first fresh piece.");
-    c.beforeStatement = 12;
-    c.lead = { median: -3, tail: -20, count: 17 };
-    expect(mediansSentence(latest)).toContain("12 of the 17 held-out confirmations with an agency's statement came before that statement, and the median one three days after it.");
-    c.lead = null;
+    expect(mediansSentence(latest)).toBe("No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them. Every held-out confirmation with an issue of NASA's quarterly news came before that issue's month, and the median one by six weeks. The median confirmation came three hours after the catalogue published the first fresh piece.");
+    c.withNotice = 5;
+    c.beforeNotice = 1;
+    c.leadNotice = { median: -1.2, tail: -3, count: 5 };
+    expect(mediansSentence(latest)).toContain("1 of the 5 held-out confirmations with an agency notice dated to the day came before that notice, and the median one 29 hours after it.");
+    c.beforeQuarterly = 12;
+    c.leadQuarterly = { median: -3, tail: -20, count: 17 };
+    expect(mediansSentence(latest)).toContain("12 of the 17 held-out confirmations with an issue of NASA's quarterly news came before that issue's month, and the median one three days after it.");
+    c.leadNotice = null;
+    c.withNotice = 0;
+    c.leadQuarterly = null;
+    c.withQuarterly = 0;
     c.lag = null;
     expect(mediansSentence(latest)).toBe("No held-out confirmation is timed yet.");
   });
