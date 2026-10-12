@@ -1,5 +1,5 @@
 import type { EventEstimate, Step, Verdict } from "./detector.ts";
-import type { SourceId, StatedPrecision } from "./truth.ts";
+import type { Precision, SourceId, StatedPrecision } from "./truth.ts";
 
 /**
  * The breakups fit to show, as the daily job publishes them under `v1/` on
@@ -54,6 +54,28 @@ export interface PublishedEvent {
 }
 
 /**
+ * The event as the ground-truth row the breakup landed on dates it, beside
+ * the detector's estimate: the row's instants, its precision, the source its
+ * date was resolved from and its id. The source is any of the truth's, GCAT
+ * and the catalogue too, so a reader that calls the time reported checks it
+ * against {@link PublishedReport}'s sources first.
+ */
+export interface PublishedRowEvent {
+  /** The instant the row states; null where it states none (a day, a month). */
+  at: string | null;
+  /** The earliest the event can have happened; null where the row gives no start. */
+  from: string | null;
+  /** The latest the event can have happened; null where the row gives no end. */
+  to: string | null;
+  /** How finely the row's source states the event (`second` to `none`). */
+  precision: Precision;
+  /** The source the row's date was resolved from. */
+  source: SourceId;
+  /** The row's id (`40258:2026-01-30`). */
+  row: string;
+}
+
+/**
  * A report that counts on the ground-truth row the breakup landed on: an
  * agency notice (`AGENCY_SOURCES`) dated no earlier than the event, or a
  * dated outside report (`news`, `analyst`). An undated statement, and any
@@ -70,7 +92,7 @@ export interface PublishedReport {
 
 /** One entry of the list, `v1/breakups.json`. */
 export interface PublishedBreakupEntry {
-  /** `<catalogue number>-<UTC day of the event estimate>` (`19460-2026-09-13`), or the day of {@link PublishedBreakupEntry.raisedAt} where the detector made no estimate. Fixed the first time the breakup is published. */
+  /** `<catalogue number>-<UTC day>` (`40258-2026-01-30`), fixed the first time the breakup is published. The day is the row's ({@link PublishedBreakupEntry.rowEvent}) where it is dated to the day or finer, else the detector's estimate's, else {@link PublishedBreakupEntry.raisedAt}'s. */
   id: string;
   state: PublishedState;
   /** When the detector first raised it: the earliest of its verdicts. */
@@ -80,6 +102,8 @@ export interface PublishedBreakupEntry {
   parent: PublishedParent;
   /** The latest verdict's estimate of the event; null where it made none. */
   event: PublishedEvent | null;
+  /** The event as the row it landed on dates it, as the truth stands at the last run that found the breakup; null where it landed on no row. */
+  rowEvent: PublishedRowEvent | null;
   /** The latest verdict's step; null for a confirmation from the pieces alone. */
   step: PublishedStep | null;
   /** The latest verdict's reasons, one per line. */

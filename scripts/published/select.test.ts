@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Breakup, BreakupKind, SourceId, Step, Verdict } from "../../src/index.ts";
+import type { Breakup, BreakupKind, Precision, SourceId, Step, Verdict } from "../../src/index.ts";
 import { selectPublished, type BodyOf } from "./select.ts";
 
 const HOUR = 3_600_000;
@@ -17,9 +17,15 @@ interface RowOptions {
   /** Each statement as `[source, statedOn day or null, url?]`. */
   statements?: [SourceId, string | null, string?][];
   id?: string;
+  /** How finely the row dates the event; `none` by default, so the id takes the detector's day. */
+  precision?: Precision;
+  /** The instant the row states, ISO; none by default. */
+  at?: string;
+  /** The source the row's date was resolved from; its first statement's by default. */
+  datedBy?: SourceId;
 }
 
-/** A ground-truth row with what the selection reads of it: its parent, kind, window (`from` to `to`, ISO), regime and dated statements. */
+/** A ground-truth row with what the selection reads of it: its parent, kind, window (`from` to `to`, ISO), its dating, regime and dated statements. */
 function row(catalogueNumber: number, from: string, to: string, options: RowOptions = {}): Breakup {
   const number = options.catalogueNumber === undefined ? catalogueNumber : options.catalogueNumber;
   const kind = options.kind ?? "breakup";
@@ -28,8 +34,9 @@ function row(catalogueNumber: number, from: string, to: string, options: RowOpti
     id: options.id ?? `${number}:${from.slice(0, 10)}`,
     parent: { catalogueNumber: number, designator: options.designator === undefined ? "2014-058A" : options.designator, name: options.name ?? `SAT ${catalogueNumber}`, class: "payload", owner: null, launchedOn: options.launchedOn === undefined ? "2014-09-27" : options.launchedOn },
     kind,
-    event: { stated: from, at: null, from, to, precision: "day" },
+    event: { stated: from, at: options.at ?? null, from, to, precision: options.precision ?? "none" },
     orbit: { altitudeKm: null, apogeeKm: null, perigeeKm: null, inclinationDeg: null, regime: options.regime ?? "GEO" },
+    resolvedFrom: { event: options.datedBy ?? options.statements?.[0]?.[0] ?? "catalogue" },
     scoreable,
     exemptReason: scoreable ? null : number === null ? "the parent has no catalogue number" : `a ${kind}`,
     statements: (options.statements ?? []).map(([source, on, url]) => ({ source, ref: `a ${source} statement`, statedOn: on === null ? null : { on, precision: "day", ref: "a ref" }, ...(url === undefined ? {} : { url }) })),
@@ -48,8 +55,11 @@ function verdict(number: number, state: Verdict["state"], raisedAt: string, over
 const noBodies: BodyOf = () => undefined;
 
 describe("a detector confirmation landing on a reported breakup", () => {
-  const luchRow = row(40258, "2026-01-30T00:00Z", "2026-01-31T00:00Z", {
+  const luchRow = row(40258, "2026-01-30T06:09Z", "2026-01-30T06:10Z", {
     name: "Luch (Olymp-K 1)",
+    precision: "minute",
+    at: "2026-01-30T06:09Z",
+    datedBy: "news",
     statements: [
       ["analyst", "2026-02-15", "https://planet4589.org/space/jsr/back/news.853.txt"],
       ["news", "2026-02-02", "https://universemagazine.com/en/russian-spy-satellite-destroyed-in-orbit/"],
@@ -59,15 +69,16 @@ describe("a detector confirmation landing on a reported breakup", () => {
   const luchStep = step("2026-01-30T08:18Z", "2026-02-01T08:12Z");
   const confirmed = verdict(40258, "confirmed", "2026-02-27T04:00Z", { step: luchStep, event: { at: at("2026-01-31T08:15Z"), from: at("2026-01-31T00:00Z"), to: at("2026-01-31T16:00Z") }, evidence: { bodyClass: 0, pieces: 7 }, bodies: [67001, 67002] });
 
-  test("is published confirmed, on the row, with its outside reports earliest first", () => {
+  test("is published confirmed, on the row, dated by the row, with its outside reports earliest first", () => {
     expect(selectPublished([confirmed], [luchRow], noBodies)).toEqual([
       {
-        id: "40258-2026-01-31",
+        id: "40258-2026-01-30",
         state: "confirmed",
         raisedAt: "2026-02-27T04:00:00.000Z",
         confirmedAt: "2026-02-27T04:00:00.000Z",
         parent: { catalogueNumber: 40258, designator: "2014-058A", name: "Luch (Olymp-K 1)", launchedOn: "2014-09-27" },
         event: { at: "2026-01-31T08:15:00.000Z", from: "2026-01-31T00:00:00.000Z", to: "2026-01-31T16:00:00.000Z" },
+        rowEvent: { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" },
         step: { beforeEpoch: "2026-01-30T08:18:00.000Z", afterEpoch: "2026-02-01T08:12:00.000Z", deltaKm: -1.5, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 4, z: 12 },
         reasons: ["confirmed at 2026-02-27T04:00Z"],
         reports: [
@@ -95,6 +106,32 @@ describe("a detector confirmation landing on a reported breakup", () => {
   });
 });
 
+describe("the id's day", () => {
+  const estimate = { at: at("2026-01-31T08:15Z"), from: at("2026-01-30T08:18Z"), to: at("2026-02-01T08:12Z") };
+  const confirmed = verdict(40258, "confirmed", "2026-02-27T04:00Z", { step: step("2026-01-30T08:18Z", "2026-02-01T08:12Z"), event: estimate });
+  const idOn = (options: RowOptions, from = "2026-01-30T00:00Z", to = "2026-01-31T00:00Z") => selectPublished([confirmed], [row(40258, from, to, { statements: [["news", "2026-02-02"]], ...options })], noBodies).map((b) => b.id);
+
+  test("is the row's where the row dates the event to the second, minute, hour or day: its instant, else its start", () => {
+    expect(idOn({ precision: "second", at: "2026-01-30T06:09:03Z" }, "2026-01-30T06:09:03Z", "2026-01-30T06:09:04Z")).toEqual(["40258-2026-01-30"]);
+    expect(idOn({ precision: "minute", at: "2026-01-30T06:09Z" }, "2026-01-30T06:09Z", "2026-01-30T06:10Z")).toEqual(["40258-2026-01-30"]);
+    expect(idOn({ precision: "hour", at: "2026-01-30T23:30Z" }, "2026-01-30T23:00Z", "2026-01-31T00:00Z")).toEqual(["40258-2026-01-30"]);
+    expect(idOn({ precision: "day" })).toEqual(["40258-2026-01-30"]);
+  });
+
+  test("is the row's whatever source dated it, GCAT's too, and the row's event names that source", () => {
+    const [breakup] = selectPublished([confirmed], [row(40258, "2026-01-30T02:10Z", "2026-01-30T02:10Z", { statements: [["gcat", null]], precision: "minute", at: "2026-01-30T02:10Z" })], noBodies);
+    expect(breakup!.id).toBe("40258-2026-01-30");
+    expect(breakup!.rowEvent).toEqual({ at: "2026-01-30T02:10:00.000Z", from: "2026-01-30T02:10:00.000Z", to: "2026-01-30T02:10:00.000Z", precision: "minute", source: "gcat", row: "40258:2026-01-30" });
+    expect(breakup!.reports).toEqual([]);
+  });
+
+  test("is the detector's where the row dates the event to the month, the year or not at all", () => {
+    expect(idOn({ precision: "month" }, "2026-01-01T00:00Z", "2026-02-01T00:00Z")).toEqual(["40258-2026-01-31"]);
+    expect(idOn({ precision: "year" }, "2026-01-01T00:00Z", "2027-01-01T00:00Z")).toEqual(["40258-2026-01-31"]);
+    expect(idOn({ precision: "none" })).toEqual(["40258-2026-01-31"]);
+  });
+});
+
 describe("an exempt confirmation", () => {
   test("under a crewed station's launch is left out", () => {
     const onStation = verdict(25544, "confirmed", "2026-03-01T00:00Z", { launch: "1998-067" });
@@ -113,14 +150,14 @@ describe("an exempt confirmation", () => {
     expect(selectPublished([confirmed], [release], noBodies)).toEqual([]);
   });
 
-  test("inside the window of a row naming the launch alone is published with no row and no reports, the parent from the catalogue (Intelsat 805)", () => {
+  test("inside the window of a row naming the launch alone is published with no row, no row's event and no reports, dated by the detector, the parent from the catalogue (Intelsat 805)", () => {
     const launchOnly = row(25371, "2026-06-19T23:35Z", "2026-08-18T23:35Z", { catalogueNumber: null, designator: "1998-037", name: "INTELSAT 805", id: "A:1998-037:2026-06-19", statements: [["catalogue", null]] });
     const intelsatStep = step("2026-07-29T20:14Z", "2026-07-30T13:06Z");
     const suspected = verdict(25371, "suspected", "2026-07-31T20:00Z", { launch: "1998-037", step: intelsatStep });
     const confirmed = verdict(25371, "confirmed", "2026-08-20T04:00Z", { launch: "1998-037", step: intelsatStep, event: { at: at("2026-07-30T04:50Z"), from: at("2026-07-30T00:00Z"), to: at("2026-07-30T12:00Z") } });
     const bodyOf: BodyOf = (number) => (number === 25371 ? { designator: "1998-037A", name: "INTELSAT 805 (IS-805)", launch: "1998-06-18" } : undefined);
     expect(selectPublished([suspected, confirmed], [launchOnly], bodyOf)).toMatchObject([
-      { id: "25371-2026-07-30", state: "confirmed", raisedAt: "2026-07-31T20:00:00.000Z", confirmedAt: "2026-08-20T04:00:00.000Z", parent: { catalogueNumber: 25371, designator: "1998-037A", name: "INTELSAT 805 (IS-805)", launchedOn: "1998-06-18" }, row: null, reports: [] },
+      { id: "25371-2026-07-30", state: "confirmed", raisedAt: "2026-07-31T20:00:00.000Z", confirmedAt: "2026-08-20T04:00:00.000Z", parent: { catalogueNumber: 25371, designator: "1998-037A", name: "INTELSAT 805 (IS-805)", launchedOn: "1998-06-18" }, rowEvent: null, row: null, reports: [] },
     ]);
   });
 });

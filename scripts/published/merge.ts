@@ -1,6 +1,6 @@
-import type { PublishedBreakup, PublishedStep, PublishedVerdict, Step, Verdict } from "../../src/index.ts";
+import type { Breakup, PublishedBreakup, PublishedStep, PublishedVerdict, Step, Verdict } from "../../src/index.ts";
 import { overlaps } from "../kpi/match.ts";
-import { byFirstRaised, isLetGo } from "./select.ts";
+import { byFirstRaised, isLetGo, publishedIdOf, rowEventOf } from "./select.ts";
 
 /** A published step back in milliseconds, as the detector's verdicts carry it. */
 const stepIn = (step: PublishedStep | null): Step | null => (step === null ? null : { ...step, beforeEpoch: Date.parse(step.beforeEpoch), afterEpoch: Date.parse(step.afterEpoch) });
@@ -47,8 +47,8 @@ const lastRaisedOf = (breakup: PublishedBreakup): number => Math.max(Date.parse(
  * One breakup from a published one and a later run's: the published id,
  * the earlier raising and confirmation, confirmed if either was, the
  * verdicts of both, the latest verdict's step, estimate, reasons and
- * evidence, and the later run's parent, row and reports (the truth as it
- * stands now).
+ * evidence, and the later run's parent, row, row's event and reports (the
+ * truth as it stands now).
  */
 function mergeOne(published: PublishedBreakup, later: PublishedBreakup): PublishedBreakup {
   const latest = lastRaisedOf(later) >= lastRaisedOf(published) ? later : published;
@@ -62,6 +62,7 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
     confirmedAt,
     parent: later.parent,
     event: latest.event,
+    rowEvent: later.rowEvent,
     step: latest.step,
     reasons: latest.reasons,
     reports: later.reports,
@@ -106,4 +107,22 @@ export function mergePublished(previous: readonly PublishedBreakup[], selected: 
     merged.push([...matches, breakup].reduce(mergeOne));
   }
   return [...merged, ...unmatched.filter((breakup) => stays(breakup, verdicts))].sort(byFirstRaised);
+}
+
+/**
+ * The breakups published before they carried `rowEvent`, re-keyed once:
+ * each such breakup (its files have no `rowEvent`) takes its row's event
+ * from the truth as it stands and the id `publishedIdOf` gives it now, as
+ * though first published today. Nothing read the files before then, so
+ * the ids were not yet anyone's (`docs/published.md`). A breakup that carries
+ * `rowEvent`, even null, is returned as it is, so once a run has written
+ * the files this changes nothing.
+ */
+export function rekeyedBeforeRowEvent(previous: readonly PublishedBreakup[], breakups: readonly Breakup[]): PublishedBreakup[] {
+  const byId = new Map(breakups.map((row) => [row.id, row]));
+  return previous.map((breakup) => {
+    if (breakup.rowEvent !== undefined) return breakup;
+    const rowEvent = rowEventOf(breakup.row === null ? null : (byId.get(breakup.row) ?? null));
+    return { ...breakup, id: publishedIdOf(breakup.parent.catalogueNumber, rowEvent, breakup.event, breakup.raisedAt), rowEvent };
+  });
 }

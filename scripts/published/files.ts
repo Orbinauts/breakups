@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { PUBLISHED_VERSION, type PublishedBreakup, type PublishedBreakupEntry, type PublishedBreakupFile, type PublishedBreakupsFile, type PublishedEvent, type PublishedReport, type PublishedStatusFile, type PublishedStep, type PublishedVerdict } from "../../src/index.ts";
+import { PUBLISHED_VERSION, type PublishedBreakup, type PublishedBreakupEntry, type PublishedBreakupFile, type PublishedBreakupsFile, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedStatusFile, type PublishedStep, type PublishedVerdict } from "../../src/index.ts";
 
 /**
  * The published files under a checkout of the `published` branch:
@@ -22,16 +22,17 @@ const statusPath = (dir: string): string => join(versionDir(dir), "status.json")
 
 const text = (value: unknown): string => JSON.stringify(value, null, 1) + "\n";
 
-/** A published step, estimate, report and verdict with their keys in the order the types declare them, whatever order they were built in. */
+/** A published step, estimate, row's event, report and verdict with their keys in the order the types declare them, whatever order they were built in. */
 const inKeyOrderStep = (s: PublishedStep | null): PublishedStep | null =>
   s === null ? null : { beforeEpoch: s.beforeEpoch, afterEpoch: s.afterEpoch, deltaKm: s.deltaKm, deltaPerigeeKm: s.deltaPerigeeKm, deltaApogeeKm: s.deltaApogeeKm, deltaInclinationDeg: s.deltaInclinationDeg, postSets: s.postSets, z: s.z };
 const inKeyOrderEvent = (e: PublishedEvent | null): PublishedEvent | null => (e === null ? null : { at: e.at, from: e.from, to: e.to });
+const inKeyOrderRowEvent = (e: PublishedRowEvent | null): PublishedRowEvent | null => (e === null ? null : { at: e.at, from: e.from, to: e.to, precision: e.precision, source: e.source, row: e.row });
 const inKeyOrderReport = (r: PublishedReport): PublishedReport => ({ source: r.source, date: r.date, precision: r.precision, url: r.url });
 const inKeyOrderVerdict = (v: PublishedVerdict): PublishedVerdict => ({ state: v.state, raisedAt: v.raisedAt, step: inKeyOrderStep(v.step), event: inKeyOrderEvent(v.event), evidence: v.evidence, reasons: v.reasons, bodies: v.bodies, candidates: v.candidates });
 
 function entryOf(b: PublishedBreakupEntry): PublishedBreakupEntry {
   const { catalogueNumber, designator, name, launchedOn } = b.parent;
-  return { id: b.id, state: b.state, raisedAt: b.raisedAt, confirmedAt: b.confirmedAt, parent: { catalogueNumber, designator, name, launchedOn }, event: inKeyOrderEvent(b.event), step: inKeyOrderStep(b.step), reasons: b.reasons, reports: b.reports.map(inKeyOrderReport) };
+  return { id: b.id, state: b.state, raisedAt: b.raisedAt, confirmedAt: b.confirmedAt, parent: { catalogueNumber, designator, name, launchedOn }, event: inKeyOrderEvent(b.event), rowEvent: inKeyOrderRowEvent(b.rowEvent), step: inKeyOrderStep(b.step), reasons: b.reasons, reports: b.reports.map(inKeyOrderReport) };
 }
 
 function readVersioned<T extends { version: number }>(path: string): T {

@@ -30,17 +30,18 @@ Every instant is an ISO string in UTC (`2026-09-17T00:00:00.000Z`) and every day
 
 | Field | What it holds |
 | --- | --- |
-| `id` | `<catalogue number>-<UTC day of the event estimate>`, such as `19460-2026-09-13`, or the day of `raisedAt` where the detector made no estimate. Fixed the first time the breakup is published: a later estimate that moves the day keeps the id. |
+| `id` | `<catalogue number>-<UTC day>`, such as `40258-2026-01-30`. The day is the one the best dating known at first publication gives: the row's (`rowEvent`) where the row dates the event to the second, minute, hour or day (its instant, else its start); otherwise the detector's estimate's (`event`); otherwise `raisedAt`'s. Fixed the first time the breakup is published: a later estimate, or a later and finer row, that moves the day keeps the id. Build addresses from it, never from `event`, which can move. |
 | `state` | `confirmed` or `suspected` (see below). |
 | `raisedAt` | When the detector first raised it: the earliest of its verdicts. |
 | `confirmedAt` | The earlier of the detector's first confirmation and the first agency notice's day (at midnight UTC); `null` while suspected. |
 | `parent` | The object that broke up: `catalogueNumber`, `designator`, `name` and `launchedOn`, from the ground-truth row it landed on, what the row leaves out filled from the satellite catalogue. |
-| `event` | The detector's estimate of when it happened: `at`, and the window `from` to `to`; `null` where it made none. |
+| `event` | The detector's estimate of when it happened: `at`, and the window `from` to `to`; `null` where it made none. A geosynchronous object's sets are days apart, so its estimate is coarse: compare `rowEvent`. |
+| `rowEvent` | The event as the ground-truth row it landed on dates it: `at` (the instant the row states, or `null`), `from` and `to` (the window, either `null` where the row gives no bound), `precision` (`second`, `minute`, `hour`, `day`, `month`, `year` or `none`), `source` (the source the row's date was resolved from) and `row` (the row's id); `null` where it landed on no row. It follows the truth as it stands at the last run that found the breakup. The source may be GCAT or the catalogue, which never count as reports, so read it before calling the time reported: for Luch (Olymp-K 1) it is s2a systems' minute, quoted by the news (`news`), for DMSP F-14 GCAT's (`gcat`). |
 | `step` | The change in the parent's orbit the detector measured (its epochs before and after, the change in semi-major axis, perigee, apogee and inclination, the sets after it and its z-score); `null` for a breakup confirmed from its fragments alone. |
 | `reasons` | The detector's reasons, one sentence per line. |
 | `reports` | The reports that count (see below), earliest first, each with `source`, `date`, `precision` (how much of the date the source gives) and `url` (`null` where the report has no page). |
 
-**`v1/breakups/<id>.json`** (`PublishedBreakupFile`): one breakup, with `version`, every field of its entry, and its whole evidence: `evidence` (the detector's numbers, by name), `bodies` (the catalogue numbers of the pieces it rests on), `candidates` (the objects the pieces cannot tell apart), `row` (the id of the ground-truth row it landed on, such as `40258:2026-01-30`, or `null`) and `verdicts`, every suspected and confirmed verdict merged into it, in the order raised. `evidence`, `bodies`, `candidates`, `step`, `event` and `reasons` are the latest verdict's.
+**`v1/breakups/<id>.json`** (`PublishedBreakupFile`): one breakup, with `version`, every field of its entry, and its whole evidence: `evidence` (the detector's numbers, by name), `bodies` (the catalogue numbers of the pieces it rests on), `candidates` (the objects the pieces cannot tell apart), `row` (the id of the ground-truth row it landed on, such as `40258:2026-01-30`, or `null`; `rowEvent.row` repeats it in the list) and `verdicts`, every suspected and confirmed verdict merged into it, in the order raised. `evidence`, `bodies`, `candidates`, `step`, `event` and `reasons` are the latest verdict's.
 
 **`v1/status.json`** (`PublishedStatusFile`): `version`, `ranAt` (when the job last ran), `setsThrough` (the last day of element sets the replay read), `detector` (the frozen detector's name, `confirmed-v10`) and `truthSha256` (the sha256 of the ground truth's file the verdicts were landed on). A reader can tell from `ranAt` whether the job has stopped running, and from `truthSha256` whether the truth changed since it last read.
 
@@ -61,6 +62,8 @@ The verdicts are the frozen detector's, the one the [live test](../README.md#liv
 ## How it is kept
 
 The files live on the orphan branch [`published`](https://github.com/Orbinauts/breakups/tree/published), under `v1/`. It is never rewritten: its history records what was public when.
+
+The ids were re-keyed once, on the first run after `rowEvent` was added (issue #11), before anything read the files: each breakup took the id the rule above gives it with the truth of that day, so Luch (Olymp-K 1) moved from `40258-2026-01-31` to `40258-2026-01-30` and DMSP F-14 from `24753-2024-10-07` to `24753-2024-12-19`, and the files of the old ids were removed. The run's commit on `published` names each move.
 
 The list starts with 2025. The frozen tag `frozen-confirmed-v10` replayed 2025 once, from the states at the end of 2024, under the same rules, and that seed was the branch's first commit: DMSP F-14 (24753), confirmed, with no report. Years before 2025 are not published; the [results page](results.md) scores them instead.
 

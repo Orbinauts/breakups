@@ -80,14 +80,14 @@ const remoteLog = (): string[] => git(remote, "log", "--format=%s", "published")
 describe("the daily publishing", () => {
   test("publishes the replay of the run just logged, commits v1/ to the published branch and pushes it", () => {
     const { summary, commit } = publishDaily(places, at("2026-10-11T03:12:45Z"), { runUrl: "https://github.com/Orbinauts/breakups/actions/runs/7" });
-    expect(readPublished(places.published).map((b) => b.id)).toEqual(["40258-2026-02-27"]);
+    expect(readPublished(places.published).map((b) => b.id)).toEqual(["40258-2026-01-30"]);
     expect(summary).toMatch(/^published 1 breakup \(1 confirmed, 0 suspected\): 1 new, 0 left; sets through 2026-10-10/);
     expect(git(remote, "rev-parse", "published")).toBe(commit);
     expect(remoteLog()).toEqual(["Published breakups of 2026-10-11", "The seed"]);
     const body = git(remote, "log", "-1", "--format=%b", "published");
     expect(body).toContain(summary);
     expect(body).toContain("https://github.com/Orbinauts/breakups/actions/runs/7");
-    expect(git(places.published, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["v1/breakups.json", "v1/breakups/40258-2026-02-27.json", "v1/status.json"]);
+    expect(git(places.published, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["v1/breakups.json", "v1/breakups/40258-2026-01-30.json", "v1/status.json"]);
     expect(git(places.published, "status", "--porcelain")).toBe("");
   });
 

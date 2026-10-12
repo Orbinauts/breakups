@@ -12,6 +12,7 @@ const usa32: PublishedBreakup = {
   confirmedAt: "2026-09-16T00:00:00.000Z",
   parent: { catalogueNumber: 19460, designator: "1988-040A", name: "USA 32", launchedOn: "1988-05-15" },
   event: { at: "2026-09-13T06:00:00.000Z", from: "2026-09-13T00:00:00.000Z", to: "2026-09-13T12:00:00.000Z" },
+  rowEvent: { at: "2026-09-13T21:13:00.000Z", from: "2026-09-13T21:03:00.000Z", to: "2026-09-13T21:23:00.000Z", precision: "minute", source: "s4s-notice", row: "19460:2026-09-13" },
   step: { beforeEpoch: "2026-09-12T00:00:00.000Z", afterEpoch: "2026-09-14T00:00:00.000Z", deltaKm: -1.5, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 4, z: 12 },
   reasons: ["a step that persists"],
   reports: [{ source: "s4s-notice", date: "2026-09-16", precision: "day", url: null }],
@@ -21,7 +22,7 @@ const usa32: PublishedBreakup = {
   row: "19460:2026-09-13",
   verdicts: [{ state: "confirmed", raisedAt: "2026-09-17T04:00:00.000Z", step: null, event: null, evidence: { bodyClass: 0, pieces: 3 }, reasons: ["a step that persists"], bodies: [70001], candidates: [] }],
 };
-const meteor: PublishedBreakup = { ...usa32, id: "12456-2026-10-05", state: "suspected", confirmedAt: null, parent: { catalogueNumber: 12456, designator: "1981-027A", name: "METEOR 2-7", launchedOn: "1981-03-14" }, row: null, reports: [] };
+const meteor: PublishedBreakup = { ...usa32, id: "12456-2026-10-05", state: "suspected", confirmedAt: null, parent: { catalogueNumber: 12456, designator: "1981-027A", name: "METEOR 2-7", launchedOn: "1981-03-14" }, rowEvent: null, row: null, reports: [] };
 const status = { ranAt: "2026-10-11T03:12:45.000Z", setsThrough: "2026-10-10", detector: "confirmed-v10", truthSha256: "ab".repeat(32) };
 
 let dir: string;

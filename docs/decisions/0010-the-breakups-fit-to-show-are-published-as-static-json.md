@@ -61,8 +61,20 @@ is new. Issue #8 is the specification.
   do not overlap). `raisedAt` is the earliest verdict's, `confirmedAt` the
   earlier of the first confirmation and the first agency notice, the
   step, estimate, reasons and evidence the latest verdict's, and the `id`
-  `<catalogue number>-<UTC day of the event estimate>`, fixed the first
-  time it is published.
+  `<catalogue number>-<UTC day>`, fixed the first time it is published.
+- **The row dates the breakup beside the detector** (issue #11). Each
+  breakup carries `rowEvent`, the event as its landed row dates it (the
+  row's instants, precision, the source its date was resolved from, and
+  its id), or null where it landed on no row; `event` stays the
+  detector's estimate. The id's day is the row's where the row dates the
+  event to the second, minute, hour or day, else the estimate's, else the
+  first raising's. A row is often finer than the detector: Luch
+  (Olymp-K 1)'s is s2a systems' minute, 2026-01-30T06:09Z, two hours
+  before the detector's window opens, since a geosynchronous object's
+  sets are days apart. Any source may date the row, GCAT and the
+  catalogue too, though neither counts as a report: the precision keeps
+  out their vague dates, and `source` lets a reader tell a report from a
+  catalogue's dating.
 - **The list grows from 2025.** Each run merges into the list already
   published, so it does not empty on 1 January: a confirmed breakup stays
   for good, a suspected one leaves when its step's latest verdict expires
@@ -121,7 +133,9 @@ is new. Issue #8 is the specification.
 - A suspected breakup is rare until the outside reports in the truth are
   kept current (issue #9).
 - A change to the files' shape that breaks a reader is a new version, and
-  the package's types say which.
+  the package's types say which. Adding `rowEvent` broke none, and the
+  ids were re-keyed once under the new rule, by the first run that read
+  files without it, before any reader existed; the version stayed 1.
 
 ## As built
 
@@ -130,8 +144,10 @@ the year file `kpi/years/2025.json.gz` (detector `confirmed-v10`, carried
 from the end-of-2024 states), landed on the truth with the catalogue's
 identities from the Archive's 2025 body table. It publishes one breakup,
 DMSP F-14 (24753), confirmed from its pieces with no report, as
-`24753-2024-10-07`. On the 2026 replay of the same detector the selection
-adds Luch/Olymp-K 1 (40258, with a news and an analyst report), Intelsat
+`24753-2024-10-07`, re-keyed `24753-2024-12-19` once `rowEvent` dated it
+by GCAT's row. On the 2026 replay of the same detector the selection
+adds Luch/Olymp-K 1 (40258, with a news and an analyst report; first
+`40258-2026-01-31`, re-keyed `40258-2026-01-30`), Intelsat
 805 (25371, no report), Yaogan-50 02 (68196) and USA 32 (19460, its
 suspected and confirmed verdicts one breakup, confirmed by the Space
 Force notice), all confirmed, and Meteor 2-7 (12456) suspected on an

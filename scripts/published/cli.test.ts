@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,7 +47,7 @@ describe("a publishing run", () => {
     const summary = publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
     const breakups = readPublished(out);
     expect(breakups.map((b) => [b.id, b.state, b.row, b.parent.name])).toEqual([
-      ["40258-2026-02-27", "confirmed", "40258:2026-01-30", "Luch (Olymp-K 1)"],
+      ["40258-2026-01-30", "confirmed", "40258:2026-01-30", "Luch (Olymp-K 1)"],
       ["99001-2026-06-01", "confirmed", null, "TESTSAT 1"],
     ]);
     const sha256 = createHash("sha256").update(readFileSync(TRUTH)).digest("hex");
@@ -58,8 +58,35 @@ describe("a publishing run", () => {
   test("merges into what is already published: a confirmed breakup the run no longer finds stays", () => {
     publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
     const summary = publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-12T03:12:45Z") });
-    expect(readPublished(out).map((b) => b.id)).toEqual(["40258-2026-02-27", "99001-2026-06-01"]);
+    expect(readPublished(out).map((b) => b.id)).toEqual(["40258-2026-01-30", "99001-2026-06-01"]);
     expect(summary).toMatch(/^published 2 breakups \(2 confirmed, 0 suspected\): 0 new, 0 left;/);
+  });
+
+  test("re-keys once the files written before the row's event, removing the files of the old ids, and says so", () => {
+    publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
+    // The files as they stood before rowEvent: Luch under the detector's day (here its raising's, as it made no estimate), and no rowEvent.
+    const dir = join(out, "v1");
+    const list = JSON.parse(readFileSync(join(dir, "breakups.json"), "utf8")) as { breakups: Record<string, unknown>[] };
+    for (const entry of list.breakups) {
+      const id = entry.id as string;
+      const old = id === "40258-2026-01-30" ? "40258-2026-02-27" : id;
+      const file = JSON.parse(readFileSync(join(dir, "breakups", `${id}.json`), "utf8")) as Record<string, unknown>;
+      delete file.rowEvent;
+      delete entry.rowEvent;
+      rmSync(join(dir, "breakups", `${id}.json`));
+      writeFileSync(join(dir, "breakups", `${old}.json`), JSON.stringify({ ...file, id: old }));
+      entry.id = old;
+    }
+    writeFileSync(join(dir, "breakups.json"), JSON.stringify(list));
+
+    const summary = publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-12T03:12:45Z") });
+    expect(summary).toMatch(/: 0 new, 0 left \(re-keyed 40258-2026-02-27 to 40258-2026-01-30\); sets through/);
+    expect(readdirSync(join(dir, "breakups")).sort()).toEqual(["40258-2026-01-30.json", "99001-2026-06-01.json"]);
+    expect(readPublished(out).map((b) => [b.id, b.rowEvent?.source ?? null])).toEqual([
+      ["40258-2026-01-30", "news"],
+      ["99001-2026-06-01", null],
+    ]);
+    expect(publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-13T03:12:45Z") })).toMatch(/: 0 new, 0 left; sets through/);
   });
 
   test("refuses year files from two detectors, or a replay that did not carry the states from the year before", () => {

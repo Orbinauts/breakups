@@ -90,6 +90,7 @@ export {
   type PublishedEvent,
   type PublishedParent,
   type PublishedReport,
+  type PublishedRowEvent,
   type PublishedState,
   type PublishedStatusFile,
   type PublishedStep,

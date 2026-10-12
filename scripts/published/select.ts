@@ -1,4 +1,4 @@
-import { isAgencySource, type Breakup, type EventEstimate, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { isAgencySource, type Breakup, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
 import { brackets, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
 
@@ -26,6 +26,28 @@ const iso = (ms: number): string => new Date(ms).toISOString();
 const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: iso(step.beforeEpoch), afterEpoch: iso(step.afterEpoch) });
 const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: iso(event.at), from: iso(event.from), to: iso(event.to) });
 const canLand = (row: Breakup): boolean => row.kind === "breakup" || row.kind === "anomalous";
+
+/** The precisions fine enough to name the day of a row's event. */
+const DAY_OR_FINER: readonly Precision[] = ["second", "minute", "hour", "day"];
+
+const isoOrNull = (instant: string | null): string | null => (instant === null ? null : new Date(instant).toISOString());
+
+/** The event as a landed row dates it, its instants as ISO strings; null for no row. */
+export function rowEventOf(row: Breakup | null): PublishedRowEvent | null {
+  if (row === null) return null;
+  return { at: isoOrNull(row.event.at), from: isoOrNull(row.event.from), to: isoOrNull(row.event.to), precision: row.event.precision, source: row.resolvedFrom.event, row: row.id };
+}
+
+/**
+ * A breakup's id: its object and a UTC day, the row's where the row dates
+ * the event to the day or finer (its instant, else its start), else the
+ * detector's estimate's, else the day it was first raised. The caller keeps
+ * an id once published.
+ */
+export function publishedIdOf(number: number, rowEvent: PublishedRowEvent | null, event: PublishedEvent | null, raisedAt: string): string {
+  const fine = rowEvent !== null && DAY_OR_FINER.includes(rowEvent.precision) ? (rowEvent.at ?? rowEvent.from) : null;
+  return `${number}-${(fine ?? event?.at ?? raisedAt).slice(0, 10)}`;
+}
 
 /** The day an event starts on, which an agency notice must not precede. */
 const eventDayOf = (row: Breakup): string => (row.event.from ?? row.event.to).slice(0, 10);
@@ -136,14 +158,17 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
-  const raisedAt = cluster[0]!.verdict.raisedAt;
+  const raisedAt = iso(cluster[0]!.verdict.raisedAt);
+  const event = publishedEventOf(latest.event);
+  const rowEvent = rowEventOf(row);
   return {
-    id: `${number}-${iso(latest.event?.at ?? raisedAt).slice(0, 10)}`,
+    id: publishedIdOf(number, rowEvent, event, raisedAt),
     state,
-    raisedAt: iso(raisedAt),
+    raisedAt,
     confirmedAt,
     parent: { catalogueNumber: number, designator: row?.parent.designator ?? body?.designator ?? null, name: row?.parent.name ?? body?.name ?? null, launchedOn: row?.parent.launchedOn ?? body?.launch ?? null },
-    event: publishedEventOf(latest.event),
+    event,
+    rowEvent,
     step: publishedStepOf(latest.step),
     reasons: latest.reasons,
     reports,
@@ -174,8 +199,9 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * expired or dismissed it. A confirmation exempt as a release on purpose
  * is left out on its own; the breakup's other verdicts are published if
  * they qualify without it. GCAT, the catalogue and undated statements never
- * count. The id is the object and the day of the latest verdict's estimate
- * (of the first raising where it made none); merging with what is already
+ * count. The id is the object and the day of the row's event where the row
+ * dates it to the day or finer, else of the latest verdict's estimate, else
+ * of the first raising (`publishedIdOf`); merging with what is already
  * published, which may fix an earlier id, is the caller's.
  */
 export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf): PublishedBreakup[] {

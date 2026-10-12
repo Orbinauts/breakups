@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { PublishedBreakup, PublishedStep, PublishedVerdict, Verdict } from "../../src/index.ts";
-import { mergePublished } from "./merge.ts";
+import type { Breakup, Precision, PublishedBreakup, PublishedRowEvent, PublishedStep, PublishedVerdict, SourceId, Verdict } from "../../src/index.ts";
+import { mergePublished, rekeyedBeforeRowEvent } from "./merge.ts";
 
 const at = (iso: string): number => Date.parse(iso);
 
@@ -10,6 +10,7 @@ function step(before: string, after: string): PublishedStep {
 
 function published(number: number, state: PublishedBreakup["state"], raisedAt: string, s: PublishedStep | null, overrides: Partial<PublishedBreakup> = {}): PublishedBreakup {
   const verdict: PublishedVerdict = { state, raisedAt, step: s, event: null, evidence: { bodyClass: 0 }, reasons: [`${state} at ${raisedAt}`], bodies: [], candidates: [] };
+  const row = overrides.row === undefined ? `${number}:${raisedAt.slice(0, 10)}` : overrides.row;
   return {
     id: `${number}-${raisedAt.slice(0, 10)}`,
     state,
@@ -17,13 +18,14 @@ function published(number: number, state: PublishedBreakup["state"], raisedAt: s
     confirmedAt: state === "confirmed" ? raisedAt : null,
     parent: { catalogueNumber: number, designator: "1988-018A", name: `SAT ${number}`, launchedOn: "1988-03-08" },
     event: null,
+    rowEvent: row === null ? null : { at: null, from: `${raisedAt.slice(0, 10)}T00:00:00.000Z`, to: null, precision: "month", source: "gcat", row },
     step: s,
     reasons: verdict.reasons,
     reports: state === "suspected" ? [{ source: "analyst", date: raisedAt.slice(0, 10), precision: "day", url: null }] : [],
     evidence: verdict.evidence,
     bodies: [],
     candidates: [],
-    row: `${number}:${raisedAt.slice(0, 10)}`,
+    row,
     verdicts: [verdict],
     ...overrides,
   };
@@ -96,6 +98,20 @@ describe("a run merged into what is already published", () => {
     });
   });
 
+  test("keeps the id fixed on first publish when a later, finer row dates the breakup to another day, and takes the row's event from the run", () => {
+    const luchStep = step("2026-01-30T08:18:00.000Z", "2026-02-01T08:12:00.000Z");
+    const estimate = { at: "2026-01-31T08:15:00.000Z", from: "2026-01-30T08:18:00.000Z", to: "2026-02-01T08:12:00.000Z" };
+    const first = published(40258, "confirmed", "2026-02-27T04:00:00.000Z", luchStep, { id: "40258-2026-01-31", event: estimate, row: null });
+    const rowEvent: PublishedRowEvent = { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" };
+    const later = published(40258, "confirmed", "2026-02-27T04:00:00.000Z", luchStep, { id: "40258-2026-01-30", event: estimate, row: "40258:2026-01-30", rowEvent });
+    expect(first.rowEvent).toBeNull();
+    const [merged, ...rest] = mergePublished([first], [later], []);
+    expect(rest).toEqual([]);
+    expect(merged!.id).toBe("40258-2026-01-31");
+    expect(merged!.row).toBe("40258:2026-01-30");
+    expect(merged!.rowEvent).toEqual(rowEvent);
+  });
+
   test("keeps the earlier confirmation, and a confirmed breakup stays confirmed when the run finds it suspected", () => {
     const s = step("2026-09-12T00:00:00.000Z", "2026-09-14T00:00:00.000Z");
     const confirmed = published(19460, "confirmed", "2026-09-17T04:00:00.000Z", s);
@@ -147,5 +163,52 @@ describe("a run merged into what is already published", () => {
     const again = { ...fromPieces, verdicts: [...fromPieces.verdicts, { ...fromPieces.verdicts[0]!, raisedAt: "2026-05-02T04:00:00.000Z" }] };
     const other = published(25371, "confirmed", "2026-08-01T04:00:00.000Z", null, { row: null });
     expect(mergePublished([fromPieces], [again, other], []).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2], [other.id, 1]]);
+  });
+});
+
+/** A ground-truth row with what the re-key reads of it: its id and its dating. */
+function truthRow(id: string, precision: Precision, at: string | null, from: string | null, to: string | null, source: SourceId): Breakup {
+  return { id, event: { stated: id, at, from, to, precision }, resolvedFrom: { event: source } } as unknown as Breakup;
+}
+
+/** A breakup as the files written before `rowEvent` hold it. */
+function beforeRowEvent(breakup: PublishedBreakup): PublishedBreakup {
+  const { rowEvent, ...rest } = breakup;
+  void rowEvent;
+  return rest as PublishedBreakup;
+}
+
+describe("the breakups published before they carried the row's event", () => {
+  const truth = [
+    truthRow("40258:2026-01-30", "minute", "2026-01-30T06:09Z", "2026-01-30T06:09Z", "2026-01-30T06:10Z", "news"),
+    truthRow("24753:2024-12-19", "minute", "2024-12-19T02:10Z", "2024-12-19T02:10Z", "2024-12-19T02:10Z", "gcat"),
+    truthRow("68196:2026-09-04", "none", null, null, "2026-09-04T00:00Z", "catalogue"),
+  ];
+  const estimate = (day: string) => ({ at: `${day}T08:15:00.000Z`, from: `${day}T00:00:00.000Z`, to: `${day}T16:00:00.000Z` });
+  const luch = beforeRowEvent(published(40258, "confirmed", "2026-02-27T04:00:00.000Z", null, { id: "40258-2026-01-31", event: estimate("2026-01-31"), row: "40258:2026-01-30" }));
+  const dmsp = beforeRowEvent(published(24753, "confirmed", "2025-02-13T20:00:00.000Z", null, { id: "24753-2024-10-07", event: estimate("2024-10-07"), row: "24753:2024-12-19" }));
+  const yaogan = beforeRowEvent(published(68196, "confirmed", "2026-09-03T20:00:00.000Z", null, { id: "68196-2026-07-24", event: estimate("2026-07-24"), row: "68196:2026-09-04" }));
+  const intelsat = beforeRowEvent(published(25371, "confirmed", "2026-07-31T20:00:00.000Z", null, { id: "25371-2026-07-30", event: estimate("2026-07-30"), row: null }));
+
+  test("are re-keyed once, as though first published today: the row's day where it dates the event to the day or finer, whatever source dated it", () => {
+    const [newLuch, newDmsp] = rekeyedBeforeRowEvent([luch, dmsp], truth);
+    expect(newLuch).toEqual({ ...luch, id: "40258-2026-01-30", rowEvent: { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" } });
+    expect(newDmsp!.id).toBe("24753-2024-12-19");
+    expect(newDmsp!.rowEvent).toMatchObject({ precision: "minute", source: "gcat" });
+  });
+
+  test("keep the detector's day where their row is dated coarser, is gone from the truth, or there is none", () => {
+    const gone = beforeRowEvent(published(40258, "confirmed", "2026-02-27T04:00:00.000Z", null, { id: "40258-2026-01-31", event: estimate("2026-01-31"), row: "40258:2026-01-29" }));
+    expect(rekeyedBeforeRowEvent([yaogan, intelsat, gone], truth).map((b) => [b.id, b.rowEvent?.precision ?? null])).toEqual([
+      ["68196-2026-07-24", "none"],
+      ["25371-2026-07-30", null],
+      ["40258-2026-01-31", null],
+    ]);
+  });
+
+  test("are left alone once they carry the row's event, even a null one", () => {
+    const carried = published(40258, "confirmed", "2026-02-27T04:00:00.000Z", null, { id: "40258-2026-01-31", event: estimate("2026-01-31"), row: "40258:2026-01-30", rowEvent: null });
+    const rekeyed = rekeyedBeforeRowEvent([luch], truth);
+    expect(rekeyedBeforeRowEvent([carried, ...rekeyed], truth)).toEqual([carried, ...rekeyed]);
   });
 });
