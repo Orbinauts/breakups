@@ -5,6 +5,7 @@ import type { DetectorParameters } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { newLedger, type StepLedger } from "./siblings.ts";
 import { launchOf, type BodyClass } from "./truth.ts";
+import { DAY_MS, wrapDegrees } from "./units.ts";
 
 /**
  * The per-launch channel: what the catalogue says about a launch by the
@@ -44,8 +45,6 @@ import { launchOf, type BodyClass } from "./truth.ts";
  * each; their numbers are reused, so neither the mark nor the first set
  * says anything of them, and they are listed, never confirming.
  */
-
-const DAY_MS = 86_400_000;
 
 /** The first analyst range and the second, by catalogue number. Physical: the catalogue's own conventions. */
 export const ANALYST_FLOOR = 80_000;
@@ -250,8 +249,6 @@ export interface PlaneOrbit {
 }
 
 export const planeOrbitOf = (body: BodyRecord): PlaneOrbit => ({ epochMs: body.firstEpoch, aKm: body.aKm, eccentricity: body.eccentricity, inclinationDeg: body.inclinationDeg, raanDeg: body.raanDeg, meanMotion: body.meanMotion });
-
-const wrapDegrees = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
 
 export interface PlaneDistance {
   /** The inclination difference, in degrees. */

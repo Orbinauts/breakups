@@ -1,5 +1,7 @@
 import type { BodyClass } from "./truth.ts";
+import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The launch-mates. A constellation raises its satellites in campaigns:
@@ -24,7 +26,6 @@ import type { DetectorParameters } from "./params.ts";
  * and bounded in size; a few thousand steps at most.
  */
 
-const DAY_MS = 86_400_000;
 /** How long a step stays in the ledger, in days: twice the sibling window, so a window read back from any instant is complete. Policy. */
 export const LEDGER_DAYS = 28;
 /** The most steps the ledger keeps, beyond which the oldest go: a busy month of the catalogue opens a few thousand persistent steps. Policy. */
@@ -125,9 +126,7 @@ export function matesOf(bodies: readonly { number: number; bodyClass: BodyClass 
     if (aKm !== null && Number.isFinite(aKm)) altitudes.push(aKm);
   }
   if (altitudes.length === 0) return { count: 0, medianAKm: Number.NaN };
-  const sorted = altitudes.sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return { count: sorted.length, medianAKm: sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2 };
+  return { count: altitudes.length, medianAKm: median(altitudes) };
 }
 
 /** Whether a step carries the object towards where its mates fly: the post-step level nearer their median altitude than the pre-step level was, and by more than the tolerance in kilometres, so a step along a level the mates already share is not read as a climb towards them. */

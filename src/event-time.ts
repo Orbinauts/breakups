@@ -1,6 +1,8 @@
 import { WGS84_E2, WGS84_EQUATORIAL_KM, propagate, readElements, type Elements } from "@orbinauts/engine";
 import type { ElementSet } from "./elements.ts";
+import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * When the event happened, from the two sets either side of the step.
@@ -35,7 +37,6 @@ import type { DetectorParameters } from "./params.ts";
  * number of propagations, which the result records.
  */
 
-const DAY_MS = 86_400_000;
 /** The Earth's rotation rate, in radians a second: added back to an Earth-fixed velocity for the inertial one. Physical. */
 export const EARTH_ROTATION_RAD_PER_S = 7.292115e-5;
 
@@ -324,21 +325,18 @@ function quantileOf(sorted: readonly number[], share: number): number {
   return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(share * sorted.length) - 1))]!;
 }
 
+/** The median of the values, NaN for none. */
+const middle = (values: number[]): number => (values.length === 0 ? Number.NaN : median(values));
+
 /** The common-origin test's reading of the pieces' closest approaches (`PiecesOrigin`). */
 export function originOf(crossings: readonly PieceCrossing[]): PiecesOrigin {
   const timed = crossings.filter((c): c is PieceCrossing & { at: number } => c.at !== null);
-  const ats = timed.map((c) => c.at).sort((a, b) => a - b);
-  const medianAt = ats.length === 0 ? Number.NaN : ats.length % 2 === 1 ? ats[(ats.length - 1) / 2]! : (ats[ats.length / 2 - 1]! + ats[ats.length / 2]!) / 2;
+  const medianAt = middle(timed.map((c) => c.at));
   const deviations = crossings.map((c) => (c.at === null ? Number.POSITIVE_INFINITY : Math.abs(c.at - medianAt) / 3_600_000)).sort((a, b) => a - b);
   const timedDeviations = timed.map((c) => Math.abs(c.at - medianAt) / 3_600_000).sort((a, b) => a - b);
   const phases = crossings.map((c) => (c.at === null ? Number.POSITIVE_INFINITY : Number.isFinite(c.lapMs) ? Math.abs(c.at - medianAt) / c.lapMs : 0)).sort((a, b) => a - b);
   const few = timed.length < 2;
   const spreadHours = few ? Number.NaN : MAD_TO_SIGMA * quantileOf(timedDeviations, 0.5);
-  const middle = (values: number[]): number => {
-    if (values.length === 0) return Number.NaN;
-    const sorted = [...values].sort((a, b) => a - b);
-    return sorted.length % 2 === 1 ? sorted[(sorted.length - 1) / 2]! : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2;
-  };
   return {
     tried: crossings.length,
     timed: timed.length,

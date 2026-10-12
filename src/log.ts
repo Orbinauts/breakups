@@ -307,7 +307,7 @@ export const SIGNALS = {
 export type SignalName = keyof typeof SIGNALS;
 
 /** Four significant digits; NaN and infinities become null-like NaN, which JSON writes as null. */
-export function round5(value: number): number {
+export function round4(value: number): number {
   if (!Number.isFinite(value) || value === 0) return value;
   const digits = 4 - Math.ceil(Math.log10(Math.abs(value)));
   const factor = 10 ** digits;
@@ -326,7 +326,7 @@ export function logRow(at: number, number: number, signals: Partial<Record<Signa
   const rounded: Record<string, number> = {};
   for (const [name, value] of Object.entries(signals)) {
     if (value === undefined) continue;
-    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") || name.startsWith("candidate") || WHOLE.has(name) ? Math.round(value) : round5(value);
+    rounded[name] = name === "beforeEpoch" || name === "afterEpoch" || name === "launch" || name.endsWith("At") || name.startsWith("candidate") || WHOLE.has(name) ? Math.round(value) : round4(value);
   }
   return { at, number, signals: rounded };
 }

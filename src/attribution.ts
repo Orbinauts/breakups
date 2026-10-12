@@ -2,10 +2,11 @@ import type { Verdict } from "./detector.ts";
 import { overridesHistory, passesOrigin, type PiecesEventTime } from "./event-time.ts";
 import { attributionSignals, judgePieces, launchRefusals, originSignals, passesSmallBatch, sameInstant, smallBatchReason, timingReason, type CloudMemory, type LaunchPassView } from "./confirmation.ts";
 import { isFragmentClass, noteCloud, planeOrbitOf, planeTestDistance, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
-import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, REFUSALS, logRow, round5, type SignalName } from "./log.ts";
+import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, REFUSALS, logRow, round4, type SignalName } from "./log.ts";
 import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import { BODY_CLASSES } from "./truth.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The Confirmed channel's attribution: a launch's fresh pieces in the
@@ -16,8 +17,6 @@ import { BODY_CLASSES } from "./truth.ts";
  * last saw it, whether a body made a persistent step in a span, and
  * whether a payload was operating at the run's instant.
  */
-
-const DAY_MS = 86_400_000;
 
 /** What the attribution reads of the run besides the launch pass's view. */
 export interface AttributionView extends LaunchPassView {
@@ -285,13 +284,13 @@ export function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, pare
     if (!ok) continue;
     raised++;
     named.add(number);
-    const evidence: Record<string, number> = { attributed: 1, piecesInPlane: kept.length, piecesJudged: judged.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(judgement.reading.deltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, planeDistanceMedian: round5(median(kept.map((p) => p.distance))), parentAgeDays: round5(judgement.reading.parentAgeDays), cloudPieces: judgement.reading.cloudPieces, daysSinceCloud: round5(judgement.reading.daysSinceCloud), parentCloudDistance: round5(judgement.reading.parentCloudDistance), launchAgeDays: round5(verdict.launchAgeDays), missKm: round5(timed!.missKm), sigmaMinutes: round5(timed!.sigmaMinutes), crossings: timed!.crossings, rivals: rivals.length, bodyClass: BODY_CLASSES.indexOf(own.bodyClass) };
-    if (Number.isFinite(timed!.spreadMinutes)) evidence.spreadMinutes = round5(timed!.spreadMinutes);
-    if (Number.isFinite(rival)) evidence.rivalMissKm = round5(rival);
+    const evidence: Record<string, number> = { attributed: 1, piecesInPlane: kept.length, piecesJudged: judged.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round4(verdict.lambda), pBurst: round4(verdict.p), cloudDeltaVMps: round4(judgement.reading.deltaVMps), gabbardSpreadKm: round4(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, planeDistanceMedian: round4(median(kept.map((p) => p.distance))), parentAgeDays: round4(judgement.reading.parentAgeDays), cloudPieces: judgement.reading.cloudPieces, daysSinceCloud: round4(judgement.reading.daysSinceCloud), parentCloudDistance: round4(judgement.reading.parentCloudDistance), launchAgeDays: round4(verdict.launchAgeDays), missKm: round4(timed!.missKm), sigmaMinutes: round4(timed!.sigmaMinutes), crossings: timed!.crossings, rivals: rivals.length, bodyClass: BODY_CLASSES.indexOf(own.bodyClass) };
+    if (Number.isFinite(timed!.spreadMinutes)) evidence.spreadMinutes = round4(timed!.spreadMinutes);
+    if (Number.isFinite(rival)) evidence.rivalMissKm = round4(rival);
     const event = piecesEvent(timed!, params);
     const o = timed!.origin;
-    for (const [name, value] of [["originTried", o.tried], ["originTimed", o.timed], ["originDev50Hours", o.dev50Hours], ["originDev75Hours", o.dev75Hours], ["originSpreadHours", o.spreadHours], ["originAgeDays", o.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round5(value);
-    if (event.byOrigin) [evidence.sigmaMinutes, evidence.eventByOrigin] = [round5(event.sigmaMinutes), 1];
+    for (const [name, value] of [["originTried", o.tried], ["originTimed", o.timed], ["originDev50Hours", o.dev50Hours], ["originDev75Hours", o.dev75Hours], ["originSpreadHours", o.spreadHours], ["originAgeDays", o.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round4(value);
+    if (event.byOrigin) [evidence.sigmaMinutes, evidence.eventByOrigin] = [round4(event.sigmaMinutes), 1];
     if (twins.length > 0) evidence.twins = twins.length;
     if (preferred) evidence.preferredFrom = byCentre;
     if (byCentre !== centred) evidence.convergedFrom = centred;
