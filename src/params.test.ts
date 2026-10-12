@@ -18,7 +18,7 @@ describe("the parameters' provenance", () => {
     for (const [name, provenance] of [...Object.entries(PARAMETER_PROVENANCE).filter(([key]) => key !== "legacy"), ...Object.entries(PARAMETER_PROVENANCE.legacy)] as [string, { kind: string; source: string }][]) {
       expect(["physical", "policy", "fitted"], name).toContain(provenance.kind);
       expect(provenance.source.length, name).toBeGreaterThan(10);
-      if (provenance.kind === "fitted") expect(provenance.source, name).toMatch(/^(?:as \w+|d\d+-(?:fitting|scope|confirmed)\.md, |the earlier attempt.s measurement)/);
+      if (provenance.kind === "fitted") expect(provenance.source, name).toMatch(/^(?:as \w+|d\d+-(?:fitting|scope|confirmed|three-axis-trigger)\.md, |the earlier attempt.s measurement)/);
     }
   });
 
@@ -42,8 +42,8 @@ describe("the off sentinel", () => {
 });
 
 describe("the legacy block", () => {
-  // The options a phase built and left off by default, as the fitting notes record them (d3, d6, d9 to d11): the live parameters are the rest.
-  const LEGACY = ["occasionalRaisesNonPayload", "persistOnMeanStep", "againstDragMinRaises", "analystAttributes", "attributionYoungLaunch", "attributionMissKmMax", "attributionTwinsUnresolved", "originHoursBase", "originHoursPerDay", "originShareMin", "originMinPieces", "originPhaseMax", "originStepHoursMax", "attributionPrefersStage", "attributionConvergenceNames", "smallBatchStepsToo"];
+  // The options a phase built and left off by default, as the fitting notes record them (d3, d6, d9 to d11, d13): the live parameters are the rest.
+  const LEGACY = ["occasionalRaisesNonPayload", "persistOnMeanStep", "againstDragMinRaises", "analystAttributes", "attributionYoungLaunch", "attributionMissKmMax", "attributionTwinsUnresolved", "originHoursBase", "originHoursPerDay", "originShareMin", "originMinPieces", "originPhaseMax", "originStepHoursMax", "attributionPrefersStage", "attributionConvergenceNames", "smallBatchStepsToo", "openOnThreeAxes"];
 
   test("holds the options off by default, and none of them is also a live parameter", () => {
     expect(Object.keys(DETECTOR_PARAMETERS.legacy).sort()).toEqual([...LEGACY].sort());

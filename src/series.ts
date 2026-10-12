@@ -104,6 +104,10 @@ export interface Candidate {
   zMean3: number;
   /** The object's envelope of held altitudes as it stood when the candidate opened, before the first post set was noted, so the post-step level is judged against where the object flew and never against itself. */
   envelope: AltitudeEnvelope;
+  /** The quantity whose residual opened the candidate and on which its persistence is judged, where the three-axis trigger opened it on the perigee radius or the inclination (`openOnThreeAxes`); absent for the semi-major axis. With it, the first post set's jump on that quantity, in its units (kilometres, degrees), and its normalised size. */
+  axis?: "rp" | "inc";
+  axisDelta1?: number;
+  axisZ1?: number;
 }
 
 export interface SeriesState {

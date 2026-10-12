@@ -352,6 +352,8 @@ export interface DetectorParameters {
  * parameters the detector runs with, so those count what is on.
  */
 export interface LegacyParameters {
+  /** Whether a set opens a candidate on the largest of its three normalised residuals (the semi-major axis, the perigee radius and the inclination, each against its trailing fit at the set before, the latter two's scales grown by the semi-major axis's own factor) rather than on the semi-major axis's alone, the candidate then judged for persistence on the quantity that opened it. A breakup whose recoil on the parent is mostly radial or normal changes the orbit's shape or plane at constant period and leaves the semi-major axis alone. Fitted on the training split, by a criterion written before the replay: on, the training years' early warnings gained one headline detection for seventeen times the false alarms. */
+  openOnThreeAxes: boolean;
   /** Whether a persistent step on an object the catalogue does not class as a payload (a rocket body, a piece of debris, an unknown) is raised when its record classes it `occasional`, a past step within two years on no pattern: a stage does not manoeuvre, so its past "step" was the catalogue's fit absorbing something, not a burn. Fitted on the training split. */
   occasionalRaisesNonPayload: boolean;
   /** Whether the persistence size is judged on the fitted line's value at the centroid of the post sets (the weighted mean step, `zMean`) rather than on its level at the first post set (`z`): the catalogue's fit converges on a new orbit over several sets, so the first post set can carry a tenth of the step and the level under-reads it while the mean does not; the evidence against a drift still guards a ramp drag could produce. Fitted on the training split. */
@@ -560,6 +562,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   eventRefinedCrossings: 8,
   eventRefineReachMinutes: 30,
   legacy: {
+    openOnThreeAxes: false,
     occasionalRaisesNonPayload: false,
     persistOnMeanStep: false,
     againstDragMinRaises: OFF,
@@ -766,6 +769,7 @@ export const PARAMETER_PROVENANCE: ParameterProvenance = {
   eventRefinedCrossings: { kind: "policy", source: "the cost of one attribution's refinement" },
   eventRefineReachMinutes: { kind: "policy", source: "half an hour either side of a coarse crossing, at least the coarse grid's step" },
   legacy: {
+    openOnThreeAxes: { kind: "fitted", source: "d13-three-axis-trigger.md, the criterion written before the replay and its reading on the training years: every one of its four measures failed, off" },
     occasionalRaisesNonPayload: { kind: "fitted", source: "d3-fitting.md, the two parent-side signals table: no training hit gained, off" },
     persistOnMeanStep: { kind: "fitted", source: "d3-fitting.md, the two parent-side signals table: no training hit gained, off" },
     againstDragMinRaises: { kind: "fitted", source: "d6-fitting.md, the sweeps on the training split: from two raises the direction test reads it, from fewer it only costs" },
