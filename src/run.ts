@@ -444,6 +444,8 @@ function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEp
     envelope: frozenEnvelope(state),
   };
   state.candidate = candidate;
+  const listed = candidatesListed(context);
+  if (!listed.includes(state.number)) listed.push(state.number);
   context.recentCandidates++;
   resetCusum(state, afterEpoch);
   return candidate;
@@ -477,6 +479,9 @@ function closeCandidate(state: SeriesState, candidate: Candidate, outcome: numbe
   }
   state.closedAt = context.now;
   state.candidate = null;
+  const listed = candidatesListed(context);
+  const at = listed.indexOf(state.number);
+  if (at !== -1) listed.splice(at, 1);
 }
 
 /** The gates a live candidate is judged by on a post set: the outcome and the reasons. The outcome `suspected` here means the step is persistent; the fusion below says whether it is raised. */
@@ -706,13 +711,32 @@ function track(item: Pending, stats: BandStats, context: RunContext): void {
   raiseScoped(state, alert, context);
 }
 
-/** Candidates that saw no post set in too long for their regime lapse, at the end of the run. */
+/** The objects with a live candidate, by number, as the catalogue lists them; listed afresh from the states where the record was written before the list existed. */
+function candidatesListed(context: RunContext): number[] {
+  const catalogue = context.catalogue;
+  if (catalogue.candidates === undefined) {
+    catalogue.candidates = [];
+    for (const state of context.states.values()) if (state.candidate !== null) catalogue.candidates.push(state.number);
+  }
+  return catalogue.candidates;
+}
+
+/** Whether the object's candidate saw no post set in too long for its regime. */
+const lapses = (state: SeriesState, context: RunContext): boolean => state.candidate !== null && context.now - state.candidate.lastPostAt > context.params.lapseDays[regimeKey(state.regime)] * DAY_MS;
+
+/** Candidates that saw no post set in too long for their regime lapse, at the end of the run, in the order the detector first met their objects. */
 function lapse(states: Map<number, SeriesState>, context: RunContext): void {
-  for (const state of states.values()) {
-    const candidate = state.candidate;
-    if (candidate === null) continue;
+  const lapsing = new Set<SeriesState>();
+  for (const number of candidatesListed(context)) {
+    const state = states.get(number);
+    if (state !== undefined && lapses(state, context)) lapsing.add(state);
+  }
+  if (lapsing.size === 0) return;
+  // The order the states were met in is the map's: walked only where more than one lapses.
+  const ordered = lapsing.size === 1 ? [...lapsing] : [...states.values()].filter((state) => lapsing.has(state));
+  for (const state of ordered) {
+    const candidate = state.candidate!;
     const days = context.params.lapseDays[regimeKey(state.regime)];
-    if (context.now - candidate.lastPostAt <= days * DAY_MS) continue;
     context.log.push(logRow(context.now, state.number, { phase: PHASES.close, outcome: OUTCOMES.lapsed, origin: ORIGINS[candidate.origin], regime: regimeIndex(state.regime), beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, delta1: candidate.delta1, z1: candidate.z1, k: candidate.postSets, bstar: candidate.bstar, sigmaOwn: candidate.sigmaOwn, residuals: candidate.residuals, z2: candidate.z2, rho2: candidate.rho2, evidence2: candidate.evidence2, span2: candidate.span2, zMean2: candidate.zMean2 }));
     if (candidate.watched) {
       context.verdicts.push({ kind: "object", state: "dismissed", number: state.number, launch: null, raisedAt: context.now, step: { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: candidate.delta1, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: candidate.postSets, z: candidate.z1 }, event: null, evidence: { delta1: round5(candidate.delta1), z1: round5(candidate.z1), k: candidate.postSets, lapseDays: days }, reasons: [`no further set followed within ${days} days; the step will be measured again when one comes`] });
@@ -722,10 +746,13 @@ function lapse(states: Map<number, SeriesState>, context: RunContext): void {
 }
 
 /** How many candidates opened across the catalogue in the last day, as the states remember them. */
-function recentCandidatesOf(states: Map<number, SeriesState>, now: number): number {
+function recentCandidatesOf(context: RunContext): number {
   let count = 0;
-  const since = now - DAY_MS;
-  for (const state of states.values()) if (state.candidate !== null && state.candidate.openedAt >= since) count++;
+  const since = context.now - DAY_MS;
+  for (const number of candidatesListed(context)) {
+    const candidate = context.states.get(number)?.candidate;
+    if (candidate !== undefined && candidate !== null && candidate.openedAt >= since) count++;
+  }
   return count;
 }
 
@@ -1002,7 +1029,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const measurements: Measurement[] = [];
   for (const item of pending) if (item.measurement !== null) measurements.push(item.measurement);
   const stats = environmentOf(measurements, params);
-  context.recentCandidates = recentCandidatesOf(states, input.now);
+  context.recentCandidates = recentCandidatesOf(context);
   for (const item of pending) {
     if (item.measurement === null) continue;
     const band = statsFor(stats, item.band, item.regime);
