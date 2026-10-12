@@ -34,7 +34,7 @@ same fault at near-zero inclination, so it could not confirm a
 geosynchronous breakup from its pieces. It now passes a piece by its
 tolerances or by its orbit normal within `planeNormalAngleMaxDeg` of the
 parent's, one degree, chosen on the training years
-(`docs/detector/plane-normal-fitting.md`). The scorecard's target test above stays
+(`docs/detector/d12-fitting.md`). The scorecard's target test above stays
 its own and does not read this parameter.
 
 The owner's targets were set on the parent's own orbit: nine reported
