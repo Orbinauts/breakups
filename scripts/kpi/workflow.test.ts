@@ -103,7 +103,7 @@ describe("the KPI workflow on a pull request", () => {
     expect(replays(paths, file)).toBe(true);
   });
 
-  test.each(["README.md", "CHANGELOG.md", "docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md", "docs/detector/events.md", "LICENSE", "test/kpi.test.ts", "scripts/kpi/rank.test.ts", ".github/workflows/ci.yml"])(
+  test.each(["README.md", "CHANGELOG.md", "docs/decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md", "docs/detector/events.md", "LICENSE", "test/kpi.test.ts", "scripts/kpi/rank.test.ts", ".github/workflows/ci.yml", ".github/ISSUE_TEMPLATE/breakup-report.yml"])(
     "leaves the years alone for a change to %s alone, which cannot",
     (file) => {
       expect(replays(paths, file)).toBe(false);
