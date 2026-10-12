@@ -13,7 +13,9 @@ import type { Regime } from "./truth.ts";
  * when it arrived; the long memory of its scatter; the two-sided CUSUM;
  * a set held in quarantine as possibly another object's; and the live
  * candidate, if a step is being judged. Everything is flat numbers and
- * arrays so a caller can serialise it, about two kilobytes an object.
+ * arrays, about two kilobytes an object; the infinities and NaN in it
+ * ("not yet", "never", "not measured") do not survive plain JSON, so a
+ * caller stores it as `serialiseStates` writes it (`states.ts`).
  *
  * The ring is what makes the detector incremental: a set is judged
  * against the sets before it, never against the year, and the work per
