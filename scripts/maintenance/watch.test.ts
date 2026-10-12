@@ -156,7 +156,7 @@ describe("the watch workflow", () => {
   });
 
   test("may open issues and read the repository, never write to it: the truth is a person's to change", () => {
-    expect(workflow.permissions).toEqual({ contents: "read", issues: "write" });
+    expect(workflow.permissions).toEqual({ contents: "read", issues: "write", actions: "write" });
     expect(steps[0]!.with).toEqual({ "persist-credentials": false });
     expect(steps.some((step) => step.run?.includes("npm run -s maintenance:watch"))).toBe(true);
   });

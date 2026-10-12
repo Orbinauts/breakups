@@ -22,6 +22,8 @@ permissions:
   contents: read
   # The notices' issues, and the failure's.
   issues: write
+  # The scheduled workflows GitHub disabled for the repository's inactivity, enabled again.
+  actions: write
 
 env:
   GH_REPO: ${{ github.repository }}
@@ -47,6 +49,12 @@ jobs:
         run: |
           set -euo pipefail
           npm run -s maintenance:watch 2>&1 | tee "$RUNNER_TEMP/watch.log"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run -s maintenance:keep-alive
       - name: Open an issue with the log
         if: failure()
         env:
