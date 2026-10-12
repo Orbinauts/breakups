@@ -7,6 +7,7 @@ import { dayOf, endedByOf, opsStatusOf } from "../../src/elements.ts";
 import { archiveHome, readYear, setAt, type ArchivedBody } from "../archive/archive.ts";
 import { clockOf, orderOf, RUN_HOURS, spaceByDay, DAY_MS } from "./replay.ts";
 import { readYearFile, yearsDir } from "./run.ts";
+import { isoInstant } from "../time.ts";
 
 /**
  * The early warning's regression fixtures: small slices of the Archive,
@@ -150,7 +151,6 @@ export interface EarlyWarningFixture {
   runs: [year: number, now: number, rows: FixtureRow[]][];
 }
 
-const iso = (ms: number): string => new Date(ms).toISOString();
 
 function bodyOf(body: ArchivedBody): FixtureBody {
   return { designator: body.designator, bodyClass: body.bodyClass, opsStatus: opsStatusOf(body.opsStatus), endedByMs: endedByOf(body.endedOn), endedFromMs: dayOf(body.endedFrom), launchedMs: dayOf(body.launch) };
@@ -179,7 +179,7 @@ function main(): void {
     const window = windowOf(c, at);
     return { c, breakup, at, window, years: yearsOver(window.from, window.to).filter((y) => existsSync(join(archive, String(y), "manifest.json"))) };
   });
-  const fixtures = new Map(planned.map((p) => [p.c.name, { format: 1, case: p.c, provenance: { source: "the Archive (docs/archive.md)", years: [], numbers: [p.c.number], window: { from: iso(p.window.from), to: iso(p.window.to) }, runHours: RUN_HOURS, extractedBy: "scripts/kpi/early-warning-fixtures.ts" }, event: null, replay: [], space: [], bodies: {}, runs: [] } as EarlyWarningFixture]));
+  const fixtures = new Map(planned.map((p) => [p.c.name, { format: 1, case: p.c, provenance: { source: "the Archive (docs/archive.md)", years: [], numbers: [p.c.number], window: { from: isoInstant(p.window.from), to: isoInstant(p.window.to) }, runHours: RUN_HOURS, extractedBy: "scripts/kpi/early-warning-fixtures.ts" }, event: null, replay: [], space: [], bodies: {}, runs: [] } as EarlyWarningFixture]));
   const runMs = RUN_HOURS * 3_600_000;
   // The run a set is handed over in: the end of the four-hour bin its clock falls in, as `runsOf` bins it.
   const binEnd = (clock: number): number => Math.floor(clock / runMs) * runMs + runMs;
@@ -239,7 +239,7 @@ function main(): void {
     const bytes = gzipSync(`${JSON.stringify(fixture)}\n`, { level: 9 });
     writeFileSync(join(FIXTURES_DIR, `${fixture.case.name}.json.gz`), bytes);
     const suspected = fixture.replay.filter((v) => v.state === "suspected");
-    console.log(`${fixture.case.name}: ${sets} sets in ${fixture.runs.length} runs, ${fixture.provenance.window.from} to ${fixture.provenance.window.to}, ${bytes.length} bytes; the full replay raised ${fixture.replay.map((v) => v.state).join(", ") || "nothing"}${suspected.length > 0 ? ` (suspected at ${iso(suspected[0]!.raisedAt)})` : ""}`);
+    console.log(`${fixture.case.name}: ${sets} sets in ${fixture.runs.length} runs, ${fixture.provenance.window.from} to ${fixture.provenance.window.to}, ${bytes.length} bytes; the full replay raised ${fixture.replay.map((v) => v.state).join(", ") || "nothing"}${suspected.length > 0 ? ` (suspected at ${isoInstant(suspected[0]!.raisedAt)})` : ""}`);
   }
 }
 

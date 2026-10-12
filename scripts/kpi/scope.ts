@@ -6,7 +6,7 @@ import { dayOf, endedByOf, isWorkingStatus, operationalAt, opsStatusOf, regimeOf
 import { OPEN_GATES, WHOLE_CATALOGUE, inScope, passesGates, type GatedStep, type ScopeSubject } from "../../src/scope.ts";
 import { archiveHome, builtYears, readBodies, readYear } from "../archive/archive.ts";
 import { dissectAll, type Cause } from "./events.ts";
-import { alertKey, alertRowsOf, type YearFile } from "./kpi.ts";
+import { alertKey, alertRowsOf, wilson, type YearFile } from "./kpi.ts";
 import type { ScoredEvent } from "./match.ts";
 import { DAY_MS } from "./replay.ts";
 import { readTruth, readYearFiles } from "./run.ts";
@@ -289,16 +289,6 @@ export function read(data: StudyData, years: Set<number>, scope: ScopePolicy, po
     if (group.some((a) => raisedUnder(a, scope, point) !== null)) r.falseAlarms++;
   }
   return r;
-}
-
-/** The Wilson score interval of a proportion, 95%; null where n is zero. */
-export function wilson(k: number, n: number, z = 1.96): [number, number] | null {
-  if (n === 0) return null;
-  const p = k / n;
-  const denominator = 1 + (z * z) / n;
-  const centre = (p + (z * z) / (2 * n)) / denominator;
-  const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denominator;
-  return [Math.max(0, centre - half), Math.min(1, centre + half)];
 }
 
 export const faRate = (r: Reading): number | null => (r.falseAlarms + r.detectedAllLines === 0 ? null : r.falseAlarms / (r.falseAlarms + r.detectedAllLines));

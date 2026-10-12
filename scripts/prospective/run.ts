@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -10,6 +10,7 @@ import { latestGcat } from "../archive/gcat.ts";
 import { daysToPull } from "../archive/pull.ts";
 import { latestSatcat } from "../archive/satcat.ts";
 import { spaceDir } from "../archive/space-weather.ts";
+import { git } from "../git.ts";
 import type { YearFile } from "../kpi/kpi.ts";
 import { installedVersions, type Versions } from "../pins/pins.ts";
 import { alertsOf, jsonl, newAlerts, readJsonl, type LoggedAlert } from "./alerts.ts";
@@ -166,8 +167,6 @@ function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEn
   if (result.error !== undefined) throw new Error(`${command} ${args.join(" ")} in ${cwd}: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} in ${cwd} exited with ${result.status ?? result.signal}`);
 }
-
-const git = (cwd: string, ...args: string[]): string => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 /** The environment the frozen worktree runs in: the test's view of the Archive, and no catalogue credentials, which it never needs. */
 export function frozenEnv(env: NodeJS.ProcessEnv, view: string): NodeJS.ProcessEnv {
