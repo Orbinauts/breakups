@@ -61,7 +61,8 @@ export interface Impulse {
   speedKmps: number;
 }
 
-const DEG = Math.PI / 180;
+/** Radians in a degree. */
+export const DEG = Math.PI / 180;
 
 /** The orbital speed at a radius on an orbit, in kilometres a second, by the vis-viva equation. */
 export function speedAt(aKm: number, rKm: number): number {

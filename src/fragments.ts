@@ -1,5 +1,5 @@
 import { semiMajorAxisOf, type ElementSet } from "./elements.ts";
-import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
+import { DEG, MU_KM3_PER_S2, speedAt } from "./impulse.ts";
 import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
@@ -270,16 +270,58 @@ export interface PlaneDistance {
  * to the piece's set is taken off. A piece catalogued longer after the
  * event than the parameter allows is not tested.
  */
-export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters, limitDays = params.planeMaxDays): PlaneDistance {
+export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: Pick<DetectorParameters, "planeInclinationToleranceDeg" | "planeNodeToleranceDeg" | "planeMaxDays">, limitDays = params.planeMaxDays): PlaneDistance {
   const deltaInclinationDeg = piece.inclinationDeg - parent.inclinationDeg;
+  const deltaNodeDeg = carriedNodeDifferenceDeg(parent, piece, eventMs);
+  const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
+  const distance = Math.abs(sinceEvent) > limitDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
+  return { deltaInclinationDeg, deltaNodeDeg, distance };
+}
+
+/** The node difference at the piece's epoch, the parent's node carried there at its own J2 rate and the rates' difference since the event taken off, in degrees. */
+function carriedNodeDifferenceDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
   const parentRate = nodePrecessionDegPerDay(parent.aKm, parent.eccentricity, parent.inclinationDeg, parent.meanMotion);
   const pieceRate = nodePrecessionDegPerDay(piece.aKm, piece.eccentricity, piece.inclinationDeg, piece.meanMotion);
   const sinceParent = (piece.epochMs - parent.epochMs) / DAY_MS;
   const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
   const parentNodeAtPiece = parent.raanDeg + parentRate * sinceParent;
-  const deltaNodeDeg = wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
-  const distance = Math.abs(sinceEvent) > limitDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
-  return { deltaInclinationDeg, deltaNodeDeg, distance };
+  return wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
+}
+
+/**
+ * The angle between a piece's orbit normal and a parent's, in degrees,
+ * the parent's node carried to the piece's epoch as `planeDistance`
+ * carries it, with no limit on the time since the event. Unlike the plane
+ * distance it holds at near-zero inclination, where the node is undefined
+ * and pieces in the parent's plane scatter over the whole circle of nodes:
+ * there every normal lies near the pole, and so near the parent's.
+ */
+export function normalAngleDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
+  const deltaNodeRad = carriedNodeDifferenceDeg(parent, piece, eventMs) * DEG;
+  const [i1, i2] = [parent.inclinationDeg * DEG, piece.inclinationDeg * DEG];
+  // The normals in a frame whose first axis is the parent's node: (0, -sin i1, cos i1) and (sin i2 sin dN, -sin i2 cos dN, cos i2), dN the node difference.
+  const [bx, by, bz] = [Math.sin(i2) * Math.sin(deltaNodeRad), -Math.sin(i2) * Math.cos(deltaNodeRad), Math.cos(i2)];
+  const [ay, az] = [-Math.sin(i1), Math.cos(i1)];
+  const cross = Math.hypot(ay * bz - az * by, az * bx, -ay * bx);
+  const dot = ay * by + az * bz;
+  return Math.atan2(cross, dot) / DEG;
+}
+
+/**
+ * The detector's plane test, as a distance in units of the tolerances:
+ * `planeDistance`'s, or, where the angle between the two orbits' normals
+ * is within `planeNormalAngleMaxDeg`, that angle scaled so the bound falls
+ * at `planeDistanceMax`, whichever is the less. So a piece is in the plane
+ * (distance at or under `planeDistanceMax`) by today's tolerances or by
+ * the normals, and the test holds at near-zero inclination, where the
+ * node is undefined. The same limit on the days since the event applies
+ * to both; with the angle at zero it is `planeDistance`'s alone.
+ */
+export function planeTestDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters, limitDays = params.planeMaxDays): number {
+  const distance = planeDistance(parent, piece, eventMs, params, limitDays).distance;
+  if (!(params.planeNormalAngleMaxDeg > 0) || Math.abs(piece.epochMs - eventMs) / DAY_MS > limitDays) return distance;
+  const byNormal = (normalAngleDeg(parent, piece, eventMs) / params.planeNormalAngleMaxDeg) * params.planeDistanceMax;
+  return Math.min(distance, byNormal);
 }
 
 /**
@@ -293,8 +335,8 @@ export function cloudBodies(launch: LaunchRecord, from: number, to: number, excl
 }
 
 /**
- * How near an orbit lies to a cloud: the least plane distance to any of
- * the cloud's bodies, each distance taken both ways (the orbit as the
+ * How near an orbit lies to a cloud: the least plane test distance
+ * (`planeTestDistance`) to any of the cloud's bodies, each distance taken both ways (the orbit as the
  * reference and the body as the reference, since the node is carried at
  * the reference's own rate) and the smaller kept, with no limit on how
  * long after the cloud's event either set is, since the test is whether
@@ -304,7 +346,7 @@ export function nearestCloudDistance(orbit: PlaneOrbit, cloud: readonly BodyReco
   let least = Number.POSITIVE_INFINITY;
   for (const body of cloud) {
     const other = planeOrbitOf(body);
-    const d = Math.min(planeDistance(orbit, other, eventMs, params, Number.POSITIVE_INFINITY).distance, planeDistance(other, orbit, eventMs, params, Number.POSITIVE_INFINITY).distance);
+    const d = Math.min(planeTestDistance(orbit, other, eventMs, params, Number.POSITIVE_INFINITY), planeTestDistance(other, orbit, eventMs, params, Number.POSITIVE_INFINITY));
     if (d < least) least = d;
   }
   return least;
@@ -430,7 +472,7 @@ export function judgeCloud(launch: LaunchRecord, catalogue: CatalogueRecord, par
     const within: { number: number; distance: number }[] = [];
     for (const candidate of parents) {
       if (candidate.number === body.number) continue;
-      const d = planeDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params).distance;
+      const d = planeTestDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params);
       if (d <= params.planeDistanceMax) within.push({ number: candidate.number, distance: d });
       if (d < distance) [parent, distance, deltaKm] = [candidate.number, d, body.aKm - candidate.orbit.aKm];
     }
