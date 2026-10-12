@@ -1,5 +1,5 @@
 {
-  "about": "Statements typed by hand from sources with no machine-readable form: NASA's Orbital Debris Quarterly News after the 16th edition's cut-off, the U.S. Space Forces-Space notice on Space-Track's login page, ESA's Space Environment Report, named analysts and news reports for 2025 to 2026, and the catalogue itself where fragments were published with no report. Each statement cites where it was read. Never written by a program.",
+  "about": "Statements typed by hand from sources with no machine-readable form: NASA's Orbital Debris Quarterly News after the 16th edition's cut-off, the U.S. Space Forces-Space notice on Space-Track's login page, named analysts and news reports (2024 to 2026), and the catalogue itself where fragments were published with no report. ESA's Space Environment Report tables are typed apart, in data/truth/esa-ser.json, and the quarterly news issues read are listed in data/truth/odqn-coverage.json. Each statement cites where it was read. Never written by a program.",
   "statements": [
     {
       "source": "odqn", "ref": "ODQN 26(3), September 2022, p. 2",
@@ -239,64 +239,28 @@
       "note": "No report by any authority as of 2026-10-09. The parent is a working payload in a retrograde orbit; the orbit given is the catalogue's."
     },
     {
-      "source": "esa-ser", "ref": "ESA Space Environment Report 2025 (GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025), Table 3.7, row 2024-04-02",
-      "kind": "unnamed",
-      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed)" },
-      "event": { "stated": "2024-04-02", "at": null, "from": "2024-04-02T00:00Z", "to": "2024-04-03T00:00Z", "precision": "day" },
+      "source": "news", "ref": "s2a systems on X, 2024-04-13 (https://x.com/s2a_systems/status/1779105729904812467): 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+      "url": "https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 59344, "designator": "2024-058B", "name": "CZ-6A R/B (Yunhai-3 02)" },
+      "event": { "stated": "nearly 60 objects around the stage in images of 7 April 2024; the stage was launched on 26 March 2024", "at": null, "from": "2024-03-26T00:00Z", "to": "2024-04-08T00:00Z", "precision": "none" },
       "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": "propulsion", "causeStated": "Propulsion",
-      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "cause": null, "causeStated": "unclear; passivation of the stage or broken insulation (SpaceNews)",
+      "piecesCatalogued": null, "piecesStatedOn": null,
       "preEventElements": null,
-      "note": "ESA names no object; 60 asserted objects, 0 catalogued.",
-      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
+      "note": "s2a systems' optical observation, a Swiss company's. SpaceNews: 'U.S. Space Force's space domain awareness has not cataloged any debris associated with the upper stage' (of the July launch). The launch day is GCAT's (LDate 2024 Mar 26). ESA's table of 2024 has a rocket body of 6,000 kg in LEO on 2024-04-02 with 60 asserted objects, named from this report in data/truth/esa-ser.json."
     },
     {
-      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-04-08",
-      "kind": "unnamed",
-      "parent": { "catalogueNumber": null, "designator": null, "name": "payload, 2,382 kg, LMO (unnamed)" },
-      "event": { "stated": "2024-04-08", "at": null, "from": "2024-04-08T00:00Z", "to": "2024-04-09T00:00Z", "precision": "day" },
+      "source": "news", "ref": "s2a systems on X, 2024-07-05 (https://x.com/s2a_systems/status/1809344226947199341): 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+      "url": "https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/",
+      "kind": "breakup",
+      "parent": { "catalogueNumber": 60214, "designator": "2024-126D", "name": "CZ-6A R/B (Tianhui-5 02)" },
+      "event": { "stated": "debris around the stage recorded on 5 July 2024 at 20:01:37 UTC; the stage was launched on 4 July 2024", "at": null, "from": "2024-07-04T00:00Z", "to": "2024-07-05T20:02Z", "precision": "none" },
       "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": "propulsion", "causeStated": "Propulsion",
-      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
+      "cause": null, "causeStated": "unclear; passivation of the stage or broken insulation (SpaceNews)",
+      "piecesCatalogued": 0, "piecesStatedOn": "2024-07-12",
       "preEventElements": null,
-      "note": "ESA names no object; 92 asserted objects, 0 catalogued.",
-      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
-    },
-    {
-      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-05-27",
-      "kind": "unnamed",
-      "parent": { "catalogueNumber": null, "designator": null, "name": "payload, 2,500 kg, GEO (unnamed)" },
-      "event": { "stated": "2024-05-27", "at": null, "from": "2024-05-27T00:00Z", "to": "2024-05-28T00:00Z", "precision": "day" },
-      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": "unknown", "causeStated": "Unknown",
-      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
-      "preEventElements": null,
-      "note": "ESA names no object; 1 asserted object, 0 catalogued.",
-      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
-    },
-    {
-      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-07-05",
-      "kind": "unnamed",
-      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed; secondary reports name a CZ-6A upper stage, 2024-126C, of 4 July 2024)" },
-      "event": { "stated": "2024-07-05", "at": null, "from": "2024-07-05T00:00Z", "to": "2024-07-06T00:00Z", "precision": "day" },
-      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": "propulsion", "causeStated": "Propulsion",
-      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
-      "preEventElements": null,
-      "note": "ESA names no object; 44 asserted objects, 0 catalogued. No authority names the object; the 2024-126C attribution rests on secondary reports only.",
-      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
-    },
-    {
-      "source": "esa-ser", "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-12-01",
-      "kind": "unnamed",
-      "parent": { "catalogueNumber": null, "designator": null, "name": "rocket body, 6,000 kg, LEO (unnamed)" },
-      "event": { "stated": "2024-12-01", "at": null, "from": "2024-12-01T00:00Z", "to": "2024-12-02T00:00Z", "precision": "day" },
-      "orbit": { "altitudeKm": null, "apogeeKm": null, "perigeeKm": null, "inclinationDeg": null },
-      "cause": "unknown", "causeStated": "Unknown",
-      "piecesCatalogued": 0, "piecesStatedOn": "2024-12-31",
-      "preEventElements": null,
-      "note": "ESA names no object; 100 asserted objects, 0 catalogued.",
-      "statedOn": { "on": "2025-10-21", "precision": "day", "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's" }
+      "note": "s2a systems' optical observation, a Swiss company's. SpaceNews: 'U.S. Space Force's space domain awareness has not cataloged any debris associated with the upper stage, suggesting the objects are very small.' The stage is 2024-126D (60214), 'CZ-6A Y7 Stage 2', in GCAT's satellite catalogue, launched 2024 Jul 4; 2024-126C is the TH-5 adapter there, not the stage. ESA's table of 2024 has a rocket body of 6,000 kg in LEO on 2024-07-05 with 44 asserted objects, named from this report in data/truth/esa-ser.json."
     }
   ]
 }
