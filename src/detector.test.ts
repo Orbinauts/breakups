@@ -1194,7 +1194,7 @@ describe("the eleventh phase's rules", () => {
 
   test("in its narrower form a rocket body is preferred only over a payload operating at the time", () => {
     // The scene above, the payload operating or not by its status.
-    const runsWith = (status: Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
+    const runsWith = (status: Pick<ElementSet, "opsStatus" | "endedByMs"> | Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
       const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload", status));
       const stage = decaying(7210, 0.02, 0.004, 48, 8, 3).map((s) => ({ ...setOf(7, s, "rocket body"), designator: "2010-002B" }));
       const at = quiet[110]!.epochMs;
@@ -1211,5 +1211,9 @@ describe("the eleventh phase's rules", () => {
     const row = feed(runsWith({}), { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, attributionPrefersStageOverWorking: true } }).log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
     expect(row.signals.preferNamedRank).toBe(1);
     expect(Number.isFinite(row.signals.preferAlternative)).toBe(false);
+    // The status is read at the event, not at the run: a payload whose dated end of contact falls just over the margin after the pieces' first epoch was operating then, though at the run, an hour later, the end is within the margin and its status unknown.
+    const event = decaying(7200, 0.02, 0.004, 48)[110]!.epochMs + HOUR;
+    const endedByMs = event + (params.endedUnknownDays + 1) * DAY + 30 * 60_000;
+    expect(named(runsWith({ opsStatus: "nonoperational", endedByMs }), { attributionPrefersStageOverWorking: true })).toEqual([7]);
   });
 });

@@ -882,9 +882,9 @@ function launchPassOf(context: RunContext): AttributionView {
       const state = context.states.get(number);
       return state !== undefined && state.steps.some((step) => step.epochMs >= from && step.epochMs <= to);
     },
-    workingAt: (number) => {
+    workingAt: (number, atMs) => {
       const state = context.states.get(number);
-      return isWorkingStatus(operationalAt({ opsStatus: state?.opsStatus, endedByMs: state?.endedByMs ?? null, endedFromMs: state?.endedFromMs ?? null }, context.now, { ...context.params, opsStatusDated: true }));
+      return isWorkingStatus(operationalAt({ opsStatus: state?.opsStatus, endedByMs: state?.endedByMs ?? null, endedFromMs: state?.endedFromMs ?? null }, atMs, { ...context.params, opsStatusDated: true }));
     },
   };
 }
