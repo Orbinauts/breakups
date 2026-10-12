@@ -40,7 +40,9 @@ const missed = breakup(40002, "2016-020", T + 20 * DAY, 12, T + 60 * DAY);
 const unreported = breakup(40003, "2017-030", T + 25 * DAY, null, null);
 const before = breakup(40004, "2018-040", T - 20 * DAY, 50, T - 5 * DAY);
 const exempt = breakup(40005, "2019-050", T + 5 * DAY, 4, null, false);
-const truth = [caught, missed, unreported, before, exempt];
+// A row long after the freeze, which dates the truth (`truthAsOf`) past every alert's 90 days below.
+const later = breakup(40006, "2021-060", T + 200 * DAY, 3, null, false);
+const truth = [caught, missed, unreported, before, exempt, later];
 
 const onCaught = alert(40001, "2015-010", T + 12 * DAY);
 const again = alert(40001, "2015-010", T + 14 * DAY);
@@ -111,6 +113,20 @@ describe("the prospective score on a synthetic log", () => {
     expect(text).toContain("1 of 2 reported events with pieces confirmed; 1 false confirmation of 4 confirmed alerts.");
     expect(text).toContain(`${caught.id} SAT 40001`);
     expect(text).toContain(`${missed.id} SAT 40002: 12 pieces`);
+  });
+});
+
+describe("a confirmation on no reported event, as the scorecard reads it", () => {
+  const young = alert(41002, "2022-002", T + 150 * DAY);
+  const all = [falseOne, young];
+  const score = scoreProspective(parseJsonl<LoggedAlert>(jsonl(all)), committedAtOf(gitLog([{ at: T + 151 * DAY, alerts: all }])), truth);
+
+  test("is unreported and pending while raised under 90 days before the truth's date, and false after", () => {
+    expect(score.falseConfirmations.map((f) => f.alert.number)).toEqual([41000]);
+    expect(score.pending.map((f) => f.alert.number)).toEqual([41002]);
+    const text = renderScore(score, "2027-02-01T10:00:00+01:00", T + 210 * DAY);
+    expect(text).toContain("1 false confirmation of 2 confirmed alerts; 1 unreported and pending.");
+    expect(resultsSummary(score, "2027-02-01")).toContain("1 false confirmation of 2 confirmed alerts, and 1 unreported confirmation pending");
   });
 });
 

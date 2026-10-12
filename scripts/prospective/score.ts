@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
-import { brackets, landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
+import { UNREPORTED_PENDING_DAYS, brackets, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, truthAsOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
 import { replacePart, RESULTS } from "../kpi/pages.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
@@ -16,7 +16,10 @@ import { runUrlOf } from "./run.ts";
  * stands (`data/breakups.json`), and prints the Confirmed headline for the
  * events after the freeze: the confirmed alerts that land on a reported
  * event, each with its lead over the event's first agency statement from
- * the commit that logged it; the false confirmations, which land on none;
+ * the commit that logged it; the false confirmations, which land on none
+ * and were raised `UNREPORTED_PENDING_DAYS` or more before the truth's
+ * date (`truthAsOf`), and the unreported ones raised since, pending, as
+ * the scorecard reads them;
  * and the reported events with fragments that no alert confirmed. A
  * confirmation lands as the scorecard's Confirmed line lands it
  * (`landConfirmed`), on the parent within the window and the half year
@@ -58,7 +61,7 @@ import { runUrlOf } from "./run.ts";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** How long the truth may lag the events: the agencies' quarterly reports. */
-export const TRUTH_LAG_DAYS = 90;
+export const TRUTH_LAG_DAYS = UNREPORTED_PENDING_DAYS;
 
 /** When each alert was committed, by its key: the first commit that added its line. */
 export type CommittedAt = Map<string, number>;
@@ -136,6 +139,10 @@ export interface ProspectiveScore {
   confirmed: number;
   detections: Detection[];
   falseConfirmations: Landed[];
+  /** Confirmed alerts on no reported event raised under `UNREPORTED_PENDING_DAYS` before the truth's date: unreported, pending, neither true nor false yet. */
+  pending: Landed[];
+  /** The truth's date (`truthAsOf`), in milliseconds since 1970. */
+  truthAsOf: number;
   /** Confirmed alerts that land elsewhere: on an event before the freeze, inside an exempt row's window, or on an event already confirmed. */
   notCounted: Landed[];
   /** The scoreable events after the freeze with catalogued pieces that no confirmed alert landed on. */
@@ -197,6 +204,7 @@ export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: C
 
 /** The Confirmed headline over the alerts logged since the freeze, against the truth. */
 export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: CommittedAt, breakups: readonly Breakup[], freezeMs = FREEZE_MS): ProspectiveScore {
+  const asOf = truthAsOf(breakups);
   const rows = rowsOf(breakups);
   const byId = new Map(breakups.map((breakup) => [breakup.id, breakup]));
   const logged: Record<string, number> = {};
@@ -209,6 +217,7 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
   const confirmed = alerts.filter((alert) => alert.kind === "object" && alert.state === "confirmed" && alert.number !== null && alert.verdict.evidence.noticed !== 1).sort((a, b) => known(a) - known(b) || Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
   const detections: Detection[] = [];
   const falseConfirmations: Landed[] = [];
+  const pending: Landed[] = [];
   const notCounted: Landed[] = [];
   const caught = new Set<string>();
   confirmed.forEach((alert, i) => {
@@ -218,7 +227,8 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
     const twin = landing.twin !== undefined && landing.twin.event !== event ? `; matched at the launch it would land on ${landing.twin.event ?? "nothing"}` : "";
     const landed: Landed = { alert, committedAt: committedAt.get(alert.key) ?? null, outcome, event, note: `${landing.note}${twin}` };
     const breakup = event === null ? undefined : byId.get(event);
-    if (outcome === "false-alarm") falseConfirmations.push(landed);
+    // A confirmation on no row is unreported: pending while the truth may still catch up, then false (the scorecard's reading).
+    if (outcome === "false-alarm") (isPendingUnreported(Date.parse(alert.raisedAt), asOf) ? pending : falseConfirmations).push(landed);
     else if (outcome === "detection" && breakup !== undefined && caught.has(breakup.id)) notCounted.push({ ...landed, outcome: "duplicate", note: "a later confirmation of an event already confirmed" });
     else if (outcome === "detection" && breakup !== undefined && lowerOf(breakup) >= freezeMs) {
       caught.add(breakup.id);
@@ -236,6 +246,8 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
     confirmed: confirmed.length,
     detections,
     falseConfirmations,
+    pending,
+    truthAsOf: asOf,
     notCounted,
     missed: withPieces.filter((breakup) => !caught.has(breakup.id)),
     awaitingPieces: after.filter((breakup) => breakup.piecesCatalogued === null && !caught.has(breakup.id)),
@@ -255,12 +267,14 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
     `Truth: data/breakups.json last changed ${truthChangedAt}.`,
     `Warning: the truth is built from the agencies' reports, which come months after an event; the events since about ${lagFrom} may not be reported yet, so this score is not final for them.`,
     "",
-    `Confirmed headline, events after the freeze: ${score.detections.length} of ${score.reported} reported events with pieces confirmed; ${score.falseConfirmations.length} false ${score.falseConfirmations.length === 1 ? "confirmation" : "confirmations"} of ${score.confirmed} confirmed alerts.`,
+    `Confirmed headline, events after the freeze: ${score.detections.length} of ${score.reported} reported events with pieces confirmed; ${score.falseConfirmations.length} false ${score.falseConfirmations.length === 1 ? "confirmation" : "confirmations"} of ${score.confirmed} confirmed alerts${score.pending.length === 0 ? "" : `; ${score.pending.length} unreported and pending`}.`,
   ];
   if (score.detections.length > 0) lines.push("", "Confirmed on a reported event (lead over the first agency statement, from the commit that logged the alert):");
   for (const d of score.detections) lines.push(`  ${named(d.breakup)}: alert raised ${iso(Date.parse(d.alert.raisedAt))}, committed ${iso(d.committedAt)}; first agency statement ${d.statement === null ? "none dated" : `${d.statement.on} (${d.statement.source})`}; lead ${d.leadDays === null ? "unknown" : `${d.leadDays} days`}`);
   if (score.falseConfirmations.length > 0) lines.push("", "False confirmations (no reported event):");
   for (const f of score.falseConfirmations) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
+  if (score.pending.length > 0) lines.push("", `Unreported and pending (no reported event yet, raised under ${UNREPORTED_PENDING_DAYS} days before the truth's date, ${new Date(score.truthAsOf).toISOString().slice(0, 10)}):`);
+  for (const f of score.pending) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
   if (score.notCounted.length > 0) lines.push("", "Confirmed alerts not counted (an event before the freeze, an exempt row, or a duplicate):");
   for (const n of score.notCounted) lines.push(`  ${n.alert.number} ${n.alert.launch ?? "-"}: ${n.outcome} ${n.event ?? ""}: ${n.note}`);
   if (score.missed.length > 0) lines.push("", "Reported events with pieces that no alert confirmed:");
@@ -298,7 +312,7 @@ export function resultsSummary(score: ProspectiveScore, truthChangedOn: string):
   return [
     `So far: ${plural(logged, "alert", "alerts")} logged since the freeze${logged === 0 ? "" : ` (${byState})`};`,
     `${plural(score.detections.length, "confirmed alert matches", "confirmed alerts match")} a reported event after the freeze, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
-    `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}.`,
+    `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}${score.pending.length === 0 ? "" : `, and ${plural(score.pending.length, "unreported confirmation", "unreported confirmations")} pending, neither true nor false until ${UNREPORTED_PENDING_DAYS} days pass with no report`}.`,
     `Early warning: ${plural(score.earlyWarning.flagged.length, "suspected alert flags", "suspected alerts flag")} a reported event after the freeze before the first sign of its fragments, and ${score.earlyWarning.late.length} after it, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
     `${plural(score.earlyWarning.falseAlarms.length, "false early warning", "false early warnings")} of ${plural(score.earlyWarning.suspected, "suspected alert", "suspected alerts")}.`,
     `The truth last changed on ${truthChangedOn}.`,

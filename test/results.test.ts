@@ -109,7 +109,9 @@ describe("the results page's headline", () => {
       recall: withInterval(line.rate!, line.interval!),
       falseConfirmations: `${c.falseAlarms} of ${c.falseAlarms + c.detectedAllLines}`,
       falseAlarmRate: withInterval(c.falseAlarmRate!, c.falseAlarmInterval!),
-      lead: `${Math.round(c.lead!.median)} days, ${c.beforeStatement} of ${c.withStatement} before it`,
+      notice: c.leadNotice == null ? "–" : `${Math.round(c.leadNotice.median)} days, ${c.beforeNotice} of ${c.withNotice} before it`,
+      quarterly: c.leadQuarterly == null ? "–" : `${Math.round(c.leadQuarterly.median)} days, ${c.beforeQuarterly} of ${c.withQuarterly} before it`,
+      dated: `${c.statementDays} / ${c.statementMonths}`,
       timing: duration(c.timing!.median),
     };
   };
@@ -122,7 +124,9 @@ describe("the results page's headline", () => {
     ["Recall (95% interval)", h.recall, t.recall, "90% or more"],
     ["False confirmations, of all events confirmed", h.falseConfirmations, t.falseConfirmations, ""],
     ["False-alarm rate (95% interval)", h.falseAlarmRate, t.falseAlarmRate, "under 10%"],
-    ["Median lead over the first agency statement", h.lead, t.lead, ""],
+    ["Median lead over the first agency notice dated to the day", h.notice, t.notice, ""],
+    ["Median lead over NASA's quarterly news, dated to its month", h.quarterly, t.quarterly, ""],
+    ["First agency statements dated to the day / to the month", h.dated, t.dated, ""],
     ["Median timing error", h.timing, t.timing, ""],
   ];
 
@@ -165,10 +169,19 @@ describe("the results page's sentences on the medians", () => {
   const spoken = (days: number): string => (days >= 14 ? count(Math.round(days / 7), "week") : days >= 2 ? count(Math.round(days), "day") : Math.round(days * 24) < 1 ? "under an hour" : count(Math.round(days * 24), "hour"));
   const text = marked(RESULTS, "kpi:medians");
 
-  test("the lead over the first agency statement, as the aggregate gives it", () => {
-    expect(c.lead).not.toBeNull();
-    const who = c.beforeStatement === c.withStatement ? "Every held-out confirmation with an agency's statement came before that statement" : `${c.beforeStatement} of the ${c.withStatement} held-out confirmations with an agency's statement came before that statement`;
-    expect(text).toContain(c.lead!.median >= 0 ? `${who}, and the median one by ${spoken(c.lead!.median)}.` : `${who}, and the median one ${spoken(-c.lead!.median)} after it.`);
+  test("the lead over the first agency notice dated to the day, as the aggregate gives it, or that none is dated yet", () => {
+    if (c.leadNotice == null || !c.withNotice) {
+      expect(text).toContain("No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them.");
+      return;
+    }
+    const who = c.beforeNotice === c.withNotice ? "Every held-out confirmation with an agency notice dated to the day came before that notice" : `${c.beforeNotice} of the ${c.withNotice} held-out confirmations with an agency notice dated to the day came before that notice`;
+    expect(text).toContain(c.leadNotice.median >= 0 ? `${who}, and the median one by ${spoken(c.leadNotice.median)}.` : `${who}, and the median one ${spoken(-c.leadNotice.median)} after it.`);
+  });
+
+  test("the lead over NASA's quarterly news, as the aggregate gives it", () => {
+    if (c.leadQuarterly == null || !c.withQuarterly) return;
+    const who = c.beforeQuarterly === c.withQuarterly ? "Every held-out confirmation with an issue of NASA's quarterly news came before that issue's month" : `${c.beforeQuarterly} of the ${c.withQuarterly} held-out confirmations with an issue of NASA's quarterly news came before that issue's month`;
+    expect(text).toContain(c.leadQuarterly.median >= 0 ? `${who}, and the median one by ${spoken(c.leadQuarterly.median)}.` : `${who}, and the median one ${spoken(-c.leadQuarterly.median)} after it.`);
   });
 
   test("the lag after the first fresh piece, as the aggregate gives it", () => {
