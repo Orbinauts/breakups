@@ -1,4 +1,4 @@
-import type { DetectorParameters } from "./params.ts";
+import type { DetectorParameters, LegacyParameters } from "./params.ts";
 import type { BodyClass, Regime } from "./truth.ts";
 
 /**
@@ -128,7 +128,7 @@ export function featuresOf(steps: StepRecord[], step: CurrentStep, firstEpochMs:
   const oldest = step.epochMs - params.historyDays * DAY_MS;
   const past = steps.filter((s) => s.epochMs < step.epochMs && s.epochMs >= oldest);
   const n730 = past.length;
-  const n365 = past.filter((s) => s.epochMs >= step.epochMs - 365 * DAY_MS).length;
+  const n365 = past.filter((s) => s.epochMs >= step.epochMs - params.stationKeepingWindowDays * DAY_MS).length;
   const ageDays = Number.isFinite(firstEpochMs) ? (step.epochMs - firstEpochMs) / DAY_MS : 0;
   const sign = Math.sign(step.deltaKm);
   let regularity = Number.NaN;
@@ -212,7 +212,7 @@ export function atypicalReasons(features: HistoryFeatures, step: CurrentStep, pa
 }
 
 /** Whether a step of the class is raised on the parent alone: a unique step, one the atypical tests single out, or, where the parameter says so, an occasional step on an object the catalogue does not class as a payload, since a stage or a fragment does not manoeuvre and its past step was the catalogue's fit absorbing something. */
-export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[], bodyClass: BodyClass = "payload", params?: Pick<DetectorParameters, "occasionalRaisesNonPayload">): boolean {
+export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[], bodyClass: BodyClass = "payload", params?: { legacy: Pick<LegacyParameters, "occasionalRaisesNonPayload"> }): boolean {
   if (manoeuvreClass === "unique" || atypical.length > 0) return true;
-  return params?.occasionalRaisesNonPayload === true && manoeuvreClass === "occasional" && bodyClass !== "payload";
+  return params?.legacy.occasionalRaisesNonPayload === true && manoeuvreClass === "occasional" && bodyClass !== "payload";
 }

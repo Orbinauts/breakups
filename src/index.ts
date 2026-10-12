@@ -74,7 +74,7 @@ export {
   type VerdictState,
 } from "./detector.ts";
 export { reviveStates, serialiseStates, type DetectorStates } from "./states.ts";
-export { PARAMETER_PROVENANCE, parametersWith, type ParameterKind, type PerRegime, type Provenance } from "./params.ts";
+export { OFF, PARAMETER_PROVENANCE, isOn, parametersWith, type LegacyParameters, type ParameterKind, type ParameterOverrides, type ParameterProvenance, type PerRegime, type Provenance } from "./params.ts";
 export { SCOPE_TIERS, type ScopeGates, type ScopeParameters, type ScopePolicy, type ScopeTier } from "./scope.ts";
 export {
   PUBLISHED_STATES,
