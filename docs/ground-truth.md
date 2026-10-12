@@ -4,7 +4,7 @@ The list of reported breakups the detector is scored against. It ships in the pa
 
 ## What counts as a breakup
 
-A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.
+A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better. An event that names a launch and no catalogued parent (a burst of new debris under the launch, or a separation GCAT gives an object the public catalogue does not list) is scored on the Confirmed line by its launch, and left out of the early warning's lines, which read the parent's own orbit. A window wider than 93 days (GCAT's "2023?" widens to three years) or with no lower edge is no target in a useful sense: such a row is kept out of every line with its reason, and [the results page](results.md#rows-kept-out-by-the-shape-of-their-window) lists them. A window a coarse date opened before the parent's launch starts at the launch day, and an event's id and the year it is counted in are its instant's where it states one (GCAT's "2018 Jan 1 0000?" widens to the minute before midnight, and is a 2018 event).
 
 ## The counts
 
@@ -12,17 +12,17 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 
 | Events from 2005 | Count |
 | --- | --- |
-| All | 634 |
-| Scoreable (breakups and anomalous events of a catalogued object) | 365 |
-| Breakups | 260 |
+| All | 637 |
+| Scoreable (breakups and anomalous events of a catalogued object or of a launch) | 396 |
+| Breakups | 262 |
 | Anomalous events (low-velocity shedding) | 146 |
 | Aerodynamic breakups at reentry (kept out) | 31 |
-| Objects released on purpose (kept out) | 183 |
+| Objects released on purpose (kept out) | 184 |
 | Reports naming no object (kept out) | 14 |
-| Confidence A (an authority states the minute) | 74 |
-| Confidence B (an authority states the day, or a window of three days at most) | 34 |
-| Confidence C (GCAT alone, an authority's month, or an analyst's dating) | 224 |
-| Confidence D (pieces in the catalogue, or news with no time) | 33 |
+| Confidence A (an authority states the minute) | 75 |
+| Confidence B (an authority states the day, or a window of three days at most) | 50 |
+| Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant) | 218 |
+| Confidence D (pieces in the catalogue, or news to the day at best) | 53 |
 
 <!-- truth:counts:end -->
 
@@ -39,4 +39,6 @@ Every statement also records when it can first have been public (a quarterly new
 
 ## When sources disagree
 
-Where sources disagree, the time comes from the source that states it most finely, an authority first; the orbit from NASA's spread, then the quarterly news, then GCAT; the cause from NASA, then ESA, then GCAT; the piece count from the latest statement. GCAT's satellite catalogue decides a field only where no other source states the event. Every disagreement is kept on the row. A reviewer who disagrees with a row edits the hand file or the overrides, never the built file; `npm run truth` rebuilds it and the tests fail until the committed file matches. [docs/truth.md](truth.md), generated by `npm run truth`, lists what was built from what.
+Statements about one parent whose windows fall within thirty days of each other describe one event, with one exception: where one source that lists each event once (NASA's history, GCAT's cloud table, GCAT's satellite catalogue, the quarterly news, a notice, ESA's report) states two instants of a breakup or an anomalous event more than a day apart, they are two events, and every other statement joins the instant nearest it. NASA lists ALOS-1's stage twice in August 2006, nineteen days apart, and the satellite catalogue dates two separations from Cosmos 2392's ullage motor a month apart in 2005: each is two events. Two sources that disagree by days on one event (NASA and GCAT a week apart on the same minute of Cosmos 2464-2466's ullage motor) stay one event, the disagreement listed.
+
+Where sources disagree, the time comes from the source that states it most finely, an authority first; the orbit from NASA's spread, then the quarterly news, then GCAT; the cause from NASA, then ESA, then GCAT; the piece count from the latest statement. GCAT's satellite catalogue decides a field only where no other source states the event. Where no statement gives the orbit (GCAT's satellite catalogue and the catalogue's bursts give none), the regime is the parent's at the event, read from its last set before the window in the Archive through a committed file derived from it (`data/truth/regimes.json`, written by `npm run truth:regimes`), so the build never reads the Archive itself. The confidence is read apart from the time, from the event's best statement: where NASA states the day and GCAT the minute, the time is GCAT's minute and the confidence NASA's B, so an agency's report never falls out of the headline because another source timed it more finely. A company's measured instant quoted in a report (s2a systems' optical timing of Luch) counts as a named analyst's dating, C. Every disagreement is kept on the row. A reviewer who disagrees with a row edits the hand file or the overrides, never the built file; `npm run truth` rebuilds it and the tests fail until the committed file matches. [docs/truth.md](truth.md), generated by `npm run truth`, lists what was built from what.

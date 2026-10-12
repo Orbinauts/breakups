@@ -3,7 +3,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import type { Latest } from "./kpi.ts";
-import { beginOf, endOf, GENERATED_PARTS, GROUND_TRUTH, inWords, markedPart, mediansSentence, readInputs, README, renderPage, replacePart, RESULTS, splitsSentence, targetSentence } from "./pages.ts";
+import { readBreakups } from "../../src/index.ts";
+import { beginOf, endOf, GENERATED_PARTS, GROUND_TRUTH, inWords, keptOutByWindowTable, markedPart, mediansSentence, readInputs, README, renderPage, replacePart, RESULTS, splitsSentence, targetSentence } from "./pages.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const PAGES = Object.fromEntries(Object.keys(GENERATED_PARTS).map((page) => [page, readFileSync(join(ROOT, page), "utf8")])) as Record<string, string>;
@@ -128,5 +129,14 @@ describe("the medians in words", () => {
     c.lead = null;
     c.lag = null;
     expect(mediansSentence(latest)).toBe("No held-out confirmation is timed yet.");
+  });
+});
+
+describe("the rows kept out by the shape of their window", () => {
+  test("are listed on the results page from 2005, each with its window and its reason", () => {
+    const table = keptOutByWindowTable(readBreakups(inputs.file));
+    expect(table.split("\n")[0]).toBe("| Event | Kind | Confidence | Window | Why it is kept out |");
+    expect(table).toContain("| 13923:2011-01-01 NOAA 8 | anomalous | D | 2011-01-01 to 2014-01-01 | the window is wider than 93 days |");
+    expect(table.split("\n")).toHaveLength(2 + 12);
   });
 });

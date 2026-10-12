@@ -50,6 +50,7 @@
     "truth:add": "node --experimental-strip-types scripts/truth/add.ts",
     "truth:report": "node --experimental-strip-types scripts/truth/report-issue.ts",
     "truth:fetch":"node --experimental-strip-types scripts/truth/fetch-sources.ts",
+    "truth:regimes": "node --experimental-strip-types scripts/truth/regimes.ts",
     "archive:strip": "node --experimental-strip-types scripts/archive/strip.ts",
     "archive:satcat": "node --experimental-strip-types scripts/archive/satcat.ts",
     "archive:gcat": "node --experimental-strip-types scripts/archive/gcat.ts",

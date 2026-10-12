@@ -141,5 +141,7 @@ describe("helpers", () => {
   test("the year an event counts in", () => {
     expect(yearOf({ event: { stated: "", at: null, from: "2019-12-31T23:00Z", to: "2020-01-02T00:00Z", precision: "day" } })).toBe(2019);
     expect(yearOf({ event: { stated: "", at: null, from: null, to: "2026-09-04T00:00Z", precision: "none" } })).toBe(2026);
+    // GCAT's "2018 Jan 1 0000?" widens to the minute before midnight: the instant it states decides.
+    expect(yearOf({ event: { stated: "2018 Jan 1 0000?", at: "2018-01-01T00:00Z", from: "2017-12-31T23:59Z", to: "2018-01-01T00:01Z", precision: "minute" } })).toBe(2018);
   });
 });

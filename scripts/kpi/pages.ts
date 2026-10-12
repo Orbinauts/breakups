@@ -58,7 +58,7 @@ export const GROUND_TRUTH = "docs/ground-truth.md";
 /** Every generated part, by the page that holds it. */
 export const GENERATED_PARTS: Readonly<Record<string, readonly string[]>> = {
   [README]: ["kpi:summary", "kpi:early-warning", "kpi:target", "kpi:lifecycle", "kpi:lifecycle-caveat", "truth:quick-start"],
-  [RESULTS]: ["kpi:current", "kpi:current-early-warning", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:early-warning-tables", "kpi:lifecycle-full", "prospective:score"],
+  [RESULTS]: ["kpi:current", "kpi:current-early-warning", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:early-warning-tables", "kpi:lifecycle-full", "prospective:score", "truth:kept-out-by-window"],
   [GROUND_TRUTH]: ["truth:counts", "truth:gcat-clouds"],
 };
 
@@ -294,7 +294,7 @@ export function splitsSentence(latest: Latest): string {
 /** The ground-truth table's rows: a label and the events from 2005 it counts. */
 export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[] = [
   ["All", () => true],
-  ["Scoreable (breakups and anomalous events of a catalogued object)", (b) => b.scoreable],
+  ["Scoreable (breakups and anomalous events of a catalogued object or of a launch)", (b) => b.scoreable],
   ["Breakups", (b) => b.kind === "breakup"],
   ["Anomalous events (low-velocity shedding)", (b) => b.kind === "anomalous"],
   ["Aerodynamic breakups at reentry (kept out)", (b) => b.kind === "aerodynamic"],
@@ -302,14 +302,24 @@ export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[]
   ["Reports naming no object (kept out)", (b) => b.kind === "unnamed"],
   ["Confidence A (an authority states the minute)", (b) => b.scoreable && b.confidence === "A"],
   ["Confidence B (an authority states the day, or a window of three days at most)", (b) => b.scoreable && b.confidence === "B"],
-  ["Confidence C (GCAT alone, an authority's month, or an analyst's dating)", (b) => b.scoreable && b.confidence === "C"],
-  ["Confidence D (pieces in the catalogue, or news with no time)", (b) => b.scoreable && b.confidence === "D"],
+  ["Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant)", (b) => b.scoreable && b.confidence === "C"],
+  ["Confidence D (pieces in the catalogue, or news to the day at best)", (b) => b.scoreable && b.confidence === "D"],
 ];
 
 /** The ground truth's counts from 2005, as the ground-truth page's table. */
 export function truthTable(breakups: readonly Breakup[]): string {
   const since = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   return [row([`Events from ${SCORING_FROM}`, "Count"]), row(["---", "---"]), ...TRUTH_ROWS.map(([label, counts]) => row([label, String(since.filter(counts).length)]))].join("\n");
+}
+
+/** The reasons a breakup or anomalous event of a catalogued parent is kept out by the shape of its window (`windowReasonOf` in the truth's build). */
+const WINDOW_REASONS: ReadonlySet<string> = new Set(["the window has no lower edge", "the window is wider than 93 days"]);
+
+/** The rows from 2005 kept out of every line by the shape of their window, as the results page lists them. */
+export function keptOutByWindowTable(breakups: readonly Breakup[]): string {
+  const kept = breakups.filter((b) => yearOf(b) >= SCORING_FROM && b.exemptReason !== null && WINDOW_REASONS.has(b.exemptReason));
+  const window = (b: Breakup): string => `${b.event.from === null ? "…" : b.event.from.slice(0, 10)} to ${b.event.to.slice(0, 10)}`;
+  return [row(["Event", "Kind", "Confidence", "Window", "Why it is kept out"]), row(["---", "---", "---", "---", "---"]), ...kept.map((b) => row([`${b.id} ${b.parent.name}`, b.kind, b.confidence, window(b), b.exemptReason!]))].join("\n");
 }
 
 /** The fenced block of a language in a text, its content. */
@@ -376,6 +386,7 @@ export async function renderPage(path: string, text: string, inputs: ReadmeInput
     out = replacePart(out, "kpi:medians", mediansSentence(latest), true);
     out = replacePart(out, "kpi:confirmed", tables.slice(0, CONFIRMED_TABLES).join("\n\n"));
     out = replacePart(out, "kpi:early-warning-tables", tables.slice(CONFIRMED_TABLES).join("\n\n"));
+    out = replacePart(out, "truth:kept-out-by-window", keptOutByWindowTable(readBreakups(file)));
     return replacePart(out, "kpi:lifecycle-full", lifecycleTables(latest).join("\n\n"));
   }
   if (path === GROUND_TRUTH) {

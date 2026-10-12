@@ -79,6 +79,7 @@
       "note": "The catalogue lists what the station jettisons (tanks, tools, covers) as debris; a burst of them is a release, not a breakup."
     },
     { "name": "shenzhou-12-releases", "exemptLaunch": "2021-053", "exempt": "objects released from a crewed spacecraft on purpose, not a breakup", "note": "The owner's decision of the eleventh phase: a crewed spacecraft's or a station's cargo craft's pieces are released on purpose, as a station's; the catalogue's burst under Shenzhou-12's launch (its orbital module's) is exempt as the station's are. NASA's own reports of a Shenzhou module's debris stay scoreable." },
+    { "name": "yaogan-50-02-lower-edge", "merge": [{ "catalogueNumber": 68196 }], "between": ["2026-07-01", "2026-09-04"], "from": "2026-07-01T20:21Z", "note": "The hand row dates Yaogan-50 02's breakup only by its pieces' cataloguing on 4 September 2026 and gives no lower edge, so the scorecard read it as no window and listed it as having no fragments. The lower edge is the one the catalogue's own burst rule gives the same pieces (scripts/truth/parse-catalogue.ts, sixty days before the first piece's first set, 2026-08-30T20:21Z), not the detector's estimate." },
     { "name": "shenzhou-14-releases", "exemptLaunch": "2022-060", "exempt": "objects released from a crewed spacecraft on purpose, not a breakup", "note": "As shenzhou-12-releases, for the burst under Shenzhou-14's launch." }
   ]
 }
