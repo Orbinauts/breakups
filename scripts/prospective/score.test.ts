@@ -40,7 +40,9 @@ const missed = breakup(40002, "2016-020", T + 20 * DAY, 12, T + 60 * DAY);
 const unreported = breakup(40003, "2017-030", T + 25 * DAY, null, null);
 const before = breakup(40004, "2018-040", T - 20 * DAY, 50, T - 5 * DAY);
 const exempt = breakup(40005, "2019-050", T + 5 * DAY, 4, null, false);
-const truth = [caught, missed, unreported, before, exempt];
+// A row long after the freeze, which dates the truth (`truthAsOf`) past every alert's 90 days below.
+const later = breakup(40006, "2021-060", T + 200 * DAY, 3, null, false);
+const truth = [caught, missed, unreported, before, exempt, later];
 
 const onCaught = alert(40001, "2015-010", T + 12 * DAY);
 const again = alert(40001, "2015-010", T + 14 * DAY);
@@ -114,6 +116,20 @@ describe("the prospective score on a synthetic log", () => {
   });
 });
 
+describe("a confirmation on no reported event, as the scorecard reads it", () => {
+  const young = alert(41002, "2022-002", T + 150 * DAY);
+  const all = [falseOne, young];
+  const score = scoreProspective(parseJsonl<LoggedAlert>(jsonl(all)), committedAtOf(gitLog([{ at: T + 151 * DAY, alerts: all }])), truth);
+
+  test("is unreported and pending while raised under 90 days before the truth's date, and false after", () => {
+    expect(score.falseConfirmations.map((f) => f.alert.number)).toEqual([41000]);
+    expect(score.pending.map((f) => f.alert.number)).toEqual([41002]);
+    const text = renderScore(score, "2027-02-01T10:00:00+01:00", T + 210 * DAY);
+    expect(text).toContain("1 false confirmation of 2 confirmed alerts; 1 unreported and pending.");
+    expect(resultsSummary(score, "2027-02-01")).toContain("1 false confirmation of 2 confirmed alerts, and 1 unreported confirmation pending");
+  });
+});
+
 describe("the early warning's line of the prospective score", () => {
   // A suspected alert on the caught event raised after its confirmation by pieces (late), one on no reported event (false), one on an event before the freeze (not counted), and the one on the missed event's step, raised long before its first agency statement (flagged), timed against the truth's instant.
   const late = alert(40001, "2015-010", T + 13 * DAY, "suspected");
@@ -138,7 +154,8 @@ describe("the early warning's line of the prospective score", () => {
   test("reads the first sign of the fragments off the log and the truth: a confirmation by pieces, else the first agency statement", () => {
     const flagged = ew.flagged[0]!;
     expect(flagged.firstSignAt).toBe(T + 60 * DAY);
-    expect(flagged.leadDays).toBeCloseTo(60 - 20.5, 1);
+    // From the commit that logged it, at T + 40 days, not from the replay's clock.
+    expect(flagged.leadDays).toBeCloseTo(60 - 40, 1);
     expect(flagged.timingMinutes).toBe(30);
     expect(ew.late[0]!.firstSignAt).toBe(Date.parse(onCaught.raisedAt));
     expect(ew.late[0]!.timingMinutes).toBeNull();
@@ -151,5 +168,44 @@ describe("the early warning's line of the prospective score", () => {
     const summary = resultsSummary(score, "2027-02-01");
     expect(summary).toContain("1 confirmed alert matches a reported event after the freeze, of 2 reported events with pieces;");
     expect(summary).toContain("Early warning: 1 suspected alert flags a reported event after the freeze before the first sign of its fragments, and 1 after it, of 2 reported events with pieces; 1 false early warning of 4 suspected alerts.");
+  });
+});
+
+describe("the early warning is known when it was committed, not when the replay's clock raised it", () => {
+  // The year is replayed whole each day against the day's catalogue status, so a step can be raised dated back days, after the fragments were public.
+  const warning = (raisedAt: number): LoggedAlert => alert(40002, "2016-020", raisedAt, "suspected");
+  const score = (alerts: LoggedAlert[], commits: { at: number; alerts: LoggedAlert[] }[]) => scoreProspective(parseJsonl<LoggedAlert>(jsonl(alerts)), committedAtOf(gitLog(commits)), [missed]).earlyWarning;
+
+  test("a warning raised before the first sign but committed after it is late", () => {
+    const backdated = warning(T + 20.5 * DAY);
+    const ew = score([backdated], [{ at: T + 61 * DAY, alerts: [backdated] }]);
+    expect(ew.flagged).toEqual([]);
+    expect(ew.late).toHaveLength(1);
+    expect(ew.late[0]!.leadDays).toBeCloseTo(-1, 1);
+    expect(ew.late[0]!.note).toBe("committed after the first sign of the fragments");
+  });
+
+  test("a warning committed before the first sign is flagged, its lead counted from the commit", () => {
+    const timely = warning(T + 20.5 * DAY);
+    const ew = score([timely], [{ at: T + 21.1 * DAY, alerts: [timely] }]);
+    expect(ew.flagged).toHaveLength(1);
+    expect(ew.flagged[0]!.leadDays).toBeCloseTo(60 - 21.1, 1);
+    expect(ew.flagged[0]!.note).toBe("committed before the first sign of the fragments");
+  });
+
+  test("the first warning known of an event is the one counted, whatever the replay's clock says", () => {
+    const backdated = warning(T + 20.2 * DAY);
+    const first = { ...warning(T + 20.6 * DAY), key: "first known" };
+    const ew = score([backdated, first], [{ at: T + 21 * DAY, alerts: [first] }, { at: T + 25 * DAY, alerts: [backdated] }]);
+    expect(ew.flagged.map((w) => w.alert.key)).toEqual(["first known"]);
+    expect(ew.notCounted).toMatchObject([{ outcome: "duplicate", alert: { key: backdated.key } }]);
+  });
+
+  test("a warning the log has no commit for is never flagged", () => {
+    const uncommitted = warning(T + 20.5 * DAY);
+    const ew = score([uncommitted], []);
+    expect(ew.flagged).toEqual([]);
+    expect(ew.late).toHaveLength(1);
+    expect(ew.late[0]!.leadDays).toBeNull();
   });
 });

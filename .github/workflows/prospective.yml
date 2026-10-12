@@ -36,7 +36,10 @@ name: Prospective
 # fails the run without touching the alerts commit. Until the 2025 seed has
 # made the branch `published`, the publishing fails with that message.
 #
-# Any failing step fails the run, and the run commits whole or not at all.
+# Any failing step fails the run, and the run commits whole or not at all;
+# a failed run opens an issue labelled `maintenance` with the end of its
+# log, one a failing day. Its scheduled runs also enable again any scheduled
+# workflow GitHub disabled for the repository's inactivity.
 # To pause the test: gh workflow disable prospective.yml; to resume it:
 # gh workflow enable prospective.yml. A gap in `runs.jsonl` shows when it
 # was not running.
@@ -55,8 +58,10 @@ concurrency:
 permissions:
   # The pushes to the `prospective` and `published` branches and the upload to the release `prospective-data`.
   contents: write
-  # An issue for each new alert, and its label where missing.
+  # An issue for each new alert, and one for a failed run, and their labels where missing.
   issues: write
+  # The scheduled workflows GitHub disabled for the repository's inactivity, enabled again.
+  actions: write
 
 env:
   FROZEN_TAG: frozen-confirmed-v10
@@ -77,6 +82,11 @@ jobs:
       # "true" once the published files are committed and pushed: the Pages deploy follows only then.
       published: ${{ steps.publish.outputs.pushed }}
     steps:
+      # The steps that do the work write their output here too, so a failed run's issue carries the end of it.
+      - name: Start the log
+        run: |
+          echo "LOG=$RUNNER_TEMP/prospective-run.log" >> "$GITHUB_ENV"
+          : > "$RUNNER_TEMP/prospective-run.log"
       - name: Check out main (the scripts)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -98,6 +108,7 @@ jobs:
       - name: The tag must still name the frozen commit
         run: |
           set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
           git -C main fetch --quiet --no-tags --depth=1 origin "+refs/tags/$FROZEN_TAG:refs/tags/$FROZEN_TAG"
           tagged=$(git -C main rev-parse "$FROZEN_TAG^{commit}")
           head=$(git -C frozen rev-parse HEAD)
@@ -111,12 +122,16 @@ jobs:
           node-version: 24
       - name: Install main's dependencies
         working-directory: main
-        run: npm install --no-audit --no-fund
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm install --no-audit --no-fund
       # No lockfile is committed: the detector's runtime dependencies are installed at the frozen detector's own pins (pins.json's frozenDetector, the versions the tag's runs used, apart from main's scoring pins), and checked.
       - name: Install the frozen detector's dependencies
         working-directory: frozen
         run: |
           set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
           node --experimental-strip-types ../main/scripts/pins/pins.ts install frozenDetector --dir .
           test -z "$(git status --porcelain)"
       # The Archive (some seven gigabytes) on the runner's larger disk.
@@ -141,7 +156,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: npm run prospective:data -- download
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run prospective:data -- download
       - name: Pull, replay with the frozen detector, and log the alerts
         id: replay
         working-directory: main
@@ -150,6 +168,7 @@ jobs:
           SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
         run: |
           set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
           git -C "$BREAKUPS_PROSPECTIVE" config user.name "github-actions[bot]"
           git -C "$BREAKUPS_PROSPECTIVE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           npm run prospective
@@ -159,20 +178,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: npm run prospective:data -- upload
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run prospective:data -- upload
       # After the data are kept, so an issue that cannot be opened never costs the day's slices; the next run opens what this one could not.
       - name: Open an issue for each new alert
         working-directory: main
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: npm run -s maintenance:alert-issues -- "$BREAKUPS_PROSPECTIVE"
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s maintenance:alert-issues -- "$BREAKUPS_PROSPECTIVE"
       # The publishing reads the replay's year files from the day's scratch directory, so it runs whenever the replay
       # succeeded, even if keeping the data or opening an issue failed; it changes nothing those steps read.
       - name: The published branch must exist
         if: ${{ !cancelled() && steps.replay.outcome == 'success' }}
         run: |
           set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
           if [ -z "$(git -C "$BREAKUPS_PROSPECTIVE" ls-remote --heads origin refs/heads/published)" ]; then
             echo "::error::No branch 'published' on the remote: the 2025 seed makes it once (docs/published.md). Nothing is published until then; the alerts are committed."
             exit 1
@@ -190,10 +216,22 @@ jobs:
         working-directory: main
         run: |
           set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
           git -C "$BREAKUPS_PUBLISHED" config user.name "github-actions[bot]"
           git -C "$BREAKUPS_PUBLISHED" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           npm run -s published:daily
           echo "pushed=true" >> "$GITHUB_OUTPUT"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s maintenance:keep-alive
       - name: The request ledger and the run's log
         if: always()
         run: |
@@ -202,6 +240,19 @@ jobs:
           echo "the run's log:"
           cat "$BREAKUPS_ARCHIVE/prospective/prospective.log" 2>/dev/null || echo "(none)"
           df -h
+      # A failed run opens an issue labelled `maintenance`, one a failing day: a run made again that day comments on it (scripts/maintenance/failure-issue.ts).
+      - name: Open an issue with the log
+        if: failure()
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          npm run -s maintenance:failure -- --title "The prospective test failed on $(date -u +%F)" \
+            --intro "The prospective test's daily run $RUN_URL failed. Whatever it had not committed to the prospective branch is not committed; the next run logs the alerts of the days it missed, with that run's commit time. The ends of its logs:" \
+            --log "$LOG" --log "${BREAKUPS_ARCHIVE:-/nonexistent}/prospective/prospective.log"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

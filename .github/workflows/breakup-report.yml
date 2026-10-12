@@ -1,0 +1,103 @@
+name: Breakup report
+
+# A report of a breakup, filed with the breakup-report issue form (or opened
+# prefilled by the watcher, watch.yml), reaches the ground truth the day the
+# owner accepts it. When an issue is labelled `breakup-report-accepted`:
+#
+# 1. `npm run truth:report -- check` (scripts/truth/report-issue.ts) reads
+#    the event and asks GitHub for the permission of whoever applied the
+#    label: only the repository's owner, with admin permission, accepts a
+#    report, since anyone with triage permission can apply a label. A label
+#    applied by anyone else is taken off again with a comment saying why.
+# 2. `npm run truth:add -- --form` reads the form's fields from the issue's
+#    body, checks the statement against the hand file's schema, appends it
+#    to data/truth/hand.json and rebuilds the truth. A statement it refuses
+#    leaves everything as it was: the label is taken off and a comment
+#    quotes the refusal, so the issue can be edited and labelled again.
+# 3. The hand file and the rebuilt truth are committed by the Actions bot
+#    to a branch `report/issue-<number>`, named by the issue's number alone,
+#    and the maintenance workflow is run on it (`-f from=<branch>`), which
+#    folds it in, replays the scorecard, runs every check and merges the
+#    result into main; the issue is closed with a link to its runs.
+#
+# The issue's text is read only by the scripts, from the event's file,
+# never pasted into a shell command.
+
+on:
+  issues:
+    types: [labeled]
+
+# Two labellings of one issue are handled one after the other.
+concurrency:
+  group: breakup-report-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  # The branch the statement is committed to.
+  contents: write
+  # The labels, the comments and the closing.
+  issues: write
+  # The maintenance workflow, run on the branch.
+  actions: write
+
+env:
+  GH_REPO: ${{ github.repository }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  BOT_NAME: github-actions[bot]
+  BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+jobs:
+  accept:
+    name: add the accepted report to the ground truth
+    if: github.event.label.name == 'breakup-report-accepted'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check who accepted it
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run -s truth:report -- check "$RUNNER_TEMP/report.md"
+      - name: Add the statement and rebuild the truth
+        if: steps.check.outputs.accepted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.check.outputs.number }}
+        run: |
+          set -uo pipefail
+          if npm run -s truth:add -- --form "$RUNNER_TEMP/report.md" --message "$RUNNER_TEMP/message.txt" > "$RUNNER_TEMP/add.log" 2>&1; then
+            cat "$RUNNER_TEMP/add.log"
+          else
+            cat "$RUNNER_TEMP/add.log"
+            npm run -s truth:report -- refused "$NUMBER" "$RUNNER_TEMP/add.log"
+            exit 1
+          fi
+      - name: Commit it to a branch and fold it in with the maintenance workflow
+        if: steps.check.outputs.accepted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.check.outputs.number }}
+          BRANCH: ${{ steps.check.outputs.branch }}
+          ACCEPTED_BY: ${{ steps.check.outputs.by }}
+        run: |
+          set -euo pipefail
+          git config user.name "$BOT_NAME"
+          git config user.email "$BOT_EMAIL"
+          git switch -q -c "$BRANCH"
+          git add data/truth/hand.json data/breakups.json docs/truth.md
+          printf 'From the breakup-report issue %s, accepted by %s, in the run %s.\n' "$NUMBER" "$ACCEPTED_BY" "$RUN_URL" >> "$RUNNER_TEMP/message.txt"
+          git commit -q -F "$RUNNER_TEMP/message.txt"
+          git push -q --force origin "$BRANCH"
+          gh workflow run maintenance.yml --ref main -f from="$BRANCH"
+          runs="https://github.com/$GH_REPO/actions/workflows/maintenance.yml"
+          gh issue comment "$NUMBER" --body "Accepted: the statement is on the branch \`$BRANCH\` with the truth rebuilt ($RUN_URL), and the maintenance workflow is folding it into main: $runs. A failure there opens its own issue."
+          gh issue close "$NUMBER" --reason completed

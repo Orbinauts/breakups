@@ -81,9 +81,11 @@ function landSuspected(verdict: ObjectVerdict, breakups: readonly Breakup[]): Br
  * it (`landConfirmed`): on the row of a detection. It is exempt, a release
  * on purpose, under a crewed station's launch, under a crewed or cargo
  * craft's launch other than on its rocket body, or inside a release row's
- * window: then it lands nowhere and is left out (null), on its own. Any
- * other landing (a row naming the launch alone or no object, an
- * aerodynamic row, no row at all) is a breakup on no row.
+ * window: then it lands nowhere and is left out (null), on its own. A
+ * detection lands on its row, a row naming the launch alone among them
+ * (the Confirmed line scores those by their launch). Any other landing (a
+ * row naming no object, an aerodynamic row, no row at all) is a breakup on
+ * no row.
  */
 function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>): Landed | null {
   const landing = landConfirmed(verdict, i, rows);
@@ -161,12 +163,14 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const raisedAt = iso(cluster[0]!.verdict.raisedAt);
   const event = publishedEventOf(latest.event);
   const rowEvent = rowEventOf(row);
+  const named = row !== null && row.parent.catalogueNumber === number ? row : null;
   return {
     id: publishedIdOf(number, rowEvent, event, raisedAt),
     state,
     raisedAt,
     confirmedAt,
-    parent: { catalogueNumber: number, designator: row?.parent.designator ?? body?.designator ?? null, name: row?.parent.name ?? body?.name ?? null, launchedOn: row?.parent.launchedOn ?? body?.launch ?? null },
+    // The parent as the row names it where the row names this body; a row naming the launch alone leaves the body's own identity.
+    parent: { catalogueNumber: number, designator: named?.parent.designator ?? body?.designator ?? null, name: named?.parent.name ?? body?.name ?? null, launchedOn: named?.parent.launchedOn ?? body?.launch ?? null },
     event,
     rowEvent,
     step: publishedStepOf(latest.step),

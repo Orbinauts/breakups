@@ -1,0 +1,154 @@
+{
+  "about": "ESA's Annual Space Environment Report: each edition's Table 3.7, the fragmentation events of the year before, typed row by row as printed (cells verbatim: the mass as printed, 'None' where ESA prints None for the asserted objects, null where the cell is blank, objectType null where the edition has no such column). Each edition is the first revision found at https://www.sdo.esoc.esa.int/publications/ (fetched 2026-10-12, its hash kept); the later revisions 9.1 (21 October 2025) and 10.1 (8 September 2026) print the same tables. ESA names no object; scripts/truth/parse-esa-ser.ts attributes each row by its rule. A row carries a parent only where a cited source names the object (namedBy). Typed by hand; never written by a program.",
+  "editions": [
+    {
+      "edition": "2017", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00208-OPS-GR", "issue": "1.2", "dateOfIssue": "2017-04-27",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I1R2_20170427.pdf", "sha256": "887d043054f8863212909f623c51e3ab40d57e1277ff9cf9d2bcbf3beb0ed3ec",
+      "table": "Table 3.7: Fragmentation events in 2016", "page": 29,
+      "rows": [
+        { "epoch": "2016-01-16", "objectType": null, "massKg": "1600.0", "catalogued": "7", "asserted": null, "orbit": "EGO", "cause": "Propulsion" },
+        { "epoch": "2016-03-26", "objectType": null, "massKg": "2700.0", "catalogued": "16", "asserted": null, "orbit": "LEO", "cause": "Attitude" },
+        { "epoch": "2016-03-26", "objectType": null, "massKg": "56.0", "catalogued": "22", "asserted": null, "orbit": "LMO", "cause": "Unknown" },
+        { "epoch": "2016-04-15", "objectType": null, "massKg": "1600.0", "catalogued": "1", "asserted": null, "orbit": "LEO", "cause": "Aerodynamics" },
+        { "epoch": "2016-06-02", "objectType": null, "massKg": "56.0", "catalogued": "20", "asserted": null, "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2016-06-29", "objectType": null, "massKg": "3060.0", "catalogued": "1", "asserted": null, "orbit": "EGO", "cause": "Propulsion" },
+        { "epoch": "2016-07-18", "objectType": null, "massKg": "2615.0", "catalogued": "11", "asserted": null, "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2016-07-26", "objectType": null, "massKg": "1600.0", "catalogued": "6", "asserted": null, "orbit": "EGO", "cause": "Propulsion" },
+        { "epoch": "2016-07-27", "objectType": null, "massKg": "56.0", "catalogued": "16", "asserted": null, "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2016-07-27", "objectType": null, "massKg": "56.0", "catalogued": "8", "asserted": null, "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2016-08-23", "objectType": null, "massKg": "2157.0", "catalogued": "7", "asserted": null, "orbit": "LEO", "cause": "Small Impactor" },
+        { "epoch": "2016-09-30", "objectType": null, "massKg": "1858.0", "catalogued": "2", "asserted": null, "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2016-10-06", "objectType": null, "massKg": "N/A", "catalogued": "8", "asserted": null, "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2016-10-23", "objectType": null, "massKg": "815.0", "catalogued": "6", "asserted": null, "orbit": "LEO", "cause": "Battery" }
+      ]
+    },
+    {
+      "edition": "2018", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00239-OPS-GR", "issue": "2.0", "dateOfIssue": "2018-05-18",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I2R0_20180518.pdf", "sha256": "b5255c7f84a02cff78a95cc2d91b6a467fe6125f1271e8f85403cf92187c3ff6",
+      "table": "Table 3.7: Fragmentation events in 2017", "page": 34,
+      "rows": [
+        { "epoch": "2017-06-17", "objectType": null, "massKg": "4000.0", "catalogued": "1", "asserted": null, "orbit": "EGO", "cause": "Unknown" },
+        { "epoch": "2017-07-01", "objectType": null, "massKg": "4000.0", "catalogued": "13", "asserted": null, "orbit": "EGO", "cause": "Unknown" },
+        { "epoch": "2017-08-25", "objectType": null, "massKg": "2763.0", "catalogued": "0", "asserted": null, "orbit": "GEO", "cause": "Propulsion" },
+        { "epoch": "2017-09-03", "objectType": null, "massKg": "56.0", "catalogued": "9", "asserted": null, "orbit": "LMO", "cause": "Propulsion" }
+      ]
+    },
+    {
+      "edition": "2019", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00271-OPS-SD", "issue": "3.0", "dateOfIssue": "2019-04-30",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I3R0_20190430.pdf", "sha256": "d21ea05cfd2bd8b7af7e2036c33f62ba03f8ac27868cbc1bc43bdb6a60d763a2",
+      "table": "Table 3.7: Fragmentation events in 2018", "page": 42,
+      "rows": [
+        { "epoch": "2018-02-12", "objectType": null, "massKg": "360.0", "catalogued": "0", "asserted": "90", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2018-02-28", "objectType": null, "massKg": "1486.62", "catalogued": "58", "asserted": "100", "orbit": "EGO", "cause": "Propulsion" },
+        { "epoch": "2018-05-22", "objectType": null, "massKg": "56.0", "catalogued": "4", "asserted": "60", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2018-08-17", "objectType": null, "massKg": "1000.0", "catalogued": "4", "asserted": "6", "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2018-08-24", "objectType": null, "massKg": "56.0", "catalogued": "1", "asserted": "20", "orbit": "UFO", "cause": "Propulsion" },
+        { "epoch": "2018-08-30", "objectType": null, "massKg": "2020.0", "catalogued": "453", "asserted": "491", "orbit": "MGO", "cause": "Propulsion" },
+        { "epoch": "2018-12-22", "objectType": null, "massKg": "42.0", "catalogued": "12", "asserted": "None", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2020", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "4.0", "dateOfIssue": "2020-09-11",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I4R0_20200911.pdf", "sha256": "e73b81e501b0e4039be10024d88c0d006a9554f71236a5d0e53c8e6e468ea65b",
+      "table": "Table 3.7: Fragmentation events in 2019", "page": 45,
+      "rows": [
+        { "epoch": "2019-02-06", "objectType": null, "massKg": "4000", "catalogued": "52", "asserted": "7", "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2019-02-06", "objectType": null, "massKg": "200", "catalogued": "0", "asserted": "5", "orbit": "LEO", "cause": "Anomalous" },
+        { "epoch": "2019-03-25", "objectType": null, "massKg": "2020", "catalogued": "667", "asserted": "60", "orbit": "MGO", "cause": "Propulsion" },
+        { "epoch": "2019-03-27", "objectType": null, "massKg": "740", "catalogued": "122", "asserted": "400", "orbit": "LEO", "cause": "Deliberate" },
+        { "epoch": "2019-04-06", "objectType": null, "massKg": "2020", "catalogued": "1077", "asserted": "14", "orbit": "MGO", "cause": "Propulsion" },
+        { "epoch": "2019-04-07", "objectType": null, "massKg": "6552", "catalogued": "1", "asserted": "5", "orbit": "GEO", "cause": "Propulsion" },
+        { "epoch": "2019-05-07", "objectType": null, "massKg": "1487", "catalogued": "0", "asserted": "None", "orbit": "UFO", "cause": "Propulsion" },
+        { "epoch": "2019-06-05", "objectType": null, "massKg": "500", "catalogued": "8", "asserted": "None", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2019-07-11", "objectType": null, "massKg": "2494", "catalogued": "7", "asserted": "None", "orbit": "LEO", "cause": "Anomalous" },
+        { "epoch": "2019-07-22", "objectType": null, "massKg": "1764", "catalogued": "8", "asserted": "8", "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2019-08-19", "objectType": null, "massKg": "56", "catalogued": "22", "asserted": "None", "orbit": "UFO", "cause": "Propulsion" },
+        { "epoch": "2019-09-30", "objectType": null, "massKg": "100", "catalogued": "9", "asserted": "None", "orbit": "N/A", "cause": "Unknown" },
+        { "epoch": "2019-10-23", "objectType": null, "massKg": "56", "catalogued": "3", "asserted": "10", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2019-12-18", "objectType": null, "massKg": "2879", "catalogued": "0", "asserted": "None", "orbit": "LEO", "cause": "Anomalous" },
+        { "epoch": "2019-12-22", "objectType": null, "massKg": "56", "catalogued": "2", "asserted": "25", "orbit": "N/A", "cause": "Propulsion" },
+        { "epoch": "2019-12-23", "objectType": null, "massKg": "50", "catalogued": "13", "asserted": "None", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2021", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "5.0", "dateOfIssue": "2021-05-27",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I5R0_20210527.pdf", "sha256": "885a164914f5e61670ee9a5c95e5b0ff359b8fcd1a83a524887189f757151866",
+      "table": "Table 3.7: Fragmentation events in 2020", "page": 55,
+      "rows": [
+        { "epoch": "2020-01-09", "objectType": "Payload", "massKg": "547", "catalogued": "17", "asserted": "17", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2020-02-12", "objectType": "Rocket Body", "massKg": "1388", "catalogued": "111", "asserted": "75", "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2020-05-08", "objectType": "Rocket Mission Related Object", "massKg": "360", "catalogued": "323", "asserted": "65", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2020-07-12", "objectType": "Rocket Mission Related Object", "massKg": "200", "catalogued": "87", "asserted": "53", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2020-08-27", "objectType": "Payload", "massKg": "1900", "catalogued": "108", "asserted": "15", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2022", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "6.0", "dateOfIssue": "2022-04-22",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I6R0_20220422.pdf", "sha256": "d824a294812d73d2f818b6717b97c52cbbe436669e32462db552ce379f18340c",
+      "table": "Table 3.7: Fragmentation events in 2021", "page": 63,
+      "rows": [
+        { "epoch": "2021-03-10", "objectType": "Payload", "massKg": "1403", "catalogued": "113", "asserted": "102", "orbit": "LEO", "cause": "Electrical" },
+        { "epoch": "2021-03-18", "objectType": "Payload", "massKg": "800", "catalogued": "37", "asserted": "43", "orbit": "LEO", "cause": "Collision" },
+        { "epoch": "2021-10-24", "objectType": "Payload", "massKg": "45", "catalogued": "22", "asserted": "21", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2021-11-15", "objectType": "Payload", "massKg": "1750", "catalogued": "1595", "asserted": "1500", "orbit": "LEO", "cause": "Deliberate" },
+        { "epoch": "2021-11-18", "objectType": "Payload", "massKg": "42", "catalogued": "11", "asserted": "8", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2021-11-26", "objectType": "Rocket Body", "massKg": "202", "catalogued": "13", "asserted": "8", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2023", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "7.1", "dateOfIssue": "2023-09-12",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I7R1_20230912.pdf", "sha256": "c0776758b880779ca662709e0bcb7c2839537ebf8a1787fba724d5224097d4eb",
+      "table": "Table 3.7: Fragmentation events in 2022", "page": 64,
+      "rows": [
+        { "epoch": "2022-04-15", "objectType": "Rocket Mission Related Object", "massKg": "55", "catalogued": "1", "asserted": "19", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2022-07-03", "objectType": "Rocket Mission Related Object", "massKg": "200", "catalogued": "6", "asserted": "52", "orbit": "LEO", "cause": "Small Impactor" },
+        { "epoch": "2022-11-12", "objectType": "Rocket Body", "massKg": "1850", "catalogued": "331", "asserted": null, "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2022-11-17", "objectType": "Rocket Mission Related Object", "massKg": "100", "catalogued": "37", "asserted": "50", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2024", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "8.0", "dateOfIssue": "2024-07-19",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I8R0_20240719.pdf", "sha256": "1e13e265c2b2e5827af78c088378cb07069243398326213acf216c9906a06681",
+      "table": "Table 3.7: Fragmentation events in 2023", "page": 64,
+      "rows": [
+        { "epoch": "2023-01-04", "objectType": "Payload", "massKg": "45", "catalogued": "58", "asserted": null, "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2023-02-10", "objectType": "Rocket Body", "massKg": "1500", "catalogued": "5", "asserted": "5", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2023-03-11", "objectType": "Payload", "massKg": "44", "catalogued": "8", "asserted": null, "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2023-06-29", "objectType": "Payload", "massKg": "223", "catalogued": "6", "asserted": "6", "orbit": "LEO", "cause": "Electrical" },
+        { "epoch": "2023-07-31", "objectType": "Rocket Mission Related Object", "massKg": "100", "catalogued": "7", "asserted": "11", "orbit": "LEO", "cause": "Small Impactor" }
+      ]
+    },
+    {
+      "edition": "2025", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "9.0", "dateOfIssue": "2025-03-31",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I9R0_20250331.pdf", "sha256": "6dd6901dc76577ef470cccb1b039abdba6316dfc1105753142e13c8ef99e9053",
+      "table": "Table 3.7: Fragmentation events in 2024", "page": 69,
+      "rows": [
+        { "epoch": "2024-04-02", "objectType": "Rocket Body", "massKg": "6000", "catalogued": "0", "asserted": "60", "orbit": "LEO", "cause": "Propulsion",
+          "parent": { "catalogueNumber": 59344, "designator": "2024-058B", "name": "CZ-6A R/B (Yunhai-3 02)" },
+          "namedBy": "s2a systems' post of 2024-04-13, 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews on 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/): a rocket body in LEO with some 60 objects, as ESA's row has it (6,000 kg, LEO, 60 asserted, 0 catalogued), launched on 26 March 2024 (GCAT)" },
+        { "epoch": "2024-04-08", "objectType": "Payload", "massKg": "2382", "catalogued": "0", "asserted": "92", "orbit": "LMO", "cause": "Propulsion" },
+        { "epoch": "2024-05-27", "objectType": "Payload", "massKg": "2500", "catalogued": "0", "asserted": "1", "orbit": "GEO", "cause": "Unknown" },
+        { "epoch": "2024-06-26", "objectType": "Payload", "massKg": "5691", "catalogued": "19", "asserted": "100", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2024-07-05", "objectType": "Rocket Body", "massKg": "6000", "catalogued": "0", "asserted": "44", "orbit": "LEO", "cause": "Propulsion",
+          "parent": { "catalogueNumber": 60214, "designator": "2024-126D", "name": "CZ-6A R/B (Tianhui-5 02)" },
+          "namedBy": "s2a systems' post of 2024-07-05, 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews on 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/), on the day of ESA's row; the stage is 2024-126D (60214), 'CZ-6A Y7 Stage 2', in GCAT's satellite catalogue, where 2024-126C is the TH-5 adapter" },
+        { "epoch": "2024-07-19", "objectType": "Payload", "massKg": "816", "catalogued": "4", "asserted": "5", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2024-08-06", "objectType": "Rocket Body", "massKg": "6000", "catalogued": "663", "asserted": "700", "orbit": "LEO", "cause": "Propulsion" },
+        { "epoch": "2024-09-06", "objectType": "Rocket Body", "massKg": "2020", "catalogued": "843", "asserted": null, "orbit": "MGO", "cause": "Propulsion" },
+        { "epoch": "2024-10-19", "objectType": "Payload", "massKg": "2946", "catalogued": "1104", "asserted": null, "orbit": "GEO", "cause": "Propulsion" },
+        { "epoch": "2024-12-01", "objectType": "Rocket Body", "massKg": "6000", "catalogued": "0", "asserted": "100", "orbit": "LEO", "cause": "Unknown" },
+        { "epoch": "2024-12-19", "objectType": "Payload", "massKg": "816", "catalogued": "0", "asserted": "50", "orbit": "LEO", "cause": "Unknown" }
+      ]
+    },
+    {
+      "edition": "2026", "title": "ESA's Annual Space Environment Report", "reference": "GEN-DB-LOG-00288-OPS-SD", "issue": "10.0", "dateOfIssue": "2026-05-01",
+      "url": "https://www.sdo.esoc.esa.int/publications/Space_Environment_Report_I10R0_20260501.pdf", "sha256": "5f3e9800a441cbf8fcdb085f91e0af77197b11b52307fbfded47eab324546be0",
+      "table": "Table 3.7: Fragmentation events in 2025", "page": 74,
+      "rows": [
+        { "epoch": "2025-01-17", "objectType": "Payload", "massKg": "3980", "catalogued": "0", "asserted": "67", "orbit": "MEO", "cause": "Propulsion" },
+        { "epoch": "2025-06-01", "objectType": "Rocket Body", "massKg": "2020", "catalogued": "2", "asserted": "2", "orbit": "EGO", "cause": "Unknown" },
+        { "epoch": "2025-12-18", "objectType": "Payload", "massKg": "530", "catalogued": "0", "asserted": "10", "orbit": "LEO", "cause": "Propulsion" }
+      ]
+    }
+  ]
+}
