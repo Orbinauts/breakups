@@ -588,7 +588,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   planeInclinationToleranceDeg: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: the plane bound is binding at three, so the tolerances are not loosened" },
   planeNodeToleranceDeg: { kind: "fitted", source: "as planeInclinationToleranceDeg" },
   planeDistanceMax: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: binding at three, five and ten add nothing" },
-  planeNormalAngleMaxDeg: { kind: "fitted", source: "d12-fitting.md, the plane test at near-zero inclination: a degree over half, one false confirmation fewer on the training years for the same detections" },
+  planeNormalAngleMaxDeg: { kind: "fitted", source: "plane-normal-fitting.md, the plane test at near-zero inclination: a degree over half, one false confirmation fewer on the training years for the same detections" },
   planeMaxDays: { kind: "policy", source: "a piece catalogued a season after the event has drifted by what drag and the rate's error allow" },
   deploymentDeltaVMps: { kind: "physical", source: "a dispenser pushes a satellite off at under a metre a second" },
   youngLaunchDays: { kind: "policy", source: "d3-fitting.md, the per-launch channel table: the first weeks of a launch catalogue its own objects" },
