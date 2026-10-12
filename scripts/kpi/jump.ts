@@ -1,4 +1,5 @@
-import { ALERT_STATES, semiMajorAxisOf, type DetectorInput, type DetectorOutput, type ElementSet, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, type DetectorInput, type DetectorOutput, type ElementSet, type Verdict } from "../../src/index.ts";
+import { semiMajorAxisOf } from "../../src/elements.ts";
 
 /**
  * The simplest detector that can be scored: a verdict on any object whose

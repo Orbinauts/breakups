@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { archiveHome } from "../archive/archive.ts";
-import { historyDir } from "../archive/pull.ts";
+import { DAY_FILE, historyDir } from "../archive/pull.ts";
 import { CITATION, DEFAULT_BASE_URL as ARCHIVE_BASE_URL, download as downloadArchive, fetchTo, sha256File, type ReleaseManifest } from "../archive/release.ts";
 
 /**
@@ -13,9 +13,11 @@ import { CITATION, DEFAULT_BASE_URL as ARCHIVE_BASE_URL, download as downloadArc
  * (`states-<year>.json.gz`, the replay of the next year starts from them)
  * with a text saying what made them (`states-<year>.provenance.txt`), the
  * day slices pulled from the catalogue's history class for each year the
- * test has replayed (`history-<year>.tar`, the kept days with their
- * modification times, which say which days had settled when they were
- * kept, so a day kept for good is never asked for again), and
+ * test has replayed (`history-<year>.tar`, the kept days, each marked
+ * with the time it was pulled, which says whether it had settled, so a day
+ * kept for good is never asked for again; a day kept before the pull
+ * marked them says so by its modification time, which the tarball keeps
+ * until the next pull marks it), and
  * `manifest.json`, naming each asset's size and SHA-256.
  *
  * `npm run prospective:data -- download` fetches the manifest, every
@@ -121,9 +123,6 @@ export function changedAssets(manifest: DataManifest, local: readonly DataAsset[
   return local.filter((asset) => manifest.assets[asset.file]?.sha256 !== asset.sha256);
 }
 
-/** A kept day's file name, the only files a year's history holds. */
-const DAY_FILE = /^\d{4}-\d{2}-\d{2}\.json\.gz$/;
-
 /** The day files of a year's history, by name. */
 export const historyDays = (archive: string, year: number): string[] =>
   readdirSync(historyDir(archive, year))
@@ -133,8 +132,8 @@ export const historyDays = (archive: string, year: number): string[] =>
 /**
  * A year's history as a tarball, its days listed by name so the same days
  * make the same archive on any machine, with their modification times
- * (which say whether a day was kept for good) and without the extended
- * attributes a Mac would add.
+ * (which say whether a day kept before the pull marked its slices was
+ * kept for good) and without the extended attributes a Mac would add.
  */
 export function tarHistory(archive: string, year: number, out: string): DataAsset {
   const days = historyDays(archive, year);
@@ -144,7 +143,7 @@ export function tarHistory(archive: string, year: number, out: string): DataAsse
   return { file: assetName("history", year), kind: "history", year, bytes: statSync(out).size, sha256: sha256File(out), days: days.length, through: days.at(-1)!.slice(0, 10) };
 }
 
-/** A year's history put back from its tarball: the year's directory replaced whole, the days' modification times kept. */
+/** A year's history put back from its tarball: the year's directory replaced whole, the days' modification times kept for the days not yet marked. */
 export function untarHistory(archive: string, year: number, tarball: string): void {
   rmSync(historyDir(archive, year), { recursive: true, force: true });
   mkdirSync(join(archive, "history"), { recursive: true });

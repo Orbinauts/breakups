@@ -22,6 +22,8 @@ name: Maintenance
 #    with an issue where its tarball would pass the 2 GiB asset limit);
 #    and in the week of the first Monday of January, April, July and
 #    October a reminder issue lists what a person must check by hand.
+#    Then the typecheck and the tests run on the folded tree, before any
+#    download or replay, so a broken build or test fails in minutes.
 # 3. Where the scorecard is replayed, the whole Archive is downloaded, the
 #    catalogue index rebuilt, and every year replayed in order from the
 #    states the one before ended with (a year a process, as the KPI
@@ -38,7 +40,10 @@ name: Maintenance
 #    the log (or comments on the one open) and nothing is merged.
 # 6. Where anything changed, a branch `maintenance/<date>` is committed by
 #    the Actions bot, a pull request says what moved and why, CI runs on it
-#    and must pass, the Archive's year and side files are uploaded, and the
+#    and must pass (a main that moved during the run is followed where it
+#    touched nothing the run generated or was made from, the change put on
+#    it as one commit and the typecheck and tests run again; otherwise the
+#    pull request is left for the next run), the Archive's year and side files are uploaded, and the
 #    pull request is squashed into main. A merge made with the workflow's token starts no workflow,
 #    so CI, the KPI workflow and the docs are run on main by hand here, and
 #    their runs are linked on the pull request. Nothing changed: no pull
@@ -83,7 +88,7 @@ permissions:
   pull-requests: write
   # The failure, refusal and reminder issues, and their label.
   issues: write
-  # CI, the KPI workflow and the docs run on main after the merge.
+  # CI, the KPI workflow and the docs run on main after the merge, and the scheduled workflows GitHub disabled for inactivity are enabled again.
   actions: write
 
 env:
@@ -217,6 +222,18 @@ jobs:
           set -euo pipefail
           exec > >(tee -a "$LOG") 2>&1
           npm run -s maintenance:reminder
+      # The cheap checks first, on the folded tree with the refreshed sources and the rebuilt truth, so a test or a build that fails costs minutes, not the replay's hour.
+      # The generated parts are written first, from the aggregate as committed; the one check the replay makes good, that the aggregate was scored against this truth, waits for it where a replay is due.
+      - name: Check the folded tree before the replay
+        working-directory: main
+        env:
+          BREAKUPS_SCORECARD_PENDING: ${{ steps.plan.outputs.rescore == 'true' && '1' || '' }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s kpi:readme
+          npm run typecheck
+          npm test
       - name: Promote the closed year into the Archive
         id: promote
         if: steps.plan.outputs.promote != ''
@@ -332,6 +349,25 @@ jobs:
           { cat "$out/title.txt"; echo; cat "$out/message.txt"; } > "$out/commit.txt"
           # A branch folded in with nothing generated beside it is the change itself: there is nothing more to commit.
           if ! git diff --cached --quiet; then git commit -q -F "$out/commit.txt"; fi
+          # The checks ran on a tree made from main as it was. A main that moved since, touching nothing the run generated or was made from,
+          # is followed: the run's change becomes one commit on it (scripts/maintenance/moved.ts) and the tree is checked again, at most three times.
+          # A main that touched any of it is not merged into blind: the pull request is left for the next run to supersede.
+          checked="$BASE"
+          decision=unmoved
+          if [ "$MERGE" = true ]; then
+            for _ in 1 2 3; do
+              npm run -s maintenance:moved -- --base "$checked" --message "$out/commit.txt" --out "$out"
+              read -r decision moved < "$out/moved.txt"
+              case "$decision" in
+                rebased)
+                  npm run typecheck
+                  npm test
+                  checked="$moved"
+                  ;;
+                *) break ;;
+              esac
+            done
+          fi
           git push -q origin "$branch"
           url=$(gh pr create --base main --head "$branch" --title "$title" --body-file "$out/body.md" --label maintenance)
           echo "url=$url" >> "$GITHUB_OUTPUT"
@@ -340,9 +376,12 @@ jobs:
             echo "left open for review"
             exit 0
           fi
-          # The checks ran on a tree made from main as it was; a main that moved since is not merged into blind.
-          if [ "$(git ls-remote origin refs/heads/main | cut -f1)" != "$BASE" ]; then
-            gh pr comment "$url" --body "Main moved while this run checked its tree, so it is not merged: the checks ran on a base that is no longer main. The next run starts again from main and supersedes this pull request."
+          if [ "$decision" = left ]; then
+            gh pr comment "$url" --body-file "$out/moved.md"
+            exit 0
+          fi
+          if [ "$(git ls-remote origin refs/heads/main | cut -f1)" != "$checked" ]; then
+            gh pr comment "$url" --body "Main kept moving while this run checked its tree, so it is not merged: the checks ran on a base that is no longer main. The next run starts again from main and supersedes this pull request."
             exit 0
           fi
           # A pull request the bot opens starts CI and the KPI workflow, each held for approval as a first-time contributor's.
@@ -414,6 +453,16 @@ jobs:
           done
           printf '%s' "$links"
           gh pr comment "$PR_URL" --body "Merged. A merge made with the workflow's token starts no workflow, so these runs on main were started by the maintenance run:"$'\n\n'"$links"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s maintenance:keep-alive
       - name: Open an issue with the log
         if: failure()
         env:
