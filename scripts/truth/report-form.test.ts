@@ -118,7 +118,7 @@ describe("the breakup-report form", () => {
 
   test("offers the hand file's own values in its lists", () => {
     const options = (id: string) => fields.find((item) => item.id === id)!.attributes.options;
-    expect(options("source")).toEqual(["news", "analyst", "s4s-notice", "odqn", "esa-ser"]);
+    expect(options("source")).toEqual(["news", "analyst", "s4s-notice", "odqn"]);
     expect(options("kind")).toEqual([...BREAKUP_KINDS]);
     expect(options("precision")).toEqual([...PRECISIONS]);
     expect(options("cause")).toEqual(["not stated", ...CAUSES]);

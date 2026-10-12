@@ -68,11 +68,12 @@ const ordered = (statement: Fields): Fields =>
 /** The sources the truth build reads from their own files: never typed into the hand file. */
 const MACHINE_READ: ReadonlySet<SourceId> = new Set<SourceId>(["gcat", "hoosf-16e"]);
 /** The sources whose statement is a report, which counts only where it is dated. */
-const REPORTS: ReadonlySet<SourceId> = new Set<SourceId>(["news", "analyst", "odqn", "s4s-notice", "esa-ser"]);
+const REPORTS: ReadonlySet<SourceId> = new Set<SourceId>(["news", "analyst", "odqn", "s4s-notice"]);
 
 /** Why the hand file refuses a statement its schema accepts, or null where it takes it. */
 export function refusal(statement: Statement, held: readonly Statement[]): string | null {
   if (MACHINE_READ.has(statement.source)) return `${statement.source} is read by the truth build itself, from its own file: a statement of it is never typed`;
+  if (statement.source === "esa-ser") return "ESA's tables are typed apart, row by row as printed, into data/truth/esa-ser.json, and the build places each row: a row is never a statement of the hand file";
   const stated = statedOnFromRef(statement);
   if (REPORTS.has(statement.source) && stated === null) return "the report gives no day it was published (statedOn, or a day like 2026-10-08 in its reference): an undated report counts for nothing";
   const from = statement.event.from;
@@ -138,7 +139,6 @@ const SOURCE_WORDS: Partial<Record<SourceId, string>> = {
   analyst: "an analyst's statement",
   "s4s-notice": "a U.S. Space Forces-Space notice",
   odqn: "an Orbital Debris Quarterly News report",
-  "esa-ser": "a row of ESA's Space Environment Report",
   catalogue: "the catalogue's listing",
 };
 

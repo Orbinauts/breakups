@@ -53,6 +53,10 @@ describe("adding a statement", () => {
     expect(() => addStatement(HAND, { ...REPORT, source: "hoosf-16e" })).toThrow(/read by the truth build itself/);
   });
 
+  test("refuses a row of ESA's report, whose tables are typed apart", () => {
+    expect(() => addStatement(HAND, { ...REPORT, source: "esa-ser" })).toThrow(/data\/truth\/esa-ser\.json/);
+  });
+
   test("refuses a report with no day it was published, which would count for nothing", () => {
     expect(() => addStatement(HAND, { ...REPORT, ref: "Space.com, a report", statedOn: undefined })).toThrow(/no day it was published/);
     // A news report's day may come from its reference, as the hand file's own rows give it.

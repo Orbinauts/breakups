@@ -13,13 +13,12 @@ body:
     id: source
     attributes:
       label: Source
-      description: "news: a news report or a company's public notification. analyst: a named analyst's statement. s4s-notice: a U.S. Space Forces-Space notice. odqn: NASA's Orbital Debris Quarterly News. esa-ser: ESA's Space Environment Report."
+      description: "news: a news report or a company's public notification. analyst: a named analyst's statement. s4s-notice: a U.S. Space Forces-Space notice. odqn: NASA's Orbital Debris Quarterly News. (ESA's Space Environment Report is typed apart, into data/truth/esa-ser.json.)"
       options:
         - news
         - analyst
         - s4s-notice
         - odqn
-        - esa-ser
     validations:
       required: true
   - type: input
