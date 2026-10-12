@@ -4,6 +4,10 @@ Every notable change to `@orbinauts/breakups`, newest first. The format follows 
 
 ## [Unreleased]
 
+### Removed
+
+- `rekeyedBeforeRowEvent` (`scripts/published/merge.ts`), the one-off re-keying of the published files written before `rowEvent`: it ran once, and every file on `published` has carried `rowEvent` since. `readPublished` now refuses a breakup that carries none, naming its file (issue #33).
+
 ### Added
 
 - The three-axis trigger, tried and left off (`docs/detector/d13-three-axis-trigger.md`): the legacy option `openOnThreeAxes` (`LegacyParameters`) opens a candidate on the perigee radius or the inclination where the semi-major axis's residual does not reach the candidate threshold, each read against its trailing fit with the fit's scale grown by the semi-major axis's own factor (`scaleInflation`) and only on an object whose scatter is measured, and judges its persistence on that quantity (`persistenceEstimate`). A criterion written before the replay asked for two more headline early warnings on the training years with at most a tenth more false alarms and the Confirmed line no worse; with it on, the training years gained one (11 to 12) for 50,905 false alarms against 2,909, and the Confirmed line lost a confirmation and gained ten false ones. Off, nothing the detector decides changed (issue #28).

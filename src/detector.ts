@@ -172,7 +172,7 @@ export interface DetectorInput {
   sets: ElementSet[];
   /** The run's instant, in milliseconds since 1970: nothing published after it is in `sets`. */
   now: number;
-  /** The days' indices up to `now`, oldest first, where the caller has them. */
+  /** The days' indices up to `now`, oldest first, where the caller has them: the run reads its own day and the two before it (`WEATHER_DAYS`), and no other day handed in. */
   space?: SpaceWeatherDay[];
   /** The notices published up to `now`, where the caller has them. */
   notices?: Notice[];

@@ -121,6 +121,13 @@ interface RunContext {
 
 const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
 
+/** Whether a set has an instant and an orbit a body can be noted by: a finite epoch, node and inclination, and a bound orbit with a positive mean motion. */
+function hasInstantAndOrbit(set: ElementSet): boolean {
+  if (![set.epochMs, set.inclinationDeg, set.raanDeg].every(Number.isFinite)) return false;
+  if (!(set.meanMotion > 0) || !(set.eccentricity >= 0 && set.eccentricity < 1)) return false;
+  return Number.isFinite(semiMajorAxisOf(set));
+}
+
 /** The measure pass for one set: screened, predicted, pushed, and the body noted under its launch. */
 function measure(state: SeriesState, set: ElementSet, context: RunContext, pending: Pending[]): void {
   const { params, weather } = context;
@@ -145,7 +152,8 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
       item.measurement = { band, regime, residual: aKm - prediction.value, sigmaPred, gapDays: prediction.gapDays, bstar: candidate.bstar };
       pushSet(state, accepted, Number.NaN, params);
     } else {
-      const fit = fitOf(state, "a", params);
+      // The three-axis trigger grows the other quantities' scales by the axis fit's: only then is that scale computed.
+      const fit = fitOf(state, "a", params, Number.POSITIVE_INFINITY, params.legacy.openOnThreeAxes);
       if (fit === null) {
         pushSet(state, accepted, Number.NaN, params);
       } else {
@@ -175,8 +183,8 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     }
     pending.push(item);
   }
-  // The body under its launch, on the first set of it the detector sees; an older set of a known body only lowers its earliest epoch.
-  if (!state.noted || set.epochMs < firstEpochBefore) {
+  // The body under its launch, on the first set of it the detector sees; an older set of a known body only lowers its earliest epoch. A set with no instant or no orbit notes nothing: its body would leave the launch's cloud nothing to judge by. One the screen refuses for its drag derivative alone notes its body as published: its instant and orbit are sound.
+  if (hasInstantAndOrbit(set) && (!state.noted || set.epochMs < firstEpochBefore)) {
     const record = noteBody(context.launches, set, context.now);
     state.noted = true;
     if (record !== null) {
@@ -963,9 +971,9 @@ function launchPassOf(context: RunContext): AttributionView {
       const state = context.states.get(number);
       return state !== undefined && state.steps.some((step) => step.epochMs >= from && step.epochMs <= to);
     },
-    workingAt: (number) => {
+    workingAt: (number, atMs) => {
       const state = context.states.get(number);
-      return isWorkingStatus(operationalAt({ opsStatus: state?.opsStatus, endedByMs: state?.endedByMs ?? null, endedFromMs: state?.endedFromMs ?? null }, context.now, { ...context.params, opsStatusDated: true }));
+      return isWorkingStatus(operationalAt({ opsStatus: state?.opsStatus, endedByMs: state?.endedByMs ?? null, endedFromMs: state?.endedFromMs ?? null }, atMs, { ...context.params, opsStatusDated: true }));
     },
   };
 }
@@ -1095,7 +1103,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
   const launches = input.launches as Map<string, unknown>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), jumped: new Map(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, input.now, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), jumped: new Map(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
   if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {

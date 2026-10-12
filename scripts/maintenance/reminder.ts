@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readStatements, type Statement } from "../../src/index.ts";
+import { statedOnFromRef } from "../truth/stated.ts";
 import { createIssue, ensureLabel, issuesLabelled } from "./github.ts";
 
 /**
@@ -77,7 +78,7 @@ export interface HandFile {
   latestNotice: string | null;
 }
 
-/** Reads what the reminder names from the hand file's statements. */
+/** Reads what the reminder names from the hand file's statements, each dated as the truth dates it (`statedOnFromRef`): its own `statedOn`, else the day its reference gives by its source's convention (a notice by the day it was seen). */
 export function handFileOf(statements: readonly Statement[]): HandFile {
   let latestEvent: HandFile["latestEvent"] = null;
   let latestStatedOn: string | null = null;
@@ -85,7 +86,7 @@ export function handFileOf(statements: readonly Statement[]): HandFile {
   let latestNotice: string | null = null;
   for (const s of statements) {
     if (latestEvent === null || s.event.to > latestEvent.to) latestEvent = { to: s.event.to, ref: s.ref };
-    const on = s.statedOn?.on ?? null;
+    const on = statedOnFromRef({ ...s, statedOn: s.statedOn ?? null })?.on ?? null;
     if (on !== null && (latestStatedOn === null || on > latestStatedOn)) latestStatedOn = on;
     const odqn = /ODQN (\d+)\((\d+)\)[^;:]*/.exec(s.ref);
     if (s.source === "odqn" && odqn !== null) {

@@ -114,7 +114,7 @@ export interface DetectorParameters {
   /** The two-sided CUSUM's drift allowance, in units of scatter, and the decision threshold; the side channel for a slow, low-energy move the step test cannot see in one set. Fitted on the training split; a threshold the sweep found only costs false alarms is set high. */
   cusumDrift: number;
   hCusum: number;
-  /** A set that moves the semi-major axis by more kilometres than this, or the inclination by more degrees, or whose node is further from the J2 precession of the last set than this many degrees, is foreign until the next set agrees with it. Physical: no breakup and few manoeuvres move an orbit that far in one gap; a cross-tagged set does. */
+  /** A set whose semi-major axis is more kilometres than this off where the last set and it say drag took the orbit (the mean of their drag rates over the gap), or that moves the inclination by more degrees, or whose node is further from the J2 precession of the last set than this many degrees, is foreign until the next set agrees with it. Physical: no breakup and few manoeuvres move an orbit that far in one gap; a cross-tagged set does. */
   foreignDeltaAKm: number;
   foreignDeltaIncDeg: number;
   foreignRaanDeg: number;

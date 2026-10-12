@@ -14,7 +14,7 @@ import { BODY_CLASSES } from "./truth.ts";
  * and the attribution's own allow. Read through the launch pass's view of
  * the run, with the verdicts it raises, a body's orbit as the detector
  * last saw it, whether a body made a persistent step in a span, and
- * whether a payload was operating at the run's instant.
+ * whether a payload was operating at the cloud's event.
  */
 
 const DAY_MS = 86_400_000;
@@ -26,8 +26,8 @@ export interface AttributionView extends LaunchPassView {
   orbitOf(number: number, fallback: PlaneOrbit): PlaneOrbit;
   /** Whether the body made a persistent step, whatever verdict it got, with its first post set between the two instants. */
   steppedWithin(number: number, from: number, to: number): boolean;
-  /** Whether the body, a payload, was operating at the run's instant by its dated status as its latest set gave it. */
-  workingAt(number: number): boolean;
+  /** Whether the body, a payload, was operating at the instant by its dated status as its latest set gave it. */
+  workingAt(number: number, atMs: number): boolean;
 }
 
 
@@ -78,18 +78,20 @@ function piecesEvent(timed: PiecesEventTime, params: DetectorParameters): { at: 
 
 /**
  * The rank the stage preference reads a body by (`attributionPrefersStage`):
- * 0 for a rocket body, 2 for a payload operating at the instant (its dated
- * status as its latest set gave it), 1 for any other body. A rocket body
+ * 0 for a rocket body, 2 for a payload operating at the event (its dated
+ * status as its latest set gave it, read at `atMs`, the cloud's event:
+ * "operating at the time" is at the breakup, not at the run that judges
+ * its pieces), 1 for any other body. A rocket body
  * in orbit since 2005 has had a reported breakup three to six times as
  * often as a payload, and a payload breaks up dead far more often than
  * working, so where the pieces cannot tell two bodies apart the lower rank
  * is the likelier parent.
  */
-function rankOf(view: AttributionView, launch: LaunchRecord, number: number): number {
+function rankOf(view: AttributionView, launch: LaunchRecord, number: number, atMs: number): number {
   const body = view.bodyOf(launch, number);
   if (body?.bodyClass === "rocket body") return 0;
   if (body?.bodyClass !== "payload") return 1;
-  return view.workingAt(number) ? 2 : 1;
+  return view.workingAt(number, atMs) ? 2 : 1;
 }
 
 const RANK_WORDS = ["a rocket body", "a body not operating at the time", "a payload operating at the time"] as const;
@@ -201,7 +203,7 @@ export function attributeCloud(launch: LaunchRecord, verdict: CloudVerdict, pare
     const byCentre = converged !== null && converged.ratio > params.attributionAmbiguityRatio ? converged.number : centred;
     // The stage preference: a body of a better rank in the pieces' plane whose offset from their centre the pieces cannot tell from the named body's is named instead, unless the named body alone made a persistent step in the window.
     // In its narrower form only a rocket body is preferred, and only over a payload operating at the time.
-    const rank = (n: number): number => rankOf(view, launch, n);
+    const rank = (n: number): number => rankOf(view, launch, n, verdict.eventMs);
     const narrow = params.attributionPrefersStageOverWorking && !params.legacy.attributionPrefersStage;
     const better = (n: number, than: number): boolean => (narrow ? rank(n) === 0 && rank(than) === 2 : rank(n) < rank(than));
     const alternative = sharing.filter((n) => n !== byCentre && better(n, byCentre)).reduce<number | null>((best, n) => (best === null || centreOf(n) < centreOf(best) ? n : best), null);

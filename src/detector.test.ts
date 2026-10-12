@@ -9,7 +9,7 @@ import type { ElementSet } from "./elements.ts";
 import type { PiecesEventTime } from "./event-time.ts";
 import { passesSmallBatch } from "./confirmation.ts";
 import type { DetectorInput, LogRow } from "./detector.ts";
-import { CATALOGUE_KEY, type CatalogueRecord } from "./fragments.ts";
+import { CATALOGUE_KEY, type CatalogueRecord, type LaunchRecord } from "./fragments.ts";
 import { runDetector } from "./run.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
@@ -348,9 +348,10 @@ describe("the detector on synthetic series", () => {
     const series = decaying(7200, 0.02, 0.004, 40, 20);
     const stepAt = 30;
     for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
-    const day = (kp: number) => ({ day: "2020-04-21", kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null });
-    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: [day(2)] });
-    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: [day(7)] });
+    // The run's own day, whichever it is: the run reads its day and the two before it.
+    const day = (kp: number) => (at: number) => [{ day: new Date(at).toISOString().slice(0, 10), kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null }];
+    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: day(2) });
+    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: day(7) });
     expect(suspected(quiet)[0]!.step!.postSets).toBe(2);
     expect(suspected(stormy)[0]!.step!.postSets).toBe(3);
     expect(suspected(stormy)[0]!.reasons.join(" ")).toContain("storm hold");
@@ -816,6 +817,25 @@ describe("the Confirmed channel's attribution", () => {
     expect(row.signals).toMatchObject({ attributionPath: 1, attributionPieces: 6, attributionKept: 6, attributionRivals: 0, attributionRefused: 0, attributionRaised: 1 });
   });
 
+  test("a set the screen cannot read notes no body under its launch, so it leaves the launch's cloud to be judged", () => {
+    const body = quietBody(1, "2010-001A");
+    const pieces = cloudOf(body, 50001);
+    const junk: ElementSet = { ...pieces[0]!, number: 50007, designator: "2010-001J", epochMs: Number.NaN };
+    const fed = feed(runs(body, [[...pieces, junk]]));
+    const confirmed = attributed(fed);
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+  });
+
+  test("a set whose drag derivative alone is junk still notes its body, when it was first published: its instant and orbit are sound", () => {
+    const first = { ...setOf(60001, { epochMs: T0, aKm: 7200, meanMotionDot: -2e-4 }, "debris"), designator: "2010-009C" };
+    const later = { ...setOf(60001, { epochMs: T0 + DAY, aKm: 7200 }, "debris"), designator: "2010-009C" };
+    const one = runDetector({ states: new Map(), launches: new Map(), sets: [first], now: T0 + HOUR });
+    const two = runDetector({ states: one.states, launches: one.launches, sets: [later], now: T0 + DAY + HOUR });
+    const launch = two.launches.get("2010-009") as LaunchRecord;
+    expect(launch.bodies.map((b) => [b.number, b.firstSeenAt])).toEqual([[60001, T0 + HOUR]]);
+  });
+
   test("of two bodies of the launch in different planes, the pieces are attributed to the one whose plane they share", () => {
     const first = quietBody(1, "2010-001A");
     const second = quietBody(2, "2010-001B", 60, "payload");
@@ -1255,7 +1275,7 @@ describe("the eleventh phase's rules", () => {
 
   test("in its narrower form a rocket body is preferred only over a payload operating at the time", () => {
     // The scene above, the payload operating or not by its status.
-    const runsWith = (status: Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
+    const runsWith = (status: Pick<ElementSet, "opsStatus" | "endedByMs"> | Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
       const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload", status));
       const stage = decaying(7210, 0.02, 0.004, 48, 8, 3).map((s) => ({ ...setOf(7, s, "rocket body"), designator: "2010-002B" }));
       const at = quiet[110]!.epochMs;
@@ -1272,6 +1292,10 @@ describe("the eleventh phase's rules", () => {
     const row = feed(runsWith({}), { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, attributionPrefersStageOverWorking: true } }).log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
     expect(row.signals.preferNamedRank).toBe(1);
     expect(Number.isFinite(row.signals.preferAlternative)).toBe(false);
+    // The status is read at the event, not at the run: a payload whose dated end of contact falls just over the margin after the pieces' first epoch was operating then, though at the run, an hour later, the end is within the margin and its status unknown.
+    const event = decaying(7200, 0.02, 0.004, 48)[110]!.epochMs + HOUR;
+    const endedByMs = event + (params.endedUnknownDays + 1) * DAY + 30 * 60_000;
+    expect(named(runsWith({ opsStatus: "nonoperational", endedByMs }), { attributionPrefersStageOverWorking: true })).toEqual([7]);
   });
 });
 

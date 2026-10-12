@@ -5,7 +5,7 @@ import { readBreakups } from "../../src/index.ts";
 import { readBodies, readManifest, type ArchivedBody } from "../archive/archive.ts";
 import { readYearFile, throughOf } from "../prospective/run.ts";
 import { readPublished, writePublished } from "./files.ts";
-import { mergePublished, rekeyedBeforeRowEvent } from "./merge.ts";
+import { mergePublished } from "./merge.ts";
 import { selectPublished } from "./select.ts";
 
 /**
@@ -55,9 +55,7 @@ export function publishedRun(options: PublishedRunOptions): string {
   const latestYear = files[files.length - 1]!.file.year;
   const setsThrough = throughOf(readManifest(options.archive, latestYear).source, latestYear);
 
-  const read = readPublished(options.out);
-  const previous = rekeyedBeforeRowEvent(read, breakups);
-  const rekeyed = read.flatMap((b, i) => (b.id === previous[i]!.id ? [] : [`${b.id} to ${previous[i]!.id}`]));
+  const previous = readPublished(options.out);
   const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number)), verdicts);
   const detector = detectors[0]!;
   writePublished(options.out, merged, { ranAt: new Date(options.now).toISOString(), setsThrough, detector, truthSha256 });
@@ -67,8 +65,7 @@ export function publishedRun(options: PublishedRunOptions): string {
   const confirmed = merged.filter((b) => b.state === "confirmed").length;
   const added = merged.filter((b) => !before.has(b.id)).length;
   const left = previous.filter((b) => !after.has(b.id)).length;
-  const rekeying = rekeyed.length === 0 ? "" : ` (re-keyed ${rekeyed.join(", ")})`;
-  return `published ${merged.length} breakup${merged.length === 1 ? "" : "s"} (${confirmed} confirmed, ${merged.length - confirmed} suspected): ${added} new, ${left} left${rekeying}; sets through ${setsThrough}, detector ${detector}, truth ${truthSha256.slice(0, 12)}`;
+  return `published ${merged.length} breakup${merged.length === 1 ? "" : "s"} (${confirmed} confirmed, ${merged.length - confirmed} suspected): ${added} new, ${left} left; sets through ${setsThrough}, detector ${detector}, truth ${truthSha256.slice(0, 12)}`;
 }
 
 function main(): void {
