@@ -4,7 +4,7 @@ import { cloudBodies, isFragmentClass, launchCodeOf, nearestCloudDistance, plane
 import type { ConfirmationReading, OpenAlert } from "./fusion.ts";
 import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, PHASES, REFUSALS, logRow, round5, type SignalName } from "./log.ts";
 import { median } from "./model.ts";
-import type { DetectorParameters } from "./params.ts";
+import { isOn, type DetectorParameters } from "./params.ts";
 import { BODY_CLASSES, type BodyClass } from "./truth.ts";
 
 /**
@@ -188,13 +188,13 @@ export function launchRefusals(subject: { key: string; number: number; bodyClass
 
 /** An analyst range's numbers are reused and say nothing of a launch: its pieces confirm an alert only where the parameters let them and the plane test names that parent alone among the open alerts. Returns the `REFUSALS` bits. */
 export function analystRefusals(confirming: readonly PieceReading[], params: DetectorParameters): number {
-  if (!params.analystAttributes) return REFUSALS.analyst;
+  if (!params.legacy.analystAttributes) return REFUSALS.analyst;
   return confirming.some((piece) => piece.within.length !== 1) ? REFUSALS.ambiguous : 0;
 }
 
 /** Whether a batch of pieces passes the small-batch rule (`smallBatchOriginHours`): a batch outside the rule's sizes, or the rule off, passes; a small one needs at least two pieces crossing the parent in the window, the share asked of them within the bound of their median crossing. */
 export function passesSmallBatch(pieces: number, timed: Pick<PiecesEventTime, "origin"> | null, params: Pick<DetectorParameters, "smallBatchMinPieces" | "smallBatchMaxPieces" | "smallBatchOriginShare" | "smallBatchOriginHours">): boolean {
-  if (!(params.smallBatchOriginHours < 1e8) || pieces < params.smallBatchMinPieces || pieces > params.smallBatchMaxPieces) return true;
+  if (!isOn(params.smallBatchOriginHours) || pieces < params.smallBatchMinPieces || pieces > params.smallBatchMaxPieces) return true;
   if (timed === null || !(timed.origin.timed >= 2)) return false;
   const deviation = params.smallBatchOriginShare <= 0.5 ? timed.origin.dev50Hours : timed.origin.dev75Hours;
   return deviation <= params.smallBatchOriginHours;
@@ -275,16 +275,16 @@ export function alertTimingRefusals(alert: { number: number; tStep: number }, pi
   let refused = 0;
   const reasons: string[] = [];
   if (analyst && timed === null) refused |= REFUSALS.untimed;
-  else if (analyst && timed!.missKm > params.attributionMissKmMax) refused |= REFUSALS.miss;
-  if (originTested(params) && Math.min(pieces.length, params.attributionMaxPieces) >= params.originMinPieces && (timed === null || !passesOrigin(timed.origin, params))) {
+  else if (analyst && timed!.missKm > params.legacy.attributionMissKmMax) refused |= REFUSALS.miss;
+  if (originTested(params.legacy) && Math.min(pieces.length, params.attributionMaxPieces) >= params.legacy.originMinPieces && (timed === null || !passesOrigin(timed.origin, params.legacy))) {
     refused |= REFUSALS.origin;
     reasons.push(`the pieces' crossings of ${alert.number} do not share an instant: the late pieces of an old cloud, not this step's`);
   }
-  if (!analyst && params.smallBatchStepsToo && !passesSmallBatch(pieces.length, timed, params)) {
+  if (!analyst && params.legacy.smallBatchStepsToo && !passesSmallBatch(pieces.length, timed, params)) {
     refused |= REFUSALS.smallBatch;
     reasons.push(smallBatchReason(pieces.length, timed, alert.number, params));
   }
-  if (timed !== null && timed.origin.timed >= 2 && (verdict.launchAgeDays - timed.origin.ageDays < params.originLaunchMarginDays || Math.abs(timed.origin.medianAt - alert.tStep) / HOUR_MS > params.originStepHoursMax)) {
+  if (timed !== null && timed.origin.timed >= 2 && (verdict.launchAgeDays - timed.origin.ageDays < params.originLaunchMarginDays || Math.abs(timed.origin.medianAt - alert.tStep) / HOUR_MS > params.legacy.originStepHoursMax)) {
     refused |= REFUSALS.origin;
     reasons.push(`the pieces cross ${alert.number} ${((timed.origin.medianAt - alert.tStep) / HOUR_MS).toFixed(0)} h from its step, ${(verdict.launchAgeDays - timed.origin.ageDays).toFixed(0)} days after the launch was first seen: not the step's pieces`);
   }
@@ -326,7 +326,7 @@ export function confirmByPieces(number: number, alert: OpenAlert, launch: Launch
   let refused = analyst ? analystRefusals(confirming, params) : launchRefusals({ key, number, bodyClass: alert.bodyClass }, verdict, params).refused;
   // On an analyst range, the pieces that lie within the plane bound of another open alert's parent too: the plane test does not name this one alone.
   const shared = analyst ? confirming.filter((piece) => piece.within.length > 1).length : 0;
-  const overridable = (bits: number): boolean => !analyst && bits !== 0 && (bits & ~HISTORY_REFUSALS) === 0 && params.originOverrideHours < 1e8;
+  const overridable = (bits: number): boolean => !analyst && bits !== 0 && (bits & ~HISTORY_REFUSALS) === 0 && isOn(params.originOverrideHours);
   if (refused !== 0 && !overridable(refused)) {
     view.log.push(logRow(now, number, attributionSignals(launch, verdict, path, alert.bodyClass, confirming, null, shared, null, Number.NaN, refused, false)));
     return null;

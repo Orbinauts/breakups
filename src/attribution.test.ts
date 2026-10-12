@@ -38,7 +38,7 @@ describe("the rules on the pieces timed back against the body", () => {
   });
 
   test("pieces missing the body by more than the bound are not its pieces", () => {
-    expect(timedRefusals(BODY, pieces(6), timing({ missKm: 120 }), OLD_LAUNCH, { ...params, attributionMissKmMax: 50 }).refused).toBe(REFUSALS.miss);
+    expect(timedRefusals(BODY, pieces(6), timing({ missKm: 120 }), OLD_LAUNCH, { ...params, legacy: { ...params.legacy, attributionMissKmMax: 50 } }).refused).toBe(REFUSALS.miss);
   });
 
   test("pieces crossing the body within the launch's margin after it was first seen are its own objects catalogued late", () => {
@@ -48,7 +48,7 @@ describe("the rules on the pieces timed back against the body", () => {
   });
 
   test("with the common-origin test on, pieces that do not share an instant are an old cloud's late pieces", () => {
-    expect(timedRefusals(BODY, pieces(6), timing({ dev50Hours: 30, dev75Hours: 40 }), OLD_LAUNCH, { ...params, originHoursBase: 6 }).refused).toBe(REFUSALS.origin);
+    expect(timedRefusals(BODY, pieces(6), timing({ dev50Hours: 30, dev75Hours: 40 }), OLD_LAUNCH, { ...params, legacy: { ...params.legacy, originHoursBase: 6 } }).refused).toBe(REFUSALS.origin);
   });
 
   test("a small batch of three or four pieces needs a tight common origin; five pieces do not", () => {
@@ -59,7 +59,7 @@ describe("the rules on the pieces timed back against the body", () => {
 });
 
 describe("the naming of the parent among twins", () => {
-  const twins = { ...params, attributionTwins: true, attributionTwinsUnresolved: false, attributionStepBreaksTies: true };
+  const twins = { ...params, attributionTwins: true, attributionStepBreaksTies: true, legacy: { ...params.legacy, attributionTwinsUnresolved: false } };
 
   test("a persistent step the body alone made names it, before its rank does", () => {
     expect(twinRuling(1, 1, true, twins)).toEqual({ by: "step", namesCandidates: true, refused: 0 });
@@ -72,11 +72,11 @@ describe("the naming of the parent among twins", () => {
 
   test("a parent nothing names is refused as ambiguous, unless unresolved twins are raised with the launch's candidates", () => {
     expect(twinRuling(0, 0, true, twins)).toEqual({ by: null, namesCandidates: false, refused: REFUSALS.ambiguous });
-    expect(twinRuling(0, 0, true, { ...twins, attributionTwinsUnresolved: true })).toEqual({ by: null, namesCandidates: true, refused: 0 });
+    expect(twinRuling(0, 0, true, { ...twins, legacy: { ...twins.legacy, attributionTwinsUnresolved: true } })).toEqual({ by: null, namesCandidates: true, refused: 0 });
   });
 
   test("with the twins off, a body named by its step is named alone, and one nothing names is refused", () => {
-    const off = { ...twins, attributionTwins: false, attributionTwinsUnresolved: true };
+    const off = { ...twins, attributionTwins: false, legacy: { ...twins.legacy, attributionTwinsUnresolved: true } };
     expect(twinRuling(1, 0, true, off)).toEqual({ by: "step", namesCandidates: false, refused: 0 });
     expect(twinRuling(0, 0, true, off)).toEqual({ by: null, namesCandidates: false, refused: REFUSALS.ambiguous });
   });

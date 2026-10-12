@@ -4,7 +4,7 @@ import { totalmem } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorParameters } from "../../src/index.ts";
+import { DETECTOR_NAME, DETECTOR_PARAMETERS, parametersWith, readBreakups, type Breakup, type DetectorParameters, type ParameterOverrides } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, yearDir } from "../archive/archive.ts";
 import { installedVersions } from "../pins/pins.ts";
 import type { Catalogue } from "./catalogue.ts";
@@ -112,12 +112,12 @@ export function replayAndScore(archive: string, year: number, truth: Truth, opti
   const notices = options.notices ?? noticesOf(truth.breakups);
   const catalogue = options.catalogue ?? catalogueOf(archive, truth);
   const result = replayYear(archive, year, { ...options, notices, decays: options.decays ?? decaysOf(catalogue) });
-  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...options.parameters }, catalogue);
+  const score = matchYear(year, truth.breakups, result.verdicts, result.index, result.timeBasis, notices, parametersWith(options.parameters), catalogue);
   const file: YearFile = {
     format: 1,
     year,
     archive: { source: result.manifest.source.kind, builtAt: result.manifest.builtAt, sets: result.manifest.sets, bodies: result.manifest.bodies },
-    detector: { name: options.detectorName ?? DETECTOR_NAME, parameters: { ...DETECTOR_PARAMETERS, ...options.parameters } },
+    detector: { name: options.detectorName ?? DETECTOR_NAME, parameters: parametersWith(options.parameters) },
     timeBasis: result.timeBasis,
     runs: result.runs,
     sets: result.sets,
@@ -137,7 +137,7 @@ export function rematch(archive: string, file: YearFile, truth: Truth): YearFile
   const notices = noticesOf(truth.breakups);
   const previous = existsSync(join(yearDir(archive, file.year - 1), "manifest.json")) ? loadSlice(archive, file.year - 1) : null;
   const index = indexOf(loadSlice(archive, file.year), previous);
-  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices, { ...DETECTOR_PARAMETERS, ...file.detector.parameters }, catalogueOf(archive, truth)) };
+  return { ...file, score: matchYear(file.year, truth.breakups, file.verdicts, index, file.timeBasis, notices, parametersWith(file.detector.parameters), catalogueOf(archive, truth)) };
 }
 
 /** One year replayed and matched: the file as it is written. */
@@ -220,13 +220,20 @@ export function writeAggregate(dir: string, truth: Truth, root = ROOT, eventsPat
 /** Where the per-event dissection of the committed results is written. */
 export const EVENTS_PATH = join(ROOT, "docs/detector/events.md");
 
-/** A `--param name=value` argument: the name must be a parameter's, the value parses as JSON. */
-export function parseParameter(arg: string, into: Partial<DetectorParameters>): void {
+/** A `--param name=value` argument: the name must be a parameter's, or a legacy option's as `legacy.name` or by its bare name (which lands in the block); the value parses as JSON. */
+export function parseParameter(arg: string, into: ParameterOverrides): void {
   const at = arg.indexOf("=");
   if (at === -1) throw new Error(`--param wants name=value, got ${arg}`);
-  const name = arg.slice(0, at) as keyof DetectorParameters;
-  if (!(name in DETECTOR_PARAMETERS)) throw new Error(`no detector parameter named ${name}`);
-  (into as Record<string, unknown>)[name] = JSON.parse(arg.slice(at + 1)) as unknown;
+  const path = arg.slice(0, at);
+  const value = JSON.parse(arg.slice(at + 1)) as unknown;
+  const option = path.startsWith("legacy.") ? path.slice("legacy.".length) : path in DETECTOR_PARAMETERS.legacy ? path : null;
+  if (option !== null) {
+    if (!(option in DETECTOR_PARAMETERS.legacy)) throw new Error(`no legacy option named ${option}`);
+    into.legacy = { ...into.legacy, [option]: value };
+    return;
+  }
+  if (!(path in DETECTOR_PARAMETERS) || path === "legacy") throw new Error(`no detector parameter named ${path}`);
+  (into as Record<string, unknown>)[path] = value;
 }
 
 function summary(file: YearFile): string {
@@ -254,7 +261,7 @@ async function main(): Promise<void> {
   let fromStates: string | null = null;
   // What a worker of a parallel replay is handed of this command's own arguments.
   const passed: string[] = [];
-  const parameters: Partial<DetectorParameters> = {};
+  const parameters: ParameterOverrides = {};
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
     if (arg === "--year") years.push(Number(args[++i]));

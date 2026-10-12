@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
+import { runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type ParameterOverrides, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
 import { dayOf, endedByOf, opsStatusOf } from "../../src/elements.ts";
 import { readBodies, readColumn, readManifest, yearDir, type ArchivedBody, type ArchivedSet, type ColumnName, type Columns, type Manifest } from "../archive/archive.ts";
 import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
@@ -257,7 +257,7 @@ export interface Carried {
 export interface ReplayOptions {
   /** The detector to run; the library's by default. */
   detector?: Detector;
-  parameters?: Partial<DetectorParameters>;
+  parameters?: ParameterOverrides;
   /** The notices the caller knows of, handed to each run as far as published by its instant. */
   notices?: Notice[];
   /** The reentries the catalogue published, each object's decay day by catalogue number, handed to every run whole: the detector reads one only from its day on. */

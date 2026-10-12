@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { OUTCOMES, PHASES, REFUSALS } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
-import { DETECTOR_PARAMETERS, type DetectorParameters } from "./params.ts";
+import { DETECTOR_PARAMETERS, type DetectorParameters, type ParameterOverrides } from "./params.ts";
 import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
@@ -1191,7 +1191,7 @@ describe("the eleventh phase's rules", () => {
       const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, stage[from + i]!]));
       return [...both(0, 115), pieces, ...both(115, quiet.length)];
     };
-    const named = (runs: ElementSet[][], parameters: Partial<DetectorParameters>): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
+    const named = (runs: ElementSet[][], parameters: ParameterOverrides): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
     const working = runsWith({ opsStatus: "operational" });
     expect(named(working, { attributionPrefersStageOverWorking: true })).toEqual([7]);
     expect(named(working, { attributionPrefersStageOverWorking: false })).toEqual([2]);

@@ -70,9 +70,6 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
-/** How long after a candidate closed, in days, and after a step was raised, in days, an object counts as quiet for a watch verdict. Policy: a month and a year. */
-export const QUIET_AFTER_CLOSE_DAYS = 30;
-export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
 export const DETECTOR_NAME = "confirmed-v10";
@@ -130,7 +127,7 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     const aKm = semiMajorAxisOf(accepted);
     const regime = state.epochs.length === 0 ? regimeOf(accepted) : state.regime;
     const perigeeHeightKm = aKm * (1 - accepted.eccentricity) - WGS84_EQUATORIAL_KM;
-    const band = bandOf(regime, perigeeHeightKm);
+    const band = bandOf(regime, perigeeHeightKm, params);
     const previousEpoch = state.epochs.length === 0 ? Number.NEGATIVE_INFINITY : state.epochs[state.epochs.length - 1]!;
     const kappa = params.kappa[regimeKey(regime)];
     const item: Pending = { state, set: accepted, aKm, regime, band, perigeeHeightKm, previousEpoch, windowBstar: accepted.bstar, post: false, fit: null, noise: null, prediction: null, measurement: null };
@@ -386,7 +383,7 @@ function verdictOf(state: SeriesState, candidate: Candidate, item: Pending, verd
 /** Whether the object is quiet enough for a watch verdict to show its first post set: its own scatter is measured, nothing closed on it lately, no step was raised on it this year, and the jump alone would pass the persistence size. */
 function isQuiet(state: SeriesState, noise: OwnNoise, z1: number, context: RunContext): boolean {
   const { params, now } = context;
-  return noise.residuals >= params.residualsForScatter && now - state.closedAt > QUIET_AFTER_CLOSE_DAYS * DAY_MS && now - state.lastRaisedAt > QUIET_AFTER_RAISE_DAYS * DAY_MS && Math.abs(z1) >= params.zPersist;
+  return noise.residuals >= params.residualsForScatter && now - state.closedAt > params.quietAfterCloseDays * DAY_MS && now - state.lastRaisedAt > params.quietAfterRaiseDays * DAY_MS && Math.abs(z1) >= params.zPersist;
 }
 
 /** Opens a candidate on a bracket and freezes the pre fits at the bracket's first edge. */
@@ -496,7 +493,7 @@ function judge(candidate: Candidate, estimate: StepEstimate, regime: Regime, con
   const minSets = stressed ? params.persistMinSetsUnderStress : params.persistMinSets;
   const enoughSets = estimate.k >= params.persistMinSetsAlone || (estimate.k >= minSets && estimate.spanHours >= params.persistMinSpanHours[regimeKey(regime)]);
   if (enoughSets && persistent(estimate, params)) {
-    const size = params.persistOnMeanStep ? `${estimate.zMean.toFixed(1)} sigma at the post sets' centroid` : `${estimate.z.toFixed(1)} sigma`;
+    const size = params.legacy.persistOnMeanStep ? `${estimate.zMean.toFixed(1)} sigma at the post sets' centroid` : `${estimate.z.toFixed(1)} sigma`;
     reasons.push(`a step of ${estimate.delta.toFixed(3)} km holds over ${estimate.k} post sets spanning ${estimate.spanHours.toFixed(1)} h: ${size}, the later sets keep ${estimate.rhoMedian.toFixed(2)} of the first jump, evidence ${estimate.evidence.toFixed(1)} against a drift`);
     if (stressed) reasons.push(weather.stormHold ? `three post sets were required under a storm hold (Kp ${weather.kpMax})` : `three post sets were required under run stress (${context.recentCandidates} candidates in a day)`);
     return { outcome: OUTCOMES.suspected, reasons };
@@ -823,8 +820,6 @@ function pieceStatesFor(context: RunContext, pieces: readonly PieceReading[]): S
   return states;
 }
 
-/** The shorter search windows tried, in days, where the pieces cannot be propagated over the whole one: a high-drag piece's set fails far from its epoch. Policy. */
-const FALLBACK_SEARCH_DAYS = [60, 20] as const;
 
 /**
  * The pieces timed back against a parent (`eventFromPieces`), their first
@@ -847,7 +842,7 @@ function pieceTimer(context: RunContext): (parent: number, pieces: readonly Piec
     const to = Math.min(...sets.map((s) => s.epochMs));
     const parentSet = parentSetFor(context, parent, to);
     if (parentSet !== null) {
-      for (const days of [context.params.attributionSearchDays, ...FALLBACK_SEARCH_DAYS.filter((d) => d < context.params.attributionSearchDays)]) {
+      for (const days of [context.params.attributionSearchDays, ...context.params.attributionFallbackSearchDays.filter((d) => d < context.params.attributionSearchDays)]) {
         timed = eventFromPieces(parentSet, sets, to - days * DAY_MS, to, context.params);
         if (timed !== null) break;
       }

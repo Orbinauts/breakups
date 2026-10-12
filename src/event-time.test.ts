@@ -215,8 +215,8 @@ describe("the common-origin test", () => {
   test("a breakup's pieces override the rules that read the launch's history as an old cloud; an old cloud's do not; the gate is off as fitted", () => {
     expect(overridesHistory(window(fresh).origin, params)).toBe(true);
     expect(overridesHistory(window(oldCloud).origin, params)).toBe(false);
-    expect(originTested(params)).toBe(false);
-    expect(passesOrigin(window(oldCloud).origin, params)).toBe(true);
+    expect(originTested(params.legacy)).toBe(false);
+    expect(passesOrigin(window(oldCloud).origin, params.legacy)).toBe(true);
     // Two pieces are too few to override, however tight.
     expect(overridesHistory(window(fresh.slice(0, 2)).origin, params)).toBe(false);
   });
