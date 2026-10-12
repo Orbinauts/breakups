@@ -308,6 +308,23 @@ export function normalAngleDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: n
 }
 
 /**
+ * The detector's plane test, as a distance in units of the tolerances:
+ * `planeDistance`'s, or, where the angle between the two orbits' normals
+ * is within `planeNormalAngleMaxDeg`, that angle scaled so the bound falls
+ * at `planeDistanceMax`, whichever is the less. So a piece is in the plane
+ * (distance at or under `planeDistanceMax`) by today's tolerances or by
+ * the normals, and the test holds at near-zero inclination, where the
+ * node is undefined. The same limit on the days since the event applies
+ * to both; with the angle at zero it is `planeDistance`'s alone.
+ */
+export function planeTestDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters, limitDays = params.planeMaxDays): number {
+  const distance = planeDistance(parent, piece, eventMs, params, limitDays).distance;
+  if (!(params.planeNormalAngleMaxDeg > 0) || Math.abs(piece.epochMs - eventMs) / DAY_MS > limitDays) return distance;
+  const byNormal = (normalAngleDeg(parent, piece, eventMs) / params.planeNormalAngleMaxDeg) * params.planeDistanceMax;
+  return Math.min(distance, byNormal);
+}
+
+/**
  * The bodies of an earlier cloud under the launch: those classed as a
  * fragment is (debris, or not yet said) first seen in the span, less the
  * bodies excluded (the alerted parent, and the pieces now being judged).
@@ -318,8 +335,8 @@ export function cloudBodies(launch: LaunchRecord, from: number, to: number, excl
 }
 
 /**
- * How near an orbit lies to a cloud: the least plane distance to any of
- * the cloud's bodies, each distance taken both ways (the orbit as the
+ * How near an orbit lies to a cloud: the least plane test distance
+ * (`planeTestDistance`) to any of the cloud's bodies, each distance taken both ways (the orbit as the
  * reference and the body as the reference, since the node is carried at
  * the reference's own rate) and the smaller kept, with no limit on how
  * long after the cloud's event either set is, since the test is whether
@@ -329,7 +346,7 @@ export function nearestCloudDistance(orbit: PlaneOrbit, cloud: readonly BodyReco
   let least = Number.POSITIVE_INFINITY;
   for (const body of cloud) {
     const other = planeOrbitOf(body);
-    const d = Math.min(planeDistance(orbit, other, eventMs, params, Number.POSITIVE_INFINITY).distance, planeDistance(other, orbit, eventMs, params, Number.POSITIVE_INFINITY).distance);
+    const d = Math.min(planeTestDistance(orbit, other, eventMs, params, Number.POSITIVE_INFINITY), planeTestDistance(other, orbit, eventMs, params, Number.POSITIVE_INFINITY));
     if (d < least) least = d;
   }
   return least;
@@ -455,7 +472,7 @@ export function judgeCloud(launch: LaunchRecord, catalogue: CatalogueRecord, par
     const within: { number: number; distance: number }[] = [];
     for (const candidate of parents) {
       if (candidate.number === body.number) continue;
-      const d = planeDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params).distance;
+      const d = planeTestDistance(candidate.orbit, planeOrbitOf(body), candidate.eventMs, params);
       if (d <= params.planeDistanceMax) within.push({ number: candidate.number, distance: d });
       if (d < distance) [parent, distance, deltaKm] = [candidate.number, d, body.aKm - candidate.orbit.aKm];
     }

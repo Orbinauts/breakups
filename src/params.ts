@@ -139,6 +139,8 @@ export interface DetectorParameters {
   planeInclinationToleranceDeg: number;
   planeNodeToleranceDeg: number;
   planeDistanceMax: number;
+  /** The angle between a piece's orbit normal and the parent's, in degrees, at or under which the piece shares the parent's plane whatever its distance in the tolerances: the plane test is the distance within `planeDistanceMax` or the normals within this angle. The node is undefined at near-zero inclination, where a parent's pieces scatter over the whole circle of nodes and fail the node tolerance while their normals all lie near the pole. Zero turns it off. Fitted on the training split. */
+  planeNormalAngleMaxDeg: number;
   /** How far ahead of its first set a piece's node may be propagated with the J2 rate before the test is not made, in days: a piece catalogued a season after the event has drifted by what drag and the rate's own error allow. Policy: 180 days. */
   planeMaxDays: number;
   /** The cloud velocity (the median of the consistent pieces' change of semi-major axis from the parent's, as a tangential impulse) under which payload-classed new bodies are a deployment, not fragments, in metres a second. Physical: a dispenser pushes a satellite off at under a metre a second. */
@@ -416,6 +418,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   planeInclinationToleranceDeg: 0.2,
   planeNodeToleranceDeg: 1.5,
   planeDistanceMax: 3,
+  planeNormalAngleMaxDeg: 0,
   planeMaxDays: 180,
   deploymentDeltaVMps: 1,
   youngLaunchDays: 30,
@@ -585,6 +588,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   planeInclinationToleranceDeg: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: the plane bound is binding at three, so the tolerances are not loosened" },
   planeNodeToleranceDeg: { kind: "fitted", source: "as planeInclinationToleranceDeg" },
   planeDistanceMax: { kind: "fitted", source: "d3-fitting.md, the per-launch channel table: binding at three, five and ten add nothing" },
+  planeNormalAngleMaxDeg: { kind: "fitted", source: "d12-fitting.md, the plane test at near-zero inclination: chosen on the training split" },
   planeMaxDays: { kind: "policy", source: "a piece catalogued a season after the event has drifted by what drag and the rate's error allow" },
   deploymentDeltaVMps: { kind: "physical", source: "a dispenser pushes a satellite off at under a metre a second" },
   youngLaunchDays: { kind: "policy", source: "d3-fitting.md, the per-launch channel table: the first weeks of a launch catalogue its own objects" },

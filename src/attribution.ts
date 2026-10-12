@@ -1,7 +1,7 @@
 import type { Verdict } from "./detector.ts";
 import { overridesHistory, passesOrigin, type PiecesEventTime } from "./event-time.ts";
 import { attributionSignals, judgePieces, launchRefusals, originSignals, passesSmallBatch, sameInstant, smallBatchReason, timingReason, type CloudMemory, type LaunchPassView } from "./confirmation.ts";
-import { isFragmentClass, noteCloud, planeDistance, planeOrbitOf, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
+import { isFragmentClass, noteCloud, planeOrbitOf, planeTestDistance, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
 import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, REFUSALS, logRow, round5, type SignalName } from "./log.ts";
 import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
@@ -61,7 +61,7 @@ function debrisSharing(view: AttributionView, launch: LaunchRecord, pieces: read
   const sharing: number[] = [];
   for (const body of debris) {
     const orbit = view.orbitOf(body.number, planeOrbitOf(body));
-    if (!pieceOrbits.some((pieceOrbit) => planeDistance(orbit, pieceOrbit, eventMs, params).distance <= params.planeDistanceMax)) continue;
+    if (!pieceOrbits.some((pieceOrbit) => planeTestDistance(orbit, pieceOrbit, eventMs, params) <= params.planeDistanceMax)) continue;
     orbits.set(body.number, orbit);
     sharing.push(body.number);
   }
