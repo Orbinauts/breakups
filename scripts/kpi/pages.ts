@@ -302,8 +302,8 @@ export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[]
   ["Reports naming no object (kept out)", (b) => b.kind === "unnamed"],
   ["Confidence A (an authority states the minute)", (b) => b.scoreable && b.confidence === "A"],
   ["Confidence B (an authority states the day, or a window of three days at most)", (b) => b.scoreable && b.confidence === "B"],
-  ["Confidence C (GCAT alone, an authority's month, or an analyst's dating)", (b) => b.scoreable && b.confidence === "C"],
-  ["Confidence D (pieces in the catalogue, or news with no time)", (b) => b.scoreable && b.confidence === "D"],
+  ["Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant)", (b) => b.scoreable && b.confidence === "C"],
+  ["Confidence D (pieces in the catalogue, or news to the day at best)", (b) => b.scoreable && b.confidence === "D"],
 ];
 
 /** The ground truth's counts from 2005, as the ground-truth page's table. */

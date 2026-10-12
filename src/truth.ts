@@ -34,11 +34,13 @@ export const PRECISIONS = ["second", "minute", "hour", "day", "month", "year", "
 export type Precision = (typeof PRECISIONS)[number];
 
 /**
- * How far the event's time can be trusted: A, an authority states the
- * minute; B, an authority states the day or a window of three days at most;
- * C, GCAT alone states it, or an authority states the month, or a named
- * analyst dated it from public elements; D, pieces in the catalogue alone,
- * or news with no time.
+ * How far the event's time can be trusted, read from its best statement
+ * whichever source states the instant most finely: A, an authority states
+ * the minute; B, an authority states the day or a window of three days at
+ * most; C, GCAT dates it to the month or finer, or an authority states the
+ * month, or a named analyst dated it from public elements, or a report
+ * quotes a company's measured instant; D, pieces in the catalogue alone, or
+ * news to the day at best.
  */
 export const CONFIDENCES = ["A", "B", "C", "D"] as const;
 export type Confidence = (typeof CONFIDENCES)[number];

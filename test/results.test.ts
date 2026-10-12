@@ -66,8 +66,8 @@ describe("the ground-truth page's table", () => {
     "Reports naming no object (kept out)": since.filter((b) => b.kind === "unnamed").length,
     "Confidence A (an authority states the minute)": scoreable.filter((b) => b.confidence === "A").length,
     "Confidence B (an authority states the day, or a window of three days at most)": scoreable.filter((b) => b.confidence === "B").length,
-    "Confidence C (GCAT alone, an authority's month, or an analyst's dating)": scoreable.filter((b) => b.confidence === "C").length,
-    "Confidence D (pieces in the catalogue, or news with no time)": scoreable.filter((b) => b.confidence === "D").length,
+    "Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant)": scoreable.filter((b) => b.confidence === "C").length,
+    "Confidence D (pieces in the catalogue, or news to the day at best)": scoreable.filter((b) => b.confidence === "D").length,
   };
   const lines = section(GROUND_TRUTH, "The counts")
     .split("\n")

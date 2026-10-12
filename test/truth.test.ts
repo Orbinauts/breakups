@@ -84,6 +84,25 @@ describe("the committed truth", () => {
     }
   });
 
+  test("takes the confidence from the best authority statement, whichever source states the instant most finely", () => {
+    const authorities = new Set(["hoosf-16e", "odqn", "s4s-notice", "esa-ser"]);
+    for (const b of scoring) {
+      const stated = b.statements.filter((s) => authorities.has(s.source));
+      if (stated.some((s) => s.event.precision === "minute" || s.event.precision === "second")) expect(b.confidence, b.id).toBe("A");
+      else if (stated.some((s) => s.event.from !== null && Date.parse(s.event.to) - Date.parse(s.event.from) <= 3 * 86_400_000)) expect(b.confidence, b.id).toBe("B");
+    }
+    // NASA or the quarterly news states the day; GCAT's cloud table the minute, which stands as the event's time.
+    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "25984:2023-03-11", "43227:2024-09-06"]) {
+      const b = breakups.find((x) => x.id === id)!;
+      expect([b.confidence, b.resolvedFrom.event, b.event.precision], id).toEqual(["B", "gcat", "minute"]);
+    }
+  });
+
+  test("a company's measured instant ranks with a named analyst's dating: Luch as Meteor 2-7", () => {
+    expect(breakups.find((b) => b.id === "40258:2026-01-30")!.confidence).toBe("C");
+    expect(breakups.find((b) => b.id === "12456:2026-10-05")!.confidence).toBe("C");
+  });
+
   test("scoreable events name a catalogued parent and are breakups or anomalous events", () => {
     for (const b of breakups.filter((x) => x.scoreable)) {
       expect(b.parent.catalogueNumber, b.id).not.toBeNull();

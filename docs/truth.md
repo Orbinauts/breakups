@@ -44,7 +44,7 @@ Columns: every event, the scoreable ones, then by kind, then by the source whose
 | 2025 | 11 | 4 | 5 | 0 | 0 | 6 | 0 | 0 | 0 | 9 | 0 | 0 | 0 | 1 | 1 |
 | 2026 | 17 | 10 | 12 | 0 | 0 | 5 | 0 | 0 | 1 | 8 | 0 | 1 | 1 | 3 | 3 |
 
-Scoreable events from 2005: 365. By confidence: A 75, B 31, C 226, D 33. By regime: unknown 212, LEO 101, MEO 8, HEO 38, GEO 6. By class: payload 222, rocket body 110, debris 33.
+Scoreable events from 2005: 365. By confidence: A 75, B 45, C 214, D 31. By regime: unknown 212, LEO 101, MEO 8, HEO 38, GEO 6. By class: payload 222, rocket body 110, debris 33.
 
 ## Conflicts between sources
 
@@ -153,14 +153,14 @@ When each event was first stated in public, as far as the sources date it: NASA'
 
 | Source of the first statement | An agency | Scoreable events from 2005 | Of which breakups, confidence A and B | Dated to the day | Dated to the month |
 | --- | --- | --- | --- | --- | --- |
-| hoosf-16e | yes | 89 | 72 | 0 | 89 |
-| odqn | yes | 13 | 11 | 0 | 13 |
+| hoosf-16e | yes | 89 | 76 | 0 | 89 |
+| odqn | yes | 13 | 13 | 0 | 13 |
 | s4s-notice | yes | 1 | 1 | 1 | 0 |
 | analyst | no | 1 | 0 | 1 | 0 |
 | news | no | 4 | 0 | 4 | 0 |
-| none dated |  | 257 | 5 |  |  |
+| none dated |  | 257 | 6 |  |  |
 
-Of the 365 scoreable events from 2005, 108 have a dated first statement and 103 a dated statement by an agency; of the 89 breakups of confidence A and B, 84 have an agency's.
+Of the 365 scoreable events from 2005, 108 have a dated first statement and 103 a dated statement by an agency; of the 96 breakups of confidence A and B, 90 have an agency's.
 
 ## GCAT's satellite catalogue
 
@@ -757,13 +757,13 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 26398:2006-08-31 COSMOS 2371 ULLAGE MOTOR | breakup | 2006-08-31T00:00Z to 2006-09-03T00:00Z | day | B | HEO | debris | propulsion | 1 | hoosf-16e, gcat | 2006-10-01 (hoosf-16e, month) | 2006-10-01 (hoosf-16e, month) |
 | 13736:2006-09-01 DMSP F-6 | breakup | 2006-09-01T00:00Z to 2006-12-01T00:00Z | month | C | unknown | payload | battery | 1 | gcat |  |  |
 | 29505:2006-10-23 Shi Jian 6/2B | anomalous | 2006-10-23T00:00Z to 2006-10-26T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
-| 29523:2006-11-04 DMSP 5D-3 F17 R/B | breakup | 2006-11-04T14:12Z | minute | C | LEO | rocket body | unknown | 70 | hoosf-16e, gcat, gcat | 2007-01-01 (hoosf-16e, month) | 2007-01-01 (hoosf-16e, month) |
+| 29523:2006-11-04 DMSP 5D-3 F17 R/B | breakup | 2006-11-04T14:12Z | minute | B | LEO | rocket body | unknown | 70 | hoosf-16e, gcat, gcat | 2007-01-01 (hoosf-16e, month) | 2007-01-01 (hoosf-16e, month) |
 | 29402:2006-11-17 COSMOS 2423 | breakup | 2006-11-17T18:00Z | minute | A | LEO | payload | deliberate | 30 | hoosf-16e, gcat, gcat | 2007-01-01 (hoosf-16e, month) | 2007-01-01 (hoosf-16e, month) |
 | 20323:2006-12-03 COBE R/B | breakup | 2006-12-03T03:37Z | minute | A | LEO | rocket body | unknown | 26 | hoosf-16e, gcat, gcat | 2007-01-01 (hoosf-16e, month) | 2007-01-01 (hoosf-16e, month) |
 | 29394:2006-12-28 IGS 3A R/B | breakup | 2006-12-28T17:29Z | minute | A | LEO | rocket body | unknown | 10 | hoosf-16e, gcat, gcat, catalogue | 2007-01-01 (hoosf-16e, month) | 2007-01-01 (hoosf-16e, month) |
 | 25730:2007-01-11 FENGYUN 1C | breakup | 2007-01-11T22:26Z | minute | A | LEO | payload | collision-deliberate | 3549 | hoosf-16e, gcat, gcat, catalogue | 2007-04-01 (hoosf-16e, month) | 2007-04-01 (hoosf-16e, month) |
 | 29480:2007-02-01 M-V-7 Stage 3 | anomalous | 2007-02-01T00:00Z to 2007-05-01T00:00Z | month | C | unknown | rocket body | unknown | 1 | gcat |  |  |
-| 30324:2007-02-02 BEIDOU 1D R/B | breakup | 2007-02-02T23:00Z | minute | C | HEO | rocket body | unknown | 41 | hoosf-16e, gcat, gcat, catalogue |  |  |
+| 30324:2007-02-02 BEIDOU 1D R/B | breakup | 2007-02-02T23:00Z | minute | B | HEO | rocket body | unknown | 41 | hoosf-16e, gcat, gcat, catalogue |  |  |
 | 25054:2007-02-14 KUPON ULLAGE MOTOR | breakup | 2007-02-14T00:00Z to 2007-02-15T00:00Z | day | B | HEO | debris | propulsion | 8 | hoosf-16e, gcat, gcat | 2007-04-01 (hoosf-16e, month) | 2007-04-01 (hoosf-16e, month) |
 | 25940:2007-02-18 CBERS 1 | breakup | 2007-02-18T11:07Z | minute | A | LEO | payload | unknown | 90 | hoosf-16e, gcat, gcat | 2007-04-01 (hoosf-16e, month) | 2007-04-01 (hoosf-16e, month) |
 | 28944:2007-02-19 ARABSAT 4 BRIZ-M R/B | breakup | 2007-02-19T17:21Z | minute | A | HEO | rocket body | propulsion | 110 | hoosf-16e, gcat, gcat, catalogue, catalogue | 2007-04-01 (hoosf-16e, month) | 2007-04-01 (hoosf-16e, month) |
@@ -779,7 +779,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 23342:2007-07-01 Resurs-O1 | anomalous | 2007-07-01T00:00Z to 2007-10-01T00:00Z | month | C | unknown | payload | unknown | 5 | gcat |  |  |
 | 28809:2007-07-03 Kirari | anomalous | 2007-07-03T00:00Z to 2007-07-06T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 21701:2007-11-10 UARS | anomalous | 2007-11-10T00:00Z to 2007-11-11T00:00Z | day | B | LEO | payload | unknown | 5 | hoosf-16e, gcat |  |  |
-| 32288:2007-11-11 USA 197 R/B | breakup | 2007-11-11T02:03Z | minute | C | LEO | rocket body | unknown | 31 | hoosf-16e, gcat, gcat | 2008-01-01 (hoosf-16e, month) | 2008-01-01 (hoosf-16e, month) |
+| 32288:2007-11-11 USA 197 R/B | breakup | 2007-11-11T02:03Z | minute | B | LEO | rocket body | unknown | 31 | hoosf-16e, gcat, gcat | 2008-01-01 (hoosf-16e, month) | 2008-01-01 (hoosf-16e, month) |
 | 29651:2008-02-21 USA 193 | breakup | 2008-02-21T03:26Z | minute | A | LEO | payload | collision-deliberate | 174 | hoosf-16e, gcat, gcat, catalogue | 2008-04-01 (hoosf-16e, month) | 2008-04-01 (hoosf-16e, month) |
 | 13124:2008-02-21 COSMOS 1348 | breakup | 2008-02-21T22:10Z to 2008-04-21T22:10Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
 | 11417:2008-03-11 COSMOS 1109 | breakup | 2008-03-11T15:40Z to 2008-05-10T15:40Z | none | D | unknown | payload | unknown | 6 | catalogue |  |  |
@@ -879,7 +879,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 38746:2012-10-16 TELKOM 3 / EXPRESS MD2 BRIZ-M R/B | breakup | 2012-10-16T16:31Z | minute | A | HEO | rocket body | propulsion | 123 | hoosf-16e, gcat, gcat | 2012-10-16 (hoosf-16e, month) | 2012-10-16 (hoosf-16e, month) |
 | 23342:2012-11-01 Resurs-O1 | anomalous | 2012-11-01T00:00Z to 2013-02-01T00:00Z | month | C | unknown | payload | unknown | 6 | gcat, catalogue |  |  |
 | 18822:2012-12-14 DMSP 5D-2 F9 (USA 29) | breakup | 2012-12-14T00:00Z to 2012-12-18T00:00Z | day | C | LEO | payload | unknown | 7 | hoosf-16e, gcat, gcat, catalogue |  |  |
-| 35871:2013-01-22 BLITS | anomalous | 2013-01-22T07:57Z | minute | C | LEO | payload | collision-accidental | 1 | hoosf-16e, gcat, gcat | 2013-04-01 (hoosf-16e, month) | 2013-04-01 (hoosf-16e, month) |
+| 35871:2013-01-22 BLITS | anomalous | 2013-01-22T07:57Z | minute | B | LEO | payload | collision-accidental | 1 | hoosf-16e, gcat, gcat | 2013-04-01 (hoosf-16e, month) | 2013-04-01 (hoosf-16e, month) |
 | 39128:2013-04-14 Briz-M No. 99538 | breakup | 2013-04-14T00:00Z to 2013-04-17T00:00Z | day | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
 | 25260:2013-05-01 SPOT-4 | anomalous | 2013-05-01T00:00Z to 2013-08-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 2909:2013-08-01 SURCAL 6? | anomalous | 2013-08-01T00:00Z to 2013-11-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
@@ -909,7 +909,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 32280:2014-08-13 COSMOS 2431-33 ULLAGE MOTOR | breakup | 2014-08-13T13:40Z | minute | A | HEO | debris | propulsion | 25 | hoosf-16e, gcat, gcat, catalogue | 2014-10-01 (hoosf-16e, month) | 2014-10-01 (hoosf-16e, month) |
 | 40118:2014-08-18 Gao Fen 2 | anomalous | 2014-08-18T00:00Z to 2014-08-21T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 870:2014-10-01 Explorer 20 | anomalous | 2014-10-01T00:00Z to 2015-01-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
-| 27372:2014-11-30 IRIDIUM 91 | anomalous | 2014-11-30T16:15Z | minute | C | LEO | payload | collision-accidental | 4 | hoosf-16e, gcat, gcat | 2015-01-01 (hoosf-16e, month) | 2015-01-01 (hoosf-16e, month) |
+| 27372:2014-11-30 IRIDIUM 91 | anomalous | 2014-11-30T16:15Z | minute | B | LEO | payload | collision-accidental | 4 | hoosf-16e, gcat, gcat | 2015-01-01 (hoosf-16e, month) | 2015-01-01 (hoosf-16e, month) |
 | 26474:2015-02-01 Titan 4B-28 Stage 2 | anomalous | 2015-02-01T00:00Z to 2015-05-01T00:00Z | month | C | unknown | rocket body | unknown | 2 | gcat |  |  |
 | 23533:2015-02-03 DMSP 5D-2 F13 (USA 109) | breakup | 2015-02-03T17:40Z | minute | A | LEO | payload | battery | 237 | hoosf-16e, gcat, gcat, catalogue, catalogue | 2015-04-01 (hoosf-16e, month) | 2015-04-01 (hoosf-16e, month) |
 | 40535:2015-03-25 Delta 371 | breakup | 2015-03-25T18:51Z | minute | C | HEO | rocket body | propulsion | 4 | gcat, gcat |  |  |
@@ -933,17 +933,17 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 23342:2016-05-01 Resurs-O1 | anomalous | 2016-05-01T00:00Z to 2016-08-01T00:00Z | month | C | unknown | payload | unknown | 9 | gcat |  |  |
 | 33473:2016-06-01 COSMOS 2447-2449 ULLAGE MOTOR | breakup | 2016-06-01T09:25Z | minute | A | HEO | debris | propulsion | 1 | hoosf-16e, gcat, catalogue | 2016-07-01 (hoosf-16e, month) | 2016-07-01 (hoosf-16e, month) |
 | 34779:2016-06-29 BEIDOU G2 | breakup | 2016-06-29T00:00Z to 2016-06-30T00:00Z | day | B | GEO | payload | unknown | 0 | hoosf-16e, gcat | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
-| 35946:2016-07-18 WORLDVIEW 2 | anomalous | 2016-07-18T22:52Z | minute | C | LEO | payload | unknown | 16 | hoosf-16e, gcat, gcat, catalogue, catalogue | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
+| 35946:2016-07-18 WORLDVIEW 2 | anomalous | 2016-07-18T22:52Z | minute | B | LEO | payload | unknown | 16 | hoosf-16e, gcat, gcat, catalogue, catalogue | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
 | 29680:2016-07-27 COSMOS 2424-2426 ULLAGE MOTOR | breakup | 2016-07-27T01:19Z | minute | A | HEO | debris | propulsion | 9 | hoosf-16e, gcat, gcat, catalogue | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
 | 14064:2016-08-01 Kosmos-1461 | breakup | 2016-08-01T00:00Z to 2016-11-01T00:00Z | month | C | unknown | payload | propulsion | 15 | gcat |  |  |
 | 39634:2016-08-23 SENTINEL 1A | breakup | 2016-08-23T17:07Z | minute | A | LEO | payload | collision-accidental | 8 | hoosf-16e, gcat, gcat, catalogue |  |  |
-| 38248:2016-09-30 RISAT 1 | anomalous | 2016-09-30T04:00Z | minute | C | LEO | payload | unknown | 2 | hoosf-16e, gcat, gcat | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
-| 23233:2016-10-23 USA 106 (DMSP 5D-2 F12) | anomalous | 2016-10-23T15:49Z | minute | C | LEO | payload | battery | 5 | hoosf-16e, gcat, gcat |  |  |
+| 38248:2016-09-30 RISAT 1 | anomalous | 2016-09-30T04:00Z | minute | B | LEO | payload | unknown | 2 | hoosf-16e, gcat, gcat | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
+| 23233:2016-10-23 USA 106 (DMSP 5D-2 F12) | anomalous | 2016-10-23T15:49Z | minute | B | LEO | payload | battery | 5 | hoosf-16e, gcat, gcat |  |  |
 | 13552:2017-01-01 Kosmos-1408 | anomalous | 2017-01-01T00:00Z to 2017-04-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 36105:2017-01-01 H-2A F16 Stage 2 | anomalous | 2017-01-01T00:00Z to 2020-01-01T00:00Z | year | D | unknown | rocket body | unknown | 2 | gcat |  |  |
 | 12504:2017-01-04 COSMOS 1275 | breakup | 2017-01-04T05:07Z to 2017-03-05T05:07Z | none | D | unknown | payload | unknown | 122 | catalogue |  |  |
 | 15333:2017-02-01 Kosmos-1603 | anomalous | 2017-02-01T00:00Z to 2017-05-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
-| 27820:2017-06-17 AMC-9 (GE-12) | anomalous | 2017-06-17T07:27Z | minute | C | GEO | payload | unknown | 1 | hoosf-16e, gcat | 2018-02-01 (hoosf-16e, month) | 2018-02-01 (hoosf-16e, month) |
+| 27820:2017-06-17 AMC-9 (GE-12) | anomalous | 2017-06-17T07:27Z | minute | B | GEO | payload | unknown | 1 | hoosf-16e, gcat | 2018-02-01 (hoosf-16e, month) | 2018-02-01 (hoosf-16e, month) |
 | 25880:2017-08-25 TELKOM 1 | anomalous | 2017-08-25T00:00Z to 2017-08-26T00:00Z | day | B | GEO | payload | unknown | 1 | hoosf-16e, gcat | 2018-02-01 (hoosf-16e, month) | 2018-02-01 (hoosf-16e, month) |
 | 42928:2017-08-31 IRNSS-R1H | breakup | 2017-08-31T13:49Z | minute | C | unknown | payload | unknown | 2 | gcat |  |  |
 | 7209:2017-09-01 Meteor | anomalous | 2017-09-01T00:00Z to 2017-12-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
@@ -978,7 +978,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 20344:2018-12-11 USA 40 R/B | breakup | 2018-12-11T21:44Z to 2019-02-09T21:44Z | none | D | unknown | rocket body | unknown | 27 | catalogue |  |  |
 | 25417:2018-12-22 ORBCOMM FM16 | breakup | 2018-12-22T07:12Z | minute | A | LEO | payload | unknown | 15 | hoosf-16e, gcat, gcat, catalogue | 2019-05-01 (hoosf-16e, month) | 2019-05-01 (hoosf-16e, month) |
 | 29050:2019-01-01 COSMIC 1-3 | breakup | 2019-01-01T00:00Z to 2022-01-01T00:00Z | year | D | unknown | payload | unknown | 2 | gcat |  |  |
-| 43675:2019-02-06 GOSAT 2 R/B DEBRIS | anomalous | 2019-02-06T06:00Z | minute | C | LEO | debris | propulsion | 5 | hoosf-16e, hoosf-16e, gcat, gcat | 2019-05-01 (hoosf-16e, month) | 2019-05-01 (hoosf-16e, month) |
+| 43675:2019-02-06 GOSAT 2 R/B DEBRIS | anomalous | 2019-02-06T06:00Z | minute | B | LEO | debris | propulsion | 5 | hoosf-16e, hoosf-16e, gcat, gcat | 2019-05-01 (hoosf-16e, month) | 2019-05-01 (hoosf-16e, month) |
 | 35816:2019-03-25 Centaur AV-018 | breakup | 2019-03-25T00:00Z to 2019-03-26T00:00Z | day | C | HEO | rocket body | unknown | 1 | gcat |  |  |
 | 43947:2019-03-27 MICROSAT-R | breakup | 2019-03-27T05:40Z | minute | A | LEO | payload | collision-deliberate | 130 | hoosf-16e, gcat, gcat, catalogue | 2019-08-01 (hoosf-16e, month) | 2019-08-01 (hoosf-16e, month) |
 | 13589:2019-04-06 Kosmos-1410 | breakup | 2019-04-06T00:00Z to 2019-04-07T00:00Z | day | C | unknown | payload | battery | 1 | gcat |  |  |
@@ -1019,7 +1019,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 45177:2020-02-15 Antares A-12 Stage 2 | breakup | 2020-02-15T20:27Z | minute | C | unknown | rocket body | unknown | 1 | gcat |  |  |
 | 33331:2020-03-01 GeoEye-1 | anomalous | 2020-03-01T00:00Z to 2020-06-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 11165:2020-04-01 Kosmos-1066 | anomalous | 2020-04-01T00:00Z to 2020-07-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
-| 37756:2020-05-08 SL-23 DEB | breakup | 2020-05-08T05:00Z | minute | C | MEO | debris | unknown | 350 | hoosf-16e, gcat, gcat, catalogue | 2020-08-01 (hoosf-16e, month) | 2020-08-01 (hoosf-16e, month) |
+| 37756:2020-05-08 SL-23 DEB | breakup | 2020-05-08T05:00Z | minute | B | MEO | debris | unknown | 350 | hoosf-16e, gcat, gcat, catalogue | 2020-08-01 (hoosf-16e, month) | 2020-08-01 (hoosf-16e, month) |
 | 2173:2020-06-01 Nimbus 2 | anomalous | 2020-06-01T00:00Z to 2020-09-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 27424:2020-07-01 Aqua | anomalous | 2020-07-01T00:00Z to 2020-10-01T00:00Z | month | C | unknown | payload | unknown | 2 | gcat |  |  |
 | 43673:2020-07-12 GOSAT 2 DEBRIS | breakup | 2020-07-12T10:00Z | minute | A | LEO | payload | unknown | 88 | hoosf-16e, gcat, gcat, catalogue | 2020-11-01 (hoosf-16e, month) | 2020-11-01 (hoosf-16e, month) |
@@ -1036,7 +1036,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 11635:2021-09-30 SATCOM 3 | breakup | 2021-09-30T14:36Z to 2021-11-29T14:36Z | none | D | unknown | payload | unknown | 5 | catalogue |  |  |
 | 39765:2021-10-23 COSMOS 2499 | breakup | 2021-10-23T18:14Z | minute | A | LEO | payload | unknown | 22 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
 | 13552:2021-11-15 COSMOS 1408 | breakup | 2021-11-15T02:48Z | minute | A | LEO | payload | collision-deliberate | 1790 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
-| 25117:2021-11-18 ORBCOMM FM5 | breakup | 2021-11-18T06:30Z | minute | C | LEO | payload | unknown | 15 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
+| 25117:2021-11-18 ORBCOMM FM5 | breakup | 2021-11-18T06:30Z | minute | B | LEO | payload | unknown | 15 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
 | 45877:2021-11-26 USA 305-308 R/B | breakup | 2021-11-26T22:45Z | minute | A | LEO | rocket body | unknown | 29 | hoosf-16e, gcat, gcat, catalogue | 2022-06-01 (hoosf-16e, month) | 2022-06-01 (hoosf-16e, month) |
 | 50505:2021-12-28 IPM 3/PERSEY R/B | anomalous | 2021-12-28T18:36Z | minute | A | LEO | payload | propulsion | 4 | hoosf-16e, gcat, gcat |  |  |
 | 52152:2022-03-29 CZ-6A R/B | anomalous | 2022-03-29T09:50Z | minute | A | LEO | rocket body | unknown | 0 | hoosf-16e |  |  |
@@ -1054,7 +1054,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 20826:2023-01-01 Meteor-2 | breakup | 2023-01-01T00:00Z to 2026-01-01T00:00Z | year | D | unknown | payload | battery | 3 | gcat |  |  |
 | 39765:2023-01-04 Cosmos 2499 (second event) | breakup | 2023-01-04T03:57Z | minute | A | LEO | payload | unknown | 20 | odqn, gcat, catalogue | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
 | 55565:2023-02-10 SSLV SS3 third stage | breakup | 2023-02-10T09:00Z to 2023-02-10T21:35Z | hour | B | LEO | rocket body | unknown | 5 | odqn, gcat | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
-| 25984:2023-03-11 Orbcomm FM 36 | breakup | 2023-03-11T01:45Z | minute | C | LEO | payload | unknown | 9 | odqn, gcat, gcat, catalogue | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
+| 25984:2023-03-11 Orbcomm FM 36 | breakup | 2023-03-11T01:45Z | minute | B | LEO | payload | unknown | 9 | odqn, gcat, gcat, catalogue | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
 | 7274:2023-06-01 Meteor (M) 22L | breakup | 2023-06-01T00:00Z to 2023-09-01T00:00Z | month | C | LEO | payload | unknown | 9 | gcat, gcat, catalogue |  |  |
 | 21299:2023-06-29 Cosmos 2143 | breakup | 2023-06-29T06:49Z | minute | A | LEO | payload | unknown | 6 | odqn, gcat, gcat, catalogue | 2023-10-01 (odqn, month) | 2023-10-01 (odqn, month) |
 | 39162:2023-07-01 VESPA | breakup | 2023-07-01T00:00Z to 2023-10-01T00:00Z | month | C | LEO | debris | unknown | 7 | gcat, gcat, catalogue |  |  |
@@ -1072,15 +1072,15 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 39186:2024-06-26 Resurs-P1 | breakup | 2024-06-26T16:32Z | minute | A | LEO | payload | unknown | 18 | odqn, gcat, catalogue | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
 | 18123:2024-07-19 DMSP 5D-2 F8 | breakup | 2024-07-19T20:41Z | minute | A | LEO | payload | unknown | 4 | odqn, gcat | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
 | 60397:2024-08-06 CZ-6A R/B (Qianfan) | breakup | 2024-08-06T17:15Z | minute | A | LEO | rocket body | unknown | 664 | odqn, gcat, gcat | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
-| 43227:2024-09-06 Atlas V Centaur (GOES-17) | breakup | 2024-09-06T05:21Z | minute | C | HEO | rocket body | unknown | 0 | odqn, gcat | 2025-02-01 (odqn, month) | 2025-02-01 (odqn, month) |
+| 43227:2024-09-06 Atlas V Centaur (GOES-17) | breakup | 2024-09-06T05:21Z | minute | B | HEO | rocket body | unknown | 0 | odqn, gcat | 2025-02-01 (odqn, month) | 2025-02-01 (odqn, month) |
 | 41748:2024-10-19 Intelsat 33e | breakup | 2024-10-19T04:30Z | minute | A | GEO | payload | unknown | 18 | odqn, gcat, gcat, catalogue | 2025-02-01 (odqn, month) | 2025-02-01 (odqn, month) |
 | 24753:2024-12-19 DMSP F-14 | breakup | 2024-12-19T02:10Z | minute | C | LEO | payload | battery | 0 | gcat, gcat, catalogue |  |  |
 | 57839:2025-05-01 Centaur AV-102 | breakup | 2025-05-01T00:00Z to 2025-08-01T00:00Z | month | C | unknown | rocket body | propulsion | 2 | gcat |  |  |
 | 10531:2025-05-09 COSMOS 970 | breakup | 2025-05-09T23:47Z to 2025-07-08T23:47Z | none | D | unknown | payload | unknown | 50 | catalogue |  |  |
 | 66629:2025-12-17 Starlink-35956 | breakup | 2025-12-17T00:00Z to 2025-12-18T00:00Z | day | D | LEO | payload | unknown |  | news | 2025-12-18 (news, day) |  |
 | 66378:2025-12-17 Shiyan 32-02 | breakup | 2025-12-17T00:00Z to 2025-12-20T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
-| 40258:2026-01-30 Luch (Olymp-K 1) | breakup | 2026-01-30T06:09Z | minute | D | unknown | payload | unknown | 1 | analyst, news, gcat | 2026-02-02 (news, day) |  |
-| 64157:2026-03-29 Starlink-34343 | breakup | 2026-03-29T00:00Z to 2026-03-30T00:00Z | day | D | LEO | payload | propulsion | 2 | news, gcat | 2026-03-30 (news, day) |  |
+| 40258:2026-01-30 Luch (Olymp-K 1) | breakup | 2026-01-30T06:09Z | minute | C | unknown | payload | unknown | 1 | analyst, news, gcat | 2026-02-02 (news, day) |  |
+| 64157:2026-03-29 Starlink-34343 | breakup | 2026-03-29T00:00Z to 2026-03-30T00:00Z | day | C | LEO | payload | propulsion | 2 | news, gcat | 2026-03-30 (news, day) |  |
 | 16496:2026-04-01 Tsiklon-3 32-308 Stage 3 | breakup | 2026-04-01T00:00Z to 2026-07-01T00:00Z | month | C | unknown | rocket body | unknown | 3 | gcat |  |  |
 | 40340:2026-04-01 Yaogan Weixing 25 fu xing er | breakup | 2026-04-01T00:00Z to 2026-07-01T00:00Z | month | C | unknown | payload | unknown | 3 | gcat |  |  |
 | 69537:2026-06-09 ZhuQue-2E upper stage | breakup | 2026-06-09T08:47Z | minute | A | LEO | rocket body | unknown | 7 | odqn, gcat | 2026-09-01 (odqn, month) | 2026-09-01 (odqn, month) |

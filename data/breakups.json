@@ -1342,7 +1342,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 18,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -2025,7 +2025,7 @@
    },
    "cause": "deliberate",
    "piecesCatalogued": 97,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -3650,7 +3650,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 114,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -4050,7 +4050,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 39,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -5271,7 +5271,7 @@
    },
    "cause": "deliberate",
    "piecesCatalogued": 53,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -23315,7 +23315,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 20,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -38376,7 +38376,7 @@
    },
    "cause": "deliberate",
    "piecesCatalogued": 0,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -51445,7 +51445,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 27,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -62592,7 +62592,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 8,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -72882,7 +72882,7 @@
    },
    "cause": "deliberate",
    "piecesCatalogued": 9,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -112111,7 +112111,7 @@
    },
    "cause": "deliberate",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -121065,7 +121065,7 @@
    },
    "cause": "collision-accidental",
    "piecesCatalogued": 2,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -138461,7 +138461,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -144675,7 +144675,7 @@
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": false,
    "exemptReason": "an aerodynamic breakup at reentry",
    "resolvedFrom": {
@@ -160617,7 +160617,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 70,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -162030,7 +162030,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 41,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -164461,7 +164461,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 31,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -173003,7 +173003,7 @@
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 88,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": false,
    "exemptReason": "an aerodynamic breakup at reentry",
    "resolvedFrom": {
@@ -179940,7 +179940,7 @@
    },
    "cause": "collision-accidental",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -184901,7 +184901,7 @@
    },
    "cause": "collision-accidental",
    "piecesCatalogued": 4,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -186183,7 +186183,7 @@
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": false,
    "exemptReason": "an aerodynamic breakup at reentry",
    "resolvedFrom": {
@@ -188137,7 +188137,7 @@
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": false,
    "exemptReason": "an aerodynamic breakup at reentry",
    "resolvedFrom": {
@@ -188642,7 +188642,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 16,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -189402,7 +189402,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -189544,7 +189544,7 @@
    },
    "cause": "battery",
    "piecesCatalogued": 5,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -190409,7 +190409,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -194932,7 +194932,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 5,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -200285,7 +200285,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 350,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -203682,7 +203682,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 15,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -207661,7 +207661,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 9,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -211608,7 +211608,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 0,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -213961,7 +213961,7 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
-   "confidence": "D",
+   "confidence": "C",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -214118,7 +214118,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
-   "confidence": "D",
+   "confidence": "C",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {

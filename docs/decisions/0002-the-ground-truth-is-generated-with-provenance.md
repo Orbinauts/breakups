@@ -121,3 +121,32 @@ separation of 30 June 2005, 55 pieces, confidence C) and one exempt
 release (the station's of 22 July 2009); before 2005 it splits Cosmos 1355
 (1984), Cosmos 2227's stage (1992), Cosmos 1261 (1981) and Cosmos 2399
 (2003).
+
+## Amended on 2026-10-12: the confidence is read from the best statement
+
+The confidence was read from whichever statement won the event's time, so
+where GCAT's cloud table stated the minute and NASA or the quarterly news
+the day, the event took GCAT's grade, C, and an agency's report left the
+headline (the Atlas V Centaur of GOES-17, 2024, and Orbcomm FM 36, 2023,
+both dated to the day by the quarterly news). Issue #19.
+
+The time still comes from the statement that states it most finely, an
+authority first on a tie; the confidence now comes from the event's best
+statement (`gradeOf`, `confidenceOf` in `scripts/truth/build-truth.ts`):
+an authority's minute A, its day or a window of three days at most B, any
+coarser time it states C; a named analyst's dating C; a company's measured
+instant a report quotes to the minute C, as an analyst's (s2a systems'
+optical timing of Luch, which was D for being a news report, ranks with
+Jim Shell's dating of Meteor 2-7); GCAT's date to the month or finer C;
+anything else D. A company's instant ranks below an agency's because it
+is not an agency's word (the seventh decision record's lead is read
+against agencies only), and with an analyst's because both are a
+measurement from outside the agencies, cited.
+
+From 2005 it moves 14 scoreable events from C to B, the 7 breakups the
+review named (DMSP 5D-3 F17's stage, Beidou 1D's, USA 197's, SL-23
+debris in 2020, Orbcomm FM5, Orbcomm FM 36 and GOES-17's Centaur) and 7
+anomalous events (BLITS, Iridium 91, WorldView-2, RISAT-1, USA 106,
+AMC-9, GOSAT-2's stage debris), 3 exempt aerodynamic events with them,
+and 2 from D to C: Luch, and Starlink-34343, which LeoLabs dated to the
+day and GCAT's satellite catalogue dates too.

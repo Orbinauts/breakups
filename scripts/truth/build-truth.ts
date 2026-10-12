@@ -396,13 +396,29 @@ export function regimeOf(orbit: StatedOrbit): Regime {
 /** The precisions of GCAT's dates it is trusted at, C: a year or none is no finer than the catalogue's own burst, D. */
 const GCAT_DATED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute", "hour", "day", "month"]);
 
-function confidenceOf(event: Statement, time: StatedTime): Confidence {
-  const authority = AUTHORITIES.has(event.source);
-  const width = upper(time) - lower(time);
-  if (authority && (time.precision === "second" || time.precision === "minute")) return "A";
-  if (authority && time.from !== null && width <= 3 * DAY_MS) return "B";
-  if (event.source === "analyst" || (event.source === "gcat" && GCAT_DATED.has(time.precision)) || (authority && time.precision !== "none")) return "C";
+const MEASURED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute"]);
+
+/**
+ * What one statement alone lets the event's time be trusted at: an
+ * authority's minute A, its day or a window of three days at most B, any
+ * coarser time it states C; a named analyst's dating C, and so a company's
+ * measured instant a report quotes to the minute (s2a systems' optical
+ * timing of Luch); GCAT's date to the month or finer C; anything else D.
+ */
+function gradeOf(statement: Statement): Confidence {
+  const time = statement.event;
+  if (AUTHORITIES.has(statement.source)) {
+    if (MEASURED.has(time.precision)) return "A";
+    if (time.from !== null && upper(time) - lower(time) <= 3 * DAY_MS) return "B";
+    if (time.precision !== "none") return "C";
+  }
+  if (statement.source === "analyst" || (statement.source === "news" && MEASURED.has(time.precision)) || (statement.source === "gcat" && GCAT_DATED.has(time.precision))) return "C";
   return "D";
+}
+
+/** The confidence of an event: its best statement's grade, an authority's above the rest, whichever statement states the instant most finely. */
+function confidenceOf(group: Group): Confidence {
+  return group.statements.map(gradeOf).sort()[0]!;
 }
 
 /** Disagreements among a group's statements, with the sources that disagree. */
@@ -476,7 +492,7 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
     orbit: { ...orbit, regime: regimeOf(orbit) },
     cause,
     piecesCatalogued: pieces,
-    confidence: confidenceOf(eventStatement, eventStatement.event),
+    confidence: confidenceOf(group),
     scoreable: exemptReason === null,
     exemptReason,
     resolvedFrom,
