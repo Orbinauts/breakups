@@ -121,7 +121,7 @@ It prints:
 <!-- truth:quick-start:begin -->
 
 ```text
-by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
+by 2026-08-27T00:00Z CZ-6C R/B (100472), breakup, confidence D, LEO
 2026-09-13T21:13Z USA 32 (19460), breakup, confidence A, LEO
 2026-10-05T09:45Z Meteor 2-7 (second event) (12456), breakup, confidence C, LEO
 ```

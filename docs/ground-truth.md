@@ -4,7 +4,7 @@ The list of reported breakups the detector is scored against. It ships in the pa
 
 ## What counts as a breakup
 
-A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better.
+A positive event is a breakup that was reported, so we are sure it happened: by NASA, by ESA, by U.S. Space Forces-Space, by a named analyst, by GCAT's satellite catalogue dating the separation of pieces from their parent, or by the public catalogue itself listing a burst of new debris under the parent's launch (at least five objects within thirty days, more than ninety days after the launch, and at least a fifth of the debris the launch already had). `data/breakups.json` holds every one found, 1961 to today, each with the statements of every source that reported it and the values resolved from them. The scorecard runs over the events from 2005, where the yearly element bundles begin, and scores NASA's two kinds apart: the detection target is for breakups, the destructive kind; anomalous events, where a body sheds a piece or two at low speed and stays intact, barely move the parent and are reported on a second line. Events whose parent has no public element sets at all are listed apart and left out of the denominator, and the headline is over events reported to the day or better. A window wider than 93 days (GCAT's "2023?" widens to three years) or with no lower edge is no target in a useful sense: such a row is kept out of every line with its reason, and [the results page](results.md#rows-kept-out-by-the-shape-of-their-window) lists them. A window a coarse date opened before the parent's launch starts at the launch day, and an event's id and the year it is counted in are its instant's where it states one (GCAT's "2018 Jan 1 0000?" widens to the minute before midnight, and is a 2018 event).
 
 ## The counts
 
@@ -13,7 +13,7 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 | Events from 2005 | Count |
 | --- | --- |
 | All | 626 |
-| Scoreable (breakups and anomalous events of a catalogued object) | 365 |
+| Scoreable (breakups and anomalous events of a catalogued object) | 353 |
 | Breakups | 260 |
 | Anomalous events (low-velocity shedding) | 146 |
 | Aerodynamic breakups at reentry (kept out) | 31 |
@@ -21,8 +21,8 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 | Reports naming no object (kept out) | 5 |
 | Confidence A (an authority states the minute) | 75 |
 | Confidence B (an authority states the day, or a window of three days at most) | 45 |
-| Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant) | 214 |
-| Confidence D (pieces in the catalogue, or news to the day at best) | 31 |
+| Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant) | 212 |
+| Confidence D (pieces in the catalogue, or news to the day at best) | 21 |
 
 <!-- truth:counts:end -->
 

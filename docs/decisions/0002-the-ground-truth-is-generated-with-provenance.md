@@ -150,3 +150,33 @@ anomalous events (BLITS, Iridium 91, WorldView-2, RISAT-1, USA 106,
 AMC-9, GOSAT-2's stage debris), 3 exempt aerodynamic events with them,
 and 2 from D to C: Luch, and Starlink-34343, which LeoLabs dated to the
 day and GCAT's satellite catalogue dates too.
+
+## Amended on 2026-10-12: the shape of a window
+
+Some rows were kept in or out of the denominator by the shape of their
+window rather than by a rule (issue #21). The build now reads a window so
+(`clampedToLaunch`, `windowReasonOf` and `idOf` in
+`scripts/truth/build-truth.ts`, `yearOf` in `src/truth.ts`):
+
+- A window a coarse date opened before the parent's launch (a day of
+  GCAT's widened by a day either side, a month) starts at the launch day.
+  From 2005 that moves seven windows' lower edges by a day, and their ids
+  with them.
+- A breakup or anomalous event of a catalogued parent whose window is
+  wider than 93 days, or has no lower edge, is kept out of every line with
+  that reason: GCAT's "2023?" widens to three years, and a confirmation
+  anywhere in three and a half years would count. Ninety-three days keeps a
+  stated month widened a month either side. From 2005 twelve scoreable rows
+  leave the denominator (three Meteor-2 rows of 2023 among them); the
+  results page lists them.
+- An event's id and the year it is counted in are its instant's day where
+  it states one, else its window's lower edge: PSLV-C37's stage, which GCAT
+  dates "2018 Jan 1 0000?", was a 2017 event by the minute before midnight
+  and is now `42052:2018-01-01`.
+- A reviewer may set the lower edge of a merged event whose statements
+  give none, with its reason (`from` on an override). Yaogan-50 02's row
+  had none, so the scorecard read it as no window; it now opens where the
+  catalogue's own burst rule opens the same pieces' window, sixty days
+  before the first piece's first set (`yaogan-50-02-lower-edge`), and its
+  id is `68196:2026-07-01`. The edge is the catalogue's, not the
+  detector's estimate.

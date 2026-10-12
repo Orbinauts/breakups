@@ -60,6 +60,23 @@ describe("the committed truth", () => {
     }
   });
 
+  test("no window opens before its parent's launch day", () => {
+    for (const b of breakups) if (b.parent.launchedOn !== null && b.parent.launchedOn.length === 10 && b.event.from !== null) expect(b.event.from.slice(0, 10) >= b.parent.launchedOn, b.id).toBe(true);
+  });
+
+  test("an id's day is the instant's where the event states one, else the window's lower edge", () => {
+    for (const b of breakups) expect(b.id.slice(-10), b.id).toBe((b.event.at ?? b.event.from ?? b.event.to).slice(0, 10));
+    expect(breakups.find((b) => b.id === "42052:2018-01-01")).toBeDefined();
+  });
+
+  test("no scoreable window is wider than 93 days or open below: such a row is kept out with its reason", () => {
+    for (const b of breakups) {
+      const wide = b.event.from === null || Date.parse(b.event.to) - Date.parse(b.event.from) > 93 * 86_400_000;
+      if (wide && ["breakup", "anomalous"].includes(b.kind) && b.parent.catalogueNumber !== null) expect(b.exemptReason, b.id).toBe(b.event.from === null ? "the window has no lower edge" : "the window is wider than 93 days");
+    }
+    expect(scoring.filter((b) => b.exemptReason === "the window is wider than 93 days").map((b) => b.parent.name)).toContain("NOAA 8");
+  });
+
   test("every event happens after its parent's launch and not after today", () => {
     const today = new Date().toISOString();
     for (const b of breakups) {

@@ -32,6 +32,8 @@ export const SAME_EVENT_DAYS = 30;
 export const CONFLICT_MINUTES = 10;
 /** A burst of catalogued pieces within this long after a reported event of the same launch is that event's late cataloguing, not a new event. */
 export const LATE_BATCH_YEARS = 3;
+/** A window wider than this is no target in a useful sense: a month either side of a stated month fits, GCAT's "2023?" widened to three years does not. */
+export const WIDE_WINDOW_DAYS = 93;
 
 const DAY_MS = 86_400_000;
 
@@ -45,6 +47,8 @@ interface Override {
   event?: SourceId;
   kind?: BreakupKind;
   exempt?: string;
+  /** The window's lower edge the reviewer sets on a merged event whose statements give none, with the reason in the note. */
+  from?: string;
   note?: string;
 }
 
@@ -459,8 +463,29 @@ function conflictsOf(group: Group): Conflict[] {
   return conflicts;
 }
 
+/** The parent's launch day as a time, the first day of the month or year where the source states no finer; null where none is stated. */
+function launchStartOf(parent: Parent): number | null {
+  const launched = parent.launchedOn;
+  if (launched === null) return null;
+  const parsed = Date.parse(`${launched.length === 4 ? `${launched}-01-01` : launched.length === 7 ? `${launched}-01` : launched}T00:00Z`);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+/** The window with its lower edge raised to the parent's launch day where a coarse date widened it to before the launch. */
+function clampedToLaunch(time: StatedTime, parent: Parent): StatedTime {
+  const launch = launchStartOf(parent);
+  if (launch === null || time.from === null || Date.parse(time.from) >= launch) return time;
+  return { ...time, from: `${new Date(launch).toISOString().slice(0, 10)}T00:00Z` };
+}
+
+/** Why a breakup or anomalous event of a catalogued parent is no target by the shape of its window: none below, or wider than `WIDE_WINDOW_DAYS`. */
+function windowReasonOf(time: StatedTime): string | null {
+  if (time.from === null) return "the window has no lower edge";
+  return upper(time) - lower(time) > WIDE_WINDOW_DAYS * DAY_MS ? `the window is wider than ${WIDE_WINDOW_DAYS} days` : null;
+}
+
 function idOf(parent: Parent, time: StatedTime, unnamedIndex: number): string {
-  const day = (time.from ?? time.to).slice(0, 10);
+  const day = (time.at ?? time.from ?? time.to).slice(0, 10);
   if (parent.catalogueNumber !== null) return `${parent.catalogueNumber}:${day}`;
   if (parent.designator !== null) return `A:${parent.designator}:${day}`;
   return `U:${unnamedIndex}:${day}`;
@@ -474,21 +499,23 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
   const applied = overrides.filter((o) => group.overrides.includes(o.name));
   const forcedEvent = applied.find((o) => o.event !== undefined)?.event;
   const forcedKind = applied.find((o) => o.kind !== undefined)?.kind;
+  const forcedFrom = applied.find((o) => o.from !== undefined)?.from;
   const eventStatement = pickEvent(group, forcedEvent);
   const { kind, source: kindSource } = pickKind(group, forcedKind);
   const { orbit, source: orbitSource } = pickOrbit(group);
   const { cause, source: causeSource } = pickCause(group);
   const { pieces, source: piecesSource } = pickPieces(group);
   const parent = pickParent(group);
+  const event = clampedToLaunch(forcedFrom === undefined ? eventStatement.event : { ...eventStatement.event, from: forcedFrom }, parent);
   const exempt = applied.find((o) => o.exempt !== undefined)?.exempt ?? null;
   const kindResolved: BreakupKind = exempt !== null && applied.some((o) => o.exemptLaunch !== undefined) ? "release" : kind;
-  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null ? "the parent has no catalogue number" : null);
+  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null ? "the parent has no catalogue number" : windowReasonOf(event));
   const resolvedFrom: ResolvedFrom = { event: eventStatement.source, orbit: orbitSource, cause: causeSource, pieces: piecesSource, kind: kindSource };
   return {
-    id: idOf(parent, eventStatement.event, unnamedIndex),
+    id: idOf(parent, event, unnamedIndex),
     parent,
     kind: kindResolved,
-    event: eventStatement.event,
+    event,
     orbit: { ...orbit, regime: regimeOf(orbit) },
     cause,
     piecesCatalogued: pieces,
