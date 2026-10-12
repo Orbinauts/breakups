@@ -82,7 +82,7 @@ describe("what an upload sends", () => {
 });
 
 describe("a year's history as a tarball", () => {
-  test("comes back with its days and their modification times, so the days kept for good are not pulled again", () => {
+  test("comes back with its days and their modification times, so the bare days kept for good are not pulled again", () => {
     const from = join(work, "from");
     const to = join(work, "to");
     const dir = historyDir(from, 2026);
@@ -90,7 +90,7 @@ describe("a year's history as a tarball", () => {
     const days = ["2026-01-01", "2026-01-02", "2026-01-03"];
     for (const day of days) {
       const path = join(dir, `${day}.json.gz`);
-      writeFileSync(path, gzipSync("[]"));
+      writeFileSync(path, gzipSync(JSON.stringify([{ NORAD_CAT_ID: "25544", GP_ID: day }])));
       const keptAt = new Date(Date.parse(`${day}T00:00:00Z`) + 5 * DAY);
       utimesSync(path, keptAt, keptAt);
     }
