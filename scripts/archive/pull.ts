@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
-import { join } from "node:path";
-import { gunzipSync } from "node:zlib";
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { constants as zlibConstants, gunzipSync, gzipSync } from "node:zlib";
 import { archiveHome, writeYear, type ArchivedBody, type ArchiveYear, type ColumnArray, type ColumnName, type Columns, type HistorySource, type Manifest, COLUMN_TYPES, REQUIRED_COLUMNS } from "./archive.ts";
 import { latestSatcat } from "./satcat.ts";
 import { parsePair } from "./strip.ts";
@@ -15,8 +15,13 @@ import { credentialsFromEnv, SpaceTrack } from "./space-track.ts";
  * YYYY-MM-DD]`. A day pulled once it has settled, two days after its
  * end, is kept for good; a more recent day is pulled again on every later
  * run, past the cache, until a pull after it has settled, since the
- * catalogue publishes a set hours after its epoch. A bundle year, once
- * published, replaces a pulled one.
+ * catalogue publishes a set hours after its epoch. Each kept day says in
+ * itself when it was pulled (`keepDay`), so the reading survives any copy
+ * of the files; a day kept empty is pulled again on every run, and the
+ * year counts it missing. The catalogue's day range holds both its ends,
+ * so a set whose epoch is exactly midnight comes in two days' answers: the
+ * year counts it once. A bundle year, once published, replaces a pulled
+ * one.
  */
 
 export const SETTLE_DAYS = 2;
@@ -49,17 +54,97 @@ export const keptSettled = (day: string, keptAt: number): boolean => keptAt >= D
  * for good. A day kept before it settled is pulled again on every run
  * until a pull after it has settled, so a run sees the sets the catalogue
  * published for the recent days since the last run, not only those it had
- * published when the day was first pulled.
+ * published when the day was first pulled. A day kept empty is never kept
+ * for good: the catalogue publishes thousands of sets a day, so an empty
+ * answer is a passing fault of the catalogue's, asked again on each run.
  */
 export function daysToPull(archive: string, year: number, through: string): string[] {
   const dir = historyDir(archive, year);
   const days: string[] = [];
   for (let day = `${year}-01-01`; day <= through && day.startsWith(String(year)); day = dayAfter(day)) {
     const kept = join(dir, `${day}.json.gz`);
-    if (existsSync(kept) && keptSettled(day, statSync(kept).mtimeMs)) continue;
+    if (existsSync(kept)) {
+      const head = keptHead(kept);
+      if (!head.empty && keptSettled(day, head.pulledAt)) continue;
+    }
     days.push(day);
   }
   return days;
+}
+
+/**
+ * A day's answer kept with the time it was pulled, so the slice says for
+ * itself whether it was kept for good, wherever its file has been copied:
+ * `{"pulledAt":"<ISO time>","rows":[...]}`, gzipped. A slice kept before
+ * the pull marked them is the bare array of rows, the time it was pulled
+ * its file's modification time.
+ */
+export function keepDay(path: string, rows: readonly unknown[], pulledAt: number): void {
+  writeMarked(path, JSON.stringify(rows), pulledAt);
+}
+
+/** A slice written whole under its name, its rows' JSON text as given, marked with the time they were pulled. */
+function writeMarked(path: string, rowsText: string, pulledAt: number): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(`${path}.keeping`, gzipSync(`{"pulledAt":${JSON.stringify(new Date(pulledAt).toISOString())},"rows":${rowsText}}`));
+  renameSync(`${path}.keeping`, path);
+}
+
+/** A kept day's file name, the only files a year's history holds. */
+export const DAY_FILE = /^\d{4}-\d{2}-\d{2}\.json\.gz$/;
+
+const MARKED = /^\{"pulledAt":"([^"]+)","rows":\[\s*(\])?/;
+const BARE = /^\s*\[\s*(\])?/;
+
+/**
+ * What a kept slice's first bytes say, read without unpacking the whole
+ * day: when it was pulled (its mark, or a bare slice's modification time)
+ * and whether it is empty. A slice that cannot be read counts as empty.
+ */
+function keptHead(path: string): { pulledAt: number; empty: boolean; bare: boolean } {
+  const unreadable = { pulledAt: Number.NEGATIVE_INFINITY, empty: true, bare: false };
+  const fd = openSync(path, "r");
+  const head = Buffer.alloc(4096);
+  const read = readSync(fd, head, 0, head.length, 0);
+  closeSync(fd);
+  let text: string;
+  try {
+    text = gunzipSync(head.subarray(0, read), { finishFlush: zlibConstants.Z_SYNC_FLUSH }).toString("utf8");
+  } catch {
+    return unreadable;
+  }
+  const marked = MARKED.exec(text);
+  if (marked !== null) return { pulledAt: Date.parse(marked[1]!), empty: marked[2] !== undefined, bare: false };
+  const bare = BARE.exec(text);
+  if (bare !== null) return { pulledAt: statSync(path).mtimeMs, empty: bare[1] !== undefined, bare: true };
+  return unreadable;
+}
+
+/** A kept slice's rows, marked or bare. */
+function keptRows(path: string): KeptRow[] {
+  const kept = JSON.parse(gunzipSync(readFileSync(path)).toString("utf8")) as KeptRow[] | { pulledAt: string; rows: KeptRow[] };
+  return Array.isArray(kept) ? kept : kept.rows;
+}
+
+/**
+ * Every bare slice of a year marked with the time its file's modification
+ * time says it was pulled, its rows kept as they were, so the reading no
+ * longer hangs on that time surviving the next copy: run on the machine
+ * that pulled the slices, or after a copy that kept the times (the
+ * release's tarball, unpacked by GNU tar). The days marked, by name.
+ */
+export function markKept(archive: string, year: number): string[] {
+  const dir = historyDir(archive, year);
+  if (!existsSync(dir)) return [];
+  const marked: string[] = [];
+  for (const file of readdirSync(dir).filter((f) => DAY_FILE.test(f)).sort()) {
+    const path = join(dir, file);
+    const head = keptHead(path);
+    if (!head.bare) continue;
+    writeMarked(path, gunzipSync(readFileSync(path)).toString("utf8").trim(), head.pulledAt);
+    marked.push(file.slice(0, 10));
+  }
+  return marked;
 }
 
 /** A kept day's row: the OMM fields this script asks for, or the two lines an earlier cache kept, each with its creation time. */
@@ -112,15 +197,23 @@ class Growing {
  */
 export function buildFromHistory(archive: string, year: number): { columns: Columns; bodies: ArchivedBody[]; sets: number; withoutSatcat: number; from: string; through: string; missing: string[] } {
   const dir = historyDir(archive, year);
-  const days = readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.json\.gz$/.test(f)).sort();
+  const days = readdirSync(dir).filter((f) => DAY_FILE.test(f)).sort();
   if (days.length === 0) throw new Error(`no days kept under ${dir}`);
   const growing = new Growing(2_000_000);
   const designators = new Map<number, string | null>();
   const gpIds: number[] = [];
   let seq = 0;
+  // The day range is inclusive at both ends, so a set whose epoch is exactly midnight is in two days' answers: it is kept from the first.
+  let previousDay = new Set<string>();
+  const withSets = new Set<string>();
   for (const file of days) {
-    const rows = JSON.parse(gunzipSync(readFileSync(join(dir, file))).toString("utf8")) as KeptRow[];
+    const rows = keptRows(join(dir, file));
+    if (rows.length > 0) withSets.add(file.slice(0, 10));
+    const thisDay = new Set<string>();
     for (const row of rows) {
+      const key = row.GP_ID ?? `${row.TLE_LINE1}\n${row.TLE_LINE2}\n${row.CREATION_DATE}`;
+      if (previousDay.has(key) || thisDay.has(key)) continue;
+      thisDay.add(key);
       let set: { number: number; designator: string | null; meanMotion: number; eccentricity: number; inclination: number; raan: number; argOfPerigee: number; meanAnomaly: number; bstar: number; meanMotionDot: number; meanMotionDdot: number; elementSetNumber: number; revAtEpoch: number };
       if (row.TLE_LINE1 !== undefined && row.TLE_LINE2 !== undefined) {
         const parsed = parsePair(row.TLE_LINE1, row.TLE_LINE2);
@@ -164,6 +257,7 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
       seq++;
       if (!designators.has(set.number)) designators.set(set.number, set.designator);
     }
+    previousDay = thisDay;
   }
   const n = growing.length;
   // Publication order: by creation time, then the catalogue's id or the day's listing.
@@ -208,7 +302,7 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
   }
   const kept = days.map((f) => f.slice(0, 10));
   const missing: string[] = [];
-  for (let day = kept[0]!; day <= kept.at(-1)!; day = dayAfter(day)) if (!kept.includes(day)) missing.push(day);
+  for (let day = kept[0]!; day <= kept.at(-1)!; day = dayAfter(day)) if (!withSets.has(day)) missing.push(day);
   return { columns: columns as unknown as Columns, bodies, sets: n, withoutSatcat, from: kept[0]!, through: kept.at(-1)!, missing };
 }
 
@@ -254,19 +348,23 @@ async function main(): Promise<void> {
   const through = throughIndex === -1 ? today : args[throughIndex + 1]!;
   const archive = archiveHome();
   const client = new SpaceTrack(credentialsFromEnv(), archive);
+  const marked = markKept(archive, year);
+  if (marked.length > 0) console.log(`${marked.length} days kept before the slices were marked, marked with the time their files say they were pulled`);
   const days = daysToPull(archive, year, through);
   console.log(`${days.length} days to pull for ${year} through ${through}`);
   let pulled = 0;
   for (const day of days) {
-    // A day kept before it settled is asked for again, past the cache, and its answer replaces the kept one only once it has come.
+    // A day kept before it settled, or kept empty, is asked for again, past the cache; its answer replaces the kept one only once it has come, marked with the time it was asked for.
     const kept = join(historyDir(archive, year), `${day}.json.gz`);
     const again = existsSync(kept);
-    const into = again ? `${kept}.again` : kept;
-    rmSync(`${kept}.again`, { force: true });
-    const { rows, cached } = await client.rows<KeptRow>(into, dayQuery(day, dayAfter(day)));
-    if (again) renameSync(into, kept);
-    if (!cached) pulled++;
-    console.log(`${day}: ${rows.length} sets${cached ? " (kept)" : again ? " (again, not yet settled when kept)" : ""}`);
+    const answer = `${kept}.again`;
+    rmSync(answer, { force: true });
+    const askedAt = Date.now();
+    const { rows } = await client.rows<KeptRow>(answer, dayQuery(day, dayAfter(day)));
+    keepDay(kept, rows, askedAt);
+    rmSync(answer);
+    pulled++;
+    console.log(`${day}: ${rows.length} sets${again ? " (again: not yet settled, or empty, when kept)" : ""}`);
   }
   const built = historyYear(archive, year);
   writeYear(archive, built);
