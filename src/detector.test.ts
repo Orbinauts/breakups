@@ -299,9 +299,10 @@ describe("the detector on synthetic series", () => {
     const series = decaying(7200, 0.02, 0.004, 40, 20);
     const stepAt = 30;
     for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
-    const day = (kp: number) => ({ day: "2020-04-21", kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null });
-    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: [day(2)] });
-    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: [day(7)] });
+    // The run's own day, whichever it is: the run reads its day and the two before it.
+    const day = (kp: number) => (at: number) => [{ day: new Date(at).toISOString().slice(0, 10), kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null }];
+    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: day(2) });
+    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: day(7) });
     expect(suspected(quiet)[0]!.step!.postSets).toBe(2);
     expect(suspected(stormy)[0]!.step!.postSets).toBe(3);
     expect(suspected(stormy)[0]!.reasons.join(" ")).toContain("storm hold");

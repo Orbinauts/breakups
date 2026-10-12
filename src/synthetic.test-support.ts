@@ -87,16 +87,17 @@ export interface Fed {
  * Feeds sets to the detector in publication order, one run per distinct
  * epoch batch: sets sharing a batch index go in one run, and each run's
  * instant is an hour after its latest epoch. Runs with no set are added
- * every four hours up to `until`, so lapses happen.
+ * every four hours up to `until`, so lapses happen. `space` is the days
+ * handed to every run, or the days for a run's instant.
  */
-export function feed(batches: ElementSet[][], options: { parameters?: Partial<DetectorParameters>; space?: SpaceWeatherDay[]; until?: number; notices?: Notice[]; decays?: ReadonlyMap<number, number> } = {}): Fed {
+export function feed(batches: ElementSet[][], options: { parameters?: Partial<DetectorParameters>; space?: SpaceWeatherDay[] | ((at: number) => SpaceWeatherDay[]); until?: number; notices?: Notice[]; decays?: ReadonlyMap<number, number> } = {}): Fed {
   let states: DetectorInput["states"] = new Map();
   let launches: DetectorInput["launches"] = new Map();
   const verdicts: Fed["verdicts"] = [];
   const log: Fed["log"] = [];
   let now = Number.NEGATIVE_INFINITY;
   const run = (sets: ElementSet[], at: number): void => {
-    const output = runDetector({ states, launches, sets, now: at, parameters: options.parameters, space: options.space, notices: options.notices?.filter((n) => n.at <= at), decays: options.decays });
+    const output = runDetector({ states, launches, sets, now: at, parameters: options.parameters, space: typeof options.space === "function" ? options.space(at) : options.space, notices: options.notices?.filter((n) => n.at <= at), decays: options.decays });
     states = output.states;
     launches = output.launches;
     verdicts.push(...output.verdicts);

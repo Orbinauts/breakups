@@ -1015,7 +1015,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
   const launches = input.launches as Map<string, unknown>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, input.now, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
   if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {

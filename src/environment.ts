@@ -145,13 +145,19 @@ export function apFactor(ap: number): number {
   return AP_SCATTER_QUIET + (AP_SCATTER_STORM - AP_SCATTER_QUIET) * position;
 }
 
-/** The weather of a run from the days the caller handed in, the run's day last. */
-export function weatherOf(space: SpaceWeatherDay[] | undefined, params: DetectorParameters): Weather {
-  if (space === undefined || space.length === 0) return { kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 };
+/** How many days of space weather a run reads: its own day and the two before it, so a storm's onset is in view. Policy. */
+export const WEATHER_DAYS = 3;
+
+/** The weather of a run at `now` from the days the caller handed in, oldest first: the highest Kp and Ap of the run's day and the `WEATHER_DAYS - 1` days before it, and the latest flux among them; any other day handed in is not read. */
+export function weatherOf(space: SpaceWeatherDay[] | undefined, now: number, params: DetectorParameters): Weather {
+  const last = new Date(now).toISOString().slice(0, 10);
+  const first = new Date(now - (WEATHER_DAYS - 1) * 86_400_000).toISOString().slice(0, 10);
+  const days = (space ?? []).filter((day) => day.day >= first && day.day <= last);
+  if (days.length === 0) return { kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 };
   let kpMax = 0;
   let apMax = 0;
   let f107 = Number.NaN;
-  for (const day of space) {
+  for (const day of days) {
     for (const kp of day.kp) if (Number.isFinite(kp) && kp > kpMax) kpMax = kp;
     if (Number.isFinite(day.Ap) && day.Ap > apMax) apMax = day.Ap;
     if (day.f107 !== null && Number.isFinite(day.f107)) f107 = day.f107;
