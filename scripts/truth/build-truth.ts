@@ -6,6 +6,7 @@ import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type 
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
 import { isSatcatStatement, parseSatcat, satcatStatements, separationsOf, type Skipped } from "./parse-gcat-satcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
+import { attributeEsaRows, esaStatement, readEsaSer, type EsaCandidate, type EsaRow } from "./parse-esa-ser.ts";
 import { renderReport } from "./report.ts";
 import { statedOnFromRef } from "./stated.ts";
 
@@ -13,8 +14,9 @@ import { statedOnFromRef } from "./stated.ts";
  * Builds the ground truth, `data/breakups.json`, from every statement the
  * sources make: NASA's history read from its text, GCAT's clouds read from
  * its table, GCAT's satellite catalogue read for every piece's parent and
- * separation date, the catalogue's own bursts, and the hand-entered
- * statements. Statements about one parent
+ * separation date, the catalogue's own bursts, the hand-entered
+ * statements, and ESA's yearly tables, each row attributed to the event it
+ * can only be by the rule of `parse-esa-ser.ts`. Statements about one parent
  * whose windows fall within a month of each other are one event; a
  * reviewer's overrides merge or separate what the rule gets wrong. Each
  * field is then resolved by a fixed order of sources, every disagreement is
@@ -68,7 +70,8 @@ const SOURCES: Partial<Record<SourceId, SourceRecord>> = {
   odqn: { citation: "NASA Orbital Debris Program Office, Orbital Debris Quarterly News, https://orbitaldebris.jsc.nasa.gov/quarterly-news/", licence: "US Government work", version: "volume 26 issue 3 (September 2022) to volume 30 issue 3 (September 2026)" },
   // The version is read from the two snapshots' own update lines (`gcatVersion`), so a refreshed snapshot states its edition.
   gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects: Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html, and the satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv", licence: "CC-BY-4.0", version: "" },
-  "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025, Table 3.7", licence: "ESA", version: "2025 edition, events of 2024" },
+  // The version is read from the editions typed into `data/truth/esa-ser.json` (`esaVersion`).
+  "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, Table 3.7 of each edition, https://www.sdo.esoc.esa.int/publications/", licence: "ESA", version: "" },
   "s4s-notice": { citation: "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page", licence: "public announcement", version: "as seen on 2026-09-17" },
   analyst: { citation: "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report", licence: "cited reports", version: "to 2026-10-10" },
   news: { citation: "LeoLabs' public notifications and the news reports cited on each statement", licence: "cited reports", version: "to 2026-10-09" },
@@ -87,10 +90,23 @@ export function gcatVersion(debrisUpdated: string, satcatUpdated: string): strin
   return `debris clouds data last updated ${gcatDay(debrisUpdated)}; satellite catalogue updated ${gcatDay(satcatUpdated)}`;
 }
 
-/** The sources' records, GCAT's version read from its snapshots. */
+/** ESA's version as the truth records it: the first and last editions whose tables are typed in, and the years their tables cover. */
+export function esaVersion(rows: readonly EsaRow[]): string {
+  const editions = [...new Map(rows.map((r) => [r.edition.edition, r.edition])).values()].sort((a, b) => a.dateOfIssue.localeCompare(b.dateOfIssue));
+  const years = rows.map((r) => r.epoch.slice(0, 4)).sort();
+  const [first, last] = [editions[0]!, editions[editions.length - 1]!];
+  return `issues ${first.issue} (${first.dateOfIssue}) to ${last.issue} (${last.dateOfIssue}), ${editions.length} editions, events of ${years[0]} to ${years[years.length - 1]}`;
+}
+
+/** ESA's tables, every row as typed. */
+function esaRows(): EsaRow[] {
+  return readEsaSer(parseJson<unknown>("data/truth/esa-ser.json"));
+}
+
+/** The sources' records, GCAT's version read from its snapshots and ESA's from its editions. */
 function sourcesOf(): Partial<Record<SourceId, SourceRecord>> {
   const version = gcatVersion(parseGcat(read("data/truth/sources/gcat-debriscat.html")).updated, parseSatcat(read("data/truth/sources/gcat-satcat.tsv")).updated);
-  return { ...SOURCES, gcat: { ...SOURCES.gcat!, version } };
+  return { ...SOURCES, gcat: { ...SOURCES.gcat!, version }, "esa-ser": { ...SOURCES["esa-ser"]!, version: esaVersion(esaRows()) } };
 }
 
 function parseJson<T>(path: string): T {
@@ -109,9 +125,11 @@ function allStatements(): Statement[] {
   const hand = readStatements(parseJson<{ statements: unknown }>("data/truth/hand.json").statements);
   const catalogue = existsSync(resolve(ROOT, "data/truth/catalogue.json")) ? readStatements(parseJson<{ statements: unknown }>("data/truth/catalogue.json").statements) : [];
   const satcat = satcatStatements(parseSatcat(read("data/truth/sources/gcat-satcat.tsv")));
+  // ESA's rows a cited source names are statements of their parent; the others are placed by the rule after grouping (`placeEsaRows`).
+  const esaNamed = esaRows().filter((row) => row.parent !== null).map((row) => esaStatement(row, "named"));
   // Each statement dated by when it can first have been public: NASA's history by the quarterly news it cites, a hand-entered one by its reference where it does not say.
   // The satellite catalogue's come last, so the events the other sources make are grouped as before and its statements join them.
-  return [...hoosf, ...gcat, ...hand, ...catalogue, ...satcat].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
+  return [...hoosf, ...gcat, ...hand, ...esaNamed, ...catalogue, ...satcat].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
 }
 
 const lower = (time: StatedTime): number => Date.parse(time.from ?? time.to);
@@ -405,12 +423,58 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
   };
 }
 
-export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[]; skipped: Skipped } {
+/** Where a row of ESA's tables went: named by a cited source, joined to an event by the rule, an unnamed event of its own, or not placed; with the events it went to or could have. */
+export interface EsaPlacement {
+  row: EsaRow;
+  placed: "named" | "joined" | "unnamed" | "unplaced";
+  events: Group[];
+}
+
+/**
+ * ESA's rows no cited source names, placed by the rule of
+ * `parse-esa-ser.ts` among the events the other sources make: a row joins
+ * the event it can only be, a row no source dates near makes an unnamed
+ * event, and the rest are left out and listed.
+ */
+function placeEsaRows(groups: Group[], overrides: Override[], rows: readonly EsaRow[]): { statements: Statement[]; placements: EsaPlacement[] } {
+  const candidates: EsaCandidate[] = groups.map((group, key) => {
+    const resolved = resolve_({ statements: group.statements, overrides: [...group.overrides] }, overrides, 0);
+    const windows = group.statements.filter((s) => s.source !== "catalogue" && s.event.from !== null).map((s) => ({ from: s.event.from!, to: s.event.to }));
+    return { key, windows, regime: resolved.orbit.regime, class: resolved.parent.class, kind: resolved.kind };
+  });
+  const statements: Statement[] = [];
+  const placements: EsaPlacement[] = [];
+  for (const attribution of attributeEsaRows(rows, candidates)) {
+    if ("joins" in attribution) {
+      const statement = esaStatement(attribution.row, "attributed");
+      groups[attribution.joins]!.statements.push(statement);
+      statements.push(statement);
+      placements.push({ row: attribution.row, placed: "joined", events: [groups[attribution.joins]!] });
+    } else if ("unnamed" in attribution) {
+      const group = { statements: [esaStatement(attribution.row, "unnamed")], overrides: [] };
+      groups.push(group);
+      statements.push(group.statements[0]!);
+      placements.push({ row: attribution.row, placed: "unnamed", events: [group] });
+    } else {
+      statements.push(esaStatement(attribution.row, "attributed"));
+      placements.push({ row: attribution.row, placed: "unplaced", events: attribution.ambiguous.map((key) => groups[key]!) });
+    }
+  }
+  return { statements, placements };
+}
+
+export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[]; skipped: Skipped; esa: { row: EsaRow; placed: EsaPlacement["placed"]; events: string[] }[] } {
   const statements = allStatements();
   const overrides = parseJson<{ overrides: Override[] }>("data/truth/overrides.json").overrides;
   const groups = groupStatements(statements, overrides);
+  const rows = esaRows();
+  const esa = placeEsaRows(groups, overrides, rows.filter((row) => row.parent === null));
+  const named: EsaPlacement[] = rows.filter((row) => row.parent !== null).map((row) => ({ row, placed: "named", events: groups.filter((g) => g.statements.some((s) => s.source === "esa-ser" && s.parent.catalogueNumber === row.parent!.catalogueNumber && s.event.stated === row.epoch)) }));
+  statements.push(...esa.statements);
   let unnamed = 0;
   const breakups = groups.map((group) => resolve_(group, overrides, group.statements[0]!.parent.catalogueNumber === null && group.statements[0]!.parent.designator === null ? ++unnamed : 0));
+  const idOfGroup = new Map(groups.map((group, i) => [group, breakups[i]!.id]));
+  const placements = [...named, ...esa.placements].map((p) => ({ row: p.row, placed: p.placed, events: p.events.map((g) => idOfGroup.get(g)!) })).sort((a, b) => a.row.epoch.localeCompare(b.row.epoch));
   breakups.sort((a, b) => lower(a.event) - lower(b.event) || upper(a.event) - upper(b.event) || a.id.localeCompare(b.id));
   const ids = new Map<string, number>();
   for (const breakup of breakups) {
@@ -419,14 +483,19 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
     if (n > 1) throw new Error(`two events share the id ${breakup.id}: ${breakup.parent.name}; separate or merge them with an override`);
   }
   for (const override of overrides) if (!breakups.some((b) => b.overrides.includes(override.name))) throw new Error(`override ${override.name} applied to nothing`);
-  return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped() };
+  return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped(), esa: placements };
+}
+
+/** The truth built and written, `data/breakups.json` and its report `docs/truth.md`; a line saying what was written. */
+export function writeTruth(): { file: BreakupsFile; line: string } {
+  const { file, statements, skipped, esa } = buildTruth();
+  const json = `${JSON.stringify(file, null, 1)}\n`;
+  writeFileSync(resolve(ROOT, "data/breakups.json"), json);
+  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped, esa));
+  const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
+  return { file, line: `data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written` };
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { file, statements, skipped } = buildTruth();
-  const json = `${JSON.stringify(file, null, 1)}\n`;
-  writeFileSync(resolve(ROOT, "data/breakups.json"), json);
-  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped));
-  const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
-  console.log(`data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written`);
+  console.log(writeTruth().line);
 }

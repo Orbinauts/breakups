@@ -22,9 +22,9 @@ const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
 
 describe("the committed truth", () => {
   test("is what the sources build, byte for byte, and the report beside it", () => {
-    const { file, statements, skipped } = buildTruth();
+    const { file, statements, skipped, esa } = buildTruth();
     expect(`${JSON.stringify(file, null, 1)}\n`).toBe(committed);
-    expect(renderReport(file, statements, skipped)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
+    expect(renderReport(file, statements, skipped, esa)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
   });
 
   test("reads back, every row checked", () => {
@@ -90,7 +90,7 @@ describe("links to the statements' pages", () => {
 
   test("only news and analyst statements carry one: the Space Force notice and the tables have none", () => {
     const linked = breakups.flatMap((b) => b.statements).filter((s) => s.url !== undefined);
-    expect(linked.map((s) => s.source).sort()).toEqual(["analyst", "analyst", "news", "news", "news", "news"]);
+    expect(linked.map((s) => s.source).sort()).toEqual(["analyst", "analyst", "news", "news", "news", "news", "news", "news"]);
   });
 });
 
@@ -109,5 +109,25 @@ describe("events checked by hand", () => {
     if (event.regime !== undefined) expect(built!.orbit.regime).toBe(event.regime);
     if (event.confidence !== undefined) expect(built!.confidence).toBe(event.confidence);
     expect(built!.scoreable).toBe(true);
+  });
+});
+
+describe("ESA's tables in the truth", () => {
+  const esaOf = (id: string): Breakup["statements"] => breakups.find((b) => b.id === id)!.statements.filter((s) => s.source === "esa-ser");
+
+  test("a row a cited report names is a scoreable event of that object, dated to ESA's day", () => {
+    const stage = breakups.find((b) => b.id === "59344:2024-04-02")!;
+    expect(stage.parent.name).toBe("CZ-6A R/B (Yunhai-3 02)");
+    expect(stage.confidence).toBe("B");
+    expect(stage.statements.map((s) => s.source).sort()).toEqual(["esa-ser", "news"]);
+  });
+
+  test("Hitomi and the ullage motor of the same day each take the row their orbit allows", () => {
+    expect(esaOf("41337:2016-03-26").map((s) => s.causeStated)).toEqual(["Attitude"]);
+    expect(esaOf("33472:2016-03-26").map((s) => s.causeStated)).toEqual(["Unknown"]);
+  });
+
+  test("a row two events could be joins neither: ESA's 2025-12-18 payload stays off both Starlink-35956 and Shiyan 32-02", () => {
+    expect(breakups.filter((b) => b.event.to.startsWith("2025-12-") && b.statements.some((s) => s.source === "esa-ser")).map((b) => b.id)).toEqual([]);
   });
 });

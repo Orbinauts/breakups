@@ -2,8 +2,10 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { afterAll, describe, expect, test } from "vitest";
-import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, PHASES, REFUSALS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, reviveStates, serialiseStates, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { ATTRIBUTION_PATHS, PHASES, REFUSALS } from "../src/log.ts";
 import { decide, namedOf, rulesOf } from "../scripts/kpi/attributions.ts";
 import { REQUIRED_COLUMNS, catalogueIndexPath, releaseManifestPath, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { readCatalogue } from "../scripts/kpi/catalogue.ts";
@@ -451,6 +453,21 @@ describe("the matching rule's pieces", () => {
     expect(state.steps).toEqual([{ epochMs: 1, deltaKm: 0.5 }]);
     expect(state.regime).toBe("LEO");
     expect(state.nested.get("a")).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  test("the states file is the library's text with the year beside it, so the files already written still read, and a caller's stored states read as a file", () => {
+    // A file as the replay has always written it.
+    const written = '{"format":1,"year":2013,"states":{"__map":[[1,{"never":"-Infinity","unmeasured":"NaN","first":1500,"marks":[0,"Infinity"]}]]},"launches":{"__map":[["2010-001",{"firstSeenAt":"Infinity"}]]}}';
+    const path = join(work, "states", "compatible.json.gz");
+    writeStates(path, { format: 1, year: YEAR, states: new Map([[1, { never: Number.NEGATIVE_INFINITY, unmeasured: Number.NaN, first: 1500, marks: [0, Number.POSITIVE_INFINITY] }]]), launches: new Map([["2010-001", { firstSeenAt: Number.POSITIVE_INFINITY }]]) });
+    expect(gunzipSync(readFileSync(path)).toString("utf8")).toBe(written);
+    const expected = { states: new Map([[1, { never: Number.NEGATIVE_INFINITY, unmeasured: Number.NaN, first: 1500, marks: [0, Number.POSITIVE_INFINITY] }]]), launches: new Map([["2010-001", { firstSeenAt: Number.POSITIVE_INFINITY }]]) };
+    writeFileSync(path, gzipSync(written));
+    expect(readStates(path)).toEqual({ format: 1, year: YEAR, ...expected });
+    expect(reviveStates(written)).toEqual(expected);
+    // The library's text, stored by a caller, read as a states file.
+    writeFileSync(path, gzipSync(serialiseStates(expected)));
+    expect(readStates(path)).toMatchObject(expected);
   });
 
   test("the lines by kind and confidence", () => {
