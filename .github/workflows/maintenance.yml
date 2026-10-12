@@ -83,7 +83,7 @@ permissions:
   pull-requests: write
   # The failure, refusal and reminder issues, and their label.
   issues: write
-  # CI, the KPI workflow and the docs run on main after the merge.
+  # CI, the KPI workflow and the docs run on main after the merge, and the scheduled workflows GitHub disabled for inactivity are enabled again.
   actions: write
 
 env:
@@ -421,6 +421,16 @@ jobs:
           done
           printf '%s' "$links"
           gh pr comment "$PR_URL" --body "Merged. A merge made with the workflow's token starts no workflow, so these runs on main were started by the maintenance run:"$'\n\n'"$links"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s maintenance:keep-alive
       - name: Open an issue with the log
         if: failure()
         env:

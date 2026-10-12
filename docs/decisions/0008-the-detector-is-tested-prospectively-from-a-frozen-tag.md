@@ -102,6 +102,16 @@ runs it at once. Stopping it ends the record; a gap in `runs.jsonl` shows
 when it was not running, and a run after a gap logs the alerts of the gap
 with the commit time of that run.
 
+Since 2026-10-12 a stop is never silent. A failed run opens an issue
+labelled `maintenance` with the end of its log, one a failing day (a run
+made again that day comments on it, `scripts/maintenance/failure-issue.ts`).
+GitHub disables a public repository's scheduled workflows after sixty days
+with no activity in it; each scheduled run of this workflow, of the weekly
+maintenance and of the weekly KPI replay enables again any of them GitHub
+disabled for that reason, and never one a person disabled
+(`scripts/maintenance/keep-alive.ts`). Three disabled at once cannot
+enable each other: `gh workflow list --all` shows it.
+
 ## As built
 
 On 2026-10-11, the day it began, the job moved from a launchd agent of the

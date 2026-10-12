@@ -99,6 +99,23 @@ merge is safe.
   the last day each year holds, so a year held through 31 December is
   never promoted again. A tarball over GitHub's 2 GiB limit on an asset is
   refused before anything is touched, with an issue saying so.
+- **Nothing ends green or silent.** Since 2026-10-12: the KPI workflow
+  fails where the Archive's release cannot be reached (a release deleted
+  or renamed, an outage), on main, on its schedule, by hand and on the
+  repository's own pull requests, and skips the replay with a notice only
+  on a pull request from a fork; a failed run of the prospective test opens
+  an issue labelled `maintenance` with the end of its log, one a failing
+  day; and each scheduled run (the daily test, the weekly maintenance, the
+  weekly KPI replay) enables again any scheduled workflow GitHub disabled
+  after sixty days without activity in the repository, never one a person
+  disabled (`scripts/maintenance/keep-alive.ts`). The KPI workflow's
+  Monday run moved from 06:00 to 12:23 UTC, after the maintenance run's
+  longest window (04:17, or 05:37 where it waited for the daily test, and
+  its 330 minutes), and joins the maintenance run's concurrency group, so
+  it never downloads the release while the maintenance run replaces its
+  files. Its other runs keep a group of their own: GitHub keeps one pending
+  run per group and a newer one displaces it, so a push's run waiting in
+  the shared group could displace a daily run of the test.
 - **A person is reminded of what no script reads.** In the week of the
   first Monday of January, April, July and October the weekly run opens
   an issue, labelled `maintenance`, listing what to check by hand since
@@ -223,3 +240,5 @@ person asks it to fold in (`-f from=<branch>`), which meets the same checks.
   `gh workflow disable prospective.yml` (the eighth decision record).
 - The KPI workflow's weekly replay: `gh workflow disable kpi.yml`, which
   also stops it on pushes and pull requests.
+- A workflow disabled by hand stays disabled: the keep-alive enables again
+  only a workflow GitHub disabled for the repository's inactivity.
