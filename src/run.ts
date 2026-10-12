@@ -13,7 +13,7 @@ import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenanc
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsFrom, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsFrom, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
@@ -108,8 +108,8 @@ interface RunContext {
   judged: Set<Candidate>;
   /** The alerts tracked in this run, each once. */
   tracked: Set<OpenAlert>;
-  /** The objects one of whose sets in this run lay beyond the candidate threshold from its own model, before the band's common mode: their later sets in the run are measured across that jump. */
-  jumped: Set<SeriesState>;
+  /** The objects one of whose sets in this run lay beyond the candidate threshold from its own model, before the band's common mode, with that set and the later sets of the run, measured across the jump, whose residuals are held back until the jump is decided. */
+  jumped: Map<SeriesState, { jump: Pending; held: Pending[] }>;
   states: Map<number, SeriesState>;
   launches: Map<string, unknown>;
   catalogue: CatalogueRecord;
@@ -160,13 +160,15 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
         item.noise = noise;
         item.prediction = prediction;
         item.measurement = { band, regime, residual, sigmaPred, gapDays: prediction.gapDays, bstar };
-        if (context.jumped.has(state)) {
-          // An earlier set of the object in this run jumped: this one is predicted from a fit that holds the jump, and is judged as its post set where a candidate opens; its residual is not the object's noise.
+        const jumped = context.jumped.get(state);
+        if (jumped !== undefined) {
+          // An earlier set of the object in this run jumped: this one is predicted from a fit that holds the jump, and is a post set where the jump opens a candidate; its residual waits for that decision (`releaseHeld`).
           pushSet(state, accepted, Number.NaN, params);
+          jumped.held.push(item);
         } else {
           pushSet(state, accepted, residual, params);
           rememberResidual(state, residual, noise.sigma, accepted.epochMs, params);
-          if (Math.abs(residual) >= params.zCand * sigmaPred) context.jumped.add(state);
+          if (Math.abs(residual) >= params.zCand * sigmaPred) context.jumped.set(state, { jump: item, held: [] });
         }
       }
     }
@@ -694,6 +696,7 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
     if (candidate === null) resetCusum(state, item.set.epochMs);
   }
   if (candidate === null) {
+    releaseHeld(item, context);
     // The set's level joins the object's envelope of held altitudes: a set that opens a candidate does not, so a jump is never judged against itself, and a bad set never widens the envelope; the sets after a step that stays join it once the candidate has closed.
     noteLevel(envelopeOf(state), item.aKm, item.set.epochMs);
     return;
@@ -706,6 +709,21 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
   }
   // A CUSUM candidate already has its post sets in the ring: judge it now.
   if (candidate.origin === "cusum") advance(item, stats, context);
+}
+
+/** Where the set that jumped opened no candidate (the band's common mode took the jump off), the later sets of its object in the run were the object's noise after all: their residuals return to the ring and the long memory. */
+function releaseHeld(item: Pending, context: RunContext): void {
+  const jumped = context.jumped.get(item.state);
+  if (jumped === undefined || jumped.jump !== item) return;
+  context.jumped.delete(item.state);
+  const state = item.state;
+  for (const held of jumped.held) {
+    const i = indexOfEpoch(state, held.set.epochMs);
+    if (i === -1) continue;
+    state.resid[i] = held.measurement!.residual;
+    rememberResidual(state, held.measurement!.residual, held.noise!.sigma, held.set.epochMs, context.params);
+  }
+  if (jumped.held.length > 0) refreshScatter(state);
 }
 
 /** The alert pass for a set of an object with an open alert: the step read once more against the frozen pre fits, once per run. */
@@ -1027,7 +1045,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
   const launches = input.launches as Map<string, unknown>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), jumped: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), jumped: new Map(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
   if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {

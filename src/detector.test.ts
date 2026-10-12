@@ -69,6 +69,27 @@ describe("the detector on synthetic series", () => {
     expect(suspected(alone).length).toBeGreaterThan(0);
   });
 
+  test("a storm's jump, taken off as common mode, opens no candidate and leaves the later sets of the same run their residuals", () => {
+    // The storm of the test above, each object's sets coming two to a run: the first of the pair at the storm's onset jumps before the common mode is taken off.
+    const objects = Array.from({ length: 40 }, (_, i) => ({ number: 100 + i, bstar: 2e-4 * (1 + (i % 5)), gauss: noise(10 + i) }));
+    const batches: ReturnType<typeof setOf>[][] = [];
+    for (let t = 0; t <= 24 * DAY; t += 16 * HOUR) {
+      const batch = [t, t + 8 * HOUR].flatMap((at) =>
+        objects.map((o) => setOf(o.number, { epochMs: T0 + at, aKm: 7100 - 0.05 * (at / DAY) * (o.bstar / 2e-4) + (at >= 20 * DAY ? -200 * o.bstar : 0) + 0.003 * o.gauss(), bstar: o.bstar })),
+      );
+      batches.push(batch);
+    }
+    const fed = feed(batches);
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.phase === PHASES.open)).toEqual([]);
+    for (const o of objects) {
+      const state = fed.states.get(o.number) as { epochs: number[]; resid: number[] };
+      const onset = state.epochs.findIndex((e) => e >= T0 + 20 * DAY);
+      expect(onset).toBeGreaterThan(0);
+      expect(state.resid.slice(onset).every(Number.isFinite)).toBe(true);
+    }
+  });
+
   test("a bad set is dismissed when the next sets are back where the model said", () => {
     const series = decaying(7200, 0.02, 0.004, 30);
     series[60]!.aKm += 0.5;
