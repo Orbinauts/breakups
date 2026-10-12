@@ -13,27 +13,75 @@ const { separations, skipped } = separationsOf(satcat);
 const statements = satcatStatements(satcat);
 const record = (JSON.parse(readFileSync(resolve(ROOT, "data/truth/sources.json"), "utf8")) as { snapshots: Record<string, { snapshotSha256: string }> }).snapshots;
 
+/** The calendar day of GCAT's update line, derived here again so the test checks the parser's derivation and not one edition's value. */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dayOf = (updated: string): string => {
+  const m = /^(\d{4}) ([A-Z][a-z]{2}) (\d{1,2}) \d{4}:\d{2}$/.exec(updated);
+  if (m === null) throw new Error(`not GCAT's update line: ${updated}`);
+  return `${m[1]}-${String(MONTHS.indexOf(m[2]!) + 1).padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
+};
+
+// The snapshot is refreshed by the weekly maintenance, so nothing here may name its edition: the update line, the day it gives and the counts are checked as relations to the snapshot read.
 describe("GCAT's satellite catalogue, read whole", () => {
   test("is the snapshot the sources record names, and reducing it again changes nothing", () => {
     expect(createHash("sha256").update(text).digest("hex")).toBe(record["gcat-satcat"]!.snapshotSha256);
     expect(reduceSatcat(text).text).toBe(text);
   });
 
-  test("yields every row with GCAT's update line", () => {
-    expect(satcat.updated).toBe("2026 Oct 9 1800:46");
-    expect(satcat.rows).toHaveLength(39_175);
-    expect(skipped).toEqual({ notAPiece: 3345, parentNotACatalogueObject: 29, noSeparationDate: 0, releasedAtLaunch: 5011, separatedBeforeLaunch: 2 });
-    expect(separations).toHaveLength(statements.length);
-    expect(statements).toHaveLength(2387);
+  test("yields every row with GCAT's update line; each row is a piece of a separation or skipped for one reason", () => {
+    expect(satcat.updated).toMatch(/^\d{4} [A-Z][a-z]{2} \d{1,2} \d{4}:\d{2}$/);
+    const kept = separations.reduce((n, s) => n + s.pieces.length, 0);
+    const skippedTotal = Object.values(skipped).reduce((n, c) => n + c, 0);
+    expect(kept).toBeGreaterThan(0);
+    expect(kept + skippedTotal).toBe(satcat.rows.length);
+    expect(statements).toHaveLength(separations.length);
   });
 
-  test("every statement is the satellite catalogue's, its window well formed and its count its pieces", () => {
+  test("every statement is the satellite catalogue's, its window well formed, its count its pieces and its pieces stated on the update line's day", () => {
+    const statedOn = dayOf(satcat.updated);
     for (const [i, s] of statements.entries()) {
       expect(isSatcatStatement(s)).toBe(true);
       expect(s.event.to >= (s.event.from ?? "")).toBe(true);
       expect(s.piecesCatalogued).toBe(separations[i]!.pieces.length);
-      expect(s.piecesStatedOn).toBe("2026-10-09");
+      expect(s.piecesStatedOn).toBe(statedOn);
+      expect(s.ref).toContain(`(satcat.tsv, updated ${satcat.updated})`);
     }
+  });
+});
+
+describe("a catalogue written for the test", () => {
+  // One row per reason to skip, and three pieces of one parent in two separations; its update line is no edition the snapshot ever had.
+  const HEADER = "#JCAT\tSatcat\tLaunch_Tag\tPiece\tType\tName\tLDate\tParent\tSDate\tDDate\tStatus";
+  const row = (jcat: string, piece: string, type: string, name: string, parent: string, sdate: string): string => `${jcat}    \t${jcat.slice(1)}\t2001-001\t${piece}\t${type.padEnd(12)}\t${name}\t2001 Jan  1\t${parent}\t${sdate}\t-\tO`;
+  const TSV = [
+    HEADER,
+    "# Updated 2031 Feb  3 0912:44",
+    row("S10000", "2001-001A", "P", "Parent", "S10001", "2001 Jan  1 1200"),
+    row("S10001", "2001-001B", "R2", "Stage", "-", "2001 Jan  1 1150"),
+    row("S10002", "2001-001C", "D  P", "deb of no parent", "-", "2003 May  5"),
+    row("S10003", "2001-001D", "D  P", "deb undated", "S10000", "-"),
+    row("S10004", "2001-001E", "D  P", "deb before launch", "S10000", "2000 Dec 25"),
+    row("S10005", "2001-001F", "C  F", "fairing", "S10000", "2001 Jan  1"),
+    row("S10006", "2001-001G", "D  P", "deb", "S10000", "2003 May  5"),
+    row("S10007", "2001-001H", "D  P", "deb", "S10000", "2003 May  6"),
+    row("S10008", "2001-001J", "D  J", "deb", "S10000", "2010 Jan?"),
+    "",
+  ].join("\n");
+  const written = parseSatcat(TSV);
+
+  test("counts each skipped row under its reason, and the rest into separations", () => {
+    const { separations: found, skipped: why } = separationsOf(written);
+    expect(written.rows).toHaveLength(9);
+    expect(why).toEqual({ notAPiece: 2, parentNotACatalogueObject: 1, noSeparationDate: 1, releasedAtLaunch: 1, separatedBeforeLaunch: 1 });
+    expect(found.map((s) => s.pieces.map((p) => p.number))).toEqual([[10006, 10007], [10008]]);
+  });
+
+  test("states its pieces on the day of its update line, and names the line in each ref", () => {
+    const found = satcatStatements(written);
+    expect(written.updated).toBe("2031 Feb 3 0912:44");
+    expect(found).toHaveLength(2);
+    expect(found[0]).toMatchObject({ kind: "breakup", cause: "propulsion", piecesCatalogued: 2, piecesStatedOn: "2031-02-03", ref: "GCAT satellite catalogue (satcat.tsv, updated 2031 Feb 3 0912:44), parent S10000, 2 pieces 10006, 10007" });
+    expect(found[1]).toMatchObject({ kind: "anomalous", cause: null, piecesCatalogued: 1, piecesStatedOn: "2031-02-03" });
   });
 });
 
@@ -43,7 +91,7 @@ describe("real rows", () => {
     expect(yaogan).toHaveLength(1);
     expect(yaogan[0]).toMatchObject({
       source: "gcat",
-      ref: "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 9 1800:46), parent S34839, 4 pieces 40065 to 40068",
+      ref: `GCAT satellite catalogue (satcat.tsv, updated ${satcat.updated}), parent S34839, 4 pieces 40065 to 40068`,
       kind: "anomalous",
       parent: { catalogueNumber: 34839, designator: "2009-021A", name: "Yaogan Weixing 6" },
       event: { stated: "2014 Jul?", at: null, from: "2014-06-01T00:00Z", to: "2014-09-01T00:00Z", precision: "month" },
