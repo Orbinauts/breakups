@@ -542,8 +542,9 @@ function raiseAlert(state: SeriesState, candidate: Candidate, item: Pending, ori
     return origin === "suspected" ? verdictOf(state, candidate, item, "suspected", estimate, evidence, [...reasons, `the step is ${((now - candidate.afterEpoch) / DAY_MS).toFixed(0)} days old at its raising: no alert is kept for the fragments`], now) : null;
   }
   if (state.alert !== null) {
-    // A second persistent step while the first's alert is open: the first closes as it stands, and the new one is tracked.
-    closeAlert(state, state.alert, closingOutcome(state.alert), context, state.alert.origin === "suspected");
+    // A second persistent step while the first's alert is open: the first closes unconfirmed, as the time to live would close it, and the new one is tracked.
+    const days = (candidate.afterEpoch - state.alert.candidate.afterEpoch) / DAY_MS;
+    closeAlert(state, state.alert, closingOutcome(state.alert), context, state.alert.origin === "suspected", { reasons: [`a second persistent step ${days.toFixed(1)} days after this one closed the alert before its ${params.alertTtlDays} days ran out`] });
   }
   const timed = origin === "suspected" ? eventOf(state, candidate, item.set.designator, params) : null;
   const alert = openAlert(state, { origin, now, candidate, step: stepOf(candidate, estimate), event: timed?.event ?? { at: candidate.tStep, from: candidate.beforeEpoch, to: candidate.afterEpoch }, launch: launchKeyOf(item.set), orbit: orbitAfterStep(state, candidate), regime: state.regime, bodyClass: item.set.bodyClass, evidence, reasons: timed === null ? reasons : [...reasons, ...timed.reasons], estimate, cadenceBefore: candidate.cadenceBefore }, params);
@@ -579,7 +580,9 @@ function closeAlert(state: SeriesState, alert: OpenAlert, outcome: number, conte
     const days = daysAfterStep(alert, now);
     const reasons = outcome === OUTCOMES.dismissed
       ? [`${alert.pieces.new} new bod${alert.pieces.new === 1 ? "y" : "ies"} came under the launch in the ${params.alertTtlDays} days after the step and every one was old by numbering, had a set before the step, or lay out of the parent's plane: not this step's pieces`, ...(extra.reasons ?? [])]
-      : [`no new body under the launch and no notice in the ${params.alertTtlDays} days after the step (${days.toFixed(0)} days)`, ...(extra.reasons ?? [])];
+      : alert.pieces.inPlane > 0
+        ? [`${alert.pieces.inPlane} new bod${alert.pieces.inPlane === 1 ? "y" : "ies"} came under the launch in the parent's plane after the step and the confirmation rules refused ${alert.pieces.inPlane === 1 ? "it" : "them"} (${days.toFixed(0)} days after the step)`, ...(extra.reasons ?? [])]
+        : [`no new body under the launch and no notice in the ${params.alertTtlDays} days after the step (${days.toFixed(0)} days)`, ...(extra.reasons ?? [])];
     context.verdicts.push({ kind: "object", state: outcome === OUTCOMES.dismissed ? "dismissed" : "expired", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...(extra.evidence ?? {}), alertDays: round5(days), piecesNew: alert.pieces.new, piecesInPlane: alert.pieces.inPlane }, reasons, bodies: extra.bodies });
   }
   state.alert = null;
@@ -1001,8 +1004,7 @@ function expire(context: RunContext): void {
   for (const state of alertedStates(context)) {
     const alert = state.alert!;
     if (context.now - alert.raisedAt < context.params.alertTtlDays * DAY_MS) continue;
-    const outcome = closingOutcome(alert);
-    closeAlert(state, alert, outcome === OUTCOMES.confirmed ? OUTCOMES.expired : outcome, context, true, { evidence: { cadenceAfter: round5(cadenceAfter(alert, context.now, context.params)) } });
+    closeAlert(state, alert, closingOutcome(alert), context, true, { evidence: { cadenceAfter: round5(cadenceAfter(alert, context.now, context.params)) } });
   }
 }
 

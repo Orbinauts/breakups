@@ -686,6 +686,29 @@ describe("the confirmation rules", () => {
     expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
     expect(row.signals.confirmRefused).toBe(1);
   });
+
+  test("an alert whose pieces were refused, closed by a second persistent step before its time ran out, expires and says so", () => {
+    // The parent of the test above, stepping again ten days after its first step, while the first alert is still open.
+    const series = decaying(7200, 0.02, 0.004, 48);
+    for (let i = 105; i < series.length; i++) series[i]!.aKm += -0.3;
+    for (let i = 135; i < series.length; i++) series[i]!.aKm += -0.3;
+    const parent = series.map((s) => withNode(setOf(1, s, "rocket body")));
+    const stepEpoch = parent[105]!.epochMs;
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0, { aKm: 7199.7, spreadKm: 0.1 })]));
+    const raised = fed.verdicts.filter((v) => (v.state === "suspected" || v.state === "manoeuvre") && v.number === 1).map((v) => v.step!.afterEpoch);
+    expect(raised).toEqual([stepEpoch, parent[135]!.epochMs]);
+    expect(confirmedOn(fed, 1)).toEqual([]);
+    const first = fed.log.filter((r) => r.signals.phase === PHASES.alert && r.number === 1)[0]!;
+    expect(first.signals.afterEpoch).toBe(stepEpoch);
+    expect(first.signals.confirmRefused).toBe(1);
+    expect(first.signals.outcome).toBe(OUTCOMES.expired);
+    const expired = fed.verdicts.filter((v) => v.state === "expired" && v.number === 1);
+    expect(expired).toHaveLength(1);
+    expect(expired[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(expired[0]!.evidence.piecesInPlane).toBe(6);
+    expect(expired[0]!.reasons.join(" ")).toContain("refused");
+    expect(expired[0]!.reasons.join(" ")).toContain("a second persistent step");
+  });
 });
 
 /**
