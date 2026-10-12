@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { clashes, followMain } from "./moved.ts";
 
 describe("what a main that moved during the run clashes with", () => {
@@ -20,8 +20,8 @@ describe("what a main that moved during the run clashes with", () => {
   });
 });
 
-/** Whoever commits in the test's repositories. */
-const IDENTITY = { GIT_AUTHOR_NAME: "bot", GIT_AUTHOR_EMAIL: "bot", GIT_COMMITTER_NAME: "bot", GIT_COMMITTER_EMAIL: "bot" };
+/** Whoever commits in the test's repositories, with no global configuration: the machine's own (a signing key) is not the run's, and signing every commit outlasts the test's time. */
+const IDENTITY = { GIT_AUTHOR_NAME: "bot", GIT_AUTHOR_EMAIL: "bot", GIT_COMMITTER_NAME: "bot", GIT_COMMITTER_EMAIL: "bot", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" };
 
 describe("following a main that moved, in a repository", () => {
   let dir: string;
@@ -41,12 +41,15 @@ describe("following a main that moved, in a repository", () => {
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), "breakups-moved-"));
+    // The script under test runs git with the process's environment.
+    for (const [name, value] of Object.entries(IDENTITY)) vi.stubEnv(name, value);
     git("init", "-q", "-b", "main");
     base = commit("base", { "src/index.ts": "one\n", "data/breakups.json": "[1]\n", "scripts/rank.ts": "rank\n" });
     message = join(dir, "..", `${dir.split("/").pop()}-message.txt`);
     writeFileSync(message, "Maintenance of today\n\nThe truth moved.\n");
   });
   afterEach(() => {
+    vi.unstubAllEnvs();
     rmSync(dir, { recursive: true, force: true });
     rmSync(message, { force: true });
   });
