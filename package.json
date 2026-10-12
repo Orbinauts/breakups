@@ -68,6 +68,7 @@
     "kpi:readme": "node --experimental-strip-types scripts/kpi/pages.ts",
     "kpi:rank": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/rank.ts",
     "kpi:fixtures": "node --max-old-space-size=8192 --experimental-strip-types scripts/kpi/early-warning-fixtures.ts",
+    "kpi:prune": "node --experimental-strip-types scripts/kpi/prune.ts",
     "prospective": "node --env-file-if-exists=.env --experimental-strip-types scripts/prospective/run.ts",
     "prospective:score": "node --experimental-strip-types scripts/prospective/score.ts",
     "prospective:data": "node --experimental-strip-types scripts/prospective/data.ts",
