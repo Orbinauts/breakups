@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, OPEN_GATES, REGIMES, WHOLE_CATALOGUE, dayOf, endedByOf, inScope, isWorkingStatus, operationalAt, opsStatusOf, passesGates, regimeOf, type BodyClass, type GatedStep, type LogRow, type OpsStatus, type Regime, type ScopeGates, type ScopePolicy, type ScopeSubject } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, REGIMES, type BodyClass, type LogRow, type OpsStatus, type Regime, type ScopeGates, type ScopePolicy } from "../../src/index.ts";
+import { dayOf, endedByOf, isWorkingStatus, operationalAt, opsStatusOf, regimeOf } from "../../src/elements.ts";
+import { OPEN_GATES, WHOLE_CATALOGUE, inScope, passesGates, type GatedStep, type ScopeSubject } from "../../src/scope.ts";
 import { archiveHome, builtYears, readBodies, readYear } from "../archive/archive.ts";
 import { dissectAll, type Cause } from "./events.ts";
 import { alertKey, alertRowsOf, type YearFile } from "./kpi.ts";
