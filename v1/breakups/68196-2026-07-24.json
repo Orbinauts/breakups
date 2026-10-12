@@ -15,6 +15,14 @@
   "from": "2026-07-20T04:53:31.045Z",
   "to": "2026-07-28T08:17:58.562Z"
  },
+ "rowEvent": {
+  "at": null,
+  "from": null,
+  "to": "2026-09-04T00:00:00.000Z",
+  "precision": "none",
+  "source": "catalogue",
+  "row": "68196:2026-09-04"
+ },
  "step": null,
  "reasons": [
   "12 fresh pieces under launch 2026-051 (100571, 100568, 100564, 100566, 100570, 100572, 100574, 100565, 100567, 100569, 100573, 100575), numbered above the catalogue's mark and first published after the cloud's first set, in the plane of 68196 (distance 0.4, 0.4, 0.3, 0.2, 0.6, 0.2, 0.4, 0.3, 0.5, 0.5, 0.3, 0.3 to the nearest plane of the launch's bodies), their semi-major axes centred 9.3 km from its, moving 4.7 m/s from it: a breakup of 68196, attributed from the pieces with no step seen on it",

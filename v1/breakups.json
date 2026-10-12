@@ -2,7 +2,7 @@
  "version": 1,
  "breakups": [
   {
-   "id": "24753-2024-10-07",
+   "id": "24753-2024-12-19",
    "state": "confirmed",
    "raisedAt": "2025-02-13T20:00:00.000Z",
    "confirmedAt": "2025-02-13T20:00:00.000Z",
@@ -17,6 +17,14 @@
     "from": "2024-10-06T11:05:31.065Z",
     "to": "2024-10-08T12:40:58.409Z"
    },
+   "rowEvent": {
+    "at": "2024-12-19T02:10:00.000Z",
+    "from": "2024-12-19T02:10:00.000Z",
+    "to": "2024-12-19T02:10:00.000Z",
+    "precision": "minute",
+    "source": "gcat",
+    "row": "24753:2024-12-19"
+   },
    "step": null,
    "reasons": [
     "12 fresh pieces under launch 1997-012 (62935, 62937, 62936, 62945, 62943, 62946, 62941, 62947, 62942, 62939, 62938, 62940), numbered above the catalogue's mark and first published after the cloud's first set, in the plane of 24753 (distance 1.0, 0.7, 0.6, 2.3, 1.6, 1.9, 0.8, 1.9, 1.3, 0.0, 0.3, 0.6 to the nearest plane of the launch's bodies), their semi-major axes centred 0.7 km from its, moving 13.2 m/s from it: a breakup of 24753, attributed from the pieces with no step seen on it",
@@ -27,7 +35,7 @@
    "reports": []
   },
   {
-   "id": "40258-2026-01-31",
+   "id": "40258-2026-01-30",
    "state": "confirmed",
    "raisedAt": "2026-02-27T04:00:00.000Z",
    "confirmedAt": "2026-02-27T04:00:00.000Z",
@@ -41,6 +49,14 @@
     "at": "2026-01-31T08:15:35.399Z",
     "from": "2026-01-30T08:18:51.759Z",
     "to": "2026-02-01T08:12:19.039Z"
+   },
+   "rowEvent": {
+    "at": "2026-01-30T06:09:00.000Z",
+    "from": "2026-01-30T06:09:00.000Z",
+    "to": "2026-01-30T06:10:00.000Z",
+    "precision": "minute",
+    "source": "news",
+    "row": "40258:2026-01-30"
    },
    "step": {
     "beforeEpoch": "2026-01-30T08:18:51.759Z",
@@ -91,6 +107,7 @@
     "from": "2026-07-30T03:58:16.329Z",
     "to": "2026-07-30T05:42:06.881Z"
    },
+   "rowEvent": null,
    "step": {
     "beforeEpoch": "2026-07-29T20:14:49.936Z",
     "afterEpoch": "2026-07-30T13:06:12.894Z",
@@ -126,6 +143,14 @@
     "from": "2026-07-20T04:53:31.045Z",
     "to": "2026-07-28T08:17:58.562Z"
    },
+   "rowEvent": {
+    "at": null,
+    "from": null,
+    "to": "2026-09-04T00:00:00.000Z",
+    "precision": "none",
+    "source": "catalogue",
+    "row": "68196:2026-09-04"
+   },
    "step": null,
    "reasons": [
     "12 fresh pieces under launch 2026-051 (100571, 100568, 100564, 100566, 100570, 100572, 100574, 100565, 100567, 100569, 100573, 100575), numbered above the catalogue's mark and first published after the cloud's first set, in the plane of 68196 (distance 0.4, 0.4, 0.3, 0.2, 0.6, 0.2, 0.4, 0.3, 0.5, 0.5, 0.3, 0.3 to the nearest plane of the launch's bodies), their semi-major axes centred 9.3 km from its, moving 4.7 m/s from it: a breakup of 68196, attributed from the pieces with no step seen on it",
@@ -150,6 +175,14 @@
     "at": "2026-09-13T21:20:42.966Z",
     "from": "2026-09-13T20:35:42.649Z",
     "to": "2026-09-13T22:05:43.284Z"
+   },
+   "rowEvent": {
+    "at": "2026-09-13T21:13:00.000Z",
+    "from": "2026-09-13T21:03:00.000Z",
+    "to": "2026-09-13T21:23:00.000Z",
+    "precision": "minute",
+    "source": "s4s-notice",
+    "row": "19460:2026-09-13"
    },
    "step": {
     "beforeEpoch": "2026-09-13T12:59:58.320Z",
@@ -189,6 +222,14 @@
     "at": "2026-10-05T09:46:14.575Z",
     "from": "2026-10-05T06:55:46.258Z",
     "to": "2026-10-05T12:36:42.892Z"
+   },
+   "rowEvent": {
+    "at": "2026-10-05T09:45:00.000Z",
+    "from": "2026-10-05T09:35:00.000Z",
+    "to": "2026-10-05T09:55:00.000Z",
+    "precision": "minute",
+    "source": "analyst",
+    "row": "12456:2026-10-05"
    },
    "step": {
     "beforeEpoch": "2026-10-05T12:42:47.767Z",
