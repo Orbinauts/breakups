@@ -568,7 +568,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     const subject = subjectAt(parent, row.from, breakup.orbit.regime, index, verdicts, params);
     row.scored.subject = subject;
     row.scored.scopeIn = inScope(subject, params.scope.policy);
-    if (catalogue !== undefined) row.scored.fragments = fragmentsOf(catalogue, parent, row.launch, row.from, row.to, row.scored.at ?? row.from, row.margin, params);
+    if (catalogue !== undefined) row.scored.fragments = fragmentsOf(catalogue, parent, row.launch, row.from, row.to, row.scored.at ?? row.from, row.margin);
     row.scored.statement = statementAt(firstAgencyStatement(breakup));
     row.scored.firstStatement = statementAt(breakup.firstStatement);
     row.scored.notice = statementAt(firstAgencyNotice(breakup));
