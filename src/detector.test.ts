@@ -7,7 +7,7 @@ import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
 import type { PiecesEventTime } from "./event-time.ts";
-import { passesSmallBatch } from "./run.ts";
+import { passesSmallBatch } from "./confirmation.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
