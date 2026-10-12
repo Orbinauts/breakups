@@ -12,17 +12,17 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 
 | Events from 2005 | Count |
 | --- | --- |
-| All | 623 |
+| All | 626 |
 | Scoreable (breakups and anomalous events of a catalogued object) | 363 |
-| Breakups | 258 |
-| Anomalous events (low-velocity shedding) | 146 |
+| Breakups | 255 |
+| Anomalous events (low-velocity shedding) | 149 |
 | Aerodynamic breakups at reentry (kept out) | 31 |
 | Objects released on purpose (kept out) | 183 |
-| Reports naming no object (kept out) | 5 |
-| Confidence A (an authority states the minute) | 74 |
+| Reports naming no object (kept out) | 8 |
+| Confidence A (an authority states the minute) | 79 |
 | Confidence B (an authority states the day, or a window of three days at most) | 31 |
-| Confidence C (GCAT alone, an authority's month, or an analyst's dating) | 225 |
-| Confidence D (pieces in the catalogue, or news with no time) | 33 |
+| Confidence C (GCAT alone, an authority's month, or an analyst's dating) | 222 |
+| Confidence D (pieces in the catalogue, or news with no time) | 31 |
 
 <!-- truth:counts:end -->
 
