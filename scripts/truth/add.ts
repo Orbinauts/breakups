@@ -15,6 +15,13 @@ import { statedOnFromRef } from "./stated.ts";
  * the command a person runs, and the one the breakup-report workflow runs
  * on a form the owner accepted. A statement the build cannot take leaves
  * the hand file as it was. `--message <file>` writes the commit's message.
+ *
+ * `npm run truth:add -- --missing-from <hand.json> [--status <file>]`
+ * appends every statement another copy of the hand file holds and this
+ * one lacks, without rebuilding: the maintenance workflow folds each
+ * accepted report's branch in so, since two branches cut from one main
+ * both append at the file's end and would not merge. `--status` writes
+ * `added` or `held` (nothing to add).
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -96,6 +103,36 @@ export function addStatement(text: string, raw: unknown): { text: string; statem
   return { text: `${text.slice(0, -END.length)}${separator}\n${formatStatement(fields)}${END}`, statement };
 }
 
+/**
+ * The hand file with every statement of another copy of it that it lacks,
+ * appended in that copy's order: how an accepted report's branch is
+ * folded into a main that moved since the branch was cut, another report
+ * appended there in the meantime. A statement it holds word for word is
+ * passed over; one it holds in other words (the refusal of a statement
+ * already held) is passed over and named in `held`; any other refusal
+ * throws.
+ */
+export function addMissing(text: string, other: string): { text: string; added: Statement[]; held: string[] } {
+  const key = (statement: Fields): string => JSON.stringify(ordered(statement));
+  const present = new Set((JSON.parse(text) as HandFile).statements.map(key));
+  const added: Statement[] = [];
+  const held: string[] = [];
+  let current = text;
+  for (const raw of (JSON.parse(other) as HandFile).statements) {
+    if (present.has(key(raw))) continue;
+    try {
+      const next = addStatement(current, raw);
+      current = next.text;
+      added.push(next.statement);
+      present.add(key(raw));
+    } catch (error) {
+      if (!(error instanceof TruthError) || !error.message.includes("already holds")) throw error;
+      held.push(error.message);
+    }
+  }
+  return { text: current, added, held };
+}
+
 const SOURCE_WORDS: Partial<Record<SourceId, string>> = {
   news: "a news report",
   analyst: "an analyst's statement",
@@ -118,9 +155,20 @@ function main(argv: readonly string[]): void {
     const i = argv.indexOf(name);
     return i === -1 ? undefined : argv[i + 1];
   };
+  const missingFrom = arg("--missing-from");
+  if (missingFrom !== undefined) {
+    const { text, added, held } = addMissing(readFileSync(HAND_PATH, "utf8"), readFileSync(missingFrom, "utf8"));
+    writeFileSync(HAND_PATH, text);
+    for (const statement of added) console.log(`added: ${addedTitle(statement)}`);
+    for (const reason of held) console.log(`passed over: ${reason}`);
+    if (added.length === 0) console.log(`the hand file holds every statement of ${missingFrom}`);
+    const status = arg("--status");
+    if (status !== undefined) writeFileSync(status, added.length === 0 ? "held\n" : "added\n");
+    return;
+  }
   const form = arg("--form");
   const path = form ?? argv.find((a, i) => !a.startsWith("--") && !["--form", "--message"].includes(argv[i - 1] ?? ""));
-  if (path === undefined) throw new Error("usage: npm run truth:add -- <statement.json> | --form <body.md> [--message <file>]");
+  if (path === undefined) throw new Error("usage: npm run truth:add -- <statement.json> | --form <body.md> [--message <file>] | --missing-from <hand.json> [--status <file>]");
   const raw: unknown = form !== undefined ? statementFromForm(readForm(readFileSync(form, "utf8"))) : JSON.parse(readFileSync(path, "utf8"));
   const before = readFileSync(HAND_PATH, "utf8");
   const { text, statement } = addStatement(before, raw);

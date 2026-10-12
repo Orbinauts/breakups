@@ -48,6 +48,7 @@
     "pins": "node --experimental-strip-types scripts/pins/pins.ts",
     "truth": "node --experimental-strip-types scripts/truth/build-truth.ts",
     "truth:add": "node --experimental-strip-types scripts/truth/add.ts",
+    "truth:report": "node --experimental-strip-types scripts/truth/report-issue.ts",
     "truth:fetch":"node --experimental-strip-types scripts/truth/fetch-sources.ts",
     "archive:strip": "node --experimental-strip-types scripts/archive/strip.ts",
     "archive:satcat": "node --experimental-strip-types scripts/archive/satcat.ts",

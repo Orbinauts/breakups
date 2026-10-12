@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { addedTitle, addStatement, formatHandFile } from "./add.ts";
+import { addedTitle, addMissing, addStatement, formatHandFile } from "./add.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const HAND = readFileSync(resolve(ROOT, "data/truth/hand.json"), "utf8");
@@ -67,6 +67,37 @@ describe("adding a statement", () => {
     const { statement } = addStatement(HAND, REPORT);
     expect(addedTitle(statement)).toBe("The ground truth holds a news report of Meteor 2-7 (second event) (12456), published 2026-10-08");
     expect(addedTitle({ ...statement, source: "analyst", parent: { catalogueNumber: null, designator: null, name: null }, ref: "an analyst, undated", statedOn: null })).toBe("The ground truth holds an analyst's statement of an unnamed object");
+  });
+
+  test("from another copy of the hand file, adds every statement this one lacks, in that copy's order", () => {
+    const second = { ...REPORT, ref: "EarthSky, 2026-10-09 (https://earthsky.org/example)", url: "https://earthsky.org/example", statedOn: { ...REPORT.statedOn, on: "2026-10-09" } };
+    const branch = addStatement(addStatement(HAND, REPORT).text, second).text;
+    const { text, added } = addMissing(HAND, branch);
+    expect(text).toBe(branch);
+    expect(added.map((s) => s.ref)).toEqual([REPORT.ref, second.ref]);
+  });
+
+  test("from a copy cut before another report reached this one, adds its own and leaves the other where it is", () => {
+    const main = addStatement(HAND, REPORT).text;
+    const other = { ...REPORT, ref: "EarthSky, 2026-10-09 (https://earthsky.org/example)", url: "https://earthsky.org/example", statedOn: { ...REPORT.statedOn, on: "2026-10-09" } };
+    const branch = addStatement(HAND, other).text;
+    const { text, added } = addMissing(main, branch);
+    expect(added.map((s) => s.ref)).toEqual([other.ref]);
+    expect((JSON.parse(text) as { statements: { ref: string }[] }).statements.slice(-2).map((s) => s.ref)).toEqual([REPORT.ref, other.ref]);
+  });
+
+  test("from a copy this one already holds, adds nothing", () => {
+    const main = addStatement(HAND, REPORT).text;
+    expect(addMissing(main, main)).toEqual({ text: main, added: [], held: [] });
+  });
+
+  test("from a copy whose statement this one holds in other words, adds nothing and says so", () => {
+    const main = addStatement(HAND, REPORT).text;
+    const branch = addStatement(HAND, { ...REPORT, note: "typed again with a note" }).text;
+    const { text, added, held } = addMissing(main, branch);
+    expect(text).toBe(main);
+    expect(added).toEqual([]);
+    expect(held).toEqual([expect.stringMatching(/already holds this statement/)]);
   });
 
   test("refuses a statement the file already holds", () => {
