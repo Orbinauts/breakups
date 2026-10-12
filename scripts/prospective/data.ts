@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { archiveHome } from "../archive/archive.ts";
+import { archiveHome, sha256File } from "../archive/archive.ts";
 import { DAY_FILE, historyDir } from "../archive/pull.ts";
-import { CITATION, DEFAULT_BASE_URL as ARCHIVE_BASE_URL, download as downloadArchive, fetchTo, sha256File, type ReleaseManifest } from "../archive/release.ts";
+import { CITATION, DEFAULT_BASE_URL as ARCHIVE_BASE_URL, download as downloadArchive, fetchTo, type ReleaseManifest } from "../archive/release.ts";
 
 /**
  * The prospective test's own data, kept as assets of the release

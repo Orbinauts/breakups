@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createReadStream, existsSync, rmSync, statSync } from "node:fs";
-import { archiveHome, bundleFile, bundlePath, writeYear, type ArchivedBody, type ColumnArray, type ColumnName, type Columns, type Manifest, type Reject, REQUIRED_COLUMNS } from "./archive.ts";
+import { existsSync, rmSync, statSync } from "node:fs";
+import { archiveHome, bundleFile, bundlePath, writeYear, type ArchivedBody, type ColumnArray, type ColumnName, type Columns, type Manifest, type Reject, COLUMN_TYPES, fixedOfField, REQUIRED_COLUMNS, sha256File } from "./archive.ts";
 import { latestSatcat } from "./satcat.ts";
 
 /**
@@ -38,21 +38,11 @@ function catalogueNumber(field: string): number {
   return value * 10000 + Number(m[2]);
 }
 
-/** A fixed-point decimal "15.49175317" as an integer of `decimals` places, or NaN. */
-function fixed(field: string, decimals: number): number {
-  const s = field.trim();
-  const m = /^(\d*)(?:\.(\d*))?$/.exec(s);
-  if (m === null || s === "" || s === ".") return Number.NaN;
-  const whole = m[1] === "" || m[1] === undefined ? 0 : Number(m[1]);
-  const fraction = (m[2] ?? "").padEnd(decimals, "0").slice(0, decimals);
-  return whole * 10 ** decimals + Number(fraction || "0");
-}
-
 /** A signed fixed-point decimal with its leading zero dropped, "-.00000123", as an integer of `decimals` places. */
 function signedFixed(field: string, decimals: number): number {
   const s = field.trim();
   const sign = s.startsWith("-") ? -1 : 1;
-  return sign * fixed(s.replace(/^[+-]/, ""), decimals);
+  return sign * fixedOfField(s.replace(/^[+-]/, ""), decimals);
 }
 
 /** An implied-point exponential, "-12007-3", as a number. */
@@ -101,37 +91,19 @@ class Growing {
   constructor(capacity: number) {
     this.capacity = capacity;
     this.columns = {} as Record<ColumnName, ColumnArray>;
-    for (const name of REQUIRED_COLUMNS) this.columns[name] = new COLUMN_TYPES_[name](capacity);
+    for (const name of REQUIRED_COLUMNS) this.columns[name] = new COLUMN_TYPES[name](capacity);
   }
 
   ensure(): void {
     if (this.length < this.capacity) return;
     this.capacity = Math.ceil(this.capacity * 1.5);
     for (const name of REQUIRED_COLUMNS) {
-      const grown = new COLUMN_TYPES_[name](this.capacity);
+      const grown = new COLUMN_TYPES[name](this.capacity);
       grown.set(this.columns[name] as never);
       this.columns[name] = grown;
     }
   }
 }
-
-const COLUMN_TYPES_ = {
-  number: Uint32Array,
-  epoch: Float64Array,
-  meanMotion: Uint32Array,
-  eccentricity: Uint32Array,
-  inclination: Uint32Array,
-  raan: Uint32Array,
-  argOfPerigee: Uint32Array,
-  meanAnomaly: Uint32Array,
-  bstar: Float32Array,
-  meanMotionDot: Int32Array,
-  meanMotionDdot: Float32Array,
-  elementSetNumber: Uint16Array,
-  revAtEpoch: Uint32Array,
-  rank: Uint32Array,
-  created: Float64Array,
-} as const;
 
 interface Parsed {
   number: number;
@@ -163,12 +135,12 @@ export function parsePair(line1: string, line2: string): Parsed | string {
     number,
     designator: designatorOf(line1.slice(9, 17)),
     epoch: epochMs(line1.slice(18, 32)),
-    meanMotion: fixed(line2.slice(52, 63), 8),
-    eccentricity: fixed(line2.slice(26, 33), 0),
-    inclination: fixed(line2.slice(8, 16), 4),
-    raan: fixed(line2.slice(17, 25), 4),
-    argOfPerigee: fixed(line2.slice(34, 42), 4),
-    meanAnomaly: fixed(line2.slice(43, 51), 4),
+    meanMotion: fixedOfField(line2.slice(52, 63), 8),
+    eccentricity: fixedOfField(line2.slice(26, 33), 0),
+    inclination: fixedOfField(line2.slice(8, 16), 4),
+    raan: fixedOfField(line2.slice(17, 25), 4),
+    argOfPerigee: fixedOfField(line2.slice(34, 42), 4),
+    meanAnomaly: fixedOfField(line2.slice(43, 51), 4),
     bstar: exponential(line1.slice(53, 61)),
     meanMotionDot: signedFixed(line1.slice(33, 43), 8),
     meanMotionDdot: exponential(line1.slice(44, 52)),
@@ -178,13 +150,6 @@ export function parsePair(line1: string, line2: string): Parsed | string {
   for (const [field, value] of Object.entries(set)) if (typeof value === "number" && !Number.isFinite(value)) return `${field} unreadable`;
   if (set.elementSetNumber > 65535) set.elementSetNumber = 65535;
   return set;
-}
-
-function sha256File(path: string): Promise<string> {
-  return new Promise((resolveHash, reject) => {
-    const hash = createHash("sha256");
-    createReadStream(path).on("data", (chunk) => hash.update(chunk)).on("end", () => resolveHash(hash.digest("hex"))).on("error", reject);
-  });
 }
 
 /** The zip's one text member, by name. */
@@ -302,7 +267,7 @@ async function strip(zip: string, member: { name: string; bytes: number }, satca
   const columns = {} as Record<ColumnName, ColumnArray>;
   for (const name of REQUIRED_COLUMNS) {
     const from = growing.columns[name];
-    const to = new COLUMN_TYPES_[name](n);
+    const to = new COLUMN_TYPES[name](n);
     for (let i = 0; i < n; i++) to[i] = from[order[i]!]!;
     columns[name] = to;
   }

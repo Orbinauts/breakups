@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
-import { sha256File } from "./release.ts";
+import { sha256File } from "./archive.ts";
 
 const work = mkdtempSync(join(tmpdir(), "breakups-release-"));
 afterAll(() => rmSync(work, { recursive: true, force: true }));

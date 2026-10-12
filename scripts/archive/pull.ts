@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { constants as zlibConstants, gunzipSync, gzipSync } from "node:zlib";
-import { archiveHome, writeYear, type ArchivedBody, type ArchiveYear, type ColumnArray, type ColumnName, type Columns, type HistorySource, type Manifest, COLUMN_TYPES, REQUIRED_COLUMNS } from "./archive.ts";
+import { archiveHome, writeYear, type ArchivedBody, type ArchiveYear, type ColumnArray, type ColumnName, type Columns, type HistorySource, type Manifest, COLUMN_TYPES, fixedOfDecimal, REQUIRED_COLUMNS } from "./archive.ts";
 import { latestSatcat } from "./satcat.ts";
 import { parsePair } from "./strip.ts";
 import { credentialsFromEnv, SpaceTrack } from "./space-track.ts";
@@ -32,17 +32,6 @@ const FIELDS = ["NORAD_CAT_ID", "OBJECT_ID", "EPOCH", "MEAN_MOTION", "ECCENTRICI
 const dayQuery = (day: string, next: string): string => `/basicspacedata/query/class/gp_history/EPOCH/${day}--${next}/orderby/CREATION_DATE%20asc,GP_ID%20asc/predicates/${FIELDS.join(",")}/format/json`;
 
 const dayAfter = (day: string): string => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-
-/** A decimal string as an integer of `decimals` places, exactly from its digits. */
-function fixed(text: string, decimals: number): number {
-  const m = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(text.trim());
-  if (m === null) return Number.NaN;
-  if (m[4] !== undefined) return Math.round(Number(text) * 10 ** decimals);
-  const sign = m[1] === "-" ? -1 : 1;
-  const whole = m[2] === "" ? 0 : Number(m[2]);
-  const fraction = (m[3] ?? "").padEnd(decimals, "0").slice(0, decimals);
-  return sign * (whole * 10 ** decimals + Number(fraction || "0"));
-}
 
 const utcMs = (text: string): number => Date.parse(text.endsWith("Z") ? text : `${text}Z`);
 
@@ -223,14 +212,14 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
         set = {
           number: Number(row.NORAD_CAT_ID),
           designator: row.OBJECT_ID || null,
-          meanMotion: fixed(row.MEAN_MOTION!, 8),
-          eccentricity: fixed(row.ECCENTRICITY!, 7),
-          inclination: fixed(row.INCLINATION!, 4),
-          raan: fixed(row.RA_OF_ASC_NODE!, 4),
-          argOfPerigee: fixed(row.ARG_OF_PERICENTER!, 4),
-          meanAnomaly: fixed(row.MEAN_ANOMALY!, 4),
+          meanMotion: fixedOfDecimal(row.MEAN_MOTION!, 8),
+          eccentricity: fixedOfDecimal(row.ECCENTRICITY!, 7),
+          inclination: fixedOfDecimal(row.INCLINATION!, 4),
+          raan: fixedOfDecimal(row.RA_OF_ASC_NODE!, 4),
+          argOfPerigee: fixedOfDecimal(row.ARG_OF_PERICENTER!, 4),
+          meanAnomaly: fixedOfDecimal(row.MEAN_ANOMALY!, 4),
           bstar: Number(row.BSTAR),
-          meanMotionDot: fixed(row.MEAN_MOTION_DOT!, 8),
+          meanMotionDot: fixedOfDecimal(row.MEAN_MOTION_DOT!, 8),
           meanMotionDdot: Number(row.MEAN_MOTION_DDOT),
           elementSetNumber: Math.min(Number(row.ELEMENT_SET_NO) || 0, 65535),
           revAtEpoch: Number(row.REV_AT_EPOCH) || 0,

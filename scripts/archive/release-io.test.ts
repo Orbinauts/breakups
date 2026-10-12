@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { writeCatalogueIndex, INDEX_FORMAT } from "../kpi/catalogue-index.ts";
-import { releaseManifestPath } from "./archive.ts";
-import { CITATION, download, fetchTo, RELEASE_TAG, sha256File, upload, type ReleaseManifest } from "./release.ts";
+import { releaseManifestPath, sha256File } from "./archive.ts";
+import { CITATION, download, fetchTo, RELEASE_TAG, upload, type ReleaseManifest } from "./release.ts";
 
 /**
  * The Archive's release, both ways, with no network and no GitHub: the

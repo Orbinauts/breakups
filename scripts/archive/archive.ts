@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
@@ -98,6 +98,36 @@ export const COLUMN_TYPES: { readonly [Name in ColumnName]-?: ColumnType } = {
 };
 
 export const REQUIRED_COLUMNS = ["number", "epoch", "meanMotion", "eccentricity", "inclination", "raan", "argOfPerigee", "meanAnomaly", "bstar", "meanMotionDot", "meanMotionDdot", "elementSetNumber", "revAtEpoch", "rank"] as const satisfies readonly ColumnName[];
+
+/**
+ * The columns' fixed-point integers, read two ways, one per source: a
+ * two-line set's field (`strip.ts`) and an OMM's decimal as the
+ * catalogue's history class prints it in JSON (`pull.ts`). They differ on
+ * purpose: a two-line field is unsigned (its sign is read apart) and a
+ * blank one is unreadable, so the set is rejected; an OMM's decimal may
+ * carry a sign or an exponent, and a blank one reads zero.
+ */
+
+/** A two-line set's unsigned fixed-point field, "15.49175317", as an integer of `decimals` places; NaN where it is blank, signed or not a decimal. */
+export function fixedOfField(field: string, decimals: number): number {
+  const s = field.trim();
+  const m = /^(\d*)(?:\.(\d*))?$/.exec(s);
+  if (m === null || s === "" || s === ".") return Number.NaN;
+  const whole = m[1] === "" || m[1] === undefined ? 0 : Number(m[1]);
+  const fraction = (m[2] ?? "").padEnd(decimals, "0").slice(0, decimals);
+  return whole * 10 ** decimals + Number(fraction || "0");
+}
+
+/** An OMM's decimal, "-0.00001234" or "1.2e-5", as an integer of `decimals` places, exactly from its digits where it has no exponent; a blank reads zero, anything else not a number NaN. */
+export function fixedOfDecimal(text: string, decimals: number): number {
+  const m = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(text.trim());
+  if (m === null) return Number.NaN;
+  if (m[4] !== undefined) return Math.round(Number(text) * 10 ** decimals);
+  const sign = m[1] === "-" ? -1 : 1;
+  const whole = m[2] === "" ? 0 : Number(m[2]);
+  const fraction = (m[3] ?? "").padEnd(decimals, "0").slice(0, decimals);
+  return sign * (whole * 10 ** decimals + Number(fraction || "0"));
+}
 
 export const MEAN_MOTION_UNIT = 1e-8;
 export const ECCENTRICITY_UNIT = 1e-7;
@@ -226,6 +256,19 @@ export const releaseManifestPath = (archive: string): string => join(archive, "r
 export const catalogueIndexPath = (archive: string): string => join(archive, "index", "catalogue-index.json.gz");
 
 const columnPath = (dir: string, name: string): string => join(dir, `${name}.bin.gz`);
+
+/** A file's SHA-256, in hex, read a piece at a time: a year's tarball is up to 2 GiB, more than a runner should hold at once. */
+export function sha256File(path: string): string {
+  const hash = createHash("sha256");
+  const piece = Buffer.alloc(64 * 1024);
+  const fd = openSync(path, "r");
+  try {
+    for (let read = readSync(fd, piece); read > 0; read = readSync(fd, piece)) hash.update(piece.subarray(0, read));
+  } finally {
+    closeSync(fd);
+  }
+  return hash.digest("hex");
+}
 
 /**
  * The decoded-column cache: a column unpacked once is kept beside the
