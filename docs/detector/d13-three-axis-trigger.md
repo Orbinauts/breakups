@@ -39,6 +39,41 @@ Two changes were made before the second replay, neither a new number:
 
 On the fixtures the log rows went from 94 to 73 against 46 off. The station-keeper went from 43 to 34, and Cosmos 2499 still lost its step. The criterion above was not changed.
 
-## The reading
+## The reading on the training years
 
-Pending: the second replay.
+The second replay ran to the end (`kpi/work/trigger-3axis-b`, 2026-10-13). It is compared with the shared baseline replay of the integration branch at the same commit and truth (`kpi/work/baseline`, the same chunks and states). It was read through a training-only reader that prints nothing of the odd years, and its console was not opened. Both are approximate: the chunks from 2016 start from states the run without the trigger wrote.
+
+| Training, the even years | Baseline | Three-axis trigger on | The criterion | Holds |
+| --- | --- | --- | --- | --- |
+| Early warning, headline breakups detected before the first fragment | 11 | 12 | at least 13 | no |
+| Early-warning false alarms | 2,909 | 50,905 | at most 3,199 | no |
+| Confirmed line, headline breakups confirmed (of 37) | 23 | 22 | at least 23 | no |
+| Confirmed line, false share | 5.4% (2) | 23.1% (12) | at most 6.4% | no |
+
+None of the four holds, so **the parameter stays off**. It is kept, off, in the `legacy` block of `params.ts`, with the other options a phase built and left off.
+
+What the trigger did on the training years:
+
+- **It raised 49,347 suspected verdicts the semi-major axis would not have**: 34,707 opened on the perigee radius and 14,640 on the inclination. Of their alerts, 47,955 were false alarms, 1,100 duplicates, 280 exempt, and 12 on a reported event (9 detections, 3 late). Another 170,224 persistent steps it opened were read as manoeuvres. A perigee or inclination residual past six sigma that holds is, overwhelmingly, a burn or the catalogue's fit, not a breakup.
+- **On the headline line it gained two detections and lost one.** Yaogan 1 (2010) went from late to detected and Resurs O1 No. 3 (2020) from missed to detected. The ullage motor of Cosmos 2459-2461 was lost in 2014 (detected to missed) and in 2018 (late to missed): a candidate opened on the other two quantities held the object when its semi-major axis stepped, as on Cosmos 2499's fixture. Every line together went from 16 detections to 23, the gains mostly on breakups and anomalous events of confidence C and D.
+- **The Confirmed line lost one headline confirmation and gained ten false ones.** With tens of thousands more alerts open on parents, small batches of pieces confirmed alerts the attribution would have weighed against other bodies or refused.
+- **The replay slowed** four- to five-fold in the late years (2024 from 210 to 832 seconds, 2026 from 304 to 1,288): two more fits a set, and the candidates they open.
+
+The budget allowed a third replay. It was not spent: the false alarms are seventeen times the baseline's, against a margin of a tenth, and the headline gain is one event. No change to the same trigger within reach (a yield of an open candidate to the semi-major axis's step, a stricter scale) would close a gap of that size without removing the gain.
+
+## The held-out years, read once after the decision
+
+Read once, after the parameter was left off, with the same reader on the odd years:
+
+| Held out, the odd years | Baseline | Three-axis trigger on |
+| --- | --- | --- |
+| Early warning, headline breakups detected before the first fragment | 8 | 7 |
+| Early-warning false alarms | 2,415 | 42,990 |
+| Confirmed line, headline breakups confirmed (of 26) | 18 | 18 |
+| Confirmed line, false share | 14.3% (4) | 37.3% (19) |
+
+The held-out years agree with the training years. The early warning lost CBERS 1 (2007) and Cosmos 2499 (2021), the latter as its fixture had shown, and gained the ullage motor of Cosmos 2456-2458 (2019). The false alarms were eighteen times the baseline's, and the Confirmed line's false share went from 14% to 37%.
+
+## What it says
+
+The structural blind spot the issue named is real: a breakup that changes the parent's shape or plane at constant period leaves the semi-major axis alone. But the perigee radius and the inclination, read with the machinery the semi-major axis uses, do not open a usable door to it. Their steps past six sigma are some fifty thousand false alarms a split for one headline event. A fairer attempt would need what the semi-major axis has and they lack: each quantity's own one-step-ahead scatter, measured over the ring with a long memory, rather than a fit's scale grown by another quantity's factor. Then a candidate opened on one quantity must yield to a step on another. Both are new state and a new phase, not a parameter; this phase leaves the trigger off and records why.
