@@ -131,7 +131,11 @@ is new. Issue #8 is the specification.
   replays (`test/fixtures/published/`), which must publish exactly the
   lists the specification expects.
 - A suspected breakup is rare until the outside reports in the truth are
-  kept current (issue #9).
+  kept current (issue #9). Since 2026-10-12 a daily watcher opens an issue
+  for each new report it can read and a report the owner accepts reaches
+  the truth the same day
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)),
+  so it is published the next morning at the latest.
 - A change to the files' shape that breaks a reader is a new version, and
   the package's types say which. Adding `rowEvent` broke none, and the
   ids were re-keyed once under the new rule, by the first run that read
@@ -153,3 +157,23 @@ suspected and confirmed verdicts one breakup, confirmed by the Space
 Force notice), all confirmed, and Meteor 2-7 (12456) suspected on an
 analyst's report of 2026-10-07 (Jim Shell's dating, as EarthSky and
 LeoLabs reported it); none of the year's other suspected verdicts.
+
+## Amended on 2026-10-12: a row naming a launch alone is a detection
+
+The seventh decision record's amendment of this day scores a row naming
+a launch and no catalogued parent on the Confirmed line by its launch
+(issue #21), so `landConfirmed` no longer calls a confirmation inside such
+a row's window exempt: it is a detection of the row. The first of the two
+readings above therefore no longer arises for these rows. Intelsat 805's
+confirmation of 2026-08-20 lands on the catalogue's burst under its
+launch, `A:1998-037:2026-06-19`, and carries the row's dating; the
+published parent stays the body the verdict names (its number,
+designator and name from the catalogue), since the row names only the
+launch.
+
+## Amended on 2026-10-12: an unreported confirmation, and the nearest row
+
+The seventh decision record's amendment of 2026-10-12 (issue #17) changed two readings the published files share with the scorecard:
+
+- **An unreported confirmation.** A detector confirmation that lands on no row is the detector's own news, as before, and is shown with no report. It now has one name everywhere: unreported. The scorecard and the live test's score count it pending, neither true nor false, while it was raised less than 90 days before the truth's date (the latest day the ground truth knows of), and false once 90 days pass with no report. The published list keeps it after that, since a confirmed breakup stays for good and the site may already show it; its `reports` stay empty and its `row` null, so a reader can apply the same reading from `raisedAt`. The files' shape is unchanged. Dropping a confirmation from the list once it turns false is left to the owner: it would change "a confirmed breakup stays for good".
+- **The nearest row.** A confirmation lands as `landConfirmed` lands it, now on the row of its object nearest the detector's instant of the event, else its raising, rather than the latest scoreable row in the window; and a confirmation inside a report naming no object, no launch and no regime lands as `unnamed`, which, like every landing other than a detection or a release on purpose, the selection publishes as a breakup on no row.

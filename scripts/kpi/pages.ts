@@ -58,7 +58,7 @@ export const GROUND_TRUTH = "docs/ground-truth.md";
 /** Every generated part, by the page that holds it. */
 export const GENERATED_PARTS: Readonly<Record<string, readonly string[]>> = {
   [README]: ["kpi:summary", "kpi:early-warning", "kpi:target", "kpi:lifecycle", "kpi:lifecycle-caveat", "truth:quick-start"],
-  [RESULTS]: ["kpi:current", "kpi:current-early-warning", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:early-warning-tables", "kpi:lifecycle-full", "prospective:score"],
+  [RESULTS]: ["kpi:current", "kpi:current-early-warning", "kpi:splits", "kpi:medians", "kpi:confirmed", "kpi:early-warning-tables", "kpi:lifecycle-full", "prospective:score", "truth:kept-out-by-window"],
   [GROUND_TRUTH]: ["truth:counts", "truth:gcat-clouds"],
 };
 
@@ -105,6 +105,9 @@ type ConfirmedLineCells = Latest["splits"]["validation"]["confirmedLine"];
 /** A rate with its count, as the README's summary states it: "74% (17 of 23)". */
 const rateOf = (rate: number | null, k: number, n: number): string => (rate === null ? "–" : `${percent(rate)} (${k} of ${n})`);
 
+/** A median lead in whole days with how many came before the statement; a dash where none is dated (or the aggregate predates the reading). */
+const leadOf = (lead: ConfirmedLineCells["leadNotice"] | undefined, before: number | undefined, dated: number | undefined, counts: (k: number, n: number) => string): string => (lead === null || lead === undefined ? "–" : `${Math.round(lead.median)} days${counts(before ?? 0, dated ?? 0)}`);
+
 /** The README's summary: the held-out years' headline in plain words, against the target. */
 export function summaryTable(latest: Latest): string {
   const held = latest.splits.validation;
@@ -115,7 +118,9 @@ export function summaryTable(latest: Latest): string {
     row(["---", "---", "---"]),
     row(["Reported breakups confirmed", rateOf(line.rate, line.detected, line.targets), "90% or more"]),
     row(["Confirmations that were false", rateOf(c.falseAlarmRate, c.falseAlarms, c.falseAlarms + c.detectedAllLines), "under 10%"]),
-    row(["Median lead over the first official report", c.lead === null ? "–" : `${Math.round(c.lead.median)} days (${c.beforeStatement} of ${c.withStatement} confirmed before it)`, ""]),
+    row(["Median lead over the first agency notice dated to the day", leadOf(c.leadNotice, c.beforeNotice, c.withNotice, (k, n) => ` (${k} of ${n} confirmed before it)`), ""]),
+    row(["Median lead over NASA's quarterly news, dated to its month", leadOf(c.leadQuarterly, c.beforeQuarterly, c.withQuarterly, (k, n) => ` (${k} of ${n} confirmed before it)`), ""]),
+    row(["First agency statements dated to the day, to the month", `${c.statementDays} to the day, ${c.statementMonths} to the month`, ""]),
     row(["Median error in the time of the breakup", c.timing === null ? "–" : duration(c.timing.median), ""]),
   ].join("\n");
 }
@@ -224,13 +229,15 @@ function currentColumn(c: ConfirmedLineCells): string[] {
     withInterval(line.rate, line.interval),
     `${c.falseAlarms} of ${c.falseAlarms + c.detectedAllLines}`,
     withInterval(c.falseAlarmRate, c.falseAlarmInterval),
-    c.lead === null ? "–" : `${Math.round(c.lead.median)} days, ${c.beforeStatement} of ${c.withStatement} before it`,
+    leadOf(c.leadNotice, c.beforeNotice, c.withNotice, (k, n) => `, ${k} of ${n} before it`),
+    leadOf(c.leadQuarterly, c.beforeQuarterly, c.withQuarterly, (k, n) => `, ${k} of ${n} before it`),
+    `${c.statementDays} / ${c.statementMonths}`,
     c.timing === null ? "–" : duration(c.timing.median),
   ];
 }
 
-const LABELS = ["Confirmed, of the targets", "Recall (95% interval)", "False confirmations, of all events confirmed", "False-alarm rate (95% interval)", "Median lead over the first agency statement", "Median timing error"];
-const TARGETS = ["", "90% or more", "", "under 10%", "", ""];
+const LABELS = ["Confirmed, of the targets", "Recall (95% interval)", "False confirmations, of all events confirmed", "False-alarm rate (95% interval)", "Median lead over the first agency notice dated to the day", "Median lead over NASA's quarterly news, dated to its month", "First agency statements dated to the day / to the month", "Median timing error"];
+const TARGETS = ["", "90% or more", "", "under 10%", "", "", "", ""];
 
 /** The results page's first table: the headline of the held-out and the training years, in plain units, against the target. */
 export function currentTable(latest: Latest): string {
@@ -273,10 +280,15 @@ export function inWords(days: number): string {
 export function mediansSentence(latest: Latest): string {
   const c = latest.splits.validation.confirmedLine;
   const sentences: string[] = [];
-  if (c.lead !== null && c.withStatement > 0) {
-    const who = c.beforeStatement === c.withStatement ? "Every held-out confirmation with an agency's statement came before that statement" : `${c.beforeStatement} of the ${c.withStatement} held-out confirmations with an agency's statement came before that statement`;
-    sentences.push(c.lead.median >= 0 ? `${who}, and the median one by ${inWords(c.lead.median)}.` : `${who}, and the median one ${inWords(-c.lead.median)} after it.`);
-  }
+  const before = (lead: ConfirmedLineCells["leadNotice"] | undefined, k: number | undefined, n: number | undefined, what: string, it: string): void => {
+    if (lead === null || lead === undefined || !n) return;
+    const who = k === n ? `Every held-out confirmation with ${what} came before ${it}` : `${k ?? 0} of the ${n} held-out confirmations with ${what} came before ${it}`;
+    sentences.push(lead.median >= 0 ? `${who}, and the median one by ${inWords(lead.median)}.` : `${who}, and the median one ${inWords(-lead.median)} after it.`);
+  };
+  const timed = (c.leadNotice !== null && c.leadNotice !== undefined) || (c.leadQuarterly !== null && c.leadQuarterly !== undefined) || c.lag !== null;
+  if (timed && !c.withNotice) sentences.push("No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them.");
+  before(c.leadNotice, c.beforeNotice, c.withNotice, "an agency notice dated to the day", "that notice");
+  before(c.leadQuarterly, c.beforeQuarterly, c.withQuarterly, "an issue of NASA's quarterly news", "that issue's month");
   if (c.lag !== null) sentences.push(`The median confirmation came ${inWords(c.lag.median)} after the catalogue published the first fresh piece.`);
   return sentences.length === 0 ? "No held-out confirmation is timed yet." : sentences.join(" ");
 }
@@ -294,7 +306,7 @@ export function splitsSentence(latest: Latest): string {
 /** The ground-truth table's rows: a label and the events from 2005 it counts. */
 export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[] = [
   ["All", () => true],
-  ["Scoreable (breakups and anomalous events of a catalogued object)", (b) => b.scoreable],
+  ["Scoreable (breakups and anomalous events of a catalogued object or of a launch)", (b) => b.scoreable],
   ["Breakups", (b) => b.kind === "breakup"],
   ["Anomalous events (low-velocity shedding)", (b) => b.kind === "anomalous"],
   ["Aerodynamic breakups at reentry (kept out)", (b) => b.kind === "aerodynamic"],
@@ -302,14 +314,24 @@ export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[]
   ["Reports naming no object (kept out)", (b) => b.kind === "unnamed"],
   ["Confidence A (an authority states the minute)", (b) => b.scoreable && b.confidence === "A"],
   ["Confidence B (an authority states the day, or a window of three days at most)", (b) => b.scoreable && b.confidence === "B"],
-  ["Confidence C (GCAT alone, an authority's month, or an analyst's dating)", (b) => b.scoreable && b.confidence === "C"],
-  ["Confidence D (pieces in the catalogue, or news with no time)", (b) => b.scoreable && b.confidence === "D"],
+  ["Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant)", (b) => b.scoreable && b.confidence === "C"],
+  ["Confidence D (pieces in the catalogue, or news to the day at best)", (b) => b.scoreable && b.confidence === "D"],
 ];
 
 /** The ground truth's counts from 2005, as the ground-truth page's table. */
 export function truthTable(breakups: readonly Breakup[]): string {
   const since = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   return [row([`Events from ${SCORING_FROM}`, "Count"]), row(["---", "---"]), ...TRUTH_ROWS.map(([label, counts]) => row([label, String(since.filter(counts).length)]))].join("\n");
+}
+
+/** The reasons a breakup or anomalous event of a catalogued parent is kept out by the shape of its window (`windowReasonOf` in the truth's build). */
+const WINDOW_REASONS: ReadonlySet<string> = new Set(["the window has no lower edge", "the window is wider than 93 days"]);
+
+/** The rows from 2005 kept out of every line by the shape of their window, as the results page lists them. */
+export function keptOutByWindowTable(breakups: readonly Breakup[]): string {
+  const kept = breakups.filter((b) => yearOf(b) >= SCORING_FROM && b.exemptReason !== null && WINDOW_REASONS.has(b.exemptReason));
+  const window = (b: Breakup): string => `${b.event.from === null ? "…" : b.event.from.slice(0, 10)} to ${b.event.to.slice(0, 10)}`;
+  return [row(["Event", "Kind", "Confidence", "Window", "Why it is kept out"]), row(["---", "---", "---", "---", "---"]), ...kept.map((b) => row([`${b.id} ${b.parent.name}`, b.kind, b.confidence, window(b), b.exemptReason!]))].join("\n");
 }
 
 /** The fenced block of a language in a text, its content. */
@@ -376,6 +398,7 @@ export async function renderPage(path: string, text: string, inputs: ReadmeInput
     out = replacePart(out, "kpi:medians", mediansSentence(latest), true);
     out = replacePart(out, "kpi:confirmed", tables.slice(0, CONFIRMED_TABLES).join("\n\n"));
     out = replacePart(out, "kpi:early-warning-tables", tables.slice(CONFIRMED_TABLES).join("\n\n"));
+    out = replacePart(out, "truth:kept-out-by-window", keptOutByWindowTable(readBreakups(file)));
     return replacePart(out, "kpi:lifecycle-full", lifecycleTables(latest).join("\n\n"));
   }
   if (path === GROUND_TRUTH) {

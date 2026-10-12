@@ -11,6 +11,7 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 - [The Confirmed line, the target](#the-confirmed-line-the-target)
 - [Early warning (suspected)](#early-warning-suspected)
 - [The life of an alert](#the-life-of-an-alert)
+- [Rows kept out by the shape of their window](#rows-kept-out-by-the-shape-of-their-window)
 - [The live test](#the-live-test)
 
 ## The headline
@@ -23,7 +24,9 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 | Recall (95% interval) | 74% (54% to 87%) | 63% (46% to 77%) | 90% or more |
 | False confirmations, of all events confirmed | 6 of 29 | 2 of 36 |  |
 | False-alarm rate (95% interval) | 21% (10% to 38%) | 6% (2% to 18%) | under 10% |
-| Median lead over the first agency statement | 42 days, 17 of 17 before it | 36 days, 14 of 21 before it |  |
+| Median lead over the first agency notice dated to the day | – | – |  |
+| Median lead over NASA's quarterly news, dated to its month | – | – |  |
+| First agency statements dated to the day / to the month | 0 / 17 | 0 / 21 |  |
 | Median timing error | 41 minutes | 19 hours |  |
 
 <!-- kpi:current:end -->
@@ -43,15 +46,16 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 
 <!-- kpi:current-early-warning:end -->
 
-A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead counts the days from the detector's confirmation to the first statement by an agency: NASA, ESA or U.S. Space Forces-Space. The timing error compares the detector's instant of the breakup with the one the ground truth gives. An early warning's target is a reported breakup whose parent had public orbits to be judged on; it is flagged when the warning came before the first fragment was catalogued, and late when it came after; its lead is over that first fragment. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, `npm run kpi:readme` writes this page's tables and the README's summary from it, and a test fails if any cell here differs from that file.
+A target is a breakup an authority reported to the day or better, whose launch then gained fresh pieces in the parent's orbital plane. The thresholds are fitted on the even years and checked on the odd ones, the held-out years. The lead is read two ways side by side: the days from the detector's confirmation to the first agency notice dated to the day (a U.S. Space Forces-Space notice, ESA's report), and to NASA's quarterly news, dated to the first day of its issue's month; the last row says how the first agency statements were dated. The timing error compares the detector's instant of the breakup with the one the ground truth gives. An early warning's target is a reported breakup whose parent had public orbits to be judged on; it is flagged when the warning came before the first fragment was catalogued, and late when it came after; its lead is over that first fragment. The scorecard regenerates these numbers: `npm run kpi` writes `kpi/latest.json`, `npm run kpi:readme` writes this page's tables and the README's summary from it, and a test fails if any cell here differs from that file.
 
 ## How the numbers are made
 
 The scorecard replays the detector over the [Archive](archive.md). It feeds the detector every element set of every object in the order the catalogue published them, in runs of four hours as the product runs, and matches what it raises against the [ground truth](ground-truth.md). [docs/decisions/0004](decisions/0004-the-scorecard-replays-the-detector-and-ci-must-reproduce-its-number.md) gives the scorecard's rules. **The target is on Confirmed alerts**, the owner's decision of 2026-10-10 ([docs/decisions/0007](decisions/0007-the-target-is-on-confirmed-alerts.md)).
 
 - A **target** is a reported breakup whose launch gained at least one fresh piece in the parent's plane within 180 days. Events with no such piece, or no orbit of the parent before the event, are counted apart and left out of the denominator.
-- A **detection** is the first confirmed verdict on the event's parent within 180 days after it. A confirmed verdict that matches no reported event is a **false confirmation**, and the false-alarm rate is over all the events confirmed, on every line.
-- The **lead** is the days from the confirmation to the first agency statement the truth dates: NASA's quarterly news, dated to the first day of its month, a U.S. Space Forces-Space notice, or ESA's report. The **lag** is the days after the first fresh piece was published. The **timing error** compares the detector's instant of the event with the truth's.
+- A **detection** is the first confirmed verdict on the event's parent within 180 days after it, assigned to the parent's reported event nearest the detector's instant of the event (else its raising), so a later event's confirmation never counts for an earlier one. A confirmed verdict that matches no reported event is **unreported**: **pending** while it was raised under 90 days before the truth's date (the latest day the truth knows of), in neither count, and a **false confirmation** after that. The false-alarm rate is over all the events confirmed, on every line.
+- A report naming no catalogued object exempts a confirmation inside its window only where it names the verdict's launch or the regime its object is in; one naming neither is counted in a cell of its own, neither exempt nor false.
+- The **lead** is read two ways: over the first agency notice dated to the day (a U.S. Space Forces-Space notice, ESA's report, any agency's statement dated to the day), and over NASA's quarterly news, dated to the first day of its issue's month, the earliest it can have been public, so that lead is the least it can have been. The **lag** is the days after the first fresh piece was published. The **timing error** compares the detector's instant of the event with the truth's.
 - The headline is breakups reported to the day or better, confidence A and B. The thresholds are fitted on the even years and the odd years are held out: those are the two **splits**. Every split scores from 2006, since 2005, the Archive's first year, is the detector's warm-up. A crewed station's launch is exempt.
 - A verdict that names a launch and its candidate bodies (twins) is matched on the body it names first. The rows "twins matched at the launch" count it as a detection where a reported event's parent is among the candidates.
 
@@ -59,20 +63,20 @@ The scorecard replays the detector over the [Archive](archive.md). It feeds the 
 
 ## The Confirmed line, the target
 
-The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. <!-- kpi:medians:begin -->Every held-out confirmation with an agency's statement came before that statement, and the median one by six weeks. The median confirmation came three hours after the catalogue published the first fresh piece.<!-- kpi:medians:end --> What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](detector/README.md) what each phase changed.
+The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. <!-- kpi:medians:begin -->No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them. The median confirmation came three hours after the catalogue published the first fresh piece.<!-- kpi:medians:end --> What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](detector/README.md) what each phase changed.
 
 <!-- kpi:confirmed:begin -->
 
-| Confirmed: the target, breakups A and B | Targets (fragments catalogued) | No fragments catalogued | Confirmed | Missed | Recall (95% interval) | False confirmations | False-alarm rate (95% interval) | Lead over the first agency statement, days: median (10th percentile) | Confirmed before it | Lag after the first fragment, days: median (90th percentile) | Timing error, minutes: median (90th percentile) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Validation: the odd years (2007 to 2025, 10 years) | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | 41.7 (9.8) | 17 of 17 | 0.1 (4.0) | 40.6 (21342.4) |
-| Validation: the odd years, twins matched at the launch | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | 41.7 (9.8) | 17 of 17 | 0.1 (4.0) | 40.6 (21342.4) |
-| Training: the even years (2006 to 2026, 11 years) | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 2 | 6% (2% to 18%) | 35.7 (-32.2) | 14 of 21 | 0.1 (5.9) | 1125.9 (173291.7) |
-| Training: the even years, twins matched at the launch | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 2 | 6% (2% to 18%) | 35.7 (-24.5) | 14 of 21 | 0.1 (5.9) | 1125.9 (173291.7) |
-| Fitted on the years to 2017 (2006 to 2017, 12 years) | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | 37.2 (-15.2) | 17 of 22 | 0.1 (0.1) | 583.0 (118847.1) |
-| Fitted on the years to 2017, twins matched at the launch | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | 37.2 (-12.3) | 17 of 22 | 0.1 (0.1) | 583.0 (89663.5) |
-| Validated on the years from 2018 (2018 to 2026, 9 years) | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 2 | 7% (2% to 23%) | 40.2 (-24.5) | 14 of 16 | 0.1 (17.2) | 72.8 (40265.4) |
-| Validated on the years from 2018, twins matched at the launch | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 2 | 7% (2% to 23%) | 40.2 (-24.5) | 14 of 16 | 0.1 (17.2) | 72.8 (40265.4) |
+| Confirmed: the target, breakups A and B | Targets (fragments catalogued) | No fragments catalogued | Confirmed | Missed | Recall (95% interval) | False confirmations | False-alarm rate (95% interval) | Lead over the first agency notice dated to the day, days: median (10th percentile) | Confirmed before it | Lead over NASA's quarterly news, days: median (10th percentile) | Confirmed before it | Lag after the first fragment, days: median (90th percentile) | Timing error, minutes: median (90th percentile) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Validation: the odd years (2007 to 2025, 10 years) | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | – | – | – | – | 0.1 (4.0) | 40.6 (21342.4) |
+| Validation: the odd years, twins matched at the launch | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | – | – | – | – | 0.1 (4.0) | 40.6 (21342.4) |
+| Training: the even years (2006 to 2026, 11 years) | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 2 | 6% (2% to 18%) | – | – | – | – | 0.1 (5.9) | 1125.9 (173291.7) |
+| Training: the even years, twins matched at the launch | 35 | 15 | 22 | 13 | 63% (46% to 77%) | 2 | 6% (2% to 18%) | – | – | – | – | 0.1 (5.9) | 1125.9 (173291.7) |
+| Fitted on the years to 2017 (2006 to 2017, 12 years) | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | – | – | – | – | 0.1 (0.1) | 583.0 (118847.1) |
+| Fitted on the years to 2017, twins matched at the launch | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | – | – | – | – | 0.1 (0.1) | 583.0 (89663.5) |
+| Validated on the years from 2018 (2018 to 2026, 9 years) | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 2 | 7% (2% to 23%) | – | – | – | – | 0.1 (17.2) | 72.8 (40265.4) |
+| Validated on the years from 2018, twins matched at the launch | 29 | 8 | 16 | 13 | 55% (38% to 72%) | 2 | 7% (2% to 23%) | – | – | – | – | 0.1 (17.2) | 72.8 (40265.4) |
 
 | Confirmed, every line, validation: the odd years (2007 to 2025, 10 years) | Targets (fragments catalogued) | No fragments catalogued | No parent orbit before the event | Confirmed | Missed | Recall (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -90,6 +94,8 @@ The held-out years were read while earlier phases were fitted, so their numbers 
 | Duplicates (a later confirmation of an event, or one on its fragment) | 2 |
 | Exempt (inside an exempt window) | 1 |
 | False confirmations (matching no reported event) | 6 |
+| Unreported and pending (no reported event yet, raised under 90 days before the truth's date; in neither count) | 0 |
+| Inside a report naming no object, no launch and no regime (in neither count) | 0 |
 | Of those, attributed with no step | 4 |
 | Verdicts naming the launch and its candidate bodies (twins), matched on the body named first | 1 |
 | Of those, on a payload / a rocket body / debris / an unknown body | 3 / 3 / 0 / 0 |
@@ -100,6 +106,8 @@ The held-out years were read while earlier phases were fitted, so their numbers 
 | Of which the statement dated to the day / to the month | 0 / 17 |
 | Of which confirmed before the statement | 17 |
 | Lead over the first agency statement, days: median (10th percentile) | 41.7 (9.8) |
+| Lead over the first agency notice dated to the day, days: median (10th percentile); confirmed before it | –; – |
+| Lead over NASA's quarterly news, days: median (10th percentile); confirmed before it | –; – |
 | Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.0) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 40.6 (21342.4) |
 
@@ -223,8 +231,31 @@ Every step that holds in an object's orbit is judged once: raised as an early wa
 
 <!-- kpi:lifecycle-full:end -->
 
+## Rows kept out by the shape of their window
+
+A reported event whose window is wider than 93 days, or has no lower edge, is no target in a useful sense: GCAT's "2023?" widens to three years, and a confirmation anywhere in three years and a half would count. Such rows are kept out of every line, the Confirmed line's and the early warning's, and a confirmed verdict on the parent inside the window and the 180 days after it is exempt rather than false. A window that a coarse date opened before the parent's launch starts at the launch. The rows from 2005:
+
+<!-- truth:kept-out-by-window:begin -->
+
+| Event | Kind | Confidence | Window | Why it is kept out |
+| --- | --- | --- | --- | --- |
+| 23342:2006-01-01 RESURS O1 No. 3 | anomalous | C | 2006-01-01 to 2006-05-01 | the window is wider than 93 days |
+| 13618:2009-01-01 COSMOS 1417 R/B | anomalous | C | 2009-01-01 to 2009-05-01 | the window is wider than 93 days |
+| 13923:2011-01-01 NOAA 8 | anomalous | D | 2011-01-01 to 2014-01-01 | the window is wider than 93 days |
+| 12446:2014-01-01 Agena D | breakup | D | 2014-01-01 to 2017-01-01 | the window is wider than 93 days |
+| 36105:2017-01-01 H-2A F16 Stage 2 | anomalous | D | 2017-01-01 to 2020-01-01 | the window is wider than 93 days |
+| 29050:2019-01-01 COSMIC 1-3 | breakup | D | 2019-01-01 to 2022-01-01 | the window is wider than 93 days |
+| 23847:2020-01-01 Ariane H10-3 V85 | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 23950:2020-01-01 Ariane H10-3 V89 | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 32254:2020-01-01 Ariane 5 L526 EPS | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 12456:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+| 15516:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+| 20826:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+
+<!-- truth:kept-out-by-window:end -->
+
 ## The live test
 
-The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth, on the Confirmed line and on the early warning. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
+The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth, on the Confirmed line and on the early warning, both from the commit that logged each alert, not from the replay's clock: the year is replayed whole each day against that day's catalogue status, so a step can be raised dated back after the fragments were public, and only its commit says when it was known. An early warning is flagged where its commit came before the first sign of the fragments, and its lead is counted from the commit. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
 
 <!-- prospective:score:begin -->So far: 1 alert logged since the freeze (1 suspected); 0 confirmed alerts match a reported event after the freeze, of 0 reported events with pieces; 0 false confirmations of 0 confirmed alerts. Early warning: 0 suspected alerts flag a reported event after the freeze before the first sign of its fragments, and 0 after it, of 0 reported events with pieces; 1 false early warning of 1 suspected alert. The truth last changed on 2026-10-12. The agencies report an event months after it, so the events of the last 90 days or so may not be in the truth yet, and the score is not final for them. The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.<!-- prospective:score:end -->

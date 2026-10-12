@@ -4,7 +4,7 @@ Detects satellites and rocket stages that break up in orbit, from public orbital
 
 ## What it does
 
-When a satellite or a spent rocket stage breaks up in orbit, its fragments appear in the public catalogue of tracked objects over the following days and weeks. This library reads that catalogue and the orbits it publishes. It names the object that broke up and works out when it happened, typically weeks before the first official report. It is for satellite operators, researchers, journalists and anyone curious about the space around Earth. It also ships the list of every reported breakup since 1961, which it is scored against. It is the detector behind [Orbinauts](https://orbinauts.com), a live satellite map.
+When a satellite or a spent rocket stage breaks up in orbit, its fragments appear in the public catalogue of tracked objects over the following days and weeks. This library reads that catalogue and the orbits it publishes. It names the object that broke up and works out when it happened, typically within hours of the catalogue publishing the first fragment. It is for satellite operators, researchers, journalists and anyone curious about the space around Earth. It also ships the list of every reported breakup since 1961, which it is scored against. It is the detector behind [Orbinauts](https://orbinauts.com), a live satellite map.
 
 ## How well it works
 
@@ -18,7 +18,9 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 | --- | --- | --- |
 | Reported breakups confirmed | 74% (17 of 23) | 90% or more |
 | Confirmations that were false | 21% (6 of 29) | under 10% |
-| Median lead over the first official report | 42 days (17 of 17 confirmed before it) |  |
+| Median lead over the first agency notice dated to the day | – |  |
+| Median lead over NASA's quarterly news, dated to its month | – |  |
+| First agency statements dated to the day, to the month | 0 to the day, 17 to the month |  |
 | Median error in the time of the breakup | 41 minutes |  |
 
 <!-- kpi:summary:end -->
@@ -35,7 +37,7 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 <!-- kpi:early-warning:end -->
 
-A false confirmation is an alert for a breakup that no one reported. The lead of a confirmation counts the days from the detector's alert to the first report by NASA, ESA or the U.S. Space Force. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end -->
+A false confirmation is an alert for a breakup that no one reported; one with no report yet is pending for 90 days, counted neither way, since the agencies report months after an event. The lead of a confirmation is read two ways: the days from the detector's alert to the first agency notice dated to the day (a U.S. Space Force notice, ESA's report), and to NASA's quarterly news, which is dated only to its month, so that lead is the least it can have been. The U.S. Space Force often posts a notice within a day or two of a breakup; so the first lead is the one that says whether a confirmation was news. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end -->
 
 An early warning is raised when a satellite or a rocket stage jumps to a new orbit and stays there, and nothing it is known to do explains the jump. When it is right, it comes weeks before the first fragment is catalogued, and it typically places the moment of the breakup to within the hour. But most early warnings are other orbit changes, mostly satellites firing their own engines (manoeuvres) in ways the detector cannot tell apart from a breakup. So an early warning is a watch list, not a confirmation. The target is set on confirmed breakups; the early warning is measured and reported beside it, and [tests on real orbit histories](https://github.com/Orbinauts/breakups/blob/main/test/early-warning.test.ts) check that it still flags known breakups and stays quiet on known manoeuvres.
 
@@ -123,7 +125,7 @@ It prints:
 <!-- truth:quick-start:begin -->
 
 ```text
-by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
+by 2026-08-27T00:00Z CZ-6C R/B (100472), breakup, confidence D, LEO
 2026-09-13T21:13Z USA 32 (19460), breakup, confidence A, LEO
 2026-10-05T09:45Z Meteor 2-7 (second event) (12456), breakup, confidence C, LEO
 ```

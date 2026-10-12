@@ -12,7 +12,7 @@ import { indexWrittenAt, loadCatalogue } from "./catalogue-index.ts";
 import { jumpDetector } from "./jump.ts";
 import { writeEvents } from "./events.ts";
 import { aggregate, renderLatest, type Latest, type YearFile } from "./kpi.ts";
-import { matchYear, noticesOf } from "./match.ts";
+import { matchYear, noticesOf, truthAsOf } from "./match.ts";
 import { approximation, chunksOf, runChunks, type Chunk } from "./parallel.ts";
 import { indexOf, loadSlice, replayYear, type Carried, type Detector, type ReplayOptions, type ReplayResult } from "./replay.ts";
 import { hasStates, readStates, writeStates } from "./states.ts";
@@ -208,7 +208,7 @@ export function writeAggregate(dir: string, truth: Truth, root = ROOT, eventsPat
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { name: string; version: string };
   const detectors = new Set(files.map((f) => f.detector.name));
   if (detectors.size > 1) throw new Error(`the year files were run with different detectors (${[...detectors].join(", ")}): rerun them`);
-  const latest = aggregate(files, { package: { name: pkg.name, version: pkg.version }, versions: installedVersions(root), truthSha256: truth.sha256, detector: files[0]!.detector });
+  const latest = aggregate(files, { package: { name: pkg.name, version: pkg.version }, versions: installedVersions(root), truthSha256: truth.sha256, truthAsOf: new Date(truthAsOf(truth.breakups)).toISOString().slice(0, 10), detector: files[0]!.detector });
   if (approximate !== undefined && dir === KPI_DIR) throw new Error("an approximate aggregate is never written to kpi/");
   writeFileSync(join(dir, "latest.json"), latestJson(latest, approximate));
   const rendered = renderLatest(latest);
