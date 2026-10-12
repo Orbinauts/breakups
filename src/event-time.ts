@@ -512,7 +512,10 @@ export function eventFromPieces(parentSet: ElementSet, pieceSets: readonly Eleme
   let candidates: number[];
   if (timed.length >= 2) {
     const cost = (t: number): number => timed.reduce((sum, i) => sum + rates[i]! ** 2 * Math.min(...crossings[i]!.map((r) => (t - r) ** 2)), 0);
-    candidates = timed.flatMap((i) => crossings[i]!).sort((a, b) => cost(a) - cost(b)).slice(0, REFINED_CROSSINGS);
+    // Each crossing's cost once, not once per comparison: the order is the same.
+    const all = timed.flatMap((i) => crossings[i]!);
+    const costs = all.map(cost);
+    candidates = all.map((_, k) => k).sort((a, b) => costs[a]! - costs[b]!).slice(0, REFINED_CROSSINGS).map((k) => all[k]!);
   } else {
     candidates = crossings[timed[0]!]!.slice(-REFINED_CROSSINGS);
   }

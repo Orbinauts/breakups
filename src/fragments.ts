@@ -104,6 +104,8 @@ export interface CatalogueRecord {
   noticesApplied: string[];
   /** The objects with an open alert, by number, so a run finds them without walking every state. */
   alerted: number[];
+  /** The objects with a live candidate, by number, so a run counts and lapses them without walking every state; absent in a record written before the list existed, and listed afresh from the states then. */
+  candidates?: number[];
   /** The instant of the first run, in milliseconds since 1970: every body the detector meets in its first window is new to it, so no launch is judged until the window has passed. */
   startedAt: number;
   /** The persistent steps of the last weeks, every object's, for the siblings test; absent in a record written before the ledger existed. */

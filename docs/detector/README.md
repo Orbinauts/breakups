@@ -47,7 +47,7 @@ Pieces in the plane of a body with an **open alert**, first published after its 
 
 ### 6. The rules
 
-The same rules judge both paths (`judgePieces` in `run.ts`). Each is a parameter that can be turned off, and the reading of every signal is kept on the alert and on the attribution row, so the rules are re-thresholded offline (`npm run kpi:sweep -- --confirmations` and `--attributions`).
+The same rules judge both paths (`judgePieces` in `confirmation.ts`; the attribution's own rules are in `attribution.ts`). Each is a parameter that can be turned off, and the reading of every signal is kept on the alert and on the attribution row, so the rules are re-thresholded offline (`npm run kpi:sweep -- --confirmations` and `--attributions`).
 
 - The launch is older than a month, and quiet in the year before: at most two new bodies a fortnight, else the pieces are an old cloud's backlog.
 - Nothing under a crewed station's launch (`stationLaunches`). Nothing under the launch of a crewed spacecraft or a station's cargo craft but on its rocket body (`visitingLaunches`). What these shed is released on purpose.
