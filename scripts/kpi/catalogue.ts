@@ -1,4 +1,6 @@
-import { isFragmentClass, planeDistance, semiMajorAxisOf, type BodyClass, type DetectorParameters, type PlaneOrbit } from "../../src/index.ts";
+import type { BodyClass, DetectorParameters } from "../../src/index.ts";
+import { semiMajorAxisOf } from "../../src/elements.ts";
+import { isFragmentClass, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
 import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
 

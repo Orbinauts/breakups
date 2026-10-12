@@ -33,7 +33,10 @@ import { replayYearsOf } from "./data.ts";
  * two requests a day, throttled and written to the ledger
  * `requests.log`), and in the first days of a year the previous year too,
  * until it has settled; the pulled years' body tables are annotated with
- * the latest satellite and payload catalogues. Then, in the frozen
+ * the day's satellite catalogue and the payload catalogue the Archive
+ * holds (its side files' snapshot, which changes only when
+ * `npm run archive:gcat` is run and the side files uploaded; the daily run
+ * does not fetch it). Then, in the frozen
  * worktree (`../breakups-frozen`, a checkout of the tag), the catalogue
  * index is built over a view of the Archive kept for the test
  * (`<archive>/prospective/view`, the Archive's entries linked, with an
@@ -289,7 +292,7 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   if (modifiedOn(join(spaceDir(archive), `${year}.json`)) !== today) run("npm", ["run", "-s", "archive:space", "--", String(replayYears[0]), String(year)], root);
   for (const y of replayYears) run("npm", ["run", "-s", "archive:pull", "--", String(y), ...(y < year ? ["--through", `${y}-12-31`] : [])], root);
 
-  // The pulled years' body tables, with the latest satellite catalogue's status and the payload catalogue's ends.
+  // The pulled years' body tables, with the day's satellite catalogue's status and the ends of the payload catalogue the Archive holds.
   const satcat = latestSatcat(archive);
   const gcat = latestGcat(archive);
   if (satcat === null || gcat === null) throw new Error(`the Archive lacks a satellite or payload catalogue snapshot under ${archive}`);

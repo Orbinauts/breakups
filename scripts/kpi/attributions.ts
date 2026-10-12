@@ -1,4 +1,5 @@
-import { ATTRIBUTION_PATHS, BODY_CLASSES, DETECTOR_PARAMETERS, PHASES, REFUSALS, type BodyClass, type DetectorParameters, type LogRow } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, type BodyClass, type DetectorParameters, type LogRow } from "../../src/index.ts";
+import { ATTRIBUTION_PATHS, PHASES, REFUSALS } from "../../src/log.ts";
 import type { Catalogue } from "./catalogue.ts";
 import { isConfirmedTarget, readingOf, splitYears, type YearFile } from "./kpi.ts";
 import { catalogueRowsOf, landConfirmed, type ConfirmedLanding, type Line, type Row } from "./match.ts";

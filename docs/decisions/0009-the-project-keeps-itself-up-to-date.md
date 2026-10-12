@@ -71,7 +71,14 @@ merge is safe.
   matching reported events, the false confirmations, the truth's last
   change and the caveat that recent events are not in the truth yet. It
   then runs every check, the typecheck, the tests and the documentation
-  build. Where anything changed, the Actions bot commits it to a branch
+  build. Since 2026-10-12 the typecheck and the tests also run once
+  before any download or replay, on the folded tree with the refreshed
+  sources and the rebuilt truth, the generated parts written from the
+  aggregate as committed, so a test bound to a source's edition or a
+  folded branch that breaks the build fails in minutes, not after the
+  replay's hour; the one test the replay makes good, that the aggregate
+  was scored against the truth the package ships, is left out of that
+  first run where a replay is due (`BREAKUPS_SCORECARD_PENDING`). Where anything changed, the Actions bot commits it to a branch
   `maintenance/<date>`, opens a pull request saying what moved and why
   (each source refreshed with its hashes, each event added, removed or
   changed by id, each cell of the aggregate with its old and new value,
@@ -92,6 +99,23 @@ merge is safe.
   the last day each year holds, so a year held through 31 December is
   never promoted again. A tarball over GitHub's 2 GiB limit on an asset is
   refused before anything is touched, with an issue saying so.
+- **Nothing ends green or silent.** Since 2026-10-12: the KPI workflow
+  fails where the Archive's release cannot be reached (a release deleted
+  or renamed, an outage), on main, on its schedule, by hand and on the
+  repository's own pull requests, and skips the replay with a notice only
+  on a pull request from a fork; a failed run of the prospective test opens
+  an issue labelled `maintenance` with the end of its log, one a failing
+  day; and each scheduled run (the daily test, the weekly maintenance, the
+  weekly KPI replay) enables again any scheduled workflow GitHub disabled
+  after sixty days without activity in the repository, never one a person
+  disabled (`scripts/maintenance/keep-alive.ts`). The KPI workflow's
+  Monday run moved from 06:00 to 12:23 UTC, after the maintenance run's
+  longest window (04:17, or 05:37 where it waited for the daily test, and
+  its 330 minutes), and joins the maintenance run's concurrency group, so
+  it never downloads the release while the maintenance run replaces its
+  files. Its other runs keep a group of their own: GitHub keeps one pending
+  run per group and a newer one displaces it, so a push's run waiting in
+  the shared group could displace a daily run of the test.
 - **A person is reminded of what no script reads.** In the week of the
   first Monday of January, April, July and October the weekly run opens
   an issue, labelled `maintenance`, listing what to check by hand since
@@ -168,8 +192,24 @@ approval, and the run approves CI's (the KPI workflow's held run is
 deleted, never having run a job, since it runs on main after the merge).
 A CI run that cannot be found or approved stops the run with an issue, as
 a failed one does, and main's ruleset would refuse the merge regardless.
-The tree is merged only onto the main it was checked against: a main that
-moved during the run is left alone and the next run starts again. And CI and
+The tree is merged only onto the main it was checked against. A main that
+moved during the run, which an hour's run makes likely, is followed only
+where the move touched nothing the run generated or was made from: no file
+under `data/` or `kpi/`, no page with generated parts (the README,
+`docs/results.md`, `docs/ground-truth.md`, `docs/detector/events.md`,
+`docs/truth.md`), no dependency manifest or pin (`package.json`,
+`package-lock.json`, `pins.json`), and no file the run itself changed, a
+folded branch's included (`scripts/maintenance/moved.ts`). The run's
+change is then put on the new main as one commit, which applies cleanly
+since none of its files moved, and the typecheck and the whole test suite
+run again on that tree before the pull request is opened and CI runs on
+it; main moving again is followed the same way, three times at most.
+Where the move touched any of those files, the pull request is left
+unmerged with the files named, and the next run starts again from main.
+A moved main that changed the detector's code but not the aggregate is
+followed: such a change reached main past the KPI workflow's check that
+the committed aggregate is reproducible, and the KPI run on main after
+the merge checks it again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
 replaying the Archive from the release to make the committed aggregate
 again and failing where it cannot, so a merged change that only the
@@ -200,3 +240,5 @@ person asks it to fold in (`-f from=<branch>`), which meets the same checks.
   `gh workflow disable prospective.yml` (the eighth decision record).
 - The KPI workflow's weekly replay: `gh workflow disable kpi.yml`, which
   also stops it on pushes and pull requests.
+- A workflow disabled by hand stays disabled: the keep-alive enables again
+  only a workflow GitHub disabled for the repository's inactivity.
