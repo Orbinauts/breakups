@@ -7,7 +7,10 @@ import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
 import type { PiecesEventTime } from "./event-time.ts";
-import { passesSmallBatch } from "./run.ts";
+import { passesSmallBatch } from "./confirmation.ts";
+import type { DetectorInput, LogRow } from "./detector.ts";
+import { CATALOGUE_KEY, type CatalogueRecord } from "./fragments.ts";
+import { runDetector } from "./run.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
@@ -148,6 +151,36 @@ describe("the detector on synthetic series", () => {
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.map((v) => v.state)).toEqual(["watch", "dismissed"]);
     expect(fed.log.at(-1)!.signals.outcome).toBe(OUTCOMES.lapsed);
+  });
+
+  test("candidates that lapse in one run lapse in the order the detector first met their objects, whatever order they opened in, and a record written before the catalogue listed its candidates still lapses them", () => {
+    const stepAt = 45;
+    const seriesOf = (seed: number): SyntheticSet[] => {
+      const series = decaying(7200, 0.02, 0.004, 20, 8, seed);
+      series.splice(stepAt + 1);
+      series[stepAt]!.aKm += -0.3;
+      return series;
+    };
+    const [first, second] = [seriesOf(1), seriesOf(2)];
+    // Object 2 is met first; at the step, object 1's set comes first in the run, so its candidate opens first.
+    const batches = first.map((s, i) => (i === stepAt ? [setOf(1, s), setOf(2, second[i]!)] : [setOf(2, second[i]!), setOf(1, s)]));
+    const lapsedOrder = (forget: boolean): number[] => {
+      let states: DetectorInput["states"] = new Map();
+      let launches: DetectorInput["launches"] = new Map();
+      const log: LogRow[] = [];
+      let now = 0;
+      const run = (sets: ElementSet[], at: number): void => {
+        const output = runDetector({ states, launches, sets, now: at });
+        [states, launches, now] = [output.states, output.launches, at];
+        log.push(...output.log);
+      };
+      for (const batch of batches) run(batch, batch[0]!.epochMs + HOUR);
+      if (forget) delete (launches.get(CATALOGUE_KEY) as CatalogueRecord).candidates;
+      for (let at = now + 4 * HOUR; at <= first[stepAt]!.epochMs + 8 * DAY; at += 4 * HOUR) run([], at);
+      return log.filter((row) => row.signals.outcome === OUTCOMES.lapsed).map((row) => row.number);
+    };
+    expect(lapsedOrder(false)).toEqual([2, 1]);
+    expect(lapsedOrder(true)).toEqual([2, 1]);
   });
 
   test("a quiet old rocket body with one large step is suspected as a unique step, with the impulse it implies", () => {
