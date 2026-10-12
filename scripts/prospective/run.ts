@@ -147,8 +147,8 @@ export function runUrlOf(env: NodeJS.ProcessEnv): string | null {
 }
 
 /** Refuses a tag that no longer names the commit the test froze. */
-export function checkTagged(tagged: string): void {
-  if (tagged !== FROZEN_COMMIT) throw new Error(`the tag ${FROZEN_TAG} names ${tagged}, not ${FROZEN_COMMIT}, the commit the test froze: a moved tag is not the frozen detector`);
+export function checkTagged(tagged: string, frozenCommit = FROZEN_COMMIT): void {
+  if (tagged !== frozenCommit) throw new Error(`the tag ${FROZEN_TAG} names ${tagged}, not ${frozenCommit}, the commit the test froze: a moved tag is not the frozen detector`);
 }
 
 /** What a settled year's end states are and what made them, kept beside them and in the release with them. */
@@ -265,7 +265,19 @@ function commitRun(branch: string, fresh: LoggedAlert[], line: RunLine, title: s
   return commit;
 }
 
-function daily(places: Places, started: number): { line: RunLine; commit: string; fresh: LoggedAlert[] } {
+/** What the daily run runs its commands with, and the commit it holds the tag to: the real ones, or a test's. */
+export interface DailyTools {
+  run: (command: string, args: string[], cwd: string, env?: NodeJS.ProcessEnv) => void;
+  frozenCommit: string;
+}
+
+/**
+ * The day's run, as the module's head says, over the places given: the
+ * commands (the fetches, the pulls, the frozen index and replay, the
+ * branch's pull) through `tools.run`, the branch's commit and push with
+ * git itself. Returns the run's line, its commit and the alerts it logged.
+ */
+export function daily(places: Places, started: number, tools: DailyTools = { run, frozenCommit: FROZEN_COMMIT }): { line: RunLine; commit: string; fresh: LoggedAlert[] } {
   const today = new Date(started).toISOString().slice(0, 10);
   const year = Number(today.slice(0, 4));
   const { root, frozen, branch, archive, home, view, states } = places;
@@ -273,14 +285,14 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   // The frozen worktree is the tag, untouched; the branch's worktree is the branch, clean and current.
   if (!existsSync(frozen)) throw new Error(`no frozen worktree at ${frozen}: git worktree add --detach ${frozen} ${FROZEN_TAG}`);
   const tagged = git(root, "rev-parse", `${FROZEN_TAG}^{commit}`);
-  checkTagged(tagged);
+  checkTagged(tagged, tools.frozenCommit);
   const head = git(frozen, "rev-parse", "HEAD");
   if (head !== tagged) throw new Error(`the frozen worktree ${frozen} is at ${head}, not at ${FROZEN_TAG} (${tagged})`);
   if (git(frozen, "status", "--porcelain") !== "") throw new Error(`the frozen worktree ${frozen} has changes: it must be the tag as committed`);
   if (!existsSync(branch)) throw new Error(`no worktree of the ${BRANCH} branch at ${branch}`);
   if (git(branch, "symbolic-ref", "--short", "HEAD") !== BRANCH) throw new Error(`${branch} is not on the ${BRANCH} branch`);
   if (git(branch, "status", "--porcelain") !== "") throw new Error(`the ${BRANCH} worktree ${branch} has changes: commit or remove them first`);
-  run("git", ["pull", "-q", "--ff-only"], branch);
+  tools.run("git", ["pull", "-q", "--ff-only"], branch);
 
   // The years to replay: the current one, and the previous one while its last days settle.
   const replayYears = replayYearsOf(year, existsSync(join(states, statesFileName(year - 1))));
@@ -288,9 +300,9 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   if (!existsSync(startStates)) throw new Error(`no frozen states to start ${replayYears[0]} from: ${startStates}`);
 
   const ledgerBefore = ledgerLines(archive);
-  if (!existsSync(join(satcatDir(archive), `${today}.csv`))) run("npm", ["run", "-s", "archive:satcat"], root);
-  if (modifiedOn(join(spaceDir(archive), `${year}.json`)) !== today) run("npm", ["run", "-s", "archive:space", "--", String(replayYears[0]), String(year)], root);
-  for (const y of replayYears) run("npm", ["run", "-s", "archive:pull", "--", String(y), ...(y < year ? ["--through", `${y}-12-31`] : [])], root);
+  if (!existsSync(join(satcatDir(archive), `${today}.csv`))) tools.run("npm", ["run", "-s", "archive:satcat"], root);
+  if (modifiedOn(join(spaceDir(archive), `${year}.json`)) !== today) tools.run("npm", ["run", "-s", "archive:space", "--", String(replayYears[0]), String(year)], root);
+  for (const y of replayYears) tools.run("npm", ["run", "-s", "archive:pull", "--", String(y), ...(y < year ? ["--through", `${y}-12-31`] : [])], root);
 
   // The pulled years' body tables, with the day's satellite catalogue's status and the ends of the payload catalogue the Archive holds.
   const satcat = latestSatcat(archive);
@@ -301,10 +313,10 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
   // The frozen detector: its own index over the view, then the replay into the day's scratch directory.
   const env = frozenEnv(process.env, view);
   refreshView(archive, view);
-  run("npm", ["run", "-s", "kpi:index"], frozen, env);
+  tools.run("npm", ["run", "-s", "kpi:index"], frozen, env);
   const scratch = join(home, today);
   rmSync(scratch, { recursive: true, force: true });
-  run("npm", ["run", "-s", "kpi", "--", ...replayYears.flatMap((y) => ["--year", String(y)]), "--out", scratch, "--from-states", states], frozen, env);
+  tools.run("npm", ["run", "-s", "kpi", "--", ...replayYears.flatMap((y) => ["--year", String(y)]), "--out", scratch, "--from-states", states], frozen, env);
 
   const files: YearFile[] = replayYears.map((y) => readYearFile(yearFilePath(scratch, y)));
   if (!files[0]!.carried) throw new Error(`the replay of ${files[0]!.year} warmed up rather than starting from ${startStates}`);
