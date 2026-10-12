@@ -11,6 +11,7 @@ import { daysToPull } from "../archive/pull.ts";
 import { latestSatcat } from "../archive/satcat.ts";
 import { spaceDir } from "../archive/space-weather.ts";
 import type { YearFile } from "../kpi/kpi.ts";
+import { installedVersions, type Versions } from "../pins/pins.ts";
 import { alertsOf, jsonl, newAlerts, readJsonl, type LoggedAlert } from "./alerts.ts";
 import { replayYearsOf } from "./data.ts";
 
@@ -129,6 +130,8 @@ export interface RunLine {
   requests: number;
   satcat: string | null;
   node: string;
+  /** The engine's and the propagators' versions the frozen detector ran on, read from its installed tree; absent from the lines made before they were recorded. */
+  versions?: Versions;
   /** The GitHub Actions run that made the line, whose log is a second, independent timestamp; absent from the lines of runs made elsewhere. */
   runUrl?: string | null;
 }
@@ -319,6 +322,7 @@ function daily(places: Places, started: number): { line: RunLine; commit: string
     requests: ledgerLines(archive) - ledgerBefore,
     satcat: satcat.day,
     node: process.version,
+    versions: installedVersions(frozen),
     runUrl: runUrlOf(process.env),
   };
   const through = line.years.map((y) => `${y.year} through ${y.through}`).join(" and ");

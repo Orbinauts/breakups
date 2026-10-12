@@ -112,22 +112,12 @@ jobs:
       - name: Install main's dependencies
         working-directory: main
         run: npm install --no-audit --no-fund
-      # No lockfile is committed: the detector's runtime dependencies are pinned to the versions the tag's runs used, and checked.
+      # No lockfile is committed: the detector's runtime dependencies are installed at the frozen detector's own pins (pins.json's frozenDetector, the versions the tag's runs used, apart from main's scoring pins), and checked.
       - name: Install the frozen detector's dependencies
         working-directory: frozen
         run: |
           set -euo pipefail
-          npm install --no-audit --no-fund --no-save --no-package-lock @orbinauts/engine@0.1.2 satellite.js@7.1.0 astronomy-engine@2.1.19
-          node -e '
-            const { readFileSync, existsSync } = require("node:fs");
-            const pinned = { "@orbinauts/engine": "0.1.2", "satellite.js": "7.1.0", "astronomy-engine": "2.1.19" };
-            for (const [name, version] of Object.entries(pinned)) {
-              const found = JSON.parse(readFileSync(`node_modules/${name}/package.json`, "utf8")).version;
-              if (found !== version) throw new Error(`${name} is ${found}, not ${version}`);
-            }
-            for (const name of ["satellite.js", "astronomy-engine"]) if (existsSync(`node_modules/@orbinauts/engine/node_modules/${name}`)) throw new Error(`the engine carries its own ${name}`);
-            console.log("the frozen detector runs on", JSON.stringify(pinned));
-          '
+          node --experimental-strip-types ../main/scripts/pins/pins.ts install frozenDetector --dir .
           test -z "$(git status --porcelain)"
       # The Archive (some seven gigabytes) on the runner's larger disk.
       - name: Place the Archive

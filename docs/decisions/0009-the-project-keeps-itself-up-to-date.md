@@ -59,10 +59,11 @@ merge is safe.
   (GCAT's debris clouds and satellite catalogue, NASA's history, whose PDF
   is turned into text only when its hash changed), rebuilds the truth,
   and plans the run (`scripts/maintenance/plan.ts`). Where the committed
-  aggregate no longer describes the truth or the Archive's release (the
-  truth's hash, the years, each year's build time), it downloads the
-  whole Archive, rebuilds the catalogue index and replays every year in
-  order, a year a process as the KPI workflow does, which writes
+  aggregate no longer describes the truth, the Archive's release or the
+  scoring pins (the truth's hash, the years, each year's build time, the
+  versions of the engine and the propagators in `pins.json`), it
+  downloads the whole Archive, rebuilds the catalogue index and replays
+  every year in order, a year a process as the KPI workflow does, which writes
   `kpi/latest.json`, `kpi/latest.md` and `docs/detector/events.md`. It
   always writes the generated parts and scores the prospective test:
   `score.md` on the `prospective` branch, and a summary on the results

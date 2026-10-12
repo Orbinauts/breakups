@@ -34,6 +34,20 @@ is the engine's pattern (its Oracle fixtures) turned on a number: the
 committed score is the record, and the proof is that anyone, CI first, can
 make it again.
 
+Making it again needs the same code as well as the same inputs, so the
+score is made on exact versions of the runtime packages (since
+2026-10-12): the engine, `@orbinauts/engine`, and the propagators it
+reads, `satellite.js` and `astronomy-engine`, pinned as `scoring` in the
+committed `pins.json`. The KPI and maintenance workflows install those and
+fail, naming the package, the version found and the pin, where one
+resolves to another version; the aggregate records the versions it was
+made with (`Latest.versions`), and a pin that moves from them is a stated
+reason to replay it. CI alone installs from the manifest's ranges, with no
+lockfile, to test what a consumer gets. The pins are not a lockfile, and
+live in their own file rather than in `package.json`, which every
+consumer's install reads; a bump is a deliberate commit, and the score
+replayed on it says what it moved.
+
 The reason for scoring the parent's step alone, and before the fragments
 appear, is the owner's: the value of the tool is to say that something
 broke up before the catalogue says so by listing the pieces. Confirmation
