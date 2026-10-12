@@ -114,11 +114,11 @@ describe("the confirmation rules judging pieces against a parent", () => {
 
   test("a debris-classed parent under an active cloud keeps only the pieces nearer its plane than the cloud lies", () => {
     const parent = body(PARENT, { bodyClass: "debris", firstEpoch: EPOCH - 2000 * DAY });
-    // The cloud lies two tolerances from the parent's plane (0.4 degrees of inclination).
+    // The cloud lies 0.4 degrees of inclination from the parent's plane: two tolerances, and its normal 0.4 degrees off, 1.2 by the normals' bound; the plane test reads the lesser.
     const cloud = [body(50, { bodyClass: "debris", firstSeenAt: NOW - 200 * DAY, inclinationDeg: 98.4 })];
     const near = [piece(101, { distance: 0.5 }), piece(102, { distance: 2.5 }), piece(103, { distance: 1 })];
     const some = judgePieces(subjectOf(parent), launchOf([parent, ...cloud, ...near.map((p) => p.body)]), verdictOf(), near.map((p) => p.reading), NO_MEMORY, viewOf());
-    expect(some.reading.parentCloudDistance).toBeCloseTo(2, 5);
+    expect(some.reading.parentCloudDistance).toBeCloseTo(1.2, 5);
     expect(some.refused).toBe(0);
     expect(some.pieces.map((p) => p.number)).toEqual([101, 103]);
     const far = [piece(101, { distance: 2.5 }), piece(102, { distance: 2.8 })];

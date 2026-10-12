@@ -1,5 +1,5 @@
 ---
-status: accepted; its target test amended on 2026-10-12 (issue #15)
+status: accepted; its target test amended on 2026-10-12 (issue #15), and the detector's plane test noted (issue #37)
 date: 2026-10-10
 ---
 
@@ -26,6 +26,16 @@ stopped being one. Four became targets, all of them misses: Intelsat 33e
 detection or false confirmation moved; the training headline reads 22 of
 36 where it read 22 of 35, and the held-out headline is unchanged at 17
 of 23.
+
+Status note, 2026-10-12, the detector's side (issue #37): the detector's
+own plane test, which the Confirmed channel reads to judge a cloud, to
+attribute it and to refuse pieces in a remembered cloud's plane, had the
+same fault at near-zero inclination, so it could not confirm a
+geosynchronous breakup from its pieces. It now passes a piece by its
+tolerances or by its orbit normal within `planeNormalAngleMaxDeg` of the
+parent's, one degree, chosen on the training years
+(`docs/detector/d12-fitting.md`). The scorecard's target test above stays
+its own and does not read this parameter.
 
 The owner's targets were set on the parent's own orbit: nine reported
 breakups in ten raised as an alert on the parent's step before the first

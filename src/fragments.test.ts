@@ -235,6 +235,13 @@ describe("the cloud judged on a near-equatorial launch", () => {
     expect(fixed.parents[0]!.distance).toBeLessThanOrEqual(params.planeDistanceMax);
   });
 
+  test("as fitted, the detector reads a geostationary parent's pieces in its plane: the normals within a degree", () => {
+    expect(params.planeNormalAngleMaxDeg).toBe(1);
+    const { launch, catalogue } = geoLaunch("2016-053", 41748, [[0.02, 200], [0.03, 320], [0.04, 40], [0.05, 150], [0.02, 260], [0.06, 10]]);
+    const verdict = judgeCloud(launch, catalogue, [{ number: 41748, orbit: orbitOf(GEO_KM, 80, 0.02, event - DAY), eventMs: event }], now, 6, params);
+    expect(verdict.consistent).toHaveLength(6);
+  });
+
   test("a stage at under a fifth of a degree keeps the one piece today's tolerances pass, gains the four whose normals lie within half a degree of its own, and the sixth only at a degree (Cosmos 2513 R/B)", () => {
     // Normals 0.01, 0.28, 0.42, 0.24 and 0.29 degrees from the parent's, and the sixth's 0.75: chords between points 0.17 degrees from the pole and the pieces' inclinations from it.
     const pieces = [[0.2, 81], [0.15, 200], [0.25, 260], [0.1, 320], [0.3, 150], [0.6, 230]] as const;
