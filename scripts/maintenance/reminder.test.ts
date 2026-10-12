@@ -64,4 +64,10 @@ describe("the reminder's body", () => {
     expect(body).toContain("data/truth/hand.json");
     expect(body).toContain("gh workflow run maintenance.yml -f from=<branch>");
   });
+
+  test("asks for every quarterly news issue read to be recorded, and each new ESA table typed into its file", () => {
+    const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
+    expect(body).toContain("`data/truth/odqn-coverage.json`");
+    expect(body).toContain("`data/truth/esa-ser.json`");
+  });
 });
