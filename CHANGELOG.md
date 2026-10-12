@@ -4,6 +4,10 @@ Every notable change to `@orbinauts/breakups`, newest first. The format follows 
 
 ## [Unreleased]
 
+### Removed
+
+- `rekeyedBeforeRowEvent` (`scripts/published/merge.ts`), the one-off re-keying of the published files written before `rowEvent`: it ran once, and every file on `published` has carried `rowEvent` since. `readPublished` now refuses a breakup that carries none, naming its file (issue #33).
+
 ### Added
 
 - Reports of breakups reach the truth through issues the owner accepts (`docs/decisions/0011`). `npm run truth:add` (`scripts/truth/add.ts`) checks one statement, as JSON or a filled breakup-report form, against the hand file's schema, refuses a machine-read source, an undated report, a report published before its event and a statement already held, appends it in the hand file's own layout and rebuilds the truth. The issue form `.github/ISSUE_TEMPLATE/breakup-report.yml` files a report; the label `breakup-report-accepted`, applied with admin permission, makes `.github/workflows/breakup-report.yml` add it on a branch `report/issue-<number>` and run the maintenance workflow from it, which folds every waiting report in by its statements (`--missing-from`). The daily `.github/workflows/watch.yml` (`npm run maintenance:watch`, `scripts/maintenance/watch.ts`) reads NASA's Orbital Debris Quarterly News, ESA's Space Environment Report, Jonathan's Space Report and the feeds of EarthSky, Space.com, SpaceNews and Ars Technica, and opens an issue for each new notice, never a row: a prefilled `breakup-report` issue for a report, a `maintenance` issue to read and record a new quarterly news issue or ESA edition, judged new against `data/truth/odqn-coverage.json` and `data/truth/esa-ser.json` (issue #9).
