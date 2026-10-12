@@ -1,5 +1,8 @@
 import { writeFileSync } from "node:fs";
-import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, EXPLANATION_BITS, MANOEUVRE_CLASSES, OUTCOMES, PHASES, REFUSALS, type LogRow } from "../../src/index.ts";
+import { DETECTOR_PARAMETERS, type LogRow } from "../../src/index.ts";
+import { EXPLANATION_BITS } from "../../src/fusion.ts";
+import { ATTRIBUTION_PATHS, OUTCOMES, PHASES, REFUSALS } from "../../src/log.ts";
+import { MANOEUVRE_CLASSES } from "../../src/manoeuvre.ts";
 import { FRAGMENTS_DAYS } from "./catalogue.ts";
 
 import { LINE_LABELS, SCORED_FROM_YEAR, firstConfirmationsOf, isConfirmedTarget, type FirstConfirmations, type Latest, type YearFile } from "./kpi.ts";

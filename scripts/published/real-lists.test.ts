@@ -61,7 +61,7 @@ describe("the fixtures of the real replays", () => {
 });
 
 describe("the real replays publish exactly the expected lists", () => {
-  test("the 2025 seed publishes DMSP F-14 alone, confirmed by U.S. Space Forces-Space's post of the event's day before its fragments confirmed it, dated by that notice, and none of the 319 suspected verdicts", () => {
+  test("the 2025 seed publishes DMSP F-14 alone, confirmed by U.S. Space Forces-Space's post of the event's day, before its fragments confirmed it and ESA's table of 2024 reported it, dated by that notice, and none of the 319 suspected verdicts", () => {
     expect(published(2025).map(shown)).toEqual([
       {
         id: "24753-2024-12-19",
@@ -72,7 +72,7 @@ describe("the real replays publish exactly the expected lists", () => {
         event: "2024-10-07T11:53:14.737Z",
         rowEvent: { at: "2024-12-19T02:10:00.000Z", from: "2024-12-19T02:00:00.000Z", to: "2024-12-19T02:20:00.000Z", precision: "minute", source: "s4s-notice", row: "24753:2024-12-19" },
         row: "24753:2024-12-19",
-        reports: [{ date: "2024-12-19", precision: "day", source: "s4s-notice", url: "https://x.com/S4S_SDA/status/1869818410277974343" }],
+        reports: [{ date: "2024-12-19", precision: "day", source: "s4s-notice", url: "https://x.com/S4S_SDA/status/1869818410277974343" }, { source: "esa-ser", date: "2025-03-31", precision: "day", url: null }],
         verdicts: ["confirmed 2025-02-13T20:00:00.000Z"],
       },
     ]);
@@ -102,8 +102,8 @@ describe("the real replays publish exactly the expected lists", () => {
         confirmedAt: "2026-08-20T04:00:00.000Z",
         parent: { catalogueNumber: 25371, designator: "1998-037A", name: "INTELSAT 805 (IS-805)", launchedOn: "1998-06-18" },
         event: "2026-07-30T04:50:11.605Z",
-        rowEvent: null,
-        row: null,
+        rowEvent: { at: null, from: "2026-06-19T23:35:00.000Z", to: "2026-08-18T23:35:00.000Z", precision: "none", source: "catalogue", row: "A:1998-037:2026-06-19" },
+        row: "A:1998-037:2026-06-19",
         reports: [],
         verdicts: ["suspected 2026-07-31T20:00:00.000Z", "confirmed 2026-08-20T04:00:00.000Z"],
       },
@@ -114,8 +114,8 @@ describe("the real replays publish exactly the expected lists", () => {
         confirmedAt: "2026-09-03T20:00:00.000Z",
         parent: { catalogueNumber: 68196, designator: "2026-051A", name: "Yaogan-50 02", launchedOn: "2026-03-15" },
         event: "2026-07-24T06:35:44.804Z",
-        rowEvent: { at: null, from: null, to: "2026-09-04T00:00:00.000Z", precision: "none", source: "catalogue", row: "68196:2026-09-04" },
-        row: "68196:2026-09-04",
+        rowEvent: { at: null, from: "2026-07-01T20:21:00.000Z", to: "2026-09-04T00:00:00.000Z", precision: "none", source: "catalogue", row: "68196:2026-07-01" },
+        row: "68196:2026-07-01",
         reports: [],
         verdicts: ["confirmed 2026-09-03T20:00:00.000Z"],
       },

@@ -11,6 +11,7 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 - [The Confirmed line, the target](#the-confirmed-line-the-target)
 - [Early warning (suspected)](#early-warning-suspected)
 - [The life of an alert](#the-life-of-an-alert)
+- [Rows kept out by the shape of their window](#rows-kept-out-by-the-shape-of-their-window)
 - [The live test](#the-live-test)
 
 ## The headline
@@ -223,8 +224,31 @@ Every step that holds in an object's orbit is judged once: raised as an early wa
 
 <!-- kpi:lifecycle-full:end -->
 
+## Rows kept out by the shape of their window
+
+A reported event whose window is wider than 93 days, or has no lower edge, is no target in a useful sense: GCAT's "2023?" widens to three years, and a confirmation anywhere in three years and a half would count. Such rows are kept out of every line, the Confirmed line's and the early warning's, and a confirmed verdict on the parent inside the window and the 180 days after it is exempt rather than false. A window that a coarse date opened before the parent's launch starts at the launch. The rows from 2005:
+
+<!-- truth:kept-out-by-window:begin -->
+
+| Event | Kind | Confidence | Window | Why it is kept out |
+| --- | --- | --- | --- | --- |
+| 23342:2006-01-01 RESURS O1 No. 3 | anomalous | C | 2006-01-01 to 2006-05-01 | the window is wider than 93 days |
+| 13618:2009-01-01 COSMOS 1417 R/B | anomalous | C | 2009-01-01 to 2009-05-01 | the window is wider than 93 days |
+| 13923:2011-01-01 NOAA 8 | anomalous | D | 2011-01-01 to 2014-01-01 | the window is wider than 93 days |
+| 12446:2014-01-01 Agena D | breakup | D | 2014-01-01 to 2017-01-01 | the window is wider than 93 days |
+| 36105:2017-01-01 H-2A F16 Stage 2 | anomalous | D | 2017-01-01 to 2020-01-01 | the window is wider than 93 days |
+| 29050:2019-01-01 COSMIC 1-3 | breakup | D | 2019-01-01 to 2022-01-01 | the window is wider than 93 days |
+| 23847:2020-01-01 Ariane H10-3 V85 | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 23950:2020-01-01 Ariane H10-3 V89 | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 32254:2020-01-01 Ariane 5 L526 EPS | breakup | D | 2020-01-01 to 2023-01-01 | the window is wider than 93 days |
+| 12456:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+| 15516:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+| 20826:2023-01-01 Meteor-2 | breakup | D | 2023-01-01 to 2026-01-01 | the window is wider than 93 days |
+
+<!-- truth:kept-out-by-window:end -->
+
 ## The live test
 
-The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth, on the Confirmed line and on the early warning. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
+The results above are a backtest. Since 2026-10-11 the detector `confirmed-v10` is frozen at the tag `frozen-confirmed-v10` and run once a day by a scheduled GitHub Actions workflow, `.github/workflows/prospective.yml`. Every alert it raises is appended to the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), whose commit time proves when the alert was known. Each run's line in `runs.jsonl` also links the Actions run, a second timestamp kept by GitHub, and each new confirmed alert opens an issue labelled [`prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Once the agencies' reports have caught up, `npm run prospective:score` scores the log against the truth, on the Confirmed line and on the early warning, both from the commit that logged each alert, not from the replay's clock: the year is replayed whole each day against that day's catalogue status, so a step can be raised dated back after the fragments were public, and only its commit says when it was known. An early warning is flagged where its commit came before the first sign of the fragments, and its lead is counted from the commit. `gh workflow disable prospective.yml` pauses the test, and [docs/decisions/0008](decisions/0008-the-detector-is-tested-prospectively-from-a-frozen-tag.md) says how and why it runs.
 
 <!-- prospective:score:begin -->So far: 1 alert logged since the freeze (1 suspected); 0 confirmed alerts match a reported event after the freeze, of 0 reported events with pieces; 0 false confirmations of 0 confirmed alerts. Early warning: 0 suspected alerts flag a reported event after the freeze before the first sign of its fragments, and 0 after it, of 0 reported events with pieces; 1 false early warning of 1 suspected alert. The truth last changed on 2026-10-12. The agencies report an event months after it, so the events of the last 90 days or so may not be in the truth yet, and the score is not final for them. The maintenance workflow scores the log every week and writes the whole score to `score.md` on the `prospective` branch.<!-- prospective:score:end -->

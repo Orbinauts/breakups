@@ -96,6 +96,8 @@ npm install @orbinauts/breakups
 
 It needs Node 22 or later, and also runs in browsers through a bundler and in Cloudflare Workers. The package is ESM only, ships TypeScript types, and imports no Node built-in.
 
+A caller that runs the detector hands each run the states the last one returned. To keep them between runs in a key-value store or a file, write them with `serialiseStates` and read them back with `reviveStates`: plain `JSON.stringify` loses them, since they are kept in maps and hold the infinities and NaN, which JSON writes as `null`.
+
 ## Quick start
 
 Read the list of reported breakups the package ships, and print the three most recent ones:
@@ -121,7 +123,7 @@ It prints:
 <!-- truth:quick-start:begin -->
 
 ```text
-by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
+by 2026-08-27T00:00Z CZ-6C R/B (100472), breakup, confidence D, LEO
 2026-09-13T21:13Z USA 32 (19460), breakup, confidence A, LEO
 2026-10-05T09:45Z Meteor 2-7 (second event) (12456), breakup, confidence C, LEO
 ```

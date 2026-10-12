@@ -26,14 +26,18 @@ import { runUrlOf } from "./run.ts";
  * freeze, each landed as the scorecard's parent-step line lands it, on a
  * reported event whose parent it names and whose window its step bracket
  * covers, each widened by the matcher's margin. It flagged the event
- * where it was raised before the first sign of the fragments, and is late
- * after it; a suspected alert on no reported event is a false alarm. The
+ * where the commit that logged it came before the first sign of the
+ * fragments, and is late after it; a suspected alert on no reported event
+ * is a false alarm. As on the Confirmed line, an alert is known when it was
+ * committed, never when the replay's clock raised it: the year is replayed
+ * whole each day against the day's catalogue status, so a step can be
+ * raised dated back, after the fragments were public. The
  * score reads no Archive, so the first sign of the fragments is the
  * earliest the log and the truth give: a confirmation by pieces landing
  * on the event, a cloud verdict under its launch after it, or the first
  * agency statement (from the first day of its month for a quarterly
  * news issue), a bound later than or equal to the first fragment's
- * publication. The lead is the days from the alert to that sign, and the
+ * publication. The lead is the days from the commit to that sign, and the
  * timing error is the detector's instant against the truth's where the
  * truth states the minute.
  *
@@ -105,13 +109,13 @@ export interface Detection extends Landed {
   leadDays: number | null;
 }
 
-/** A suspected alert landed on a reported event after the freeze: before the first sign of the fragments, or after it. */
+/** A suspected alert landed on a reported event after the freeze: committed before the first sign of the fragments, or after it (or never). */
 export interface EarlyWarning extends Landed {
   breakup: Breakup;
   status: "flagged" | "late";
   /** The first sign of the fragments the score knows of, in milliseconds since 1970; null where none yet. */
   firstSignAt: number | null;
-  /** Days from the alert's raising to that sign; positive where the alert came first. */
+  /** Days from the commit that logged the alert to that sign; positive where the alert came first; null where no commit carries it. */
   leadDays: number | null;
   /** The detector's instant against the truth's, in minutes, where the truth states the minute. */
   timingMinutes: number | null;
@@ -156,7 +160,9 @@ function statedAtOf(statement: FirstStatement | null): number | null {
 
 /** The early warning's line: every suspected alert since the freeze, landed on the truth, against the first sign of each event's fragments the log and the truth give. */
 export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: CommittedAt, breakups: readonly Breakup[], confirmations: readonly Detection[], freezeMs = FREEZE_MS): EarlyWarningScore {
-  const suspected = alerts.filter((alert) => alert.kind === "object" && alert.state === "suspected" && alert.number !== null).sort((a, b) => Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
+  // The first warning of an event counts, so they are read in the order they were known, as the Confirmed line reads its alerts.
+  const known = (alert: LoggedAlert): number => committedAt.get(alert.key) ?? Number.POSITIVE_INFINITY;
+  const suspected = alerts.filter((alert) => alert.kind === "object" && alert.state === "suspected" && alert.number !== null).sort((a, b) => known(a) - known(b) || Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
   const clouds = alerts.filter((alert) => alert.kind === "cloud");
   const firstSign = (breakup: Breakup): number | null => {
     const launch = launchOf(breakup.parent.designator);
@@ -183,15 +189,18 @@ export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: C
     else if (caught.has(breakup.id)) score.notCounted.push({ ...landed, outcome: "duplicate", event: breakup.id, note: "a later early warning of an event already flagged" });
     else {
       caught.add(breakup.id);
-      const raisedAt = Date.parse(alert.raisedAt);
+      // Known when the commit logged it: the daily re-replay can raise a step dated back, after the fragments were public.
+      const committed = landed.committedAt;
       const sign = firstSign(breakup);
       const instant = breakup.event.precision === "minute" && breakup.event.at !== null && breakup.event.at !== undefined ? Date.parse(breakup.event.at) : null;
-      const status = sign === null || raisedAt < sign ? "flagged" : "late";
-      const warning: EarlyWarning = { ...landed, outcome: status, event: breakup.id, note: status === "flagged" ? "before the first sign of the fragments" : "after the first sign of the fragments", breakup, status, firstSignAt: sign, leadDays: sign === null ? null : Math.round(((sign - raisedAt) / DAY_MS) * 10) / 10, timingMinutes: instant === null || alert.verdict.event === null ? null : Math.round(Math.abs(alert.verdict.event.at - instant) / 60_000) };
+      const status = committed !== null && (sign === null || committed < sign) ? "flagged" : "late";
+      const note = committed === null ? "no commit of the log carries it" : status === "flagged" ? "committed before the first sign of the fragments" : "committed after the first sign of the fragments";
+      const warning: EarlyWarning = { ...landed, outcome: status, event: breakup.id, note, breakup, status, firstSignAt: sign, leadDays: sign === null || committed === null ? null : Math.round(((sign - committed) / DAY_MS) * 10) / 10, timingMinutes: instant === null || alert.verdict.event === null ? null : Math.round(Math.abs(alert.verdict.event.at - instant) / 60_000) };
       (status === "flagged" ? score.flagged : score.late).push(warning);
     }
   }
-  score.missed = breakups.filter((breakup) => breakup.scoreable && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
+  // A row naming a launch and no catalogued parent has no parent's orbit to warn on: it is the Confirmed line's alone.
+  score.missed = breakups.filter((breakup) => breakup.scoreable && breakup.parent.catalogueNumber !== null && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
   return score;
 }
 
@@ -269,7 +278,7 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
   for (const a of score.awaitingPieces) lines.push(`  ${named(a)}`);
   const ew = score.earlyWarning;
   lines.push("", `Early warning (suspected), events after the freeze: ${ew.flagged.length} of ${score.reported} reported events with pieces flagged before the first sign of their fragments, ${ew.late.length} late; ${ew.falseAlarms.length} false ${ew.falseAlarms.length === 1 ? "alarm" : "alarms"} of ${ew.suspected} suspected alerts.`);
-  if (ew.flagged.length + ew.late.length > 0) lines.push("", "Early warnings on a reported event (lead over the first sign of the fragments; timing error against the truth's minute):");
+  if (ew.flagged.length + ew.late.length > 0) lines.push("", "Early warnings on a reported event (lead over the first sign of the fragments, from the commit that logged the alert; timing error against the truth's minute):");
   for (const w of [...ew.flagged, ...ew.late]) lines.push(`  ${named(w.breakup)}: ${w.status}, raised ${iso(Date.parse(w.alert.raisedAt))}, committed ${iso(w.committedAt)}; first sign of the fragments ${w.firstSignAt === null ? "none yet" : iso(w.firstSignAt)}; lead ${w.leadDays === null ? "unknown" : `${w.leadDays} days`}; timing error ${w.timingMinutes === null ? "unknown" : `${w.timingMinutes} minutes`}`);
   if (ew.falseAlarms.length > 0) lines.push("", "False early warnings (no reported event's step):");
   for (const f of ew.falseAlarms) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);

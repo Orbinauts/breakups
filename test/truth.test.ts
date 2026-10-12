@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { buildTruth } from "../scripts/truth/build-truth.ts";
+import { buildTruth, distinctInstants } from "../scripts/truth/build-truth.ts";
+import { readRegimes, regimeAt } from "../scripts/truth/regimes.ts";
 import { renderReport } from "../scripts/truth/report.ts";
 import { readBreakups, yearOf, type Breakup } from "../src/index.ts";
 
@@ -22,14 +23,28 @@ const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
 
 describe("the committed truth", () => {
   test("is what the sources build, byte for byte, and the report beside it", () => {
-    const { file, statements, skipped } = buildTruth();
+    const { file, statements, skipped, esa } = buildTruth();
     expect(`${JSON.stringify(file, null, 1)}\n`).toBe(committed);
-    expect(renderReport(file, statements, skipped)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
+    expect(renderReport(file, statements, skipped, esa)).toBe(readFileSync(resolve(ROOT, "docs/truth.md"), "utf8"));
   });
 
   test("reads back, every row checked", () => {
     expect(breakups.length).toBeGreaterThan(500);
     expect(scoring.filter((b) => b.scoreable).length).toBeGreaterThan(140);
+  });
+
+  test("holds no two instants one listing source states more than a day apart in one event", () => {
+    for (const group of buildTruth().groups) {
+      if (group.overrides.length > 0) continue;
+      const s = group.statements;
+      for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) expect(distinctInstants(s[i]!, s[j]!), `${s[i]!.ref} / ${s[j]!.ref}`).toBe(false);
+    }
+  });
+
+  test("splits ALOS-1's stage into NASA's two events and Cosmos 2392's ullage motor into GCAT's two separations", () => {
+    expect(breakups.find((b) => b.id === "28932:2006-08-27")).toMatchObject({ event: { at: "2006-08-27T16:18Z" }, confidence: "A", scoreable: true });
+    expect(breakups.find((b) => b.id === "28932:2006-08-08")!.conflicts.filter((c) => c.field === "event")).toEqual([]);
+    expect(breakups.find((b) => b.id === "27474:2005-06-30")).toMatchObject({ piecesCatalogued: 55, scoreable: true });
   });
 
   test("is ordered by time, with no two events of one parent within a day", () => {
@@ -44,6 +59,23 @@ describe("the committed truth", () => {
         expect(Date.parse(events[i]!.event.from ?? events[i]!.event.to) - Date.parse(events[i - 1]!.event.to), events[i]!.id).toBeGreaterThan(86_400_000);
       }
     }
+  });
+
+  test("no window opens before its parent's launch day", () => {
+    for (const b of breakups) if (b.parent.launchedOn !== null && b.parent.launchedOn.length === 10 && b.event.from !== null) expect(b.event.from.slice(0, 10) >= b.parent.launchedOn, b.id).toBe(true);
+  });
+
+  test("an id's day is the instant's where the event states one, else the window's lower edge", () => {
+    for (const b of breakups) expect(b.id.slice(-10), b.id).toBe((b.event.at ?? b.event.from ?? b.event.to).slice(0, 10));
+    expect(breakups.find((b) => b.id === "42052:2018-01-01")).toBeDefined();
+  });
+
+  test("no scoreable window is wider than 93 days or open below: such a row is kept out with its reason", () => {
+    for (const b of breakups) {
+      const wide = b.event.from === null || Date.parse(b.event.to) - Date.parse(b.event.from) > 93 * 86_400_000;
+      if (wide && ["breakup", "anomalous"].includes(b.kind) && b.parent.catalogueNumber !== null) expect(b.exemptReason, b.id).toBe(b.event.from === null ? "the window has no lower edge" : "the window is wider than 93 days");
+    }
+    expect(scoring.filter((b) => b.exemptReason === "the window is wider than 93 days").map((b) => b.parent.name)).toContain("NOAA 8");
   });
 
   test("every event happens after its parent's launch and not after today", () => {
@@ -70,9 +102,44 @@ describe("the committed truth", () => {
     }
   });
 
-  test("scoreable events name a catalogued parent and are breakups or anomalous events", () => {
+  test("takes the confidence from the best authority statement, whichever source states the instant most finely", () => {
+    const authorities = new Set(["hoosf-16e", "odqn", "s4s-notice", "esa-ser"]);
+    for (const b of scoring) {
+      const stated = b.statements.filter((s) => authorities.has(s.source));
+      if (stated.some((s) => s.event.precision === "minute" || s.event.precision === "second")) expect(b.confidence, b.id).toBe("A");
+      else if (stated.some((s) => s.event.from !== null && Date.parse(s.event.to) - Date.parse(s.event.from) <= 3 * 86_400_000)) expect(b.confidence, b.id).toBe("B");
+    }
+    // NASA or the quarterly news states the day; GCAT's cloud table the minute, which stands as the event's time.
+    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "25984:2023-03-11", "43227:2024-09-06"]) {
+      const b = breakups.find((x) => x.id === id)!;
+      expect([b.confidence, b.resolvedFrom.event, b.event.precision], id).toEqual(["B", "gcat", "minute"]);
+    }
+  });
+
+  test("a company's measured instant ranks with a named analyst's dating: Luch as Meteor 2-7", () => {
+    expect(breakups.find((b) => b.id === "40258:2026-01-30")!.confidence).toBe("C");
+    expect(breakups.find((b) => b.id === "12456:2026-10-05")!.confidence).toBe("C");
+  });
+
+  test("a burst under a launch with no catalogued parent is scoreable, the Confirmed line scoring it by its launch", () => {
+    for (const id of ["A:1965-027:2012-03-28", "A:1998-037:2026-06-19", "A:2013-076:2023-05-28", "A:2018-005:2024-03-17"]) expect(breakups.find((b) => b.id === id), id).toMatchObject({ scoreable: true, exemptReason: null });
+  });
+
+  test("a row whose statements give no orbit takes its parent's regime before the window from the file derived from the Archive", () => {
+    const regimes = readRegimes(ROOT)!;
+    let filled = 0;
+    for (const b of scoring) {
+      if (b.parent.catalogueNumber === null || (b.orbit.apogeeKm ?? b.orbit.altitudeKm) !== null) continue;
+      const runs = regimes.parents[String(b.parent.catalogueNumber)];
+      expect(b.orbit.regime, b.id).toBe(regimeAt(runs, Date.parse(b.event.from ?? b.event.to)));
+      if (b.orbit.regime !== "unknown") filled++;
+    }
+    expect(filled).toBeGreaterThan(100);
+  });
+
+  test("scoreable events name a catalogued parent or its launch and are breakups or anomalous events", () => {
     for (const b of breakups.filter((x) => x.scoreable)) {
-      expect(b.parent.catalogueNumber, b.id).not.toBeNull();
+      expect(b.parent.catalogueNumber ?? b.parent.designator, b.id).not.toBeNull();
       expect(["breakup", "anomalous"]).toContain(b.kind);
     }
     for (const b of breakups.filter((x) => !x.scoreable)) expect(b.exemptReason, b.id).not.toBeNull();
@@ -112,5 +179,25 @@ describe("events checked by hand", () => {
     if (event.regime !== undefined) expect(built!.orbit.regime).toBe(event.regime);
     if (event.confidence !== undefined) expect(built!.confidence).toBe(event.confidence);
     expect(built!.scoreable).toBe(true);
+  });
+});
+
+describe("ESA's tables in the truth", () => {
+  const esaOf = (id: string): Breakup["statements"] => breakups.find((b) => b.id === id)!.statements.filter((s) => s.source === "esa-ser");
+
+  test("a row a cited report names is a scoreable event of that object, dated to ESA's day", () => {
+    const stage = breakups.find((b) => b.id === "59344:2024-04-02")!;
+    expect(stage.parent.name).toBe("CZ-6A R/B (Yunhai-3 02)");
+    expect(stage.confidence).toBe("B");
+    expect(stage.statements.map((s) => s.source).sort()).toEqual(["esa-ser", "news"]);
+  });
+
+  test("Hitomi and the ullage motor of the same day each take the row their orbit allows", () => {
+    expect(esaOf("41337:2016-03-26").map((s) => s.causeStated)).toEqual(["Attitude"]);
+    expect(esaOf("33472:2016-03-26").map((s) => s.causeStated)).toEqual(["Unknown"]);
+  });
+
+  test("a row two events could be joins neither: ESA's 2025-12-18 payload stays off both Starlink-35956 and Shiyan 32-02", () => {
+    expect(breakups.filter((b) => b.event.to.startsWith("2025-12-") && b.statements.some((s) => s.source === "esa-ser")).map((b) => b.id)).toEqual([]);
   });
 });

@@ -6,6 +6,8 @@ import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type 
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
 import { isSatcatStatement, parseSatcat, satcatStatements, separationsOf, type Skipped } from "./parse-gcat-satcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
+import { attributeEsaRows, esaStatement, readEsaSer, type EsaCandidate, type EsaRow } from "./parse-esa-ser.ts";
+import { readRegimes, regimeAt, type RegimesFile } from "./regimes.ts";
 import { renderReport } from "./report.ts";
 import { statedOnFromRef } from "./stated.ts";
 
@@ -13,9 +15,11 @@ import { statedOnFromRef } from "./stated.ts";
  * Builds the ground truth, `data/breakups.json`, from every statement the
  * sources make: NASA's history read from its text, GCAT's clouds read from
  * its table, GCAT's satellite catalogue read for every piece's parent and
- * separation date, the catalogue's own bursts, and the hand-entered
- * statements. Statements about one parent
- * whose windows fall within a month of each other are one event; a
+ * separation date, the catalogue's own bursts, the hand-entered
+ * statements, and ESA's yearly tables, each row attributed to the event it
+ * can only be by the rule of `parse-esa-ser.ts`. Statements about one parent
+ * whose windows fall within a month of each other are one event, unless
+ * one source lists them as two instants more than a day apart; a
  * reviewer's overrides merge or separate what the rule gets wrong. Each
  * field is then resolved by a fixed order of sources, every disagreement is
  * listed as a conflict, and the report `docs/truth.md` says what was built
@@ -31,6 +35,8 @@ export const SAME_EVENT_DAYS = 30;
 export const CONFLICT_MINUTES = 10;
 /** A burst of catalogued pieces within this long after a reported event of the same launch is that event's late cataloguing, not a new event. */
 export const LATE_BATCH_YEARS = 3;
+/** A window wider than this is no target in a useful sense: a month either side of a stated month fits, GCAT's "2023?" widened to three years does not. */
+export const WIDE_WINDOW_DAYS = 93;
 
 const DAY_MS = 86_400_000;
 
@@ -44,6 +50,8 @@ interface Override {
   event?: SourceId;
   kind?: BreakupKind;
   exempt?: string;
+  /** The window's lower edge the reviewer sets on a merged event whose statements give none, with the reason in the note. */
+  from?: string;
   note?: string;
 }
 
@@ -68,7 +76,8 @@ const SOURCES: Partial<Record<SourceId, SourceRecord>> = {
   odqn: { citation: "NASA Orbital Debris Program Office, Orbital Debris Quarterly News, https://orbitaldebris.jsc.nasa.gov/quarterly-news/", licence: "US Government work", version: "volume 26 issue 3 (September 2022) to volume 30 issue 3 (September 2026)" },
   // The version is read from the two snapshots' own update lines (`gcatVersion`), so a refreshed snapshot states its edition.
   gcat: { citation: "McDowell, J., General Catalog of Artificial Space Objects: Space Debris Clouds, https://planet4589.org/space/debris/debriscat/index.html, and the satellite catalogue, https://planet4589.org/space/gcat/tsv/cat/satcat.tsv", licence: "CC-BY-4.0", version: "" },
-  "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, Table 3.7 of issue 9.1, 21 October 2025, and of issue 10.1, 8 September 2026", licence: "ESA", version: "2025 edition, events of 2024; 2026 edition, events of 2025" },
+  // The version is read from the editions typed into `data/truth/esa-ser.json` (`esaVersion`).
+  "esa-ser": { citation: "ESA Space Debris Office, ESA's Annual Space Environment Report, Table 3.7 of each edition, https://www.sdo.esoc.esa.int/publications/", licence: "ESA", version: "" },
   "s4s-notice": { citation: "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page and on X by the 18th Space Control Squadron and its successors (the account now named @S4S_SDA), and the statements of the commands that held the role before or beside it (U.S. Strategic Command, Air Force Space Command, U.S. Space Command), each cited on its statement", licence: "public announcement", version: "2009-02-11 to 2026-09-17" },
   analyst: { citation: "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report", licence: "cited reports", version: "to 2026-10-10" },
   news: { citation: "LeoLabs' public notifications and the news reports cited on each statement", licence: "cited reports", version: "to 2026-10-09" },
@@ -87,10 +96,23 @@ export function gcatVersion(debrisUpdated: string, satcatUpdated: string): strin
   return `debris clouds data last updated ${gcatDay(debrisUpdated)}; satellite catalogue updated ${gcatDay(satcatUpdated)}`;
 }
 
-/** The sources' records, GCAT's version read from its snapshots. */
+/** ESA's version as the truth records it: the first and last editions whose tables are typed in, and the years their tables cover. */
+export function esaVersion(rows: readonly EsaRow[]): string {
+  const editions = [...new Map(rows.map((r) => [r.edition.edition, r.edition])).values()].sort((a, b) => a.dateOfIssue.localeCompare(b.dateOfIssue));
+  const years = rows.map((r) => r.epoch.slice(0, 4)).sort();
+  const [first, last] = [editions[0]!, editions[editions.length - 1]!];
+  return `issues ${first.issue} (${first.dateOfIssue}) to ${last.issue} (${last.dateOfIssue}), ${editions.length} editions, events of ${years[0]} to ${years[years.length - 1]}`;
+}
+
+/** ESA's tables, every row as typed. */
+function esaRows(): EsaRow[] {
+  return readEsaSer(parseJson<unknown>("data/truth/esa-ser.json"));
+}
+
+/** The sources' records, GCAT's version read from its snapshots and ESA's from its editions. */
 function sourcesOf(): Partial<Record<SourceId, SourceRecord>> {
   const version = gcatVersion(parseGcat(read("data/truth/sources/gcat-debriscat.html")).updated, parseSatcat(read("data/truth/sources/gcat-satcat.tsv")).updated);
-  return { ...SOURCES, gcat: { ...SOURCES.gcat!, version } };
+  return { ...SOURCES, gcat: { ...SOURCES.gcat!, version }, "esa-ser": { ...SOURCES["esa-ser"]!, version: esaVersion(esaRows()) } };
 }
 
 function parseJson<T>(path: string): T {
@@ -109,18 +131,92 @@ function allStatements(): Statement[] {
   const hand = readStatements(parseJson<{ statements: unknown }>("data/truth/hand.json").statements);
   const catalogue = existsSync(resolve(ROOT, "data/truth/catalogue.json")) ? readStatements(parseJson<{ statements: unknown }>("data/truth/catalogue.json").statements) : [];
   const satcat = satcatStatements(parseSatcat(read("data/truth/sources/gcat-satcat.tsv")));
+  // ESA's rows a cited source names are statements of their parent; the others are placed by the rule after grouping (`placeEsaRows`).
+  const esaNamed = esaRows().filter((row) => row.parent !== null).map((row) => esaStatement(row, "named"));
   // Each statement dated by when it can first have been public: NASA's history by the quarterly news it cites, a hand-entered one by its reference where it does not say.
   // The satellite catalogue's come last, so the events the other sources make are grouped as before and its statements join them.
-  return [...hoosf, ...gcat, ...hand, ...catalogue, ...satcat].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
+  return [...hoosf, ...gcat, ...hand, ...esaNamed, ...catalogue, ...satcat].map((statement) => ({ ...statement, statedOn: statedOnFromRef(statement) }));
 }
 
 const lower = (time: StatedTime): number => Date.parse(time.from ?? time.to);
 const upper = (time: StatedTime): number => Date.parse(time.to);
 
+/** The time between two windows, zero where they overlap. */
+const gapOf = (a: StatedTime, b: StatedTime): number => Math.max(0, lower(a) - upper(b), lower(b) - upper(a));
+
 /** Whether two windows fall within `SAME_EVENT_DAYS` of each other. */
 function near(a: StatedTime, b: StatedTime): boolean {
-  const gap = SAME_EVENT_DAYS * DAY_MS;
-  return lower(a) <= upper(b) + gap && lower(b) <= upper(a) + gap;
+  return gapOf(a, b) <= SAME_EVENT_DAYS * DAY_MS;
+}
+
+const middle = (time: StatedTime): number => (lower(time) + upper(time)) / 2;
+/** How far apart two sets of statements are: the gap between their nearest windows, then, on a tie, between the nearest windows' middles. */
+function distanceOf(a: Statement[], b: Statement[]): [number, number] {
+  let best: [number, number] = [Infinity, Infinity];
+  for (const s of a) {
+    for (const t of b) {
+      const d: [number, number] = [gapOf(s.event, t.event), Math.abs(middle(s.event) - middle(t.event))];
+      if (d[0] < best[0] || (d[0] === best[0] && d[1] < best[1])) best = d;
+    }
+  }
+  return best;
+}
+const closer = (a: [number, number], b: [number, number]): boolean => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+
+/**
+ * The sources that list each event once: NASA's history, GCAT's cloud table
+ * and its satellite catalogue (each apart), the quarterly news, the notices
+ * and ESA's report. Two of one such source's statements on one parent are
+ * two events where both state the day or finer and they lie more than a day
+ * apart. The news and the analysts gather many outlets' reports under one
+ * name, and the catalogue's bursts are windows, not instants: neither is
+ * read so.
+ */
+const LISTING_SOURCES: ReadonlySet<SourceId> = new Set<SourceId>(["hoosf-16e", "gcat", "odqn", "s4s-notice", "esa-ser"]);
+const listingOf = (statement: Statement): string | null => (isSatcatStatement(statement) ? "gcat-satcat" : LISTING_SOURCES.has(statement.source) ? statement.source : null);
+const STATES_THE_DAY: ReadonlySet<Precision> = new Set<Precision>(["second", "minute", "hour", "day"]);
+/**
+ * The kinds the rule reads: the scorecard's targets. NASA's aerodynamic
+ * table is read twice where its cells wrap (one row, two dates), and the
+ * satellite catalogue's releases from a station or a crewed craft come
+ * weeks apart as one episode; both are out of the denominator either way.
+ */
+const isTargetKind = (statement: Statement): boolean => statement.kind === null || statement.kind === "breakup" || statement.kind === "anomalous";
+
+/** Whether one listing source states these two as distinct instants of one parent: both to the day or finer, more than a day apart. */
+export function distinctInstants(a: Statement, b: Statement): boolean {
+  const listing = listingOf(a);
+  const sameParent = a.parent.catalogueNumber === b.parent.catalogueNumber && (a.parent.catalogueNumber !== null || a.parent.designator === b.parent.designator);
+  return listing !== null && listing === listingOf(b) && sameParent && isTargetKind(a) && isTargetKind(b) && STATES_THE_DAY.has(a.event.precision) && STATES_THE_DAY.has(b.event.precision) && gapOf(a.event, b.event) > DAY_MS;
+}
+
+/**
+ * A run of statements chained within a month, split where one listing
+ * source states distinct instants: the two nearest parts (by the gap
+ * between their windows, then between the windows' middles) are joined first,
+ * then the next nearest, never two parts that hold distinct instants of one
+ * source, nor parts further apart than `SAME_EVENT_DAYS`. Each statement so
+ * joins the instant nearest it, whatever order the sources come in.
+ */
+function splitDistinct(group: Group, order: Map<Statement, number>): Group[] {
+  const all = group.statements;
+  if (!all.some((a, i) => all.slice(i + 1).some((b) => distinctInstants(a, b)))) return [group];
+  const parts = all.map((s) => [s]);
+  for (;;) {
+    let best: { i: number; j: number; distance: [number, number] } | null = null;
+    for (let i = 0; i < parts.length; i++) {
+      for (let j = i + 1; j < parts.length; j++) {
+        if (parts[i]!.some((a) => parts[j]!.some((b) => distinctInstants(a, b)))) continue;
+        const distance = distanceOf(parts[i]!, parts[j]!);
+        if (distance[0] <= SAME_EVENT_DAYS * DAY_MS && (best === null || closer(distance, best.distance))) best = { i, j, distance };
+      }
+    }
+    if (best === null) break;
+    parts[best.i]!.push(...parts[best.j]!);
+    parts.splice(best.j, 1);
+  }
+  const byOrder = (a: Statement, b: Statement): number => order.get(a)! - order.get(b)!;
+  return parts.map((part) => part.sort(byOrder)).sort((a, b) => byOrder(a[0]!, b[0]!)).map((statements) => ({ statements, overrides: [...group.overrides] }));
 }
 
 /** The key statements are first grouped by: the parent's catalogue number, else its launch, else nothing (each unnamed row stands alone). */
@@ -137,9 +233,12 @@ interface Group {
 
 /**
  * Statements grouped into events: by parent first, then by windows within
- * a month of each other, each statement joining the first group it is
- * near. An override's `merge` pulls the named parents' statements between
- * its days into one group before the rule runs.
+ * a month of each other, except that two instants one listing source
+ * states more than a day apart are two events (`distinctInstants`), each
+ * other statement joining the instant nearest it. Sources that disagree
+ * within the month stay one event, their disagreement a conflict. An
+ * override's `merge` pulls the named parents' statements between its days
+ * into one group before the rule runs, and the rule does not split it.
  */
 export function groupStatements(statements: Statement[], overrides: Override[]): Group[] {
   const groups: Group[] = [];
@@ -169,6 +268,11 @@ export function groupStatements(statements: Statement[], overrides: Override[]):
       byParent.set(key, candidates);
     }
   });
+  // A month's chain may hold two instants one listing source states apart: it is split at them.
+  const order = new Map(statements.map((s, i) => [s, i] as const));
+  const split = groups.flatMap((group) => (group.overrides.length > 0 ? [group] : splitDistinct(group, order)));
+  groups.length = 0;
+  groups.push(...split);
   // A statement that names the launch alone (the catalogue's pieces, GCAT's analyst parents) joins the event of a
   // numbered parent of that launch whose window is near; else, for the catalogue's bursts, a reported event of the
   // launch in the years before, whose cloud is still being catalogued.
@@ -181,7 +285,8 @@ export function groupStatements(statements: Statement[], overrides: Override[]):
       continue;
     }
     const sameLaunch = groups.filter((other) => other !== group && numbered(other) && !catalogueOnly(other) && launchOfGroup(other) === launch);
-    const home = numbered(group) ? undefined : sameLaunch.find((other) => other.statements.some((s) => group.statements.some((g) => near(s.event, g.event))));
+    const joinable = (other: Group): boolean => other.statements.some((s) => group.statements.some((g) => near(s.event, g.event))) && !other.statements.some((s) => group.statements.some((g) => distinctInstants(s, g)));
+    const home = numbered(group) ? undefined : sameLaunch.filter(joinable).sort((a, b) => (closer(distanceOf(a.statements, group.statements), distanceOf(b.statements, group.statements)) ? -1 : closer(distanceOf(b.statements, group.statements), distanceOf(a.statements, group.statements)) ? 1 : 0))[0];
     if (home !== undefined) {
       home.statements.push(...group.statements);
       continue;
@@ -314,13 +419,29 @@ export function regimeOf(orbit: StatedOrbit): Regime {
 /** The precisions of GCAT's dates it is trusted at, C: a year or none is no finer than the catalogue's own burst, D. */
 const GCAT_DATED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute", "hour", "day", "month"]);
 
-function confidenceOf(event: Statement, time: StatedTime): Confidence {
-  const authority = AUTHORITIES.has(event.source);
-  const width = upper(time) - lower(time);
-  if (authority && (time.precision === "second" || time.precision === "minute")) return "A";
-  if (authority && time.from !== null && width <= 3 * DAY_MS) return "B";
-  if (event.source === "analyst" || (event.source === "gcat" && GCAT_DATED.has(time.precision)) || (authority && time.precision !== "none")) return "C";
+const MEASURED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute"]);
+
+/**
+ * What one statement alone lets the event's time be trusted at: an
+ * authority's minute A, its day or a window of three days at most B, any
+ * coarser time it states C; a named analyst's dating C, and so a company's
+ * measured instant a report quotes to the minute (s2a systems' optical
+ * timing of Luch); GCAT's date to the month or finer C; anything else D.
+ */
+function gradeOf(statement: Statement): Confidence {
+  const time = statement.event;
+  if (AUTHORITIES.has(statement.source)) {
+    if (MEASURED.has(time.precision)) return "A";
+    if (time.from !== null && upper(time) - lower(time) <= 3 * DAY_MS) return "B";
+    if (time.precision !== "none") return "C";
+  }
+  if (statement.source === "analyst" || (statement.source === "news" && MEASURED.has(time.precision)) || (statement.source === "gcat" && GCAT_DATED.has(time.precision))) return "C";
   return "D";
+}
+
+/** The confidence of an event: its best statement's grade, an authority's above the rest, whichever statement states the instant most finely. */
+function confidenceOf(group: Group): Confidence {
+  return group.statements.map(gradeOf).sort()[0]!;
 }
 
 /** Disagreements among a group's statements, with the sources that disagree. */
@@ -361,40 +482,70 @@ function conflictsOf(group: Group): Conflict[] {
   return conflicts;
 }
 
+/** The parent's launch day as a time, the first day of the month or year where the source states no finer; null where none is stated. */
+function launchStartOf(parent: Parent): number | null {
+  const launched = parent.launchedOn;
+  if (launched === null) return null;
+  const parsed = Date.parse(`${launched.length === 4 ? `${launched}-01-01` : launched.length === 7 ? `${launched}-01` : launched}T00:00Z`);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+/** The window with its lower edge raised to the parent's launch day where a coarse date widened it to before the launch. */
+function clampedToLaunch(time: StatedTime, parent: Parent): StatedTime {
+  const launch = launchStartOf(parent);
+  if (launch === null || time.from === null || Date.parse(time.from) >= launch) return time;
+  return { ...time, from: `${new Date(launch).toISOString().slice(0, 10)}T00:00Z` };
+}
+
+/** Why a breakup or anomalous event of a catalogued parent is no target by the shape of its window: none below, or wider than `WIDE_WINDOW_DAYS`. */
+function windowReasonOf(time: StatedTime): string | null {
+  if (time.from === null) return "the window has no lower edge";
+  return upper(time) - lower(time) > WIDE_WINDOW_DAYS * DAY_MS ? `the window is wider than ${WIDE_WINDOW_DAYS} days` : null;
+}
+
 function idOf(parent: Parent, time: StatedTime, unnamedIndex: number): string {
-  const day = (time.from ?? time.to).slice(0, 10);
+  const day = (time.at ?? time.from ?? time.to).slice(0, 10);
   if (parent.catalogueNumber !== null) return `${parent.catalogueNumber}:${day}`;
   if (parent.designator !== null) return `A:${parent.designator}:${day}`;
   return `U:${unnamedIndex}:${day}`;
 }
 
+/** The regime of the orbit the statements give, else of the parent's last set before the window as the file derived from the Archive holds it. */
+function regimeAtEvent(orbit: StatedOrbit, parent: Parent, event: StatedTime, regimes: RegimesFile | null): Regime {
+  const stated = regimeOf(orbit);
+  if (stated !== "unknown" || parent.catalogueNumber === null || regimes === null) return stated;
+  return regimeAt(regimes.parents[String(parent.catalogueNumber)], lower(event));
+}
+
 /** One group resolved into a Known Breakup. */
-function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Breakup {
+function resolve_(group: Group, overrides: Override[], unnamedIndex: number, regimes: RegimesFile | null): Breakup {
   const launch = group.statements.map((s) => s.parent.designator?.slice(0, 8)).find((l) => l !== undefined) ?? null;
   // An exempt launch's events that only the catalogues (its bursts, GCAT's satellite catalogue) state are exempt; a report's own event stays scoreable.
   for (const o of overrides) if (o.exemptLaunch !== undefined && o.exemptLaunch === launch && group.statements.every((s) => s.source === "catalogue" || isSatcatStatement(s)) && !group.overrides.includes(o.name)) group.overrides.push(o.name);
   const applied = overrides.filter((o) => group.overrides.includes(o.name));
   const forcedEvent = applied.find((o) => o.event !== undefined)?.event;
   const forcedKind = applied.find((o) => o.kind !== undefined)?.kind;
+  const forcedFrom = applied.find((o) => o.from !== undefined)?.from;
   const eventStatement = pickEvent(group, forcedEvent);
   const { kind, source: kindSource } = pickKind(group, forcedKind);
   const { orbit, source: orbitSource } = pickOrbit(group);
   const { cause, source: causeSource } = pickCause(group);
   const { pieces, source: piecesSource } = pickPieces(group);
   const parent = pickParent(group);
+  const event = clampedToLaunch(forcedFrom === undefined ? eventStatement.event : { ...eventStatement.event, from: forcedFrom }, parent);
   const exempt = applied.find((o) => o.exempt !== undefined)?.exempt ?? null;
   const kindResolved: BreakupKind = exempt !== null && applied.some((o) => o.exemptLaunch !== undefined) ? "release" : kind;
-  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null ? "the parent has no catalogue number" : null);
+  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null && parent.designator === null ? "the parent has no catalogue number" : windowReasonOf(event));
   const resolvedFrom: ResolvedFrom = { event: eventStatement.source, orbit: orbitSource, cause: causeSource, pieces: piecesSource, kind: kindSource };
   return {
-    id: idOf(parent, eventStatement.event, unnamedIndex),
+    id: idOf(parent, event, unnamedIndex),
     parent,
     kind: kindResolved,
-    event: eventStatement.event,
-    orbit: { ...orbit, regime: regimeOf(orbit) },
+    event,
+    orbit: { ...orbit, regime: regimeAtEvent(orbit, parent, event, regimes) },
     cause,
     piecesCatalogued: pieces,
-    confidence: confidenceOf(eventStatement, eventStatement.event),
+    confidence: confidenceOf(group),
     scoreable: exemptReason === null,
     exemptReason,
     resolvedFrom,
@@ -405,12 +556,59 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
   };
 }
 
-export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[]; skipped: Skipped } {
+/** Where a row of ESA's tables went: named by a cited source, joined to an event by the rule, an unnamed event of its own, or not placed; with the events it went to or could have. */
+export interface EsaPlacement {
+  row: EsaRow;
+  placed: "named" | "joined" | "unnamed" | "unplaced";
+  events: Group[];
+}
+
+/**
+ * ESA's rows no cited source names, placed by the rule of
+ * `parse-esa-ser.ts` among the events the other sources make: a row joins
+ * the event it can only be, a row no source dates near makes an unnamed
+ * event, and the rest are left out and listed.
+ */
+function placeEsaRows(groups: Group[], overrides: Override[], rows: readonly EsaRow[], regimes: RegimesFile | null): { statements: Statement[]; placements: EsaPlacement[] } {
+  const candidates: EsaCandidate[] = groups.map((group, key) => {
+    const resolved = resolve_({ statements: group.statements, overrides: [...group.overrides] }, overrides, 0, regimes);
+    const windows = group.statements.filter((s) => s.source !== "catalogue" && s.event.from !== null).map((s) => ({ from: s.event.from!, to: s.event.to }));
+    return { key, windows, regime: resolved.orbit.regime, class: resolved.parent.class, kind: resolved.kind };
+  });
+  const statements: Statement[] = [];
+  const placements: EsaPlacement[] = [];
+  for (const attribution of attributeEsaRows(rows, candidates)) {
+    if ("joins" in attribution) {
+      const statement = esaStatement(attribution.row, "attributed");
+      groups[attribution.joins]!.statements.push(statement);
+      statements.push(statement);
+      placements.push({ row: attribution.row, placed: "joined", events: [groups[attribution.joins]!] });
+    } else if ("unnamed" in attribution) {
+      const group = { statements: [esaStatement(attribution.row, "unnamed")], overrides: [] };
+      groups.push(group);
+      statements.push(group.statements[0]!);
+      placements.push({ row: attribution.row, placed: "unnamed", events: [group] });
+    } else {
+      statements.push(esaStatement(attribution.row, "attributed"));
+      placements.push({ row: attribution.row, placed: "unplaced", events: attribution.ambiguous.map((key) => groups[key]!) });
+    }
+  }
+  return { statements, placements };
+}
+
+export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements: Statement[]; skipped: Skipped; esa: { row: EsaRow; placed: EsaPlacement["placed"]; events: string[] }[] } {
   const statements = allStatements();
   const overrides = parseJson<{ overrides: Override[] }>("data/truth/overrides.json").overrides;
   const groups = groupStatements(statements, overrides);
+  const regimes = readRegimes(ROOT);
+  const rows = esaRows();
+  const esa = placeEsaRows(groups, overrides, rows.filter((row) => row.parent === null), regimes);
+  const named: EsaPlacement[] = rows.filter((row) => row.parent !== null).map((row) => ({ row, placed: "named", events: groups.filter((g) => g.statements.some((s) => s.source === "esa-ser" && s.parent.catalogueNumber === row.parent!.catalogueNumber && s.event.stated === row.epoch)) }));
+  statements.push(...esa.statements);
   let unnamed = 0;
-  const breakups = groups.map((group) => resolve_(group, overrides, group.statements[0]!.parent.catalogueNumber === null && group.statements[0]!.parent.designator === null ? ++unnamed : 0));
+  const breakups = groups.map((group) => resolve_(group, overrides, group.statements[0]!.parent.catalogueNumber === null && group.statements[0]!.parent.designator === null ? ++unnamed : 0, regimes));
+  const idOfGroup = new Map(groups.map((group, i) => [group, breakups[i]!.id]));
+  const placements = [...named, ...esa.placements].map((p) => ({ row: p.row, placed: p.placed, events: p.events.map((g) => idOfGroup.get(g)!) })).sort((a, b) => a.row.epoch.localeCompare(b.row.epoch));
   breakups.sort((a, b) => lower(a.event) - lower(b.event) || upper(a.event) - upper(b.event) || a.id.localeCompare(b.id));
   const ids = new Map<string, number>();
   for (const breakup of breakups) {
@@ -419,14 +617,19 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
     if (n > 1) throw new Error(`two events share the id ${breakup.id}: ${breakup.parent.name}; separate or merge them with an override`);
   }
   for (const override of overrides) if (!breakups.some((b) => b.overrides.includes(override.name))) throw new Error(`override ${override.name} applied to nothing`);
-  return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped() };
+  return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped(), esa: placements };
+}
+
+/** The truth built and written, `data/breakups.json` and its report `docs/truth.md`; a line saying what was written. */
+export function writeTruth(): { file: BreakupsFile; line: string } {
+  const { file, statements, skipped, esa } = buildTruth();
+  const json = `${JSON.stringify(file, null, 1)}\n`;
+  writeFileSync(resolve(ROOT, "data/breakups.json"), json);
+  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped, esa));
+  const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
+  return { file, line: `data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written` };
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { file, statements, skipped } = buildTruth();
-  const json = `${JSON.stringify(file, null, 1)}\n`;
-  writeFileSync(resolve(ROOT, "data/breakups.json"), json);
-  writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped));
-  const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
-  console.log(`data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written`);
+  console.log(writeTruth().line);
 }

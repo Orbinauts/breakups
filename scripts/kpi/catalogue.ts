@@ -1,4 +1,6 @@
-import { isFragmentClass, planeDistance, semiMajorAxisOf, type BodyClass, type DetectorParameters, type PlaneOrbit } from "../../src/index.ts";
+import type { BodyClass, DetectorParameters } from "../../src/index.ts";
+import { semiMajorAxisOf } from "../../src/elements.ts";
+import { isFragmentClass, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
 import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
 
@@ -173,6 +175,27 @@ export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string
     if (body.number <= mark || body.number >= ANALYST_FLOOR || !isFragmentClass(body.bodyClass)) continue;
     if (body.firstClock < from - marginMs || body.firstClock > to + FRAGMENTS_DAYS * DAY_MS || body.firstEpoch < from - DAY_MS) continue;
     if (planeDistance(before.orbit, body.orbit, eventMs, params, Number.POSITIVE_INFINITY).distance > params.planeDistanceMax) continue;
+    result.inPlane++;
+    if (result.firstAt === null || body.firstClock < result.firstAt) [result.firstAt, result.firstBody] = [body.firstClock, body.number];
+  }
+  return result;
+}
+
+/**
+ * The fresh pieces the catalogue published under a launch within
+ * `FRAGMENTS_DAYS` of a launch-level event, one whose parent has no
+ * catalogue number (a burst under the launch, a separation GCAT gives an
+ * object the public catalogue does not list): as `fragmentsOf`, but with
+ * no parent's plane to test them against, every such piece counts. The
+ * count is carried as `inPlane` and the parent's orbit as known, so the
+ * Confirmed line reads the row as any other target.
+ */
+export function launchFragmentsOf(catalogue: Catalogue, launch: string, from: number, to: number, marginMs: number): EventFragments {
+  const result: EventFragments = { inPlane: 0, firstAt: null, firstBody: null, parentOrbit: true };
+  const mark = catalogue.markAt(from - marginMs);
+  for (const body of catalogue.byLaunch.get(launch) ?? []) {
+    if (body.number <= mark || body.number >= ANALYST_FLOOR || !isFragmentClass(body.bodyClass)) continue;
+    if (body.firstClock < from - marginMs || body.firstClock > to + FRAGMENTS_DAYS * DAY_MS || body.firstEpoch < from - DAY_MS) continue;
     result.inPlane++;
     if (result.firstAt === null || body.firstClock < result.firstAt) [result.firstAt, result.firstBody] = [body.firstClock, body.number];
   }

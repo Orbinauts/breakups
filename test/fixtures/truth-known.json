@@ -22,6 +22,6 @@
     { "id": "69537:2026-06-09", "name": "ZhuQue-2E upper stage", "kind": "breakup", "at": "2026-06-09T08:47Z", "regime": "LEO" },
     { "id": "19460:2026-09-13", "name": "USA 32", "kind": "breakup", "at": "2026-09-13T21:13Z", "confidence": "A", "regime": "LEO" },
     { "id": "12456:2026-10-05", "name": "Meteor 2-7 (second event)", "kind": "breakup", "at": "2026-10-05T09:45Z", "confidence": "C", "regime": "LEO" },
-    { "id": "68196:2026-09-04", "name": "Yaogan-50 02", "kind": "breakup", "to": "2026-09-04T00:00Z", "confidence": "D" }
+    { "id": "68196:2026-07-01", "name": "Yaogan-50 02", "kind": "breakup", "from": "2026-07-01T20:21Z", "to": "2026-09-04T00:00Z", "confidence": "D" }
   ]
 }
