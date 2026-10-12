@@ -61,18 +61,18 @@ describe("the fixtures of the real replays", () => {
 });
 
 describe("the real replays publish exactly the expected lists", () => {
-  test("the 2025 seed publishes DMSP F-14 alone, confirmed from its fragments six weeks before ESA's table of 2024 reported it, dated by GCAT's row, and none of the 319 suspected verdicts", () => {
+  test("the 2025 seed publishes DMSP F-14 alone, confirmed by U.S. Space Forces-Space's post of the event's day, before its fragments confirmed it and ESA's table of 2024 reported it, dated by that notice, and none of the 319 suspected verdicts", () => {
     expect(published(2025).map(shown)).toEqual([
       {
         id: "24753-2024-12-19",
         state: "confirmed",
         raisedAt: "2025-02-13T20:00:00.000Z",
-        confirmedAt: "2025-02-13T20:00:00.000Z",
-        parent: { catalogueNumber: 24753, designator: "1997-012A", name: "DMSP F-14", launchedOn: "1997-04-04" },
+        confirmedAt: "2024-12-19T00:00:00.000Z",
+        parent: { catalogueNumber: 24753, designator: "1997-012A", name: "DMSP 5D-2 F14 (USA 131)", launchedOn: "1997-04-04" },
         event: "2024-10-07T11:53:14.737Z",
-        rowEvent: { at: "2024-12-19T02:10:00.000Z", from: "2024-12-19T02:10:00.000Z", to: "2024-12-19T02:10:00.000Z", precision: "minute", source: "gcat", row: "24753:2024-12-19" },
+        rowEvent: { at: "2024-12-19T02:10:00.000Z", from: "2024-12-19T02:00:00.000Z", to: "2024-12-19T02:20:00.000Z", precision: "minute", source: "s4s-notice", row: "24753:2024-12-19" },
         row: "24753:2024-12-19",
-        reports: [{ source: "esa-ser", date: "2025-03-31", precision: "day", url: null }],
+        reports: [{ date: "2024-12-19", precision: "day", source: "s4s-notice", url: "https://x.com/S4S_SDA/status/1869818410277974343" }, { source: "esa-ser", date: "2025-03-31", precision: "day", url: null }],
         verdicts: ["confirmed 2025-02-13T20:00:00.000Z"],
       },
     ]);

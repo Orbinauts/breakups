@@ -22,9 +22,9 @@
    "version": "issues 1.2 (2017-04-27) to 10.0 (2026-05-01), 10 editions, events of 2016 to 2025"
   },
   "s4s-notice": {
-   "citation": "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page",
+   "citation": "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page and on X by the 18th Space Control Squadron and its successors (the account now named @S4S_SDA), and the statements of the commands that held the role before or beside it (U.S. Strategic Command, Air Force Space Command, U.S. Space Command), each cited on its statement",
    "licence": "public announcement",
-   "version": "as seen on 2026-09-17"
+   "version": "2009-02-11 to 2026-09-17"
   },
   "analyst": {
    "citation": "Named analysts' statements, each cited on its statement: Jim Shell's dating of Meteor 2-7's second breakup from public elements, as reported by EarthSky, 2026-10-07; J. McDowell's GCAT satellite catalogue and Jonathan's Space Report",
@@ -167834,6 +167834,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "U.S. Strategic Command, whose Joint Space Operations Center then ran the space surveillance network: Brig. Gen. Michael Carey's statement as reported by Spaceflight Now on 2009-02-11 (https://spaceflightnow.com/news/n0902/11iridium/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 22675,
+      "designator": "1993-036A",
+      "name": "Cosmos 2251"
+     },
+     "event": {
+      "stated": "Tuesday, 10 February 2009 (the article's dating of the collision)",
+      "at": null,
+      "from": "2009-02-10T00:00Z",
+      "to": "2009-02-11T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "the collision of Iridium 33 and Cosmos 2251 (the article)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"As of about 12 hours ago, I think the head count was up (to around) 600 pieces.\" \"It's going to take about two days before we get a solid picture of what the debris fields look like.\" The count is of both satellites' pieces. The command held the role the U.S. Space Forces hold now.",
+     "statedOn": {
+      "on": "2009-02-11",
+      "precision": "day",
+      "ref": "Spaceflight Now, 11 February 2009: the command's spokesman spoke on the article's day"
+     },
+     "url": "https://spaceflightnow.com/news/n0902/11iridium/"
+    },
+    {
      "source": "gcat",
      "ref": "entry 306 (93036)",
      "kind": "breakup",
@@ -167927,10 +167962,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2009-04-01",
-    "precision": "month",
-    "ref": "“Satellite Collision Leaves Significant Debris Clouds”, ODQN 13(2), April 2009, cited by NASA's history, p. 404",
-    "source": "hoosf-16e"
+    "on": "2009-02-11",
+    "precision": "day",
+    "ref": "Spaceflight Now, 11 February 2009: the command's spokesman spoke on the article's day",
+    "source": "s4s-notice"
    }
   },
   {
@@ -168022,6 +168057,41 @@
       "precision": "month",
       "ref": "“Satellite Collision Leaves Significant Debris Clouds”, ODQN 13(2), April 2009, cited by NASA's history, p. 440"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Strategic Command, whose Joint Space Operations Center then ran the space surveillance network: Brig. Gen. Michael Carey's statement as reported by Spaceflight Now on 2009-02-11 (https://spaceflightnow.com/news/n0902/11iridium/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 24946,
+      "designator": "1997-051C",
+      "name": "Iridium 33"
+     },
+     "event": {
+      "stated": "Tuesday, 10 February 2009 (the article's dating of the collision)",
+      "at": null,
+      "from": "2009-02-10T00:00Z",
+      "to": "2009-02-11T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "the collision of Iridium 33 and Cosmos 2251 (the article)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"As of about 12 hours ago, I think the head count was up (to around) 600 pieces.\" \"It's going to take about two days before we get a solid picture of what the debris fields look like.\" The count is of both satellites' pieces. The command held the role the U.S. Space Forces hold now.",
+     "statedOn": {
+      "on": "2009-02-11",
+      "precision": "day",
+      "ref": "Spaceflight Now, 11 February 2009: the command's spokesman spoke on the article's day"
+     },
+     "url": "https://spaceflightnow.com/news/n0902/11iridium/"
     },
     {
      "source": "gcat",
@@ -168117,10 +168187,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2009-04-01",
-    "precision": "month",
-    "ref": "“Satellite Collision Leaves Significant Debris Clouds”, ODQN 13(2), April 2009, cited by NASA's history, p. 440",
-    "source": "hoosf-16e"
+    "on": "2009-02-11",
+    "precision": "day",
+    "ref": "Spaceflight Now, 11 February 2009: the command's spokesman spoke on the article's day",
+    "source": "s4s-notice"
    }
   },
   {
@@ -185235,6 +185305,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "Air Force Space Command's disclosure of 27 February 2015, in answer to SpaceNews, as reported by Space.com on 2015-03-02 (https://www.space.com/28709-military-weather-satellite-explodes-photo.html)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 23533,
+      "designator": "1995-015A",
+      "name": "DMSP 5D-2 F13"
+     },
+     "event": {
+      "stated": "Feb. 3 (2015)",
+      "at": null,
+      "from": "2015-02-03T00:00Z",
+      "to": "2015-02-04T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "\"a sudden spike in temperature\" in the power subsystem followed by \"an unrecoverable loss of attitude control\"",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"The 'catastrophic event' produced 43 pieces of space debris, according to Air Force Space Command, which disclosed the loss of the satellite Feb. 27 in response to questions from SpaceNews.\" The Joint Space Operations Center identified the debris field.",
+     "statedOn": {
+      "on": "2015-02-27",
+      "precision": "day",
+      "ref": "Space.com, 2 March 2015: the command disclosed the loss on 27 February"
+     },
+     "url": "https://www.space.com/28709-military-weather-satellite-explodes-photo.html"
+    },
+    {
      "source": "gcat",
      "ref": "entry 336 (95015)",
      "kind": "breakup",
@@ -185367,10 +185472,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2015-04-01",
-    "precision": "month",
-    "ref": "“Recent Breakup of a DMSP Satellite”, ODQN 19(2), April 2015, cited by NASA's history, p. 426",
-    "source": "hoosf-16e"
+    "on": "2015-02-27",
+    "precision": "day",
+    "ref": "Space.com, 2 March 2015: the command disclosed the loss on 27 February",
+    "source": "s4s-notice"
    }
   },
   {
@@ -186657,15 +186762,50 @@
       "precision": "month",
       "ref": "“Fragmentation of Fregat Upper Stage Debris”, ODQN 20(1), April 2016, cited by NASA's history, p. 540"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2015-08-04 23:05 UTC (https://x.com/S4S_SDA/status/628703420795326464)",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": 37756,
+      "designator": "2011-037B",
+      "name": "SL-23 DEB (Fregat tank)"
+     },
+     "event": {
+      "stated": "unknown objects identified near the parent by 4 August 2015",
+      "at": null,
+      "from": null,
+      "to": "2015-08-04T23:05Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"JSpOC has identified unknown objs near SL-23 DEB (#37756). #37756 status is unknown.\"",
+     "statedOn": {
+      "on": "2015-08-04",
+      "precision": "day",
+      "ref": "the post's own time, 2015-08-04T23:05:50Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/628703420795326464"
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-04-01",
-    "precision": "month",
-    "ref": "“Fragmentation of Fregat Upper Stage Debris”, ODQN 20(1), April 2016, cited by NASA's history, p. 540",
-    "source": "hoosf-16e"
+    "on": "2015-08-04",
+    "precision": "day",
+    "ref": "the post's own time, 2015-08-04T23:05:50Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -186832,6 +186972,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2015-11-25 18:41 UTC (https://x.com/S4S_SDA/status/669586782174908420)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 26536,
+      "designator": "2000-055A",
+      "name": "NOAA 16"
+     },
+     "event": {
+      "stated": "a possible breakup identified by 25 November 2015",
+      "at": null,
+      "from": null,
+      "to": "2015-11-25T18:41Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "\"there is no indication that a collision caused the NOAA 16 breakup\" (the center's post of 2015-11-26 01:31 UTC)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"The JSpOC has identified a possible breakup of NOAA 16 (#26536).\" Space.com (3 December 2015, https://www.space.com/31257-weather-satellite-breaks-up-in-space.html): the center \"said it first detected the breakup at 3:41 a.m. Eastern time\" (08:41 UTC on 25 November), the detection's time and not the event's.",
+     "statedOn": {
+      "on": "2015-11-25",
+      "precision": "day",
+      "ref": "the post's own time, 2015-11-25T18:41:43Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/669586782174908420"
+    },
+    {
      "source": "gcat",
      "ref": "entry 341 (00055)",
      "kind": "breakup",
@@ -186964,10 +187139,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-04-01",
-    "precision": "month",
-    "ref": "“Recent NOAA_16 Satellite Breakup”, ODQN 20(1), April 2016, cited by NASA's history, p. 466",
-    "source": "hoosf-16e"
+    "on": "2015-11-25",
+    "precision": "day",
+    "ref": "the post's own time, 2015-11-25T18:41:43Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -187436,6 +187611,76 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X of 20 January 2016, as reported by TASS on 2016-01-22 (https://tass.com/science/851400)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 41122,
+      "designator": "2015-075B",
+      "name": "Breeze-M R/B (Cosmos 2513)"
+     },
+     "event": {
+      "stated": "a \"possible breakup\" identified by 20 January 2016",
+      "at": null,
+      "from": null,
+      "to": "2016-01-21T00:00Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"The UN Air Force's Joint Space Operations Centre (JSpOC) tweeted on January 20 that it had identified a \"possible breakup\" of a Russian Breeze-M upper stage earlier in the day.\" (TASS's \"UN\" is the US.) SpaceNews of 2016-01-21 says the same. The post itself was not found.",
+     "statedOn": {
+      "on": "2016-01-20",
+      "precision": "day",
+      "ref": "TASS, 22 January 2016: the center posted on 20 January"
+     },
+     "url": "https://tass.com/science/851400"
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-01-21 16:52 UTC (https://x.com/S4S_SDA/status/690215289024176128)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 41122,
+      "designator": "2015-075B",
+      "name": "Breeze-M R/B (Cosmos 2513)"
+     },
+     "event": {
+      "stated": "16 Jan 2016, 3:50z +/- 4 mins",
+      "at": "2016-01-16T03:50Z",
+      "from": "2016-01-16T03:46Z",
+      "to": "2016-01-16T03:54Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Further analysis shows time of BREEZE-M R/B breakup: 16 Jan 2016, 3:50z +/- 4 mins #41122breakup\"",
+     "statedOn": {
+      "on": "2016-01-21",
+      "precision": "day",
+      "ref": "the post's own time, 2016-01-21T16:52:03Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/690215289024176128"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-01-16",
      "kind": null,
@@ -187584,14 +187829,30 @@
       "esa-ser"
      ],
      "detail": "hoosf-16e unknown against esa-ser propulsion"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2016 Jan 16 0650 against s4s-notice 16 Jan 2016, 3:50z +/- 4 mins"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "s4s-notice",
+      "gcat"
+     ],
+     "detail": "s4s-notice 16 Jan 2016, 3:50z +/- 4 mins against gcat 2016 Jan 16 0650"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-04-01",
-    "precision": "month",
-    "ref": "“Briz-M Core Stage Fragments Near Geosynchronous Orbit”, ODQN 20(1), April 2016, cited by NASA's history, p. 564",
-    "source": "hoosf-16e"
+    "on": "2016-01-20",
+    "precision": "day",
+    "ref": "TASS, 22 January 2016: the center posted on 20 January",
+    "source": "s4s-notice"
    }
   },
   {
@@ -187906,6 +188167,76 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-03-27 14:54 UTC (https://x.com/S4S_SDA/status/714103414225960960)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 41337,
+      "designator": "2016-012A",
+      "name": "ASTRO H (Hitomi)"
+     },
+     "event": {
+      "stated": "@~0820z, 26Mar",
+      "at": "2016-03-26T08:20Z",
+      "from": "2016-03-26T08:10Z",
+      "to": "2016-03-26T08:30Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Events not related.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"JSpOC ID’d 2 breakups: SL-12 R/B(33472) @~0145z, 27Mar–21 pieces. ASTRO H(41337) @~0820z, 26Mar–5 pieces. Events not related.\" The center's update of 28 March (next statement) gives 0820z as the confirmation's time, not the event's.",
+     "statedOn": {
+      "on": "2016-03-27",
+      "precision": "day",
+      "ref": "the post's own time, 2016-03-27T14:54:56Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/714103414225960960"
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-03-28 16:36 UTC (https://x.com/S4S_SDA/status/714491486671233024)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 41337,
+      "designator": "2016-012A",
+      "name": "ASTRO H (Hitomi)"
+     },
+     "event": {
+      "stated": "26Mar @ 0142z +/- 11mins",
+      "at": "2016-03-26T01:42Z",
+      "from": "2016-03-26T01:31Z",
+      "to": "2016-03-26T01:53Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Update: Analysis shows ASTRO H breakup occurred 26Mar @ 0142z +/- 11mins. JSpOC confirmed breakup @ 0820z.\"",
+     "statedOn": {
+      "on": "2016-03-28",
+      "precision": "day",
+      "ref": "the post's own time, 2016-03-28T16:36:59Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/714491486671233024"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-03-26",
      "kind": null,
@@ -188010,20 +188341,52 @@
      "detail": "hoosf-16e 26 Mar 2016, 0142 GMT against gcat 2016 Mar 26 0140"
     },
     {
+     "field": "event",
+     "sources": [
+      "hoosf-16e",
+      "s4s-notice"
+     ],
+     "detail": "hoosf-16e 26 Mar 2016, 0142 GMT against s4s-notice @~0820z, 26Mar"
+    },
+    {
      "field": "cause",
      "sources": [
       "hoosf-16e",
       "gcat"
      ],
      "detail": "hoosf-16e propulsion against gcat aerodynamic"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2016 Mar 26 0140 against s4s-notice @~0820z, 26Mar"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "s4s-notice",
+      "s4s-notice"
+     ],
+     "detail": "s4s-notice @~0820z, 26Mar against s4s-notice 26Mar @ 0142z +/- 11mins"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "s4s-notice",
+      "gcat"
+     ],
+     "detail": "s4s-notice @~0820z, 26Mar against gcat 2016 Mar 26 0140"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-10-01",
-    "precision": "month",
-    "ref": "“ASTRO-H Spacecraft Fragments During Payload Check-out Operations”, ODQN 20(4), October 2016, cited by NASA's history, p. 566",
-    "source": "hoosf-16e"
+    "on": "2016-03-27",
+    "precision": "day",
+    "ref": "the post's own time, 2016-03-27T14:54:56Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -188115,6 +188478,41 @@
       "precision": "month",
       "ref": "“Russian SOZ Unit Breakup Up in March”, ODQN 20(1), April 2016, cited by NASA's history, p. 520"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-03-27 14:54 UTC (https://x.com/S4S_SDA/status/714103414225960960)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 33472,
+      "designator": "2008-067G",
+      "name": "SL-12 R/B (Cosmos 2447-2449 ullage motor)"
+     },
+     "event": {
+      "stated": "@~0145z, 27Mar",
+      "at": "2016-03-27T01:45Z",
+      "from": "2016-03-27T01:35Z",
+      "to": "2016-03-27T01:55Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Events not related.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"JSpOC ID’d 2 breakups: SL-12 R/B(33472) @~0145z, 27Mar–21 pieces. ASTRO H(41337) @~0820z, 26Mar–5 pieces.\" 21 pieces tracked.",
+     "statedOn": {
+      "on": "2016-03-27",
+      "precision": "day",
+      "ref": "the post's own time, 2016-03-27T14:54:56Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/714103414225960960"
     },
     {
      "source": "esa-ser",
@@ -188211,13 +188609,46 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "event",
+     "sources": [
+      "hoosf-16e",
+      "s4s-notice"
+     ],
+     "detail": "hoosf-16e 26 Mar 2016, 1212 GMT against s4s-notice @~0145z, 27Mar"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2016 Mar 26 1212 against s4s-notice @~0145z, 27Mar"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "s4s-notice",
+      "gcat"
+     ],
+     "detail": "s4s-notice @~0145z, 27Mar against gcat 2016 Mar 26 1212"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "s4s-notice",
+      "esa-ser"
+     ],
+     "detail": "s4s-notice @~0145z, 27Mar against esa-ser 2016-03-26"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-04-01",
-    "precision": "month",
-    "ref": "“Russian SOZ Unit Breakup Up in March”, ODQN 20(1), April 2016, cited by NASA's history, p. 520",
-    "source": "hoosf-16e"
+    "on": "2016-03-27",
+    "precision": "day",
+    "ref": "the post's own time, 2016-03-27T14:54:56Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -188565,6 +188996,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-06-01 23:58 UTC (https://x.com/S4S_SDA/status/738157819556298754)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 33473,
+      "designator": "2008-067H",
+      "name": "SL-12 R/B (Cosmos 2447-2449 ullage motor)"
+     },
+     "event": {
+      "stated": "@ 0920-0930z on 1Jun16",
+      "at": null,
+      "from": "2016-06-01T09:20Z",
+      "to": "2016-06-01T09:30Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication of collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Breakup Notification: SL-12 R/B (#33473) @ 0920-0930z on 1Jun16. 20+ associated pieces. No indication of collision.\"",
+     "statedOn": {
+      "on": "2016-06-01",
+      "precision": "day",
+      "ref": "the post's own time, 2016-06-01T23:58:33Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/738157819556298754"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-06-02",
      "kind": null,
@@ -188675,14 +189141,22 @@
       "esa-ser"
      ],
      "detail": "gcat 2016 Jun 1 0925? against esa-ser 2016-06-02"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "s4s-notice",
+      "esa-ser"
+     ],
+     "detail": "s4s-notice @ 0920-0930z on 1Jun16 against esa-ser 2016-06-02"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-07-01",
-    "precision": "month",
-    "ref": "“Two Additional Russian Breakups in 2016”, ODQN 20(3), July 2016, cited by NASA's history, p. 522",
-    "source": "hoosf-16e"
+    "on": "2016-06-01",
+    "precision": "day",
+    "ref": "the post's own time, 2016-06-01T23:58:33Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -188931,6 +189405,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-07-19 20:53 UTC (https://x.com/S4S_SDA/status/755505904770883584)",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": 35946,
+      "designator": "2009-055A",
+      "name": "WorldView-2"
+     },
+     "event": {
+      "stated": "19 Jul (2016)",
+      "at": null,
+      "from": "2016-07-19T00:00Z",
+      "to": "2016-07-20T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"19 Jul: JSpOC ID’d debris causing event related to @DigitalGlobe WorldView-2; 8 debris pieces but WV2 confirmed operational & maneuverable!\"",
+     "statedOn": {
+      "on": "2016-07-19",
+      "precision": "day",
+      "ref": "the post's own time, 2016-07-19T20:53:38Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/755505904770883584"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-07-18",
      "kind": null,
@@ -189093,14 +189602,30 @@
       "catalogue"
      ],
      "detail": "hoosf-16e anomalous against catalogue breakup"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2016 Jul 18 2252? against s4s-notice 19 Jul (2016)"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "s4s-notice",
+      "gcat"
+     ],
+     "detail": "s4s-notice 19 Jul (2016) against gcat 2016 Jul 18 2252?"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-10-01",
-    "precision": "month",
-    "ref": "“WorldView 2 Spacecraft Fragments in July 2016”, ODQN 20(4), October 2016, cited by NASA's history, p. 670",
-    "source": "hoosf-16e"
+    "on": "2016-07-19",
+    "precision": "day",
+    "ref": "the post's own time, 2016-07-19T20:53:38Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -189276,6 +189801,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-07-29 01:12 UTC (https://x.com/S4S_SDA/status/758832554187235328)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 29680,
+      "designator": "2006-062G",
+      "name": "SL-12 R/B (Cosmos 2424-2426 ullage motor)"
+     },
+     "event": {
+      "stated": "27Jul16",
+      "at": null,
+      "from": "2016-07-27T00:00Z",
+      "to": "2016-07-28T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication of collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Another SL-12 R/B breakup! #29680 on 27Jul16. 6 pieces as of 2000z 28Jul16. No indication of collision.\"",
+     "statedOn": {
+      "on": "2016-07-29",
+      "precision": "day",
+      "ref": "the post's own time, 2016-07-29T01:12:34Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/758832554187235328"
+    },
+    {
      "source": "gcat",
      "ref": "entry 352 (06062G)",
      "kind": "breakup",
@@ -189369,10 +189929,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2016-10-01",
-    "precision": "month",
-    "ref": "“New SOZ Breakup in July 2016”, ODQN 20(4), October 2016, cited by NASA's history, p. 498",
-    "source": "hoosf-16e"
+    "on": "2016-07-29",
+    "precision": "day",
+    "ref": "the post's own time, 2016-07-29T01:12:34Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -189640,6 +190200,41 @@
      "statedOn": null
     },
     {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-09-08 02:07 UTC (https://x.com/S4S_SDA/status/773704274425450496)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 39634,
+      "designator": "2014-016A",
+      "name": "Sentinel 1A"
+     },
+     "event": {
+      "stated": "23 Aug (2016), as identified by ESA",
+      "at": null,
+      "from": "2016-08-23T00:00Z",
+      "to": "2016-08-24T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "a small particle impact",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"JSpOC tracking 5 small debris due to Sentinel 1A small particle impact, as ID’d by @ESA on 23 Aug.\"",
+     "statedOn": {
+      "on": "2016-09-08",
+      "precision": "day",
+      "ref": "the post's own time, 2016-09-08T02:07:28Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/773704274425450496"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-08-23",
      "kind": null,
@@ -189767,10 +190362,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2017-04-27",
+    "on": "2016-09-08",
     "precision": "day",
-    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
-    "source": "esa-ser"
+    "ref": "the post's own time, 2016-09-08T02:07:28Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -189844,6 +190439,41 @@
       "precision": "month",
       "ref": "“Indian RISAT-1 Spacecraft Experiences Possible Fragmentation”, ODQN 20(4), October 2016, cited by NASA's history, p. 672"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-10-05 23:33 UTC (https://x.com/S4S_SDA/status/783812350860140544)",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": 38248,
+      "designator": "2012-017A",
+      "name": "RISAT-1"
+     },
+     "event": {
+      "stated": "Sep 30 (2016)",
+      "at": null,
+      "from": "2016-09-30T00:00Z",
+      "to": "2016-10-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Debris-causing event ID'd near RISAT-1(#38248) on Sep 30: 16 pieces, 15 decayed. Will catalog last piece on Oct 6. No known collision risk.\"",
+     "statedOn": {
+      "on": "2016-10-05",
+      "precision": "day",
+      "ref": "the post's own time, 2016-10-05T23:33:21Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/783812350860140544"
     },
     {
      "source": "esa-ser",
@@ -190043,7 +190673,7 @@
    },
    "kind": "anomalous",
    "event": {
-    "stated": "2016 Oct 23 1549",
+    "stated": "@1549z, 23Oct",
     "at": "2016-10-23T15:49Z",
     "from": "2016-10-23T15:49Z",
     "to": "2016-10-23T15:49Z",
@@ -190058,11 +190688,11 @@
    },
    "cause": "battery",
    "piecesCatalogued": 5,
-   "confidence": "B",
+   "confidence": "A",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "gcat",
+    "event": "s4s-notice",
     "orbit": "hoosf-16e",
     "cause": "esa-ser",
     "pieces": "gcat",
@@ -190098,6 +190728,41 @@
      "preEventElements": null,
      "note": "Known events: 1. Type: Payload; owner: US; launched 29 Aug. 1994.",
      "statedOn": null
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The Joint Space Operations Center's post on X (the account now named @S4S_SDA), 2016-10-24 19:32 UTC (https://x.com/S4S_SDA/status/790637056124936192)",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": 23233,
+      "designator": "1994-057A",
+      "name": "DMSP 5D-2 F12"
+     },
+     "event": {
+      "stated": "@1549z, 23Oct",
+      "at": "2016-10-23T15:49Z",
+      "from": "2016-10-23T15:49Z",
+      "to": "2016-10-23T15:49Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "\"Cause unknown.\"",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"JSpOC ID’d debris event near DMSP 5D-2 F12 (23233) @1549z, 23Oct. 1 piece, which is now in routine conjunction analysis. Cause unknown.\"",
+     "statedOn": {
+      "on": "2016-10-24",
+      "precision": "day",
+      "ref": "the post's own time, 2016-10-24T19:32:18Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/790637056124936192"
     },
     {
      "source": "esa-ser",
@@ -190197,10 +190862,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2017-04-27",
+    "on": "2016-10-24",
     "precision": "day",
-    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
-    "source": "esa-ser"
+    "ref": "the post's own time, 2016-10-24T19:32:18Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -193456,6 +194121,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2018-02-14 04:23 UTC (https://x.com/S4S_SDA/status/963629809921351680)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43089,
+      "designator": "2017-086C",
+      "name": "Fregat DEB (tank)"
+     },
+     "event": {
+      "stated": "12Feb btwn 0955-0959z",
+      "at": null,
+      "from": "2018-02-12T09:55Z",
+      "to": "2018-02-12T09:59Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "\"Cause unknown at this time.\"",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"18 SPCS confirms breakup of FREGAT DEB (#43089, 2017-086C) on 12Feb btwn 0955-0959z. 25+ pieces. Cause unknown at this time.\"",
+     "statedOn": {
+      "on": "2018-02-14",
+      "precision": "day",
+      "ref": "the post's own time, 2018-02-14T04:23:44Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/963629809921351680"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-02-12",
      "kind": null,
@@ -193578,10 +194278,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2018-05-01",
-    "precision": "month",
-    "ref": "“Fragmentation of Fregat-SB Upper Stage Debris”, ODQN 22(2), May 2018, cited by NASA's history, p. 568",
-    "source": "hoosf-16e"
+    "on": "2018-02-14",
+    "precision": "day",
+    "ref": "the post's own time, 2018-02-14T04:23:44Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -193748,6 +194448,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2018-03-21 21:24 UTC (https://x.com/S4S_SDA/status/976570290271432705)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 3692,
+      "designator": "1969-013B",
+      "name": "Titan 3C Transtage"
+     },
+     "event": {
+      "stated": "28Feb @ 2100z",
+      "at": "2018-02-28T21:00Z",
+      "from": "2018-02-28T21:00Z",
+      "to": "2018-02-28T21:00Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed breakup of Titan 3C #3692 in #GEO on 28Feb @ 2100z - 3 pieces being tracked\"",
+     "statedOn": {
+      "on": "2018-03-21",
+      "precision": "day",
+      "ref": "the post's own time, 2018-03-21T21:24:35Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/976570290271432705"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-02-28",
      "kind": null,
@@ -193880,14 +194615,22 @@
       "gcat"
      ],
      "detail": "hoosf-16e 28 Feb 2018, 2101 GMT against gcat 2018 Feb 28 2100"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "hoosf-16e",
+      "s4s-notice"
+     ],
+     "detail": "hoosf-16e 28 Feb 2018, 2101 GMT against s4s-notice 28Feb @ 2100z"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2018-05-01",
-    "precision": "month",
-    "ref": "“Fragmentation of Titan Transtage in GEO”, ODQN 22(2), May 2018, cited by NASA's history, p. 96",
-    "source": "hoosf-16e"
+    "on": "2018-03-21",
+    "precision": "day",
+    "ref": "the post's own time, 2018-03-21T21:24:35Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -194273,6 +195016,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2018-05-22 20:44 UTC (https://x.com/S4S_SDA/status/999028332229312513)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 36407,
+      "designator": "2010-007H",
+      "name": "SL-12 R/B (AUX MOTOR) (Cosmos 2459-2461 ullage motor)"
+     },
+     "event": {
+      "stated": "22 May @ 0206z",
+      "at": "2018-05-22T02:06Z",
+      "from": "2018-05-22T02:06Z",
+      "to": "2018-05-22T02:06Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication it was caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed breakup of SL-12 R/B (AUX MOTOR) #36407 on 22 May @ 0206z - 60 pieces being tracked - no indication it was caused by collision\"",
+     "statedOn": {
+      "on": "2018-05-22",
+      "precision": "day",
+      "ref": "the post's own time, 2018-05-22T20:44:50Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/999028332229312513"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-05-22",
      "kind": null,
@@ -194400,10 +195178,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2018-09-01",
-    "precision": "month",
-    "ref": "“A SOZ Unit Breakup Predicted and Observed in May 2018”, ODQN 22(3), September 2018, cited by NASA's history, p. 530",
-    "source": "hoosf-16e"
+    "on": "2018-05-22",
+    "precision": "day",
+    "ref": "the post's own time, 2018-05-22T20:44:50Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -195698,6 +196476,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2019-01-01 18:00 UTC (https://x.com/S4S_SDA/status/1080161833837780998)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 25417,
+      "designator": "1998-046E",
+      "name": "Orbcomm FM 16"
+     },
+     "event": {
+      "stated": "22 Dec @ 0712 UTC",
+      "at": "2018-12-22T07:12Z",
+      "from": "2018-12-22T07:12Z",
+      "to": "2018-12-22T07:12Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed breakup of ORBCOMM OG1 sat FM 16, #25417, on 22 Dec @ 0712 UTC - tracking 34 pieces - no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2019-01-01",
+      "precision": "day",
+      "ref": "the post's own time, 2019-01-01T18:00:24Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1080161833837780998"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-12-22",
      "kind": null,
@@ -195838,14 +196651,30 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat battery"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2018 Dec 22 0513 against s4s-notice 22 Dec @ 0712 UTC"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "s4s-notice",
+      "gcat"
+     ],
+     "detail": "s4s-notice 22 Dec @ 0712 UTC against gcat 2018 Dec 22 0513"
     }
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2019-04-30",
+    "on": "2019-01-01",
     "precision": "day",
-    "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019",
-    "source": "esa-ser"
+    "ref": "the post's own time, 2019-01-01T18:00:24Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -196478,6 +197307,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "Air Force Space Command's vice commander, Lt. Gen. David Thompson, to a Senate Armed Services subcommittee on 27 March 2019, as reported by Spaceflight Now on 2019-03-27 (https://spaceflightnow.com/2019/03/27/u-s-military-sensors-track-debris-from-indian-anti-satellite-test/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43947,
+      "designator": "2019-006A",
+      "name": "Microsat-R"
+     },
+     "event": {
+      "stated": "Wednesday, 27 March 2019 (the article: the missile launched at 0539 GMT)",
+      "at": null,
+      "from": "2019-03-27T00:00Z",
+      "to": "2019-03-28T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "India's anti-satellite test (the article)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"Immediately after the test struck the target vehicle, the Joint Space Operations Center and the Air Force’s 18th Space Control Squadron began collecting information about the break-up of the vehicle ... Currently, they are tracking about 270 different objects in the debris field.\" \"We do know that altitude at which it occurred, and we immediately started providing public notice on our Space Track website.\" India announced the test the same day.",
+     "statedOn": {
+      "on": "2019-03-27",
+      "precision": "day",
+      "ref": "Spaceflight Now, 27 March 2019: the general spoke at a hearing that afternoon"
+     },
+     "url": "https://spaceflightnow.com/2019/03/27/u-s-military-sensors-track-debris-from-indian-anti-satellite-test/"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-03-27",
      "kind": null,
@@ -196630,10 +197494,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2019-08-01",
-    "precision": "month",
-    "ref": "“Two Breakup Events Reported”, ODQN 23(3), August 2019, cited by NASA's history, p. 574",
-    "source": "hoosf-16e"
+    "on": "2019-03-27",
+    "precision": "day",
+    "ref": "Spaceflight Now, 27 March 2019: the general spoke at a hearing that afternoon",
+    "source": "s4s-notice"
    }
   },
   {
@@ -196855,6 +197719,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2019-04-24 22:49 UTC (https://x.com/S4S_SDA/status/1121184362559496192)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43652,
+      "designator": "2018-079B",
+      "name": "Atlas 5 Centaur R/B (USA 288)"
+     },
+     "event": {
+      "stated": "April 6, 2019",
+      "at": null,
+      "from": "2019-04-06T00:00Z",
+      "to": "2019-04-07T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed breakup of ATLAS 5 CENTAUR R/B (2018-079B, #43652) on April 6, 2019. Tracking 14 associated pieces – no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2019-04-24",
+      "precision": "day",
+      "ref": "the post's own time, 2019-04-24T22:49:17Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1121184362559496192"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-04-06",
      "kind": null,
@@ -197059,10 +197958,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2019-08-01",
-    "precision": "month",
-    "ref": "“Two Breakup Events Reported”, ODQN 23(3), August 2019, cited by NASA's history, p. 570",
-    "source": "hoosf-16e"
+    "on": "2019-04-24",
+    "precision": "day",
+    "ref": "the post's own time, 2019-04-24T22:49:17Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -198064,6 +198963,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2019-08-14 20:44 UTC (https://x.com/S4S_SDA/status/1161740449029115904)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 22079,
+      "designator": "1992-052D",
+      "name": "Ariane 42P R/B (TOPEX/Poseidon)"
+     },
+     "event": {
+      "stated": "July 22, 2019, @ appx 0917 UTC",
+      "at": "2019-07-22T09:17Z",
+      "from": "2019-07-22T09:07Z",
+      "to": "2019-07-22T09:27Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed that the breakup of ARIANE 42P R/B (SCC# 22079) occurred on July 22, 2019, @ appx 0917 UTC. Tracking 7 associated pieces - no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2019-08-14",
+      "precision": "day",
+      "ref": "the post's own time, 2019-08-14T20:44:41Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1161740449029115904"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-07-22",
      "kind": null,
@@ -198206,6 +199140,14 @@
      "detail": "hoosf-16e unknown against gcat propulsion"
     },
     {
+     "field": "event",
+     "sources": [
+      "hoosf-16e",
+      "s4s-notice"
+     ],
+     "detail": "hoosf-16e 22 July 2019, 1902 Z against s4s-notice July 22, 2019, @ appx 0917 UTC"
+    },
+    {
      "field": "cause",
      "sources": [
       "hoosf-16e",
@@ -198216,10 +199158,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2019-11-01",
-    "precision": "month",
-    "ref": "“Three Recent Rocket Body Breakups”, ODQN 23(4), November 2019, cited by NASA's history, p. 388",
-    "source": "hoosf-16e"
+    "on": "2019-08-14",
+    "precision": "day",
+    "ref": "the post's own time, 2019-08-14T20:44:41Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -201584,6 +202526,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2020-02-14 20:11 UTC (https://x.com/S4S_SDA/status/1228411398100639745)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 21656,
+      "designator": "1991-056B",
+      "name": "SL-14 R/B (Meteor 3-5)"
+     },
+     "event": {
+      "stated": "Feb 12, 2020, @ 1046 UTC",
+      "at": "2020-02-12T10:46Z",
+      "from": "2020-02-12T10:46Z",
+      "to": "2020-02-12T10:46Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed that the breakup of SL-14 R/B (#21656, 1991-056B) occurred on Feb 12, 2020, @ 1046 UTC. Tracking 75 associated pieces - no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2020-02-14",
+      "precision": "day",
+      "ref": "the post's own time, 2020-02-14T20:11:14Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1228411398100639745"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-02-12",
      "kind": null,
@@ -201711,10 +202688,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2020-04-01",
-    "precision": "month",
-    "ref": "“Three Recent Breakup Events”, ODQN 24(2), April 2020, cited by NASA's history, p. 370",
-    "source": "hoosf-16e"
+    "on": "2020-02-14",
+    "precision": "day",
+    "ref": "the post's own time, 2020-02-14T20:11:14Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -202100,6 +203077,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2020-05-09 19:14 UTC (https://x.com/S4S_SDA/status/1259200117296386055)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 37756,
+      "designator": "2011-037B",
+      "name": "Fregat DEB (tank)"
+     },
+     "event": {
+      "stated": "May 8, 2020, between 0402 and 0551 UTC",
+      "at": null,
+      "from": "2020-05-08T04:02Z",
+      "to": "2020-05-08T05:51Z",
+      "precision": "hour"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS confirmed that the breakup of FREGAT DEB (TANK) (#37756, 2011-037B) occurred on May 8, 2020, between 0402 and 0551 UTC. Tracking 65 associated pieces – no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2020-05-09",
+      "precision": "day",
+      "ref": "the post's own time, 2020-05-09T19:14:37Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1259200117296386055"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-05-08",
      "kind": null,
@@ -202244,10 +203256,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2020-08-01",
-    "precision": "month",
-    "ref": "“Second Fragmentation of Fregat Upper Stage Debris”, ODQN 24(3), August 2020, cited by NASA's history, p. 540",
-    "source": "hoosf-16e"
+    "on": "2020-05-09",
+    "precision": "day",
+    "ref": "the post's own time, 2020-05-09T19:14:37Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -202642,6 +203654,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2020-07-14 15:00 UTC (https://x.com/S4S_SDA/status/1283053867089920000)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43673,
+      "designator": "2018-084C",
+      "name": "H-2A DEB (GOSAT 2)"
+     },
+     "event": {
+      "stated": "July 12, 2020, at 0844 UTC",
+      "at": "2020-07-12T08:44Z",
+      "from": "2020-07-12T08:44Z",
+      "to": "2020-07-12T08:44Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS has confirmed the breakup of H-2A DEB (#43673, 2018-084C) on July 12, 2020, at 0844 UTC. Tracking 53 associated pieces – no indication caused by collision.\"",
+     "statedOn": {
+      "on": "2020-07-14",
+      "precision": "day",
+      "ref": "the post's own time, 2020-07-14T15:00:54Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1283053867089920000"
+    },
+    {
      "source": "gcat",
      "ref": "entry 379 (18084C)",
      "kind": "breakup",
@@ -202742,6 +203789,14 @@
      "detail": "hoosf-16e 12 July 2020, 1000 GMT against gcat 2020 Jul 12 0844"
     },
     {
+     "field": "event",
+     "sources": [
+      "hoosf-16e",
+      "s4s-notice"
+     ],
+     "detail": "hoosf-16e 12 July 2020, 1000 GMT against s4s-notice July 12, 2020, at 0844 UTC"
+    },
+    {
      "field": "cause",
      "sources": [
       "hoosf-16e",
@@ -202752,10 +203807,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2020-11-01",
-    "precision": "month",
-    "ref": "“Two New Breakups with One Resulting in an ISS Maneuver”, ODQN 24(4), November 2020, cited by NASA's history, p. 572",
-    "source": "hoosf-16e"
+    "on": "2020-07-14",
+    "precision": "day",
+    "ref": "the post's own time, 2020-07-14T15:00:54Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -203696,6 +204751,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2021-03-19 00:05 UTC (https://x.com/S4S_SDA/status/1372700633795547139)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 27453,
+      "designator": "2002-032A",
+      "name": "NOAA 17"
+     },
+     "event": {
+      "stated": "March 10, 2021, at 0711 UTC",
+      "at": "2021-03-10T07:11Z",
+      "from": "2021-03-10T07:11Z",
+      "to": "2021-03-10T07:11Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "no indication caused by collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS has confirmed the breakup of NOAA 17 (#27453, 2002-06-24) on March 10, 2021, at 0711 UTC. NOAA 17 was decommissioned in 2013. Tracking 16 associated pieces – no indication caused by collision.\" The post's 2002-06-24 is the launch day, not the designator.",
+     "statedOn": {
+      "on": "2021-03-19",
+      "precision": "day",
+      "ref": "the post's own time, 2021-03-19T00:05:09Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1372700633795547139"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-03-10",
      "kind": null,
@@ -203840,10 +204930,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2021-06-01",
-    "precision": "month",
-    "ref": "“Two On-orbit Breakup Events in March”, ODQN 25(2), June 2021, cited by NASA's history, p. 472",
-    "source": "hoosf-16e"
+    "on": "2021-03-19",
+    "precision": "day",
+    "ref": "the post's own time, 2021-03-19T00:05:09Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -203935,6 +205025,41 @@
       "precision": "month",
       "ref": "“Two On-orbit Breakup Events in March”, ODQN 25(2), June 2021, cited by NASA's history, p. 578"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2021-03-22 18:36 UTC (https://x.com/S4S_SDA/status/1374067474111500290)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 44547,
+      "designator": "2019-063A",
+      "name": "Yunhai 1-02"
+     },
+     "event": {
+      "stated": "March 18, 2021, at 0741 UTC",
+      "at": "2021-03-18T07:41Z",
+      "from": "2021-03-18T07:41Z",
+      "to": "2021-03-18T07:41Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis is ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS has confirmed the  breakup of YUNHAI 1-02 (#44547, 2019-063A), which occurred on March 18, 2021, at 0741 UTC. Tracking 21 associated pieces – analysis is ongoing.\"",
+     "statedOn": {
+      "on": "2021-03-22",
+      "precision": "day",
+      "ref": "the post's own time, 2021-03-22T18:36:29Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1374067474111500290"
     },
     {
      "source": "esa-ser",
@@ -204081,10 +205206,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2021-06-01",
-    "precision": "month",
-    "ref": "“Two On-orbit Breakup Events in March”, ODQN 25(2), June 2021, cited by NASA's history, p. 578",
-    "source": "hoosf-16e"
+    "on": "2021-03-22",
+    "precision": "day",
+    "ref": "the post's own time, 2021-03-22T18:36:29Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -205590,6 +206715,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Control Squadron's post on X (the account now named @S4S_SDA), 2021-11-15 23:24 UTC (https://x.com/S4S_SDA/status/1460388384078139399)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 13552,
+      "designator": "1982-092A",
+      "name": "Cosmos 1408"
+     },
+     "event": {
+      "stated": "NOV 15, 2021",
+      "at": null,
+      "from": "2021-11-15T00:00Z",
+      "to": "2021-11-16T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated in the post; U.S. Space Command's statement of the same day names Russia's direct-ascent anti-satellite test",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SPCS has confirmed the breakup of COSMOS-1408 (INTLDES 1982-092A, SCC 13552), which occurred on NOV 15, 2021.  Tracking 1,500 possible associated pieces – analysis is ongoing.\" U.S. Space Command said it was \"aware of a debris-generating event in outer space\" earlier the same day (Fox News, 15 November 2021, 2:08pm EST, https://www.foxnews.com/us/space-command-russia-shoots-down-satellite-in-debris-generating-event).",
+     "statedOn": {
+      "on": "2021-11-15",
+      "precision": "day",
+      "ref": "the post's own time, 2021-11-15T23:24:58Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1460388384078139399"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-11-15",
      "kind": null,
@@ -205742,10 +206902,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2022-03-01",
-    "precision": "month",
-    "ref": "“The Intentional Destruction of Cosmos 1408”, ODQN 26(1), March 2022, cited by NASA's history, p. 228",
-    "source": "hoosf-16e"
+    "on": "2021-11-15",
+    "precision": "day",
+    "ref": "the post's own time, 2021-11-15T23:24:58Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -207004,6 +208164,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Defense Squadron's post on X (the account now named @S4S_SDA), 2022-05-03 15:56 UTC (https://x.com/S4S_SDA/status/1521519056578224130)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 32398,
+      "designator": "2007-065F",
+      "name": "SL-12 R/B (Cosmos 2434-2436 ullage motor)"
+     },
+     "event": {
+      "stated": "April 15, 2022",
+      "at": null,
+      "from": "2022-04-15T00:00Z",
+      "to": "2022-04-16T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SDS has confirmed the breakup of SL-12 R/B (#32398, 2007-065F), which occurred April 15, 2022. Tracking 16 associated pieces – analysis ongoing.\"",
+     "statedOn": {
+      "on": "2022-05-03",
+      "precision": "day",
+      "ref": "the post's own time, 2022-05-03T15:56:26Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1521519056578224130"
+    },
+    {
      "source": "gcat",
      "ref": "entry 389 (07065F)",
      "kind": "breakup",
@@ -207067,10 +208262,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2022-06-01",
-    "precision": "month",
-    "ref": "“Recent Fragmentation of an Ullage Motor”, ODQN 26(2), June 2022, cited by NASA's history, p. 512",
-    "source": "hoosf-16e"
+    "on": "2022-05-03",
+    "precision": "day",
+    "ref": "the post's own time, 2022-05-03T15:56:26Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -207661,6 +208856,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Defense Squadron's post on X (the account now named @S4S_SDA), 2022-07-15 23:16 UTC (https://x.com/S4S_SDA/status/1548084056532742144)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43674,
+      "designator": "2018-084D",
+      "name": "H-IIA PES fairing cover (GOSAT 2)"
+     },
+     "event": {
+      "stated": "July 3, 2022",
+      "at": null,
+      "from": "2022-07-03T00:00Z",
+      "to": "2022-07-04T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SDS has confirmed the breakup of H2-A DEB (#43674, 2018-084D) which occurred on July 3, 2022. Tracking 23 associated pieces & incorporating them into routine conjunction assessment to support spaceflight safety.\"",
+     "statedOn": {
+      "on": "2022-07-15",
+      "precision": "day",
+      "ref": "the post's own time, 2022-07-15T23:16:15Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1548084056532742144"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 7.1, 12 September 2023 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2022, p. 64, row 2022-07-03",
      "kind": null,
@@ -207805,10 +209035,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2022-09-01",
-    "precision": "month",
-    "ref": "ODQN 26(3), September 2022, p. 2",
-    "source": "odqn"
+    "on": "2022-07-15",
+    "precision": "day",
+    "ref": "the post's own time, 2022-07-15T23:16:15Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -208324,6 +209554,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Defense Squadron's post on X (the account now named @S4S_SDA), 2022-11-13 01:02 UTC (https://x.com/S4S_SDA/status/1591597224081108992)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 54236,
+      "designator": "2022-151B",
+      "name": "CZ-6A R/B (Yunhai 3)"
+     },
+     "event": {
+      "stated": "likely occurred Nov 12 @~0525 UTC",
+      "at": "2022-11-12T05:25Z",
+      "from": "2022-11-12T05:15Z",
+      "to": "2022-11-12T05:35Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SDS confirmed breakup assoc w/ CZ-6A R/B (#54236, 2022-151B) -  likely occurred Nov 12 @~0525 UTC. Tracking 50+ associated pieces @ est. 500-700km altitude & incorporating into routine conjunction assessment to support spaceflight safety.\"",
+     "statedOn": {
+      "on": "2022-11-13",
+      "precision": "day",
+      "ref": "the post's own time, 2022-11-13T01:02:03Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1591597224081108992"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 7.1, 12 September 2023 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2022, p. 64, row 2022-11-12",
      "kind": null,
@@ -208451,10 +209716,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2023-03-01",
-    "precision": "month",
-    "ref": "ODQN 27(1), March 2023, pp. 1-2; ODQN 28(4), October 2024, p. 2",
-    "source": "odqn"
+    "on": "2022-11-13",
+    "precision": "day",
+    "ref": "the post's own time, 2022-11-13T01:02:03Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -208682,7 +209947,7 @@
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 620,
     "apogeeKm": 633,
     "perigeeKm": 609,
     "inclinationDeg": 98.2,
@@ -208695,7 +209960,7 @@
    "exemptReason": null,
    "resolvedFrom": {
     "event": "odqn",
-    "orbit": "odqn",
+    "orbit": "s4s-notice",
     "cause": "odqn",
     "pieces": "gcat",
     "kind": "odqn"
@@ -208734,6 +209999,41 @@
       "precision": "month",
       "ref": "ODQN 27(1), March 2023, p. 2"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Defense Squadron's post on X (the account now named @S4S_SDA), 2022-11-23 17:55 UTC (https://x.com/S4S_SDA/status/1595476174267891712)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 38345,
+      "designator": "2012-025F",
+      "name": "H-2A DEB (GCOM-W1 lower fairing panel)"
+     },
+     "event": {
+      "stated": "Nov 17 @2335 UTC",
+      "at": "2022-11-17T23:35Z",
+      "from": "2022-11-17T23:35Z",
+      "to": "2022-11-17T23:35Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 620,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Analysis ongoing.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SDS confirms breakup of H-2A DEB (#38345, 2012-025F) on Nov 17 @2335 UTC. Tracking 50+ associated pieces @ est. 620km altitude & incorporating them into routine conjunction assessment to support spaceflight safety. Analysis ongoing.\"",
+     "statedOn": {
+      "on": "2022-11-23",
+      "precision": "day",
+      "ref": "the post's own time, 2022-11-23T17:55:37Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1595476174267891712"
     },
     {
      "source": "gcat",
@@ -208799,10 +210099,10 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2023-03-01",
-    "precision": "month",
-    "ref": "ODQN 27(1), March 2023, p. 2",
-    "source": "odqn"
+    "on": "2022-11-23",
+    "precision": "day",
+    "ref": "the post's own time, 2022-11-23T17:55:37Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -209296,7 +210596,7 @@
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 1169,
     "apogeeKm": 1537,
     "perigeeKm": 1163,
     "inclinationDeg": 82.45,
@@ -209309,7 +210609,7 @@
    "exemptReason": null,
    "resolvedFrom": {
     "event": "odqn",
-    "orbit": "odqn",
+    "orbit": "s4s-notice",
     "cause": "odqn",
     "pieces": "odqn",
     "kind": "odqn"
@@ -209348,6 +210648,41 @@
       "precision": "month",
       "ref": "ODQN 27(2), June 2023, p. 1"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "The 18th Space Defense Squadron's post on X (the account now named @S4S_SDA), 2023-02-07 00:20 UTC (https://x.com/S4S_SDA/status/1622752004388032512)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 39765,
+      "designator": "2014-028E",
+      "name": "Cosmos 2499 (second event)"
+     },
+     "event": {
+      "stated": "Jan 4, 2023 at appx 0357 UTC",
+      "at": "2023-01-04T03:57Z",
+      "from": "2023-01-04T03:47Z",
+      "to": "2023-01-04T04:07Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 1169,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#18SDS has confirmed the breakup of COSMOS 2499 (#39765, 2014-028E) - occurred Jan 4, 2023 at appx 0357 UTC. Tracking 85 associated pieces at est 1169 km altitude - analysis ongoing.\"",
+     "statedOn": {
+      "on": "2023-02-07",
+      "precision": "day",
+      "ref": "the post's own time, 2023-02-07T00:20:01Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1622752004388032512"
     },
     {
      "source": "esa-ser",
@@ -209456,10 +210791,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2023-06-01",
-    "precision": "month",
-    "ref": "ODQN 27(2), June 2023, p. 1",
-    "source": "odqn"
+    "on": "2023-02-07",
+    "precision": "day",
+    "ref": "the post's own time, 2023-02-07T00:20:01Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -209951,14 +211286,14 @@
    },
    "kind": "breakup",
    "event": {
-    "stated": "2023 Mar 11 0145",
+    "stated": "March 11, 2023, at approximately 0145 UTC",
     "at": "2023-03-11T01:45Z",
-    "from": "2023-03-11T01:45Z",
-    "to": "2023-03-11T01:45Z",
+    "from": "2023-03-11T01:35Z",
+    "to": "2023-03-11T01:55Z",
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 792,
     "apogeeKm": 793,
     "perigeeKm": 776,
     "inclinationDeg": 45,
@@ -209966,12 +211301,12 @@
    },
    "cause": "unknown",
    "piecesCatalogued": 9,
-   "confidence": "B",
+   "confidence": "A",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "gcat",
-    "orbit": "odqn",
+    "event": "s4s-notice",
+    "orbit": "s4s-notice",
     "cause": "odqn",
     "pieces": "gcat",
     "kind": "odqn"
@@ -210010,6 +211345,41 @@
       "precision": "month",
       "ref": "ODQN 27(2), June 2023, p. 2"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "18th Space Defense Squadron announcement on Space-Track's login page, seen 2023-03-17 as relayed to the SeeSat-L list on 2023-03-17 08:14 -0400 (https://www.satobs.org/seesat/Mar-2023/0088.html) and by @OrbitalFocus on X at 11:34 UTC (https://x.com/OrbitalFocus/status/1636692364914819076)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 25984,
+      "designator": "1999-065E",
+      "name": "Orbcomm FM 36"
+     },
+     "event": {
+      "stated": "March 11, 2023, at approximately 0145 UTC",
+      "at": "2023-03-11T01:45Z",
+      "from": "2023-03-11T01:35Z",
+      "to": "2023-03-11T01:55Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 792,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Analysis is ongoing.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"The 18th Space Defense Squadron (18 SDS) has confirmed the breakup of Orbcomm FM 36 (#25984, 1999-065E), which likely occurred March 11, 2023, at approximately time 0145 UTC. As of March 16, 18 SDS is tracking 7 associated pieces at an estimated 792 km altitude.\" The archive's copy of the login page of 2023-03-13 carries no such announcement.",
+     "statedOn": {
+      "on": "2023-03-17",
+      "precision": "day",
+      "ref": "18th Space Defense Squadron announcement on Space-Track's login page, seen 2023-03-17 as relayed to the SeeSat-L list on 2023-03-17 08:14 -0400 (https://www.satobs.org/seesat/Mar-2023/0088.html) and by @OrbitalFocus on X at 11:34 UTC (https://x.com/OrbitalFocus/status/1636692364914819076)"
+     },
+     "url": "https://www.satobs.org/seesat/Mar-2023/0088.html"
     },
     {
      "source": "esa-ser",
@@ -210156,10 +211526,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2023-06-01",
-    "precision": "month",
-    "ref": "ODQN 27(2), June 2023, p. 2",
-    "source": "odqn"
+    "on": "2023-03-17",
+    "precision": "day",
+    "ref": "18th Space Defense Squadron announcement on Space-Track's login page, seen 2023-03-17 as relayed to the SeeSat-L list on 2023-03-17 08:14 -0400 (https://www.satobs.org/seesat/Mar-2023/0088.html) and by @OrbitalFocus on X at 11:34 UTC (https://x.com/OrbitalFocus/status/1636692364914819076)",
+    "source": "s4s-notice"
    }
   },
   {
@@ -213529,7 +214899,7 @@
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 350,
     "apogeeKm": 388,
     "perigeeKm": 353,
     "inclinationDeg": 97,
@@ -213542,7 +214912,7 @@
    "exemptReason": null,
    "resolvedFrom": {
     "event": "odqn",
-    "orbit": "odqn",
+    "orbit": "s4s-notice",
     "cause": "odqn",
     "pieces": "gcat",
     "kind": "odqn"
@@ -213581,6 +214951,76 @@
       "precision": "month",
       "ref": "ODQN 28(4), October 2024, p. 1"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Command's statement posted on X, 2024-06-27 11:39 UTC (https://x.com/US_SpaceCom/status/1806291334484938931), its text as quoted by SatNews on 2024-06-30 (https://news.satnews.com/2024/06/30/u-s-space-command-reports-break-up-of-russian-owned-space-object)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 39186,
+      "designator": "2013-030A",
+      "name": "Resurs-P1"
+     },
+     "event": {
+      "stated": "June 26, 2024, at approximately 1000 MT (1600 UTC)",
+      "at": "2024-06-26T16:00Z",
+      "from": "2024-06-26T15:50Z",
+      "to": "2024-06-26T16:10Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"U.S. Space Command confirms the break-up of RESURS-P1 (#39186), a Russian-owned, decommissioned satellite, that occurred in LEO on June 26, 2024, at approximately 1000 MT (1600 UTC), resulting in more than 100 pieces of trackable debris. USSPACECOM has observed no immediate threats and is continuing to conduct routine conjunction assessments ...\" The post is an image of the statement; its text is SatNews'.",
+     "statedOn": {
+      "on": "2024-06-27",
+      "precision": "day",
+      "ref": "the post's own time, 2024-06-27T11:39:48Z by X's public embed"
+     },
+     "url": "https://x.com/US_SpaceCom/status/1806291334484938931"
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-06-27 14:56 UTC (https://x.com/S4S_SDA/status/1806340899913552292)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 39186,
+      "designator": "2013-030A",
+      "name": "Resurs-P1"
+     },
+     "event": {
+      "stated": "26 Jun sometime between 1512-1640 UTC",
+      "at": null,
+      "from": "2024-06-26T15:12Z",
+      "to": "2024-06-26T16:40Z",
+      "precision": "hour"
+     },
+     "orbit": {
+      "altitudeKm": 350,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"S4S has confirmed the breakup of RESURS P1 (#39186, 2013-030A),  which likely occurred 26 Jun sometime between 1512-1640 UTC. Currently tracking 100+ associated pieces at est 350 km altitude -- analysis ongoing.\" The login page carried the 18 SDS's announcement of the same window by 2024-06-27 16:27 UTC.",
+     "statedOn": {
+      "on": "2024-06-27",
+      "precision": "day",
+      "ref": "the post's own time, 2024-06-27T14:56:45Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1806340899913552292"
     },
     {
      "source": "esa-ser",
@@ -213677,13 +215117,30 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "event",
+     "sources": [
+      "gcat",
+      "s4s-notice"
+     ],
+     "detail": "gcat 2024 Jun 26 1632 against s4s-notice June 26, 2024, at approximately 1000 MT (1600 UTC)"
+    },
+    {
+     "field": "event",
+     "sources": [
+      "odqn",
+      "s4s-notice"
+     ],
+     "detail": "odqn 26 June 2024, 16:32 GMT against s4s-notice June 26, 2024, at approximately 1000 MT (1600 UTC)"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
-    "on": "2024-10-01",
-    "precision": "month",
-    "ref": "ODQN 28(4), October 2024, p. 1",
-    "source": "odqn"
+    "on": "2024-06-27",
+    "precision": "day",
+    "ref": "the post's own time, 2024-06-27T11:39:48Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -213822,7 +215279,7 @@
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 825,
     "apogeeKm": 837,
     "perigeeKm": 818,
     "inclinationDeg": 98.7,
@@ -213835,7 +215292,7 @@
    "exemptReason": null,
    "resolvedFrom": {
     "event": "odqn",
-    "orbit": "odqn",
+    "orbit": "s4s-notice",
     "cause": "odqn",
     "pieces": "odqn",
     "kind": "odqn"
@@ -213874,6 +215331,41 @@
       "precision": "month",
       "ref": "ODQN 28(4), October 2024, p. 1"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-07-20 15:26 UTC (https://x.com/S4S_SDA/status/1814683250918629783)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 18123,
+      "designator": "1987-053A",
+      "name": "DMSP 5D-2 F8"
+     },
+     "event": {
+      "stated": "approx 2040 UTC July 19",
+      "at": "2024-07-19T20:40Z",
+      "from": "2024-07-19T20:30Z",
+      "to": "2024-07-19T20:50Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 825,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#S4S has confirmed the breakup of DMSP 5D-2 F8 (#18123, 1987-053A), at approx 2040 UTC July 19. Tracking 5 associated pieces at est 825 km altitude -- analysis ongoing.\"",
+     "statedOn": {
+      "on": "2024-07-20",
+      "precision": "day",
+      "ref": "the post's own time, 2024-07-20T15:26:16Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1814683250918629783"
     },
     {
      "source": "esa-ser",
@@ -213952,10 +215444,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2024-10-01",
-    "precision": "month",
-    "ref": "ODQN 28(4), October 2024, p. 1",
-    "source": "odqn"
+    "on": "2024-07-20",
+    "precision": "day",
+    "ref": "the post's own time, 2024-07-20T15:26:16Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -214029,6 +215521,76 @@
       "precision": "month",
       "ref": "ODQN 28(4), October 2024, pp. 1-2"
      }
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-08-07 23:01 UTC (https://x.com/S4S_SDA/status/1821320706044653969)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "2024-140",
+      "name": "Long March 6A rocket (Qianfan launch)"
+     },
+     "event": {
+      "stated": "confirmed by 7 August 2024 (the post's 'Aug. 7, 2024' is the launch's day in China)",
+      "at": null,
+      "from": null,
+      "to": "2024-08-07T23:01Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Analysis ongoing.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#S4S has confirmed the breakup of a Chinese Long March 6A rocket launched from the Taiyuan Satellite Launch Center, China, on Aug. 7, 2024. Analysis ongoing.\" The post names no catalogue number; U.S. Space Command's statement followed on 2024-08-08 (https://x.com/US_SpaceCom/status/1821615199230816555).",
+     "statedOn": {
+      "on": "2024-08-07",
+      "precision": "day",
+      "ref": "the post's own time, 2024-08-07T23:01:09Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1821320706044653969"
+    },
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2024-08-14 in the Internet Archive's copy of 11:22 UTC (https://web.archive.org/web/20240814112225/https://www.space-track.org/auth/login)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "2024-140",
+      "name": "Long March 6A rocket (Qianfan launch)"
+     },
+     "event": {
+      "stated": "August 6, 2024, at 1715 UTC",
+      "at": "2024-08-06T17:15Z",
+      "from": "2024-08-06T17:15Z",
+      "to": "2024-08-06T17:15Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Analysis is ongoing.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"U.S. Space Forces - Space (S4S) has confirmed the breakup of a Chinese Long March 6A rocket launched from the Taiyuan Satellite Launch Center, China, on Aug. 6, 2024. The breakup likely occurred August 6, 2024, at 1715 UTC.\" The announcement names no catalogue number.",
+     "statedOn": {
+      "on": "2024-08-14",
+      "precision": "day",
+      "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2024-08-14 in the Internet Archive's copy of 11:22 UTC (https://web.archive.org/web/20240814112225/https://www.space-track.org/auth/login)"
+     },
+     "url": "https://web.archive.org/web/20240814112225/https://www.space-track.org/auth/login"
     },
     {
      "source": "esa-ser",
@@ -214153,10 +215715,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2024-10-01",
-    "precision": "month",
-    "ref": "ODQN 28(4), October 2024, pp. 1-2",
-    "source": "odqn"
+    "on": "2024-08-07",
+    "precision": "day",
+    "ref": "the post's own time, 2024-08-07T23:01:09Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -214305,6 +215867,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-09-07 19:28 UTC (https://x.com/S4S_SDA/status/1832501184445489610)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 43227,
+      "designator": "2018-022B",
+      "name": "Atlas 5 Centaur R/B (GOES-17)"
+     },
+     "event": {
+      "stated": "confirmed by 7 September 2024",
+      "at": null,
+      "from": null,
+      "to": "2024-09-07T19:28Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": 35000,
+      "perigeeKm": 7600,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis is ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#S4S has confirmed the breakup of ATLAS 5 CENTAUR R/B (#43227) at an approx. altitude of 35,000 km apogee and 7,600 km perigee — analysis is ongoing.\"",
+     "statedOn": {
+      "on": "2024-09-07",
+      "precision": "day",
+      "ref": "the post's own time, 2024-09-07T19:28:23Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1832501184445489610"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-09-06",
      "kind": null,
@@ -214381,10 +215978,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-02-01",
-    "precision": "month",
-    "ref": "ODQN 29(1), February 2025, p. 1",
-    "source": "odqn"
+    "on": "2024-09-07",
+    "precision": "day",
+    "ref": "the post's own time, 2024-09-07T19:28:23Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -214825,6 +216422,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-10-20 01:56 UTC (https://x.com/S4S_SDA/status/1847819183272472884)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 41748,
+      "designator": "2016-053B",
+      "name": "Intelsat 33e"
+     },
+     "event": {
+      "stated": "~0430 UTC (the Space-Track alert: 'on October 19, 2024, at approximately 0430 UTC')",
+      "at": "2024-10-19T04:30Z",
+      "from": "2024-10-19T04:20Z",
+      "to": "2024-10-19T04:40Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"S4S has confirmed the breakup of Intelsat 33E (#41748, 2016-053B) ~0430 UTC. Currently tracking around 20 associated pieces - analysis ongoing.\" Posted on the evening of 19 October in the United States; the Space-Track alert of the same wording gives the day (The Debrief, 24 October 2024, https://thedebrief.org/u-s-space-force-tracking-debris-after-anomaly-leads-to-unexplained-satellite-loss/).",
+     "statedOn": {
+      "on": "2024-10-20",
+      "precision": "day",
+      "ref": "the post's own time, 2024-10-20T01:56:38Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1847819183272472884"
+    },
+    {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-10-19",
      "kind": null,
@@ -214985,10 +216617,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-02-01",
-    "precision": "month",
-    "ref": "ODQN 29(1), February 2025, p. 1",
-    "source": "odqn"
+    "on": "2024-10-20",
+    "precision": "day",
+    "ref": "the post's own time, 2024-10-20T01:56:38Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -215589,21 +217221,21 @@
    "parent": {
     "catalogueNumber": 24753,
     "designator": "1997-012A",
-    "name": "DMSP F-14",
+    "name": "DMSP 5D-2 F14 (USA 131)",
     "class": "payload",
     "owner": null,
     "launchedOn": "1997-04-04"
    },
-   "kind": "breakup",
+   "kind": "anomalous",
    "event": {
-    "stated": "2024 Dec 19 0210",
+    "stated": "approx 0210 UTC Dec 19",
     "at": "2024-12-19T02:10Z",
-    "from": "2024-12-19T02:10Z",
-    "to": "2024-12-19T02:10Z",
+    "from": "2024-12-19T02:00Z",
+    "to": "2024-12-19T02:20Z",
     "precision": "minute"
    },
    "orbit": {
-    "altitudeKm": null,
+    "altitudeKm": 840,
     "apogeeKm": 843,
     "perigeeKm": 831,
     "inclinationDeg": 98.84,
@@ -215611,17 +217243,52 @@
    },
    "cause": "battery",
    "piecesCatalogued": 0,
-   "confidence": "B",
+   "confidence": "A",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "gcat",
-    "orbit": "gcat",
+    "event": "s4s-notice",
+    "orbit": "s4s-notice",
     "cause": "gcat",
     "pieces": "gcat",
-    "kind": "gcat"
+    "kind": "s4s-notice"
    },
    "statements": [
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space's post on X (the account now named @S4S_SDA), 2024-12-19 18:53 UTC (https://x.com/S4S_SDA/status/1869818410277974343)",
+     "kind": "anomalous",
+     "parent": {
+      "catalogueNumber": 24753,
+      "designator": "1997-012A",
+      "name": "DMSP 5D-2 F14 (USA 131)"
+     },
+     "event": {
+      "stated": "approx 0210 UTC Dec 19",
+      "at": "2024-12-19T02:10Z",
+      "from": "2024-12-19T02:00Z",
+      "to": "2024-12-19T02:20Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 840,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"analysis ongoing\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"#S4S has confirmed a low-velocity fragmentation event associated with DMSP 5D-2 F14 (USA 131) (#24753, 1997-012A), at approx 0210 UTC Dec 19 at est 840 km altitude. No assessed threat to the ISS -- analysis ongoing.\" The login page's wording calls it \"the anomalous debris-causing event\".",
+     "statedOn": {
+      "on": "2024-12-19",
+      "precision": "day",
+      "ref": "the post's own time, 2024-12-19T18:53:43Z by X's public embed"
+     },
+     "url": "https://x.com/S4S_SDA/status/1869818410277974343"
+    },
     {
      "source": "esa-ser",
      "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-12-19",
@@ -215747,13 +217414,22 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "kind",
+     "sources": [
+      "s4s-notice",
+      "catalogue"
+     ],
+     "detail": "s4s-notice anomalous against catalogue breakup"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-03-31",
+    "on": "2024-12-19",
     "precision": "day",
-    "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025",
-    "source": "esa-ser"
+    "ref": "the post's own time, 2024-12-19T18:53:43Z by X's public embed",
+    "source": "s4s-notice"
    }
   },
   {
@@ -216507,89 +218183,6 @@
    "firstStatement": null
   },
   {
-   "id": "66629:2025-12-17",
-   "parent": {
-    "catalogueNumber": 66629,
-    "designator": "2025-271N",
-    "name": "Starlink-35956",
-    "class": "payload",
-    "owner": null,
-    "launchedOn": null
-   },
-   "kind": "breakup",
-   "event": {
-    "stated": "17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")",
-    "at": null,
-    "from": "2025-12-17T00:00Z",
-    "to": "2025-12-18T00:00Z",
-    "precision": "day"
-   },
-   "orbit": {
-    "altitudeKm": 418,
-    "apogeeKm": null,
-    "perigeeKm": null,
-    "inclinationDeg": 53.12,
-    "regime": "LEO"
-   },
-   "cause": "unknown",
-   "piecesCatalogued": null,
-   "confidence": "D",
-   "scoreable": true,
-   "exemptReason": null,
-   "resolvedFrom": {
-    "event": "news",
-    "orbit": "news",
-    "cause": null,
-    "pieces": null,
-    "kind": "news"
-   },
-   "statements": [
-    {
-     "source": "news",
-     "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 66629,
-      "designator": "2025-271N",
-      "name": "Starlink-35956"
-     },
-     "event": {
-      "stated": "17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")",
-      "at": null,
-      "from": "2025-12-17T00:00Z",
-      "to": "2025-12-18T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": 418,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": 53.12
-     },
-     "cause": null,
-     "causeStated": "likely an internal energetic source rather than a collision (SpaceX, LeoLabs)",
-     "piecesCatalogued": null,
-     "piecesStatedOn": null,
-     "preEventElements": null,
-     "note": "SpaceX reported an anomaly at 418 km with loss of communications and a propulsion tank venting; LeoLabs detected tens of objects. The satellite reentered on 2026-01-17.",
-     "statedOn": {
-      "on": "2025-12-18",
-      "precision": "day",
-      "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)"
-     },
-     "url": "https://x.com/LeoLabs_Space/status/2001760505954754671"
-    }
-   ],
-   "conflicts": [],
-   "overrides": [],
-   "firstStatement": {
-    "on": "2025-12-18",
-    "precision": "day",
-    "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
-    "source": "news"
-   }
-  },
-  {
    "id": "66378:2025-12-17",
    "parent": {
     "catalogueNumber": 66378,
@@ -216661,6 +218254,141 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": null
+  },
+  {
+   "id": "66629:2025-12-18",
+   "parent": {
+    "catalogueNumber": 66629,
+    "designator": "2025-271N",
+    "name": "Starlink-35956",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "anomalous",
+   "event": {
+    "stated": "18 Dec 25 at 0140 UTC",
+    "at": "2025-12-18T01:40Z",
+    "from": "2025-12-18T01:40Z",
+    "to": "2025-12-18T01:40Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": 418,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": 53.12,
+    "regime": "LEO"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "A",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "s4s-notice",
+    "orbit": "news",
+    "cause": null,
+    "pieces": null,
+    "kind": "s4s-notice"
+   },
+   "statements": [
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2025-12-21 in the Internet Archive's copy of 23:52 UTC (https://web.archive.org/web/20251221235227/https://www.space-track.org/auth/login)",
+     "kind": "anomalous",
+     "parent": {
+      "catalogueNumber": 66629,
+      "designator": "2025-271N",
+      "name": "Starlink-35956"
+     },
+     "event": {
+      "stated": "18 Dec 25 at 0140 UTC",
+      "at": "2025-12-18T01:40Z",
+      "from": "2025-12-18T01:40Z",
+      "to": "2025-12-18T01:40Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Please refer to SpaceX for additional information on this event.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"U.S. Space Forces-Space (S4S) has confirmed an anomalous debris event of STARLINK-35956 (INTLDES 2025-271, 66629), which likely occurred 18 Dec 25 at 0140 UTC. There is no assessed risk to the ISS. Analysis is ongoing.\" The archive's copy of 2025-12-05 carries no such announcement; the day it went up is not known.",
+     "statedOn": {
+      "on": "2025-12-21",
+      "precision": "day",
+      "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2025-12-21 in the Internet Archive's copy of 23:52 UTC (https://web.archive.org/web/20251221235227/https://www.space-track.org/auth/login)"
+     },
+     "url": "https://web.archive.org/web/20251221235227/https://www.space-track.org/auth/login"
+    },
+    {
+     "source": "news",
+     "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 66629,
+      "designator": "2025-271N",
+      "name": "Starlink-35956"
+     },
+     "event": {
+      "stated": "17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")",
+      "at": null,
+      "from": "2025-12-17T00:00Z",
+      "to": "2025-12-18T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": 418,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": 53.12
+     },
+     "cause": null,
+     "causeStated": "likely an internal energetic source rather than a collision (SpaceX, LeoLabs)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "SpaceX reported an anomaly at 418 km with loss of communications and a propulsion tank venting; LeoLabs detected tens of objects. The satellite reentered on 2026-01-17.",
+     "statedOn": {
+      "on": "2025-12-18",
+      "precision": "day",
+      "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)"
+     },
+     "url": "https://x.com/LeoLabs_Space/status/2001760505954754671"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "day",
+     "sources": [
+      "s4s-notice",
+      "news"
+     ],
+     "detail": "s4s-notice 18 Dec 25 at 0140 UTC against news 17 December 2025 (LeoLabs: \"fragment creation event on 17 Dec 2025\")"
+    },
+    {
+     "field": "kind",
+     "sources": [
+      "s4s-notice",
+      "news"
+     ],
+     "detail": "s4s-notice anomalous against news breakup"
+    }
+   ],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2025-12-18",
+    "precision": "day",
+    "ref": "LeoLabs on X, 2025-12-18 (https://x.com/LeoLabs_Space/status/2001760505954754671); The Register, 2025-12-23 (https://www.theregister.com/2025/12/23/starlink_satellite_fails_debris/)",
+    "source": "news"
+   }
   },
   {
    "id": "62485:2025-12-22",
@@ -217048,13 +218776,13 @@
     "owner": null,
     "launchedOn": "2025-05-27"
    },
-   "kind": "breakup",
+   "kind": "anomalous",
    "event": {
-    "stated": "29 March 2026 (LeoLabs: \"fragment creation event ... on 29 March 2026\")",
-    "at": null,
-    "from": "2026-03-29T00:00Z",
-    "to": "2026-03-30T00:00Z",
-    "precision": "day"
+    "stated": "29 March 26 (JDay 088) at approximately 19:30z (UTC)",
+    "at": "2026-03-29T19:30Z",
+    "from": "2026-03-29T19:20Z",
+    "to": "2026-03-29T19:40Z",
+    "precision": "minute"
    },
    "orbit": {
     "altitudeKm": 560,
@@ -217065,17 +218793,52 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
-   "confidence": "C",
+   "confidence": "A",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "news",
+    "event": "s4s-notice",
     "orbit": "news",
     "cause": "gcat",
     "pieces": "gcat",
-    "kind": "news"
+    "kind": "s4s-notice"
    },
    "statements": [
+    {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-04-10 in the Internet Archive's copy of 07:21 UTC (https://web.archive.org/web/20260410072121/https://www.space-track.org/auth/login)",
+     "kind": "anomalous",
+     "parent": {
+      "catalogueNumber": 64157,
+      "designator": "2025-112M",
+      "name": "Starlink-34343"
+     },
+     "event": {
+      "stated": "29 March 26 (JDay 088) at approximately 19:30z (UTC)",
+      "at": "2026-03-29T19:30Z",
+      "from": "2026-03-29T19:20Z",
+      "to": "2026-03-29T19:40Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Please refer to SpaceX for additional information on this event.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"U.S. Space Forces-Space (S4S) confirms the anomalous debris causing event of Starlink-34343 (#64157, 2025-112M) in LEO, with the event likely occurring on 29 March 26 (JDay 088) at approximately 19:30z (UTC).\" The archive's copy of 2026-03-31 11:29 UTC carries no such announcement.",
+     "statedOn": {
+      "on": "2026-04-10",
+      "precision": "day",
+      "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-04-10 in the Internet Archive's copy of 07:21 UTC (https://web.archive.org/web/20260410072121/https://www.space-track.org/auth/login)"
+     },
+     "url": "https://web.archive.org/web/20260410072121/https://www.space-track.org/auth/login"
+    },
     {
      "source": "news",
      "ref": "LeoLabs' detection posted 2026-03-30; EarthSky (https://earthsky.org/space/starlink-satellite-breaks-up-debris-artemis-risk/); Gizmodo (https://gizmodo.com/spacex-starlink-satellite-malfunctions-breaks-apart-in-orbit-2000740250)",
@@ -217142,7 +218905,16 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "kind",
+     "sources": [
+      "s4s-notice",
+      "news"
+     ],
+     "detail": "s4s-notice anomalous against news breakup"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
     "on": "2026-03-30",
@@ -217672,7 +219444,7 @@
     "name": "ZhuQue-2E upper stage",
     "class": "rocket body",
     "owner": null,
-    "launchedOn": "2026-06-09"
+    "launchedOn": null
    },
    "kind": "breakup",
    "event": {
@@ -217737,6 +219509,41 @@
      }
     },
     {
+     "source": "s4s-notice",
+     "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-06-13 in the Internet Archive's copy of 03:27 UTC (https://web.archive.org/web/20260613032725/https://www.space-track.org/auth/login)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 69537,
+      "designator": "2026-128C",
+      "name": "ZhuQue-2E upper stage"
+     },
+     "event": {
+      "stated": "9 June 2026, at 0847 UTC",
+      "at": "2026-06-09T08:47Z",
+      "from": "2026-06-09T08:47Z",
+      "to": "2026-06-09T08:47Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "not stated (\"Analysis is ongoing.\")",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "\"U.S. Space Forces - Space (S4S) has confirmed the breakup of a Chinese Zhuque-2E rocket body launched from the Jiuquan Satellite Launch Center, China, on 9 June 2026. The breakup likely occurred 9 June 2026, at 0847 UTC.\" The announcement names no catalogue number; the parent is NASA's (ODQN 30(3)). No earlier copy of the page in June 2026 is archived.",
+     "statedOn": {
+      "on": "2026-06-13",
+      "precision": "day",
+      "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-06-13 in the Internet Archive's copy of 03:27 UTC (https://web.archive.org/web/20260613032725/https://www.space-track.org/auth/login)"
+     },
+     "url": "https://web.archive.org/web/20260613032725/https://www.space-track.org/auth/login"
+    },
+    {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S69537, 7 pieces 69629 to 69635",
      "kind": "breakup",
@@ -217779,10 +219586,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2026-09-01",
-    "precision": "month",
-    "ref": "ODQN 30(3), September 2026, p. 1",
-    "source": "odqn"
+    "on": "2026-06-13",
+    "precision": "day",
+    "ref": "U.S. Space Forces-Space announcement on Space-Track's login page, seen 2026-06-13 in the Internet Archive's copy of 03:27 UTC (https://web.archive.org/web/20260613032725/https://www.space-track.org/auth/login)",
+    "source": "s4s-notice"
    }
   },
   {

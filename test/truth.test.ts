@@ -110,10 +110,13 @@ describe("the committed truth", () => {
       else if (stated.some((s) => s.event.from !== null && Date.parse(s.event.to) - Date.parse(s.event.from) <= 3 * 86_400_000)) expect(b.confidence, b.id).toBe("B");
     }
     // NASA or the quarterly news states the day; GCAT's cloud table the minute, which stands as the event's time.
-    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "25984:2023-03-11", "43227:2024-09-06"]) {
+    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "43227:2024-09-06"]) {
       const b = breakups.find((x) => x.id === id)!;
       expect([b.confidence, b.resolvedFrom.event, b.event.precision], id).toEqual(["B", "gcat", "minute"]);
     }
+    // Where the Space Forces' notice states the minute itself, the authority's minute stands.
+    const orbcomm = breakups.find((x) => x.id === "25984:2023-03-11")!;
+    expect([orbcomm.confidence, orbcomm.resolvedFrom.event, orbcomm.event.precision]).toEqual(["A", "s4s-notice", "minute"]);
   });
 
   test("a company's measured instant ranks with a named analyst's dating: Luch as Meteor 2-7", () => {
@@ -155,9 +158,12 @@ describe("links to the statements' pages", () => {
     ]);
   });
 
-  test("only news and analyst statements carry one: the Space Force notice and the tables have none", () => {
-    const linked = breakups.flatMap((b) => b.statements).filter((s) => s.url !== undefined);
-    expect(linked.map((s) => s.source).sort()).toEqual(["analyst", "analyst", "news", "news", "news", "news", "news", "news"]);
+  test("only statements read from a page carry one: the news, the analysts and the notices read from a post or an article; the tables and the login page's notice have none", () => {
+    const statements = breakups.flatMap((b) => b.statements);
+    const linked = statements.filter((s) => s.url !== undefined);
+    expect([...new Set(linked.map((s) => s.source))].sort()).toEqual(["analyst", "news", "s4s-notice"]);
+    for (const s of linked) expect(s.ref).toContain(s.url!);
+    expect(statements.filter((s) => s.source === "s4s-notice" && s.url === undefined).map((s) => s.parent.name)).toEqual(["USA 32"]);
   });
 });
 
