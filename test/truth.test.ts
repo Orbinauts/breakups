@@ -110,10 +110,13 @@ describe("the committed truth", () => {
       else if (stated.some((s) => s.event.from !== null && Date.parse(s.event.to) - Date.parse(s.event.from) <= 3 * 86_400_000)) expect(b.confidence, b.id).toBe("B");
     }
     // NASA or the quarterly news states the day; GCAT's cloud table the minute, which stands as the event's time.
-    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "25984:2023-03-11", "43227:2024-09-06"]) {
+    for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "43227:2024-09-06"]) {
       const b = breakups.find((x) => x.id === id)!;
       expect([b.confidence, b.resolvedFrom.event, b.event.precision], id).toEqual(["B", "gcat", "minute"]);
     }
+    // Where the Space Forces' notice states the minute itself, the authority's minute stands.
+    const orbcomm = breakups.find((x) => x.id === "25984:2023-03-11")!;
+    expect([orbcomm.confidence, orbcomm.resolvedFrom.event, orbcomm.event.precision]).toEqual(["A", "s4s-notice", "minute"]);
   });
 
   test("a company's measured instant ranks with a named analyst's dating: Luch as Meteor 2-7", () => {
