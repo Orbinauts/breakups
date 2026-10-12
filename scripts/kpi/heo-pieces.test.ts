@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { type PlaneOrbit } from "../../src/index.ts";
-import { nodePrecessionDegPerDay } from "../../src/series.ts";
+import type { PlaneOrbit } from "../../src/fragments.ts";
 import { DETECTOR_PARAMETERS, type BodyClass } from "../../src/index.ts";
+import { nodePrecessionDegPerDay } from "../../src/series.ts";
 import type { SatcatRow } from "../truth/parse-gcat-satcat.ts";
 import { catalogueOver, fragmentsOf, type BodyFact } from "./catalogue.ts";
 import { attributionOf, boundsOf, gcatPiecesOf, impulseTiltDeg, normalAngleDeg, normalDeltaVMps, readEvent, tally, type Attribution, type EventReading, type PieceReading } from "./heo-pieces.ts";

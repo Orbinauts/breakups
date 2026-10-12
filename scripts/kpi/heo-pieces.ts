@@ -1,7 +1,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DETECTOR_PARAMETERS, isFragmentClass, launchOf, planeDistance, readBreakups, regimeOf, speedAt, yearOf, type PlaneOrbit, type Regime } from "../../src/index.ts";
+import { regimeOf } from "../../src/elements.ts";
+import { isFragmentClass, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
+import { speedAt } from "../../src/impulse.ts";
+import { DETECTOR_PARAMETERS, launchOf, readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import type { StatedTime } from "../../src/truth.ts";
 import { archiveHome, catalogueIndexPath } from "../archive/archive.ts";
 import { parseVagueDate } from "../truth/dates.ts";
@@ -315,6 +318,7 @@ function main(): void {
   const gcat = gcatPiecesOf(parseSatcat(readFileSync(resolve(ROOT, "data/truth/sources/gcat-satcat.tsv"), "utf8")).rows);
   const measured: Measured[] = [];
   const skipped = { noLaunch: 0, notInIndex: 0, noParentOrbit: 0 };
+  const notInIndex: string[] = [];
   for (const breakup of breakups) {
     const parent = breakup.parent.catalogueNumber;
     const split = splitOf(yearOf(breakup));
@@ -333,6 +337,7 @@ function main(): void {
       reading = readEvent(catalogue, { id: breakup.id, name: breakup.parent.name, parent, launch, from, to, eventMs, marginMs }, gcat);
     } catch {
       skipped.notInIndex++;
+      notInIndex.push(`${breakup.id} (${breakup.orbit.regime})`);
       continue;
     }
     if (reading === null) {
@@ -347,7 +352,7 @@ function main(): void {
   }
   const bounds = boundsOf(DELTA_VS_MPS);
   const out: string[] = [
-    `Read ${measured.length} scoreable events from 2006 with a catalogued parent from the catalogue index built ${index.builtAt}${stale.length > 0 ? ` (stale against the Archive: ${stale.join("; ")})` : ""}; skipped ${skipped.noLaunch} with no launch, ${skipped.notInIndex} the index holds no parent instant for, ${skipped.noParentOrbit} with no parent set before the event. GCAT's satellite catalogue: ${gcat.size} pieces.`,
+    `Read ${measured.length} scoreable events from 2006 with a catalogued parent from the catalogue index built ${index.builtAt}${stale.length > 0 ? ` (stale against the Archive: ${stale.join("; ")})` : ""}; skipped ${skipped.noLaunch} with no launch, ${skipped.notInIndex} the index holds no parent instant for${notInIndex.length > 0 ? ` (${notInIndex.join(", ")}: rebuild the index for this truth)` : ""}, ${skipped.noParentOrbit} with no parent set before the event. GCAT's satellite catalogue: ${gcat.size} pieces.`,
     "",
   ];
   for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
