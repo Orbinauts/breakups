@@ -18191,7 +18191,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -25237,7 +25237,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -26186,7 +26186,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -27019,7 +27019,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -27706,7 +27706,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -29429,7 +29429,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -35821,7 +35821,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -55182,7 +55182,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -63602,7 +63602,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -68005,7 +68005,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -74614,7 +74614,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -84999,7 +84999,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -92730,7 +92730,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -92803,7 +92803,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -103828,7 +103828,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -104631,7 +104631,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -105142,7 +105142,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -108659,7 +108659,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -114530,7 +114530,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -127950,7 +127950,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 2,
@@ -134177,7 +134177,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -134469,7 +134469,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -137678,7 +137678,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -139373,7 +139373,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -143350,7 +143350,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 10,
@@ -143423,7 +143423,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -143496,7 +143496,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -143719,7 +143719,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -144598,7 +144598,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -145725,7 +145725,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -146019,7 +146019,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -147749,7 +147749,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -148119,7 +148119,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -148561,7 +148561,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -148840,7 +148840,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -149434,7 +149434,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "MEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -151072,7 +151072,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -151997,7 +151997,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -153581,7 +153581,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 2,
@@ -154426,7 +154426,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -154572,7 +154572,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 4,
@@ -154894,7 +154894,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -155402,7 +155402,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "MEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -155475,7 +155475,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -155548,7 +155548,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -156059,7 +156059,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -156132,7 +156132,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -156614,7 +156614,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 55,
@@ -156977,7 +156977,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -157256,7 +157256,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -157514,7 +157514,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -157587,7 +157587,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -157660,7 +157660,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -157733,7 +157733,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 4,
@@ -157806,7 +157806,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -157909,7 +157909,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -157982,7 +157982,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -158055,7 +158055,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -158128,7 +158128,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -158201,7 +158201,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -158274,7 +158274,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -158670,7 +158670,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -159154,7 +159154,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -159227,7 +159227,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -159300,7 +159300,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -159373,7 +159373,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -159446,7 +159446,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -159519,7 +159519,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -159592,7 +159592,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 3,
@@ -159665,7 +159665,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -160188,7 +160188,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -160467,7 +160467,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "MEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -161276,7 +161276,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -161953,7 +161953,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -162877,7 +162877,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -162950,7 +162950,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -163023,7 +163023,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -163096,7 +163096,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -163199,7 +163199,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -163272,7 +163272,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -163345,7 +163345,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -163418,7 +163418,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -163603,7 +163603,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
@@ -163676,7 +163676,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -163749,7 +163749,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -163822,7 +163822,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -163970,7 +163970,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -164043,7 +164043,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -164608,7 +164608,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -164681,7 +164681,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -165283,7 +165283,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 7,
@@ -165356,7 +165356,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -165731,7 +165731,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 11,
@@ -165907,7 +165907,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -165980,7 +165980,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -166053,7 +166053,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -166433,7 +166433,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -166682,7 +166682,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -166976,7 +166976,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 7,
@@ -167049,7 +167049,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 5,
@@ -167122,7 +167122,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -167195,7 +167195,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -167517,7 +167517,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -168146,7 +168146,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -168219,7 +168219,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -168482,7 +168482,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -168585,7 +168585,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -168733,7 +168733,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 3,
@@ -168806,7 +168806,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 10,
@@ -168879,7 +168879,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -169098,7 +169098,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -169171,7 +169171,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -169244,7 +169244,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -169317,7 +169317,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -169390,7 +169390,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -169463,7 +169463,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -169536,7 +169536,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -169609,7 +169609,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -169682,7 +169682,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -169755,7 +169755,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -169858,7 +169858,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -169931,7 +169931,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -170034,7 +170034,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 4,
@@ -170107,7 +170107,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -170180,7 +170180,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -170253,7 +170253,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -170326,7 +170326,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -170399,7 +170399,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 8,
@@ -170828,7 +170828,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -171031,7 +171031,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
@@ -171104,7 +171104,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -171250,7 +171250,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -171323,7 +171323,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -171426,7 +171426,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -171499,7 +171499,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -171572,7 +171572,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -171645,7 +171645,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -171718,7 +171718,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -171864,7 +171864,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 40,
@@ -172010,7 +172010,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -172113,7 +172113,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -172186,7 +172186,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -172428,7 +172428,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -172501,7 +172501,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 3,
@@ -172574,7 +172574,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 39,
@@ -172823,7 +172823,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 8,
@@ -173209,7 +173209,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 12,
@@ -173312,7 +173312,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 12,
@@ -173385,7 +173385,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -173664,7 +173664,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -173812,7 +173812,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -174075,7 +174075,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -174368,7 +174368,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -174441,7 +174441,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -174952,7 +174952,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -175233,7 +175233,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -175306,7 +175306,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 26,
@@ -175658,7 +175658,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -175731,7 +175731,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -175804,7 +175804,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 3,
@@ -175877,7 +175877,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -175950,7 +175950,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
@@ -176023,7 +176023,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -176096,7 +176096,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -176169,7 +176169,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -176683,7 +176683,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -176756,7 +176756,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -176998,7 +176998,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -177476,7 +177476,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -177549,7 +177549,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -177695,7 +177695,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -177768,7 +177768,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 16,
@@ -178289,7 +178289,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178362,7 +178362,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178435,7 +178435,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178508,7 +178508,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178581,7 +178581,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178654,7 +178654,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -178727,7 +178727,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178800,7 +178800,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -178946,7 +178946,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
@@ -179019,7 +179019,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -179195,7 +179195,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -179268,7 +179268,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -179643,7 +179643,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -180151,7 +180151,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -180224,7 +180224,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -180475,7 +180475,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -180548,7 +180548,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -180967,7 +180967,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -181203,7 +181203,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -181276,7 +181276,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -181568,7 +181568,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -181714,7 +181714,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 25,
@@ -181787,7 +181787,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -182415,7 +182415,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 8,
@@ -182751,7 +182751,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -183014,7 +183014,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -183437,7 +183437,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -183675,7 +183675,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 2,
@@ -184123,7 +184123,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -184196,7 +184196,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -184605,7 +184605,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -184678,7 +184678,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -184824,7 +184824,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -185039,7 +185039,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -185112,7 +185112,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -185499,7 +185499,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -185572,7 +185572,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -186445,7 +186445,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -186691,7 +186691,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -187295,7 +187295,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -187723,7 +187723,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -188275,7 +188275,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 9,
@@ -189039,7 +189039,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 15,
@@ -189673,7 +189673,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -189819,7 +189819,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -190038,7 +190038,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 122,
@@ -190257,7 +190257,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -190777,7 +190777,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191040,7 +191040,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -191113,7 +191113,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -191186,7 +191186,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191259,7 +191259,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191332,7 +191332,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191405,7 +191405,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191478,7 +191478,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191551,7 +191551,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -191624,7 +191624,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -191697,7 +191697,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -191770,7 +191770,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191843,7 +191843,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "MEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -191916,7 +191916,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 3,
@@ -191989,7 +191989,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -192062,7 +192062,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -192135,7 +192135,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -192208,7 +192208,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -192393,7 +192393,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -192569,7 +192569,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -193091,7 +193091,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -193164,7 +193164,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -193237,7 +193237,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
@@ -193573,7 +193573,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -194354,7 +194354,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -194427,7 +194427,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -194855,7 +194855,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -195127,7 +195127,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -195200,7 +195200,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -195618,7 +195618,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -195932,7 +195932,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -196181,7 +196181,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -196457,7 +196457,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -196530,7 +196530,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -196810,7 +196810,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -196883,7 +196883,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -196956,7 +196956,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -197029,7 +197029,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197102,7 +197102,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197175,7 +197175,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197248,7 +197248,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -197321,7 +197321,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197394,7 +197394,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197814,7 +197814,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 4,
@@ -197887,7 +197887,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -197960,7 +197960,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -198193,7 +198193,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -198341,7 +198341,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -198822,7 +198822,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 3,
@@ -198895,7 +198895,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -198968,7 +198968,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -199041,7 +199041,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -199361,7 +199361,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -199434,7 +199434,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -199507,7 +199507,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -199580,7 +199580,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -199653,7 +199653,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -199726,7 +199726,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200062,7 +200062,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200135,7 +200135,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200208,7 +200208,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200480,7 +200480,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200553,7 +200553,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -200626,7 +200626,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -200906,7 +200906,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -201178,7 +201178,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
@@ -201251,7 +201251,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
@@ -201324,7 +201324,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "deliberate",
    "piecesCatalogued": 1,
@@ -201500,7 +201500,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -201573,7 +201573,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "aerodynamic",
    "piecesCatalogued": 1,
@@ -201646,7 +201646,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 3,
@@ -202117,7 +202117,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -202263,7 +202263,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 10,
@@ -202409,7 +202409,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -202662,7 +202662,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -202842,7 +202842,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -202915,7 +202915,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -202988,7 +202988,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -203061,7 +203061,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 5,
@@ -203406,7 +203406,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -204049,7 +204049,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -204339,7 +204339,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -204935,7 +204935,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205008,7 +205008,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205156,7 +205156,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205229,7 +205229,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -205302,7 +205302,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
@@ -205704,7 +205704,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205777,7 +205777,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205925,7 +205925,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -205998,7 +205998,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -206591,7 +206591,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -206771,7 +206771,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -206844,7 +206844,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 1,
@@ -206917,7 +206917,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 3,
@@ -206990,7 +206990,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "battery",
    "piecesCatalogued": 3,
@@ -207214,7 +207214,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -207287,7 +207287,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -207584,7 +207584,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -207846,7 +207846,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -207919,7 +207919,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208067,7 +208067,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208213,7 +208213,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208419,7 +208419,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208492,7 +208492,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208746,7 +208746,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -208952,7 +208952,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -209025,7 +209025,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -209098,7 +209098,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209246,7 +209246,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209319,7 +209319,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 4,
@@ -209392,7 +209392,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 2,
@@ -209465,7 +209465,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209613,7 +209613,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209686,7 +209686,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209832,7 +209832,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209905,7 +209905,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -209978,7 +209978,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 6,
@@ -210051,7 +210051,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -210197,7 +210197,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -210507,7 +210507,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -210580,7 +210580,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -210808,7 +210808,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -210954,7 +210954,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "propulsion",
    "piecesCatalogued": 18,
@@ -211716,7 +211716,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -211789,7 +211789,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -211935,7 +211935,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -212008,7 +212008,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -212270,7 +212270,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -212343,7 +212343,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -212416,7 +212416,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -212790,7 +212790,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213071,7 +213071,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213144,7 +213144,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213217,7 +213217,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "HEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213290,7 +213290,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213436,7 +213436,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 50,
@@ -213509,7 +213509,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213665,7 +213665,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213738,7 +213738,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213884,7 +213884,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -213957,7 +213957,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "GEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -214227,7 +214227,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -214300,7 +214300,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 3,
@@ -214446,7 +214446,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -214594,7 +214594,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -214667,7 +214667,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,
@@ -214861,7 +214861,7 @@
     "apogeeKm": null,
     "perigeeKm": null,
     "inclinationDeg": null,
-    "regime": "unknown"
+    "regime": "LEO"
    },
    "cause": "unknown",
    "piecesCatalogued": 1,

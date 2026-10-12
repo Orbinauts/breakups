@@ -130,7 +130,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[], skippe
     "",
     table(["Year", "Events", "Scoreable", "Breakup", "Anomalous", "Aerodynamic", "Release", "Unnamed", ...SOURCES], perYear),
     "",
-    `Scoreable events from ${SCORING_FROM}: ${scoring.filter((b) => b.scoreable).length}. By confidence: ${["A", "B", "C", "D"].map((c) => `${c} ${confidences.get(c) ?? 0}`).join(", ")}. By regime: ${[...regimes].map(([r, n]) => `${r} ${n}`).join(", ")}. By class: ${[...classes].map(([c, n]) => `${c} ${n}`).join(", ")}.`,
+    `Scoreable events from ${SCORING_FROM}: ${scoring.filter((b) => b.scoreable).length}. By confidence: ${["A", "B", "C", "D"].map((c) => `${c} ${confidences.get(c) ?? 0}`).join(", ")}. By regime: ${[...regimes].map(([r, n]) => `${r} ${n}`).join(", ")} (${scoring.filter((b) => b.scoreable && b.orbit.regime !== "unknown" && ((b.orbit.apogeeKm ?? b.orbit.altitudeKm) === null || (b.orbit.perigeeKm ?? b.orbit.altitudeKm) === null)).length} of them read from the parent's last set before the window in the Archive, \`data/truth/regimes.json\`, where no statement gives the orbit). By class: ${[...classes].map(([c, n]) => `${c} ${n}`).join(", ")}.`,
     "",
     "## Conflicts between sources",
     "",

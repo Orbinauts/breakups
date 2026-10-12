@@ -6,6 +6,7 @@ import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type 
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
 import { isSatcatStatement, parseSatcat, satcatStatements, separationsOf, type Skipped } from "./parse-gcat-satcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
+import { readRegimes, regimeAt, type RegimesFile } from "./regimes.ts";
 import { renderReport } from "./report.ts";
 import { statedOnFromRef } from "./stated.ts";
 
@@ -491,8 +492,15 @@ function idOf(parent: Parent, time: StatedTime, unnamedIndex: number): string {
   return `U:${unnamedIndex}:${day}`;
 }
 
+/** The regime of the orbit the statements give, else of the parent's last set before the window as the file derived from the Archive holds it. */
+function regimeAtEvent(orbit: StatedOrbit, parent: Parent, event: StatedTime, regimes: RegimesFile | null): Regime {
+  const stated = regimeOf(orbit);
+  if (stated !== "unknown" || parent.catalogueNumber === null || regimes === null) return stated;
+  return regimeAt(regimes.parents[String(parent.catalogueNumber)], lower(event));
+}
+
 /** One group resolved into a Known Breakup. */
-function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Breakup {
+function resolve_(group: Group, overrides: Override[], unnamedIndex: number, regimes: RegimesFile | null): Breakup {
   const launch = group.statements.map((s) => s.parent.designator?.slice(0, 8)).find((l) => l !== undefined) ?? null;
   // An exempt launch's events that only the catalogues (its bursts, GCAT's satellite catalogue) state are exempt; a report's own event stays scoreable.
   for (const o of overrides) if (o.exemptLaunch !== undefined && o.exemptLaunch === launch && group.statements.every((s) => s.source === "catalogue" || isSatcatStatement(s)) && !group.overrides.includes(o.name)) group.overrides.push(o.name);
@@ -516,7 +524,7 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number): Br
     parent,
     kind: kindResolved,
     event,
-    orbit: { ...orbit, regime: regimeOf(orbit) },
+    orbit: { ...orbit, regime: regimeAtEvent(orbit, parent, event, regimes) },
     cause,
     piecesCatalogued: pieces,
     confidence: confidenceOf(group),
@@ -534,8 +542,9 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
   const statements = allStatements();
   const overrides = parseJson<{ overrides: Override[] }>("data/truth/overrides.json").overrides;
   const groups = groupStatements(statements, overrides);
+  const regimes = readRegimes(ROOT);
   let unnamed = 0;
-  const breakups = groups.map((group) => resolve_(group, overrides, group.statements[0]!.parent.catalogueNumber === null && group.statements[0]!.parent.designator === null ? ++unnamed : 0));
+  const breakups = groups.map((group) => resolve_(group, overrides, group.statements[0]!.parent.catalogueNumber === null && group.statements[0]!.parent.designator === null ? ++unnamed : 0, regimes));
   breakups.sort((a, b) => lower(a.event) - lower(b.event) || upper(a.event) - upper(b.event) || a.id.localeCompare(b.id));
   const ids = new Map<string, number>();
   for (const breakup of breakups) {

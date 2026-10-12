@@ -180,3 +180,17 @@ window rather than by a rule (issue #21). The build now reads a window so
   before the first piece's first set (`yaogan-50-02-lower-edge`), and its
   id is `68196:2026-07-01`. The edge is the catalogue's, not the
   detector's estimate.
+
+The same issue's last item, the regimes: GCAT's satellite catalogue and the
+catalogue's bursts state no orbit, so most of their rows had the regime
+"unknown" (202 of the 353 scoreable rows from 2005 before this change).
+A row whose statements give no orbit now takes its parent's regime at the
+event, the detector's filing of the parent's last set before the window,
+from a file derived from the Archive and committed beside the sources
+(`data/truth/regimes.json`, `npm run truth:regimes`, `scripts/truth/regimes.ts`):
+for each such parent, the runs of one regime over every set the Archive
+holds of it, so a moved window is read again without the Archive. The
+build reads the file, never the Archive, and stays reproducible from the
+repository alone; a parent the truth gains keeps "unknown" until the file
+is derived again. From 2005, 180 scoreable rows take a regime so, and 22
+stay unknown (parents with no set before the event).

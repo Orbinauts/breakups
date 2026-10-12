@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { buildTruth, distinctInstants } from "../scripts/truth/build-truth.ts";
+import { readRegimes, regimeAt } from "../scripts/truth/regimes.ts";
 import { renderReport } from "../scripts/truth/report.ts";
 import { readBreakups, yearOf, type Breakup } from "../src/index.ts";
 
@@ -118,6 +119,18 @@ describe("the committed truth", () => {
   test("a company's measured instant ranks with a named analyst's dating: Luch as Meteor 2-7", () => {
     expect(breakups.find((b) => b.id === "40258:2026-01-30")!.confidence).toBe("C");
     expect(breakups.find((b) => b.id === "12456:2026-10-05")!.confidence).toBe("C");
+  });
+
+  test("a row whose statements give no orbit takes its parent's regime before the window from the file derived from the Archive", () => {
+    const regimes = readRegimes(ROOT)!;
+    let filled = 0;
+    for (const b of scoring) {
+      if (b.parent.catalogueNumber === null || (b.orbit.apogeeKm ?? b.orbit.altitudeKm) !== null) continue;
+      const runs = regimes.parents[String(b.parent.catalogueNumber)];
+      expect(b.orbit.regime, b.id).toBe(regimeAt(runs, Date.parse(b.event.from ?? b.event.to)));
+      if (b.orbit.regime !== "unknown") filled++;
+    }
+    expect(filled).toBeGreaterThan(100);
   });
 
   test("scoreable events name a catalogued parent and are breakups or anomalous events", () => {
