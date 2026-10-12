@@ -517,7 +517,7 @@ function resolve_(group: Group, overrides: Override[], unnamedIndex: number, reg
   const event = clampedToLaunch(forcedFrom === undefined ? eventStatement.event : { ...eventStatement.event, from: forcedFrom }, parent);
   const exempt = applied.find((o) => o.exempt !== undefined)?.exempt ?? null;
   const kindResolved: BreakupKind = exempt !== null && applied.some((o) => o.exemptLaunch !== undefined) ? "release" : kind;
-  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null ? "the parent has no catalogue number" : windowReasonOf(event));
+  const exemptReason = exempt ?? (kind === "aerodynamic" ? "an aerodynamic breakup at reentry" : kind === "release" ? "a release of objects, not a breakup" : kind === "unnamed" ? "the report names no object" : parent.catalogueNumber === null && parent.designator === null ? "the parent has no catalogue number" : windowReasonOf(event));
   const resolvedFrom: ResolvedFrom = { event: eventStatement.source, orbit: orbitSource, cause: causeSource, pieces: piecesSource, kind: kindSource };
   return {
     id: idOf(parent, event, unnamedIndex),

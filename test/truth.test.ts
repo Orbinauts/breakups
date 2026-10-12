@@ -121,6 +121,10 @@ describe("the committed truth", () => {
     expect(breakups.find((b) => b.id === "12456:2026-10-05")!.confidence).toBe("C");
   });
 
+  test("a burst under a launch with no catalogued parent is scoreable, the Confirmed line scoring it by its launch", () => {
+    for (const id of ["A:1965-027:2012-03-28", "A:1998-037:2026-06-19", "A:2013-076:2023-05-28", "A:2018-005:2024-03-17"]) expect(breakups.find((b) => b.id === id), id).toMatchObject({ scoreable: true, exemptReason: null });
+  });
+
   test("a row whose statements give no orbit takes its parent's regime before the window from the file derived from the Archive", () => {
     const regimes = readRegimes(ROOT)!;
     let filled = 0;
@@ -133,9 +137,9 @@ describe("the committed truth", () => {
     expect(filled).toBeGreaterThan(100);
   });
 
-  test("scoreable events name a catalogued parent and are breakups or anomalous events", () => {
+  test("scoreable events name a catalogued parent or its launch and are breakups or anomalous events", () => {
     for (const b of breakups.filter((x) => x.scoreable)) {
-      expect(b.parent.catalogueNumber, b.id).not.toBeNull();
+      expect(b.parent.catalogueNumber ?? b.parent.designator, b.id).not.toBeNull();
       expect(["breakup", "anomalous"]).toContain(b.kind);
     }
     for (const b of breakups.filter((x) => !x.scoreable)) expect(b.exemptReason, b.id).not.toBeNull();

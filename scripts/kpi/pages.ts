@@ -294,7 +294,7 @@ export function splitsSentence(latest: Latest): string {
 /** The ground-truth table's rows: a label and the events from 2005 it counts. */
 export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[] = [
   ["All", () => true],
-  ["Scoreable (breakups and anomalous events of a catalogued object)", (b) => b.scoreable],
+  ["Scoreable (breakups and anomalous events of a catalogued object or of a launch)", (b) => b.scoreable],
   ["Breakups", (b) => b.kind === "breakup"],
   ["Anomalous events (low-velocity shedding)", (b) => b.kind === "anomalous"],
   ["Aerodynamic breakups at reentry (kept out)", (b) => b.kind === "aerodynamic"],

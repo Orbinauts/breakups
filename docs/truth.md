@@ -22,29 +22,29 @@ Columns: every event, the scoreable ones, then by kind, then by the source whose
 | Year | Events | Scoreable | Breakup | Anomalous | Aerodynamic | Release | Unnamed | hoosf-16e | odqn | gcat | esa-ser | s4s-notice | analyst | news | catalogue |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2005 | 21 | 11 | 9 | 2 | 3 | 7 | 0 | 8 | 0 | 13 | 0 | 0 | 0 | 0 | 0 |
-| 2006 | 47 | 25 | 18 | 10 | 2 | 17 | 0 | 12 | 0 | 33 | 0 | 0 | 0 | 0 | 2 |
+| 2006 | 47 | 27 | 18 | 10 | 2 | 17 | 0 | 12 | 0 | 33 | 0 | 0 | 0 | 0 | 2 |
 | 2007 | 29 | 19 | 9 | 10 | 1 | 9 | 0 | 7 | 0 | 22 | 0 | 0 | 0 | 0 | 0 |
-| 2008 | 29 | 14 | 12 | 6 | 6 | 5 | 0 | 8 | 0 | 13 | 0 | 0 | 0 | 0 | 8 |
-| 2009 | 55 | 36 | 20 | 20 | 2 | 13 | 0 | 5 | 0 | 44 | 0 | 0 | 0 | 0 | 6 |
-| 2010 | 27 | 19 | 14 | 6 | 1 | 6 | 0 | 6 | 0 | 18 | 0 | 0 | 0 | 0 | 3 |
-| 2011 | 26 | 12 | 8 | 7 | 4 | 7 | 0 | 7 | 0 | 17 | 0 | 0 | 0 | 0 | 2 |
-| 2012 | 28 | 16 | 10 | 10 | 2 | 6 | 0 | 6 | 0 | 17 | 0 | 0 | 0 | 0 | 5 |
-| 2013 | 15 | 7 | 4 | 4 | 1 | 6 | 0 | 2 | 0 | 12 | 0 | 0 | 0 | 0 | 1 |
-| 2014 | 35 | 23 | 16 | 10 | 1 | 8 | 0 | 10 | 0 | 22 | 0 | 0 | 0 | 0 | 3 |
-| 2015 | 21 | 16 | 12 | 5 | 1 | 3 | 0 | 7 | 0 | 13 | 0 | 0 | 0 | 0 | 1 |
-| 2016 | 19 | 13 | 10 | 4 | 1 | 4 | 0 | 7 | 0 | 11 | 0 | 0 | 0 | 0 | 1 |
-| 2017 | 30 | 21 | 9 | 16 | 0 | 5 | 0 | 2 | 0 | 24 | 0 | 0 | 0 | 0 | 4 |
-| 2018 | 25 | 16 | 14 | 4 | 1 | 6 | 0 | 7 | 0 | 15 | 0 | 0 | 0 | 0 | 3 |
-| 2019 | 40 | 27 | 19 | 11 | 1 | 9 | 0 | 9 | 0 | 29 | 0 | 0 | 0 | 0 | 2 |
+| 2008 | 29 | 18 | 12 | 6 | 6 | 5 | 0 | 8 | 0 | 13 | 0 | 0 | 0 | 0 | 8 |
+| 2009 | 55 | 39 | 20 | 20 | 2 | 13 | 0 | 5 | 0 | 44 | 0 | 0 | 0 | 0 | 6 |
+| 2010 | 27 | 20 | 14 | 6 | 1 | 6 | 0 | 6 | 0 | 18 | 0 | 0 | 0 | 0 | 3 |
+| 2011 | 26 | 14 | 8 | 7 | 4 | 7 | 0 | 7 | 0 | 17 | 0 | 0 | 0 | 0 | 2 |
+| 2012 | 28 | 20 | 10 | 10 | 2 | 6 | 0 | 6 | 0 | 17 | 0 | 0 | 0 | 0 | 5 |
+| 2013 | 15 | 8 | 4 | 4 | 1 | 6 | 0 | 2 | 0 | 12 | 0 | 0 | 0 | 0 | 1 |
+| 2014 | 35 | 25 | 16 | 10 | 1 | 8 | 0 | 10 | 0 | 22 | 0 | 0 | 0 | 0 | 3 |
+| 2015 | 21 | 17 | 12 | 5 | 1 | 3 | 0 | 7 | 0 | 13 | 0 | 0 | 0 | 0 | 1 |
+| 2016 | 19 | 14 | 10 | 4 | 1 | 4 | 0 | 7 | 0 | 11 | 0 | 0 | 0 | 0 | 1 |
+| 2017 | 30 | 24 | 9 | 16 | 0 | 5 | 0 | 2 | 0 | 24 | 0 | 0 | 0 | 0 | 4 |
+| 2018 | 25 | 18 | 14 | 4 | 1 | 6 | 0 | 7 | 0 | 15 | 0 | 0 | 0 | 0 | 3 |
+| 2019 | 40 | 29 | 19 | 11 | 1 | 9 | 0 | 9 | 0 | 29 | 0 | 0 | 0 | 0 | 2 |
 | 2020 | 25 | 18 | 12 | 9 | 1 | 3 | 0 | 4 | 0 | 21 | 0 | 0 | 0 | 0 | 0 |
-| 2021 | 26 | 13 | 11 | 4 | 2 | 9 | 0 | 8 | 0 | 16 | 0 | 0 | 0 | 0 | 2 |
+| 2021 | 26 | 15 | 11 | 4 | 2 | 9 | 0 | 8 | 0 | 16 | 0 | 0 | 0 | 0 | 2 |
 | 2022 | 28 | 10 | 8 | 2 | 1 | 17 | 0 | 4 | 3 | 21 | 0 | 0 | 0 | 0 | 0 |
-| 2023 | 32 | 10 | 13 | 2 | 0 | 17 | 0 | 0 | 3 | 28 | 0 | 0 | 0 | 0 | 1 |
-| 2024 | 40 | 13 | 15 | 4 | 0 | 16 | 5 | 0 | 4 | 28 | 5 | 0 | 0 | 0 | 3 |
-| 2025 | 11 | 4 | 5 | 0 | 0 | 6 | 0 | 0 | 0 | 9 | 0 | 0 | 0 | 1 | 1 |
-| 2026 | 17 | 10 | 12 | 0 | 0 | 5 | 0 | 0 | 1 | 8 | 0 | 1 | 1 | 3 | 3 |
+| 2023 | 32 | 12 | 13 | 2 | 0 | 17 | 0 | 0 | 3 | 28 | 0 | 0 | 0 | 0 | 1 |
+| 2024 | 40 | 19 | 15 | 4 | 0 | 16 | 5 | 0 | 4 | 28 | 5 | 0 | 0 | 0 | 3 |
+| 2025 | 11 | 5 | 5 | 0 | 0 | 6 | 0 | 0 | 0 | 9 | 0 | 0 | 0 | 1 | 1 |
+| 2026 | 17 | 12 | 12 | 0 | 0 | 5 | 0 | 0 | 1 | 8 | 0 | 1 | 1 | 3 | 3 |
 
-Scoreable events from 2005: 353. By confidence: A 75, B 45, C 212, D 21. By regime: unknown 22, LEO 260, MEO 9, HEO 50, GEO 12 (180 of them read from the parent's last set before the window in the Archive, `data/truth/regimes.json`, where no statement gives the orbit). By class: payload 216, rocket body 104, debris 33.
+Scoreable events from 2005: 394. By confidence: A 75, B 45, C 221, D 53. By regime: unknown 62, LEO 261, MEO 9, HEO 50, GEO 12 (180 of them read from the parent's last set before the window in the Archive, `data/truth/regimes.json`, where no statement gives the orbit). By class: payload 253, rocket body 108, debris 33.
 
 ## Conflicts between sources
 
@@ -158,9 +158,9 @@ When each event was first stated in public, as far as the sources date it: NASA'
 | s4s-notice | yes | 1 | 1 | 1 | 0 |
 | analyst | no | 1 | 0 | 1 | 0 |
 | news | no | 4 | 0 | 4 | 0 |
-| none dated |  | 245 | 6 |  |  |
+| none dated |  | 286 | 6 |  |  |
 
-Of the 353 scoreable events from 2005, 108 have a dated first statement and 103 a dated statement by an agency; of the 96 breakups of confidence A and B, 90 have an agency's.
+Of the 394 scoreable events from 2005, 108 have a dated first statement and 103 a dated statement by an agency; of the 96 breakups of confidence A and B, 90 have an agency's.
 
 ## GCAT's satellite catalogue
 
@@ -176,7 +176,7 @@ Columns, from 2005: the events the satellite catalogue alone states (with the ca
 | 2006 | 5 | 8 | 0 | 17 | 13 | 1 | 12 |
 | 2007 | 2 | 8 | 0 | 9 | 10 | 0 | 9 |
 | 2008 | 1 | 5 | 1 | 5 | 6 | 1 | 4 |
-| 2009 | 9 | 19 | 2 | 13 | 27 | 4 | 5 |
+| 2009 | 9 | 19 | 2 | 13 | 28 | 4 | 5 |
 | 2010 | 4 | 5 | 0 | 6 | 9 | 2 | 8 |
 | 2011 | 3 | 6 | 1 | 7 | 8 | 0 | 5 |
 | 2012 | 1 | 9 | 0 | 6 | 10 | 1 | 5 |
@@ -188,13 +188,13 @@ Columns, from 2005: the events the satellite catalogue alone states (with the ca
 | 2018 | 3 | 4 | 1 | 6 | 7 | 0 | 7 |
 | 2019 | 8 | 9 | 1 | 9 | 16 | 0 | 9 |
 | 2020 | 7 | 9 | 1 | 3 | 13 | 0 | 5 |
-| 2021 | 3 | 2 | 1 | 9 | 4 | 0 | 8 |
+| 2021 | 3 | 2 | 1 | 9 | 5 | 0 | 8 |
 | 2022 | 3 | 0 | 0 | 17 | 3 | 0 | 5 |
-| 2023 | 6 | 2 | 0 | 17 | 4 | 0 | 6 |
-| 2024 | 6 | 4 | 0 | 16 | 6 | 0 | 4 |
-| 2025 | 3 | 0 | 0 | 6 | 2 | 0 | 0 |
+| 2023 | 6 | 2 | 0 | 17 | 5 | 1 | 6 |
+| 2024 | 6 | 4 | 0 | 16 | 10 | 0 | 4 |
+| 2025 | 3 | 0 | 0 | 6 | 3 | 0 | 0 |
 | 2026 | 3 | 0 | 0 | 5 | 3 | 0 | 3 |
-| All | 83 | 118 | 8 | 184 | 183 | 9 | 133 |
+| All | 83 | 118 | 8 | 184 | 191 | 10 | 133 |
 
 Of the events it joined from 2005, 66 disagree with it on the day, the cause or the parent; each is in the conflicts above.
 
@@ -414,7 +414,6 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 28912:2005-12-29 Meteosat 9 | release | a release of objects, not a breakup |
 | 23342:2006-01-01 RESURS O1 No. 3 | anomalous | the window is wider than 93 days |
 | 28933:2006-02-05 Orlan-M No. 14 | release | a release of objects, not a breakup |
-| A:1993-016:2006-02-20 SL-16 | breakup | the parent has no catalogue number |
 | 12409:2006-04-01 Kosmos-1266 | release | a release of objects, not a breakup |
 | 13600:2006-04-01 Kosmos-1412 | release | a release of objects, not a breakup |
 | 28737:2006-04-01 Shi Jian 7 | release | a release of objects, not a breakup |
@@ -422,7 +421,6 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 28939:2006-04-13 Akari | release | a release of objects, not a breakup |
 | 23936:2006-06-01 USA 123 | release | a release of objects, not a breakup |
 | A:1998-067:2006-06-02 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
-| A:1981-120:2006-06-06 SL-8 | breakup | the parent has no catalogue number |
 | 26622:2006-07-01 Delta 282 | release | a release of objects, not a breakup |
 | 29251:2006-07-12 Discovery (STS-121) | release | a release of objects, not a breakup |
 | 29111:2006-07-18 Kosmos-2420 | release | a release of objects, not a breakup |
@@ -452,19 +450,13 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 32847:2008-05-16 Progress M-64 | release | a release of objects, not a breakup |
 | A:1998-067:2008-07-11 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 33387:2008-09-28 CZ-2F Y7 Stage 2 | release | a release of objects, not a breakup |
-| A:1989-006:2008-10-03 ARIANE 2 | breakup | the parent has no catalogue number |
 | A:1998-067:2008-11-18 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
-| A:1968-081:2008-11-23 TITAN 3C TRANSTAGE | breakup | the parent has no catalogue number |
 | 5104:2008-12-01 Isis 2 | release | a release of objects, not a breakup |
-| A:1988-109:2008-12-03 ARIANE 44LP | breakup | the parent has no catalogue number |
 | 33457:2008-12-15 CZ-4B Y20 Stage 3 | aerodynamic | an aerodynamic breakup at reentry |
-| A:1992-072:2008-12-19 ARIANE 42P+ | breakup | the parent has no catalogue number |
 | 13618:2009-01-01 COSMOS 1417 R/B | anomalous | the window is wider than 93 days |
 | 33439:2009-02-23 Kosmos-2445 | release | a release of objects, not a breakup |
 | A:1998-067:2009-03-19 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 33449:2009-03-29 Molniya-M 46-693 Blok-I | aerodynamic | an aerodynamic breakup at reentry |
-| A:1993-014:2009-04-13 SL-18 | breakup | the parent has no catalogue number |
-| A:1987-068:2009-04-28 SL-14 | breakup | the parent has no catalogue number |
 | 22698:2009-05-01 RADCAL | release | a release of objects, not a breakup |
 | 32289:2009-05-01 Yaogan Weixing 3 | release | a release of objects, not a breakup |
 | A:1998-067:2009-07-18 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
@@ -475,11 +467,9 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 35811:2009-09-06 Discovery (STS-128) | release | a release of objects, not a breakup |
 | 17369:2009-11-01 Kosmos-1818 | release | a release of objects, not a breakup |
 | 26387:2009-11-01 Kosmos-3M 52-105 Stage 2 | release | a release of objects, not a breakup |
-| A:1978-098:2009-11-01 GCAT auxiliary object A03006 | anomalous | the parent has no catalogue number |
 | 35951:2009-11-22 DMSP F-18 | release | a release of objects, not a breakup |
 | 36119:2009-12-29 WISE | release | a release of objects, not a breakup |
 | 36086:2010-01-14 Poisk | release | a release of objects, not a breakup |
-| A:2007-003:2010-06-04 CZ-3A | breakup | the parent has no catalogue number |
 | 35698:2010-06-21 BRIZ-M TANK | aerodynamic | an aerodynamic breakup at reentry |
 | 22698:2010-07-01 RADCAL | release | a release of objects, not a breakup |
 | 36511:2010-07-20 Kosmos-2462 | release | a release of objects, not a breakup |
@@ -490,8 +480,6 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | A:1998-067:2011-01-21 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 37359:2011-01-30 Progress M-09M | release | a release of objects, not a breakup |
 | 32780:2011-03-05 CTDRS R/B | aerodynamic | an aerodynamic breakup at reentry |
-| A:1990-081:2011-03-10 CZ-4 | breakup | the parent has no catalogue number |
-| A:1978-026:2011-03-14 DELTA 1 | breakup | the parent has no catalogue number |
 | 11320:2011-04-01 Kosmos-1091 | release | a release of objects, not a breakup |
 | 13617:2011-04-01 Kosmos-1417 | release | a release of objects, not a breakup |
 | 3138:2011-05-01 OGO 5 | aerodynamic | an aerodynamic breakup at reentry |
@@ -503,27 +491,20 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 21847:2012-01-17 COSMOS 2176 | aerodynamic | an aerodynamic breakup at reentry |
 | 38049:2012-01-17 Feng Yun 2F | release | a release of objects, not a breakup |
 | 38073:2012-01-28 Progress M-14M | release | a release of objects, not a breakup |
-| A:2011-068:2012-02-04 CZ-2D | breakup | the parent has no catalogue number |
 | 36086:2012-02-16 Poisk | release | a release of objects, not a breakup |
 | 37764:2012-03-02 BEIDOU IGSO4 CZ-3A FINAL | aerodynamic | an aerodynamic breakup at reentry |
-| A:2010-059:2012-03-15 CZ-4C | breakup | the parent has no catalogue number |
-| A:1965-027:2012-03-28 OPS 4682 | breakup | the parent has no catalogue number |
 | 27453:2012-05-01 NOAA 17 | release | a release of objects, not a breakup |
-| A:1968-081:2012-05-01 TITAN 3C TRANSTAGE | breakup | the parent has no catalogue number |
 | 38461:2012-06-29 Shenzhou 9 | release | a release of objects, not a breakup |
 | 38552:2012-07-13 Meteosat 10 | release | a release of objects, not a breakup |
 | 39082:2013-04-19 Progress M-18M | release | a release of objects, not a breakup |
 | 11844:2013-05-23 COSMOS 1188 | aerodynamic | an aerodynamic breakup at reentry |
 | A:1998-067:2013-06-24 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 39179:2013-06-25 Shenzhou 10 | release | a release of objects, not a breakup |
-| A:1994-029:2013-08-10 PEGASUS | breakup | the parent has no catalogue number |
 | 40812:2013-08-19 ATV-PCE WAL-6 | release | objects released from the station on purpose, not a breakup |
 | 39267:2013-10-30 DANDE | release | a release of objects, not a breakup |
 | 39456:2013-11-30 Progress M-21M | release | a release of objects, not a breakup |
 | 12446:2014-01-01 Agena D | breakup | the window is wider than 93 days |
-| A:1993-016:2014-03-05 SL-16 | breakup | the parent has no catalogue number |
 | 18241:2014-03-21 Kosmos-1860 reactor core | release | a release of objects, not a breakup |
-| A:1987-068:2014-03-25 SL-14 | breakup | the parent has no catalogue number |
 | 9889:2014-03-29 COSMOS 862 DEB | aerodynamic | an aerodynamic breakup at reentry |
 | 9889:2014-05-19 Kosmos-862 baffle? | release | a release of objects, not a breakup |
 | 25544:2014-06-19 Zarya | release | objects released from the station on purpose, not a breakup |
@@ -533,7 +514,6 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 26400:2014-10-22 Zvezda | release | a release of objects, not a breakup |
 | 36086:2014-10-22 Poisk | release | a release of objects, not a breakup |
 | 40367:2015-01-06 Feng Yun 2G | release | a release of objects, not a breakup |
-| A:1979-104:2015-05-24 ARIANE 1 | breakup | the parent has no catalogue number |
 | 40279:2015-06-17 BREEZE-M DEB 21-Oct- | aerodynamic | an aerodynamic breakup at reentry |
 | 40732:2015-07-24 Meteosat 11 | release | a release of objects, not a breakup |
 | 41177:2015-12-24 Progress MS-01 | release | a release of objects, not a breakup |
@@ -542,19 +522,13 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 28163:2016-04-15 MOLNIYA 1-93 | aerodynamic | an aerodynamic breakup at reentry |
 | A:1998-067:2016-08-19 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 41812:2016-11-18 Shenzhou 11 | release | a release of objects, not a breakup |
-| A:1968-114:2016-12-29 DELTA 1 | breakup | the parent has no catalogue number |
 | 36105:2017-01-01 H-2A F16 Stage 2 | anomalous | the window is wider than 93 days |
-| A:1993-016:2017-01-02 SL-16 | breakup | the parent has no catalogue number |
-| A:1974-089:2017-01-17 THORAD DELTA 1 | breakup | the parent has no catalogue number |
-| A:2010-042:2017-01-19 CZ-3B | breakup | the parent has no catalogue number |
 | A:1998-067:2017-05-06 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | A:1998-067:2017-06-26 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 25162:2017-12-01 Globalstar M001 | release | a release of objects, not a breakup |
 | 27369:2017-12-01 H-2A F2 Stage 2 | release | a release of objects, not a breakup |
 | 36588:2017-12-01 SERVIS-2 | release | a release of objects, not a breakup |
-| A:2018-005:2018-01-12 Delta 379 | breakup | the parent has no catalogue number |
 | 26400:2018-02-02 Zvezda | release | a release of objects, not a breakup |
-| A:1999-040:2018-02-12 IUS | breakup | the parent has no catalogue number |
 | 18665:2018-04-01 Kosmos-1900 | release | a release of objects, not a breakup |
 | 20663:2018-04-01 Kosmos-2084 | aerodynamic | an aerodynamic breakup at reentry |
 | A:1998-067:2018-06-14 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
@@ -565,13 +539,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 44048:2019-03-04 Nusantara Satu | release | a release of objects, not a breakup |
 | 44063:2019-03-08 Crew Dragon | release | a release of objects, not a breakup |
 | 16591:2019-04-01 USA-15 | release | a release of objects, not a breakup |
-| A:1988-077:2019-04-08 TITAN 34D TRANSTAGE | breakup | the parent has no catalogue number |
 | 8871:2019-05-03 OPS 7837 | aerodynamic | an aerodynamic breakup at reentry |
 | 10358:2019-08-01 Kosmos-952 | release | a release of objects, not a breakup |
 | 15930:2019-08-01 Kosmos-1670 | release | a release of objects, not a breakup |
 | 22693:2019-08-01 Tsiklon-3 82-801 Stage 3 | release | a release of objects, not a breakup |
 | 7291:2019-08-01 Kosmos-651 | release | a release of objects, not a breakup |
-| A:2016-068:2019-08-03 CZ-2D | breakup | the parent has no catalogue number |
 | A:1998-067:2019-08-21 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | A:1998-067:2019-11-15 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 23847:2020-01-01 Ariane H10-3 V85 | breakup | the window is wider than 93 days |
@@ -585,13 +557,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 47233:2021-01-14 Dragon CRS-21 | release | a release of objects, not a breakup |
 | 12546:2021-03-01 CAT 03 | aerodynamic | an aerodynamic breakup at reentry |
 | 46920:2021-05-02 Dragon Resilience (Crew-1) | release | a release of objects, not a breakup |
-| A:2021-048:2021-06-03 GCAT auxiliary object A09767 | breakup | the parent has no catalogue number |
 | 48831:2021-07-10 Dragon CRS-22 | release | a release of objects, not a breakup |
 | 48852:2021-09-17 Shenzhou 12 | release | objects released from a crewed spacecraft on purpose, not a breakup |
 | 49221:2021-09-17 Shenzhou 12 Guidao Cang | release | objects released from a crewed spacecraft on purpose, not a breakup |
 | 49220:2021-09-18 Inspiration4 | release | a release of objects, not a breakup |
 | 49117:2021-09-30 Dragon CRS-23 | release | a release of objects, not a breakup |
-| A:1987-011:2021-10-13 COSMOS 1818 COOLANT | breakup | the parent has no catalogue number |
 | 48209:2021-11-09 Dragon Endeavour (Crew-2) | release | a release of objects, not a breakup |
 | 49818:2021-12-18 LDPE 1 | release | a release of objects, not a breakup |
 | A:1998-067:2022-01-19 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
@@ -617,13 +587,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 20826:2023-01-01 Meteor-2 | breakup | the window is wider than 93 days |
 | 54371:2023-01-11 Dragon CRS-26 | release | a release of objects, not a breakup |
 | 55131:2023-01-16 Shi Jian 23 | release | a release of objects, not a breakup |
-| A:2018-081:2023-02-01 GCAT auxiliary object A09209 | breakup | the parent has no catalogue number |
 | 54699:2023-02-22 Shiyan 20A | release | a release of objects, not a breakup |
 | 53963:2023-03-12 Dragon Endurance (Crew-5) | release | a release of objects, not a breakup |
 | 55860:2023-04-15 Dragon CRS-27 | release | a release of objects, not a breakup |
 | A:1998-067:2023-05-04 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 36086:2023-05-12 Poisk | release | a release of objects, not a breakup |
-| A:2013-076:2023-05-28 COSMOS 2491 | breakup | the parent has no catalogue number |
 | 56739:2023-05-31 Axiom Ax-2 | release | a release of objects, not a breakup |
 | 54379:2023-06-03 Shenzhou 15 | release | a release of objects, not a breakup |
 | 36086:2023-06-22 Poisk | release | a release of objects, not a breakup |
@@ -637,16 +605,12 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 58815:2024-02-09 Axiom Ax-3 | release | a release of objects, not a breakup |
 | 58658:2024-02-22 Kosmos-2574 | release | a release of objects, not a breakup |
 | 57697:2024-03-12 Dragon Endurance (Crew-7) | release | a release of objects, not a breakup |
-| A:2018-005:2024-03-17 DELTA 4 | breakup | the parent has no catalogue number |
 | U:1:2024-04-02 rocket body, 6,000 kg, LEO (unnamed) | unnamed | the report names no object |
-| A:1968-081:2024-04-03 TITAN 3C TRANSTAGE | breakup | the parent has no catalogue number |
 | U:2:2024-04-08 payload, 2,382 kg, LMO (unnamed) | unnamed | the report names no object |
 | 59287:2024-04-30 Dragon CRS-30 | release | a release of objects, not a breakup |
 | 58146:2024-04-30 Shenzhou 17 | release | a release of objects, not a breakup |
 | U:3:2024-05-27 payload, 2,500 kg, GEO (unnamed) | unnamed | the report names no object |
-| A:2023-084:2024-06-01 GCAT auxiliary object A10979 | anomalous | the parent has no catalogue number |
 | U:4:2024-07-05 rocket body, 6,000 kg, LEO (unnamed; secondary reports name a CZ-6A upper stage, 2024-126C, of 4 July 2024) | unnamed | the report names no object |
-| A:2024-149:2024-08-16 GCAT auxiliary object A11288 | breakup | the parent has no catalogue number |
 | 61042:2024-09-15 Polaris Dawn | release | a release of objects, not a breakup |
 | 61049:2024-10-04 SpaceMobile-004 | release | a release of objects, not a breakup |
 | 61506:2024-10-11 Shi Jian 19 | release | a release of objects, not a breakup |
@@ -655,9 +619,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 61045:2024-10-22 SpaceMobile-003 | release | a release of objects, not a breakup |
 | 61046:2024-10-22 SpaceMobile-005 | release | a release of objects, not a breakup |
 | 59097:2024-10-25 Dragon Endeavour (Crew-8) | release | a release of objects, not a breakup |
-| A:2008-003:2024-11-01 GCAT auxiliary object A07325 | breakup | the parent has no catalogue number |
 | 59591:2024-11-03 Shenzhou 18 | release | a release of objects, not a breakup |
-| A:2024-199:2024-11-05 GCAT auxiliary object A11343 | breakup | the parent has no catalogue number |
 | U:5:2024-12-01 rocket body, 6,000 kg, LEO (unnamed) | unnamed | the report names no object |
 | 61791:2024-12-17 Dragon CRS-31 | release | a release of objects, not a breakup |
 | A:1998-067:2024-12-19 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
@@ -667,14 +629,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 61683:2025-04-30 Shenzhou 19 | release | a release of objects, not a breakup |
 | 66264:2025-11-14 CZ-2F Y21 Stage 2 | release | a release of objects, not a breakup |
 | 62485:2025-12-22 Shi Jian 25 | release | a release of objects, not a breakup |
-| A:2025-313:2025-12-28 GCAT auxiliary object A11727 | breakup | the parent has no catalogue number |
 | 63632:2026-01-19 Shenzhou 20 | release | a release of objects, not a breakup |
-| A:1965-027:2026-05-03 OPS 4682 | breakup | the parent has no catalogue number |
 | 64543:2026-05-10 W-4 | release | a release of objects, not a breakup |
 | A:1998-067:2026-05-27 GCAT auxiliary object A06581 | release | objects released from the station on purpose, not a breakup |
 | 36086:2026-05-27 Poisk | release | a release of objects, not a breakup |
 | 66645:2026-05-29 Shenzhou 22 | release | a release of objects, not a breakup |
-| A:1998-037:2026-06-19 INTELSAT 805 | breakup | the parent has no catalogue number |
 
 ## Overrides applied
 
@@ -750,6 +709,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 27474:2005-06-30 DM5-2L SOZ-1 | breakup | 2005-06-30T00:00Z to 2005-07-01T00:00Z | day | C | LEO | rocket body | propulsion | 55 | gcat |  |  |
 | 11962:2006-02-01 Meteor-2 No. 5L | breakup | 2006-02-01T00:00Z to 2006-05-01T00:00Z | month | C | LEO | payload | battery | 21 | gcat, gcat |  |  |
 | 20:2006-02-14 VANGUARD 3 | anomalous | 2006-02-14T00:00Z to 2006-02-15T00:00Z | day | B | MEO | payload | unknown | 2 | hoosf-16e, gcat | 2006-07-01 (hoosf-16e, month) | 2006-07-01 (hoosf-16e, month) |
+| A:1993-016:2006-02-20 SL-16 | breakup | 2006-02-20T02:55Z to 2006-04-21T02:55Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
 | 24284:2006-03-01 Zenit part | breakup | 2006-03-01T00:00Z to 2006-06-01T00:00Z | month | C | LEO | debris | unknown | 1 | gcat |  |  |
 | 16191:2006-04-01 Meteor-3 | breakup | 2006-04-01T00:00Z to 2006-07-01T00:00Z | month | C | LEO | payload | battery | 4 | gcat |  |  |
 | 18361:2006-04-01 NNS 30270-07 | anomalous | 2006-04-01T00:00Z to 2006-07-01T00:00Z | month | C | LEO | payload | unknown | 5 | gcat, catalogue |  |  |
@@ -759,6 +719,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 3094:2006-04-23 Delta 56 | breakup | 2006-04-23T00:00Z to 2006-04-26T00:00Z | day | C | LEO | rocket body | unknown | 10 | gcat, gcat, catalogue |  |  |
 | 16263:2006-05-04 COSMOS 1703 R/B | breakup | 2006-05-04T16:04Z | minute | A | LEO | rocket body | propulsion | 51 | hoosf-16e, gcat, gcat, catalogue | 2006-07-01 (hoosf-16e, month) | 2006-07-01 (hoosf-16e, month) |
 | 12054:2006-06-01 Kosmos-1220 | anomalous | 2006-06-01T00:00Z to 2006-09-01T00:00Z | month | C | LEO | payload | unknown | 2 | gcat |  |  |
+| A:1981-120:2006-06-06 SL-8 | breakup | 2006-06-06T02:34Z to 2006-08-05T02:34Z | none | D | unknown | payload | unknown | 9 | catalogue |  |  |
 | 20081:2006-06-10 COSMOS 2022-2024 ULLAGE MOTOR | breakup | 2006-06-10T13:20Z | minute | A | HEO | debris | propulsion | 120 | hoosf-16e, gcat, gcat, catalogue | 2006-07-01 (hoosf-16e, month) | 2006-07-01 (hoosf-16e, month) |
 | 23342:2006-07-01 Resurs-O1 | anomalous | 2006-07-01T00:00Z to 2006-10-01T00:00Z | month | C | LEO | payload | unknown | 2 | gcat |  |  |
 | 5117:2006-07-01 Kosmos-405 | anomalous | 2006-07-01T00:00Z to 2006-10-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
@@ -803,9 +764,13 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 19070:2008-08-01 NNS 30230-12 | anomalous | 2008-08-01T00:00Z to 2008-11-01T00:00Z | month | C | LEO | payload | unknown | 4 | gcat |  |  |
 | 33331:2008-09-06 GeoEye-1 | anomalous | 2008-09-06T00:00Z to 2008-09-08T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 33323:2008-09-06 CZ-2C SMA-Y1 Stage 2 | breakup | 2008-09-06T03:40Z | minute | C | LEO | rocket body | propulsion | 17 | gcat, gcat |  |  |
+| A:1989-006:2008-10-03 ARIANE 2 | breakup | 2008-10-03T00:00Z to 2008-12-02T00:00Z | none | D | unknown | payload | unknown | 36 | catalogue |  |  |
+| A:1968-081:2008-11-23 TITAN 3C TRANSTAGE | breakup | 2008-11-23T05:59Z to 2009-01-22T05:59Z | none | D | unknown | rocket body | unknown | 5 | catalogue |  |  |
 | 12627:2008-11-27 COSMOS 1285 | breakup | 2008-11-27T06:31Z to 2009-01-26T06:31Z | none | D | HEO | payload | unknown | 7 | catalogue |  |  |
 | 14064:2008-12-01 Kosmos-1461 | breakup | 2008-12-01T00:00Z to 2009-03-01T00:00Z | month | C | LEO | payload | propulsion | 5 | gcat |  |  |
 | 1814:2008-12-01 FR-1 | anomalous | 2008-12-01T00:00Z to 2009-03-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1988-109:2008-12-03 ARIANE 44LP | breakup | 2008-12-03T05:07Z to 2009-02-01T05:07Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
+| A:1992-072:2008-12-19 ARIANE 42P+ | breakup | 2008-12-19T12:36Z to 2009-02-17T12:36Z | none | D | unknown | payload | unknown | 16 | catalogue |  |  |
 | 25791:2009-01-01 FUSE | anomalous | 2009-01-01T00:00Z to 2009-04-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 33500:2009-01-23 H-IIA-F15 | breakup | 2009-01-23T04:09Z | minute | C | LEO | rocket body | propulsion | 10 | gcat, gcat |  |  |
 | 22675:2009-02-10 COSMOS 2251 | breakup | 2009-02-10T16:56Z | minute | A | LEO | payload | collision-accidental | 1716 | hoosf-16e, gcat, gcat, catalogue | 2009-04-01 (hoosf-16e, month) | 2009-04-01 (hoosf-16e, month) |
@@ -816,6 +781,8 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 11605:2009-03-18 METEOR 2-5 | breakup | 2009-03-18T19:37Z to 2009-05-17T19:37Z | none | D | LEO | payload | unknown | 6 | catalogue |  |  |
 | 18820:2009-03-29 METEOR 2-17 | breakup | 2009-03-29T23:27Z to 2009-05-28T23:27Z | none | D | LEO | payload | unknown | 10 | catalogue |  |  |
 | 13770:2009-04-01 Kosmos-1437 | anomalous | 2009-04-01T00:00Z to 2009-07-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1993-014:2009-04-13 SL-18 | breakup | 2009-04-13T07:02Z to 2009-06-12T07:02Z | none | D | unknown | payload | unknown | 10 | catalogue |  |  |
+| A:1987-068:2009-04-28 SL-14 | breakup | 2009-04-28T06:32Z to 2009-06-27T06:32Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
 | 12456:2009-05-01 Meteor-2 | breakup | 2009-05-01T00:00Z to 2009-08-01T00:00Z | month | C | LEO | payload | battery | 1 | gcat |  |  |
 | 13777:2009-05-01 IRAS | anomalous | 2009-05-01T00:00Z to 2009-08-01T00:00Z | month | C | LEO | payload | unknown | 3 | gcat |  |  |
 | 19419:2009-05-01 NNS 30250-25 | anomalous | 2009-05-01T00:00Z to 2009-08-01T00:00Z | month | C | LEO | payload | unknown | 4 | gcat |  |  |
@@ -840,6 +807,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 33408:2009-11-01 Shi Jian 6/3B | anomalous | 2009-11-01T00:00Z to 2010-02-01T00:00Z | month | C | LEO | payload | unknown | 3 | gcat |  |  |
 | 8293:2009-11-01 Meteor | anomalous | 2009-11-01T00:00Z to 2010-02-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 8591:2009-11-01 Kosmos-789 | anomalous | 2009-11-01T00:00Z to 2010-02-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1978-098:2009-11-01 GCAT auxiliary object A03006 | anomalous | 2009-11-01T00:00Z to 2010-02-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 13113:2009-11-02 METEOR 2-8 | breakup | 2009-11-02T00:46Z to 2010-01-01T00:46Z | none | D | LEO | payload | unknown | 40 | catalogue |  |  |
 | 23342:2009-12-01 Resurs-O1 | anomalous | 2009-12-01T00:00Z to 2010-03-01T00:00Z | month | C | LEO | payload | unknown | 6 | gcat, catalogue |  |  |
 | 29092:2010-02-04 YAOGAN 1 | breakup | 2010-02-04T06:49Z | minute | A | LEO | payload | unknown | 7 | hoosf-16e, gcat, gcat | 2010-04-01 (hoosf-16e, month) | 2010-04-01 (hoosf-16e, month) |
@@ -847,6 +815,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 14452:2010-05-01 Meteor-2 | breakup | 2010-05-01T00:00Z to 2010-08-01T00:00Z | month | C | LEO | payload | battery | 3 | gcat |  |  |
 | 11605:2010-05-26 METEOR 2-5 | breakup | 2010-05-26T11:51Z to 2010-07-25T11:51Z | none | D | LEO | payload | unknown | 39 | catalogue |  |  |
 | 18123:2010-06-01 DMSP F-8 | breakup | 2010-06-01T00:00Z to 2010-09-01T00:00Z | month | C | LEO | payload | battery | 3 | gcat, gcat |  |  |
+| A:2007-003:2010-06-04 CZ-3A | breakup | 2010-06-04T01:29Z to 2010-08-03T01:29Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
 | 5731:2010-06-05 METEOR 1-10 | breakup | 2010-06-05T20:13Z to 2010-08-04T20:13Z | none | D | LEO | payload | unknown | 8 | catalogue |  |  |
 | 36597:2010-06-15 CZ-2D Y15 Stage 2 | breakup | 2010-06-15T01:51Z | minute | C | unknown | rocket body | unknown | 1 | gcat, catalogue |  |  |
 | 12456:2010-07-01 Meteor-2 | breakup | 2010-07-01T00:00Z to 2010-10-01T00:00Z | month | C | LEO | payload | battery | 12 | gcat, catalogue |  |  |
@@ -863,6 +832,8 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 30590:2010-12-23 IGS 4A/4B R/B DEBRIS | breakup | 2010-12-23T16:00Z | minute | A | LEO | debris | unknown | 3 | hoosf-16e, gcat, gcat | 2011-01-01 (hoosf-16e, month) | 2011-01-01 (hoosf-16e, month) |
 | 37345:2011-01-20 Fregat-SB No. 2001 | breakup | 2011-01-20T00:00Z to 2011-01-22T00:00Z | day | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
 | 2173:2011-03-01 Nimbus 2 | anomalous | 2011-03-01T00:00Z to 2011-06-01T00:00Z | month | C | LEO | payload | unknown | 26 | gcat |  |  |
+| A:1990-081:2011-03-10 CZ-4 | breakup | 2011-03-10T10:06Z to 2011-05-09T10:06Z | none | D | unknown | payload | unknown | 18 | catalogue |  |  |
+| A:1978-026:2011-03-14 DELTA 1 | breakup | 2011-03-14T05:35Z to 2011-05-13T05:35Z | none | D | unknown | payload | unknown | 41 | catalogue |  |  |
 | 16969:2011-04-01 NOAA 10 | breakup | 2011-04-01T00:00Z to 2011-07-01T00:00Z | month | C | LEO | payload | battery | 3 | gcat |  |  |
 | 25260:2011-04-01 SPOT-4 | anomalous | 2011-04-01T00:00Z to 2011-07-01T00:00Z | month | C | LEO | payload | unknown | 2 | gcat |  |  |
 | 33433:2011-05-01 Shiyan Weixing 3 | anomalous | 2011-05-01T00:00Z to 2011-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
@@ -873,8 +844,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 20630:2011-11-18 COSMOS 2079-81 ULLAGE MOTOR | breakup | 2011-11-18T03:44Z | minute | A | HEO | debris | propulsion | 2 | hoosf-16e, gcat, gcat | 2012-01-01 (hoosf-16e, month) | 2012-01-01 (hoosf-16e, month) |
 | 23342:2011-12-01 Resurs-O1 | anomalous | 2011-12-01T00:00Z to 2012-03-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 38015:2011-12-21 NIGCOMSAT 1R R/B | breakup | 2011-12-21T00:00Z to 2011-12-22T00:00Z | day | B | HEO | rocket body | unknown | 39 | hoosf-16e, gcat, gcat, catalogue | 2012-01-01 (hoosf-16e, month) | 2012-01-01 (hoosf-16e, month) |
+| A:2011-068:2012-02-04 CZ-2D | breakup | 2012-02-04T19:06Z to 2012-04-04T19:06Z | none | D | unknown | payload | unknown | 6 | catalogue |  |  |
 | 18820:2012-02-19 METEOR 2-17 | breakup | 2012-02-19T17:37Z to 2012-04-19T17:37Z | none | D | LEO | payload | unknown | 16 | catalogue |  |  |
 | 38092:2012-02-26 BEIDOU G5 R/B | breakup | 2012-02-26T00:00Z to 2012-02-27T00:00Z | day | B | HEO | rocket body | unknown | 44 | hoosf-16e, gcat, gcat, catalogue | 2012-04-01 (hoosf-16e, month) | 2012-04-01 (hoosf-16e, month) |
+| A:2010-059:2012-03-15 CZ-4C | breakup | 2012-03-15T03:02Z to 2012-05-14T03:02Z | none | D | unknown | payload | unknown | 5 | catalogue |  |  |
+| A:1965-027:2012-03-28 OPS 4682 | breakup | 2012-03-28T05:07Z to 2012-05-27T05:07Z | none | D | unknown | payload | unknown | 102 | catalogue |  |  |
 | 1952:2012-05-01 NNS 30070 | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 2807:2012-05-01 NNS 30130-40 | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 29107:2012-05-01 Cloudsat | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
@@ -882,6 +856,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 670:2012-05-01 Transit VBN-1 | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 2 | gcat |  |  |
 | 8026:2012-05-01 Meteor-2 | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 9903:2012-05-01 Meteor | anomalous | 2012-05-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1968-081:2012-05-01 TITAN 3C TRANSTAGE | breakup | 2012-05-01T09:37Z to 2012-06-30T09:37Z | none | D | unknown | rocket body | unknown | 16 | catalogue |  |  |
 | 14064:2012-06-01 Kosmos-1461 | breakup | 2012-06-01T00:00Z to 2012-09-01T00:00Z | month | C | LEO | payload | propulsion | 2 | gcat |  |  |
 | 23455:2012-07-01 NOAA 14 | anomalous | 2012-07-01T00:00Z to 2012-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | hoosf-16e, gcat |  |  |
 | 29659:2012-09-01 Kosmos-3M 27-226 SL Stage 2 | anomalous | 2012-09-01T00:00Z to 2012-12-01T00:00Z | month | C | LEO | rocket body | unknown | 1 | gcat |  |  |
@@ -893,14 +868,17 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 39128:2013-04-15 Briz-M No. 99538 | breakup | 2013-04-15T00:00Z to 2013-04-17T00:00Z | day | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
 | 25260:2013-05-01 SPOT-4 | anomalous | 2013-05-01T00:00Z to 2013-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 2909:2013-08-01 SURCAL 6? | anomalous | 2013-08-01T00:00Z to 2013-11-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1994-029:2013-08-10 PEGASUS | breakup | 2013-08-10T21:32Z to 2013-10-09T21:32Z | none | D | unknown | payload | unknown | 18 | catalogue |  |  |
 | 39271:2013-09-29 CASSIOPE R/B | breakup | 2013-09-29T16:41Z | minute | A | LEO | rocket body | unknown | 23 | hoosf-16e, gcat, gcat |  |  |
 | 37211:2013-11-01 CZ-3C Y5 | breakup | 2013-11-01T17:31Z | minute | C | HEO | rocket body | propulsion | 61 | gcat, gcat, catalogue, catalogue |  |  |
 | 23560:2013-12-01 ERS-2 | anomalous | 2013-12-01T00:00Z to 2014-03-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 39523:2014-02-14 Briz-M No. 99544 | breakup | 2014-02-14T21:18Z | minute | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
 | 39580:2014-02-27 H-2A F23 Stage 2 | breakup | 2014-02-27T18:52Z | minute | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
 | 10095:2014-03-01 Kosmos-921 | anomalous | 2014-03-01T00:00Z to 2014-06-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1993-016:2014-03-05 SL-16 | breakup | 2014-03-05T18:40Z to 2014-05-04T18:40Z | none | D | unknown | payload | unknown | 33 | catalogue |  |  |
 | 17535:2014-03-11 COSMOS 1823 | breakup | 2014-03-11T14:00Z to 2014-05-10T14:00Z | none | D | LEO | payload | unknown | 25 | catalogue |  |  |
 | 18187:2014-03-21 COSMOS 1867 | anomalous | 2014-03-21T00:00Z to 2014-04-05T00:00Z | day | C | LEO | payload | unknown | 44 | hoosf-16e, gcat, gcat, catalogue |  |  |
+| A:1987-068:2014-03-25 SL-14 | breakup | 2014-03-25T10:57Z to 2014-05-24T10:57Z | none | D | unknown | payload | unknown | 17 | catalogue |  |  |
 | 25637:2014-04-28 ARGOS/ORSTED/SUNSAT R/B | breakup | 2014-04-28T00:00Z to 2014-04-29T00:00Z | day | B | LEO | rocket body | unknown | 7 | hoosf-16e, gcat, gcat, catalogue | 2014-07-01 (hoosf-16e, month) | 2014-07-01 (hoosf-16e, month) |
 | 31793:2014-05-09 Zenit-2M 1-2005 Stage 2 | breakup | 2014-05-09T00:00Z to 2014-05-12T00:00Z | day | C | LEO | rocket body | unknown | 8 | gcat |  |  |
 | 31792:2014-05-10 COSMOS 2428 | breakup | 2014-05-10T20:24Z | minute | A | LEO | payload | unknown | 10 | hoosf-16e, gcat, catalogue | 2014-07-01 (hoosf-16e, month) | 2014-07-01 (hoosf-16e, month) |
@@ -928,6 +906,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 40620:2015-04-28 PROGRESS-M 27M R/B | breakup | 2015-04-28T07:18:35.000Z | second | A | LEO | rocket body | unknown | 21 | hoosf-16e |  |  |
 | 40556:2015-04-29 BRIZ-KM R/B | anomalous | 2015-04-29T00:00Z to 2015-04-30T00:00Z | day | B | LEO | rocket body | propulsion | 6 | hoosf-16e, gcat, gcat, catalogue |  |  |
 | 31116:2015-05-01 CZ-3A Y13 | breakup | 2015-05-01T00:00Z to 2015-08-01T00:00Z | month | C | HEO | rocket body | propulsion | 3 | gcat, gcat |  |  |
+| A:1979-104:2015-05-24 ARIANE 1 | breakup | 2015-05-24T11:23Z to 2015-07-23T11:23Z | none | D | unknown | payload | unknown | 9 | catalogue |  |  |
 | 13736:2015-07-01 DMSP 5D-2 F-6 | breakup | 2015-07-01T00:00Z to 2015-10-01T00:00Z | month | C | LEO | payload | battery | 6 | gcat, gcat, catalogue |  |  |
 | 23561:2015-07-27 ERS-2 R/B | anomalous | 2015-07-27T00:00Z to 2015-07-28T00:00Z | day | B | LEO | rocket body | unknown | 1 | hoosf-16e |  |  |
 | 37756:2015-08-03 SL-23 DEB | breakup | 2015-08-03T00:00Z to 2015-08-05T00:00Z | day | B | MEO | debris | unknown | 334 | hoosf-16e | 2016-04-01 (hoosf-16e, month) | 2016-04-01 (hoosf-16e, month) |
@@ -948,8 +927,12 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 39634:2016-08-23 SENTINEL 1A | breakup | 2016-08-23T17:07Z | minute | A | LEO | payload | collision-accidental | 8 | hoosf-16e, gcat, gcat, catalogue |  |  |
 | 38248:2016-09-30 RISAT 1 | anomalous | 2016-09-30T04:00Z | minute | B | LEO | payload | unknown | 2 | hoosf-16e, gcat, gcat | 2016-10-01 (hoosf-16e, month) | 2016-10-01 (hoosf-16e, month) |
 | 23233:2016-10-23 USA 106 (DMSP 5D-2 F12) | anomalous | 2016-10-23T15:49Z | minute | B | LEO | payload | battery | 5 | hoosf-16e, gcat, gcat |  |  |
+| A:1968-114:2016-12-29 DELTA 1 | breakup | 2016-12-29T07:00Z to 2017-02-27T07:00Z | none | D | unknown | payload | unknown | 15 | catalogue |  |  |
 | 13552:2017-01-01 Kosmos-1408 | anomalous | 2017-01-01T00:00Z to 2017-04-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1993-016:2017-01-02 SL-16 | breakup | 2017-01-02T21:20Z to 2017-03-03T21:20Z | none | D | unknown | payload | unknown | 19 | catalogue |  |  |
 | 12504:2017-01-04 COSMOS 1275 | breakup | 2017-01-04T05:07Z to 2017-03-05T05:07Z | none | D | LEO | payload | unknown | 122 | catalogue |  |  |
+| A:1974-089:2017-01-17 THORAD DELTA 1 | breakup | 2017-01-17T04:06Z to 2017-03-18T04:06Z | none | D | unknown | payload | unknown | 30 | catalogue |  |  |
+| A:2010-042:2017-01-19 CZ-3B | breakup | 2017-01-19T16:07Z to 2017-03-20T16:07Z | none | D | unknown | payload | unknown | 7 | catalogue |  |  |
 | 15333:2017-02-01 Kosmos-1603 | anomalous | 2017-02-01T00:00Z to 2017-05-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 27820:2017-06-17 AMC-9 (GE-12) | anomalous | 2017-06-17T07:27Z | minute | B | GEO | payload | unknown | 1 | hoosf-16e, gcat | 2018-02-01 (hoosf-16e, month) | 2018-02-01 (hoosf-16e, month) |
 | 25880:2017-08-25 TELKOM 1 | anomalous | 2017-08-25T00:00Z to 2017-08-26T00:00Z | day | B | GEO | payload | unknown | 1 | hoosf-16e, gcat | 2018-02-01 (hoosf-16e, month) | 2018-02-01 (hoosf-16e, month) |
@@ -970,9 +953,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 38341:2017-12-01 H-2A F21 Stage 2 | anomalous | 2017-12-01T00:00Z to 2018-03-01T00:00Z | month | C | LEO | rocket body | unknown | 3 | gcat |  |  |
 | 9509:2017-12-01 Kosmos-864 | anomalous | 2017-12-01T00:00Z to 2018-03-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 42052:2018-01-01 PSLV-C37 PS4 | anomalous | 2018-01-01T00:00Z | minute | C | LEO | rocket body | unknown | 1 | gcat |  |  |
+| A:2018-005:2018-01-12 Delta 379 | breakup | 2018-01-12T22:21Z | minute | C | LEO | payload | propulsion | 6 | gcat, gcat |  |  |
 | 39014:2018-02-01 CZ-4C Y9 Stage 3 | breakup | 2018-02-01T00:00Z to 2018-05-01T00:00Z | month | C | LEO | rocket body | unknown | 1 | gcat |  |  |
 | 16139:2018-02-08 COSMOS 1691 | breakup | 2018-02-08T00:42Z to 2018-04-09T00:42Z | none | D | LEO | payload | unknown | 5 | catalogue |  |  |
 | 43089:2018-02-12 FREGAT DEB (TANK) | breakup | 2018-02-12T09:57Z | minute | A | MEO | debris | unknown | 5 | hoosf-16e, gcat, gcat | 2018-05-01 (hoosf-16e, month) | 2018-05-01 (hoosf-16e, month) |
+| A:1999-040:2018-02-12 IUS | breakup | 2018-02-12T11:15Z to 2018-04-13T11:15Z | none | D | unknown | payload | unknown | 6 | catalogue |  |  |
 | 3692:2018-02-28 TITAN IIIC TRANSTAGE R/B | breakup | 2018-02-28T21:01Z | minute | A | GEO | rocket body | propulsion | 19 | hoosf-16e, gcat, gcat, catalogue | 2018-05-01 (hoosf-16e, month) | 2018-05-01 (hoosf-16e, month) |
 | 19256:2018-04-01 Kosmos-1954 | anomalous | 2018-04-01T00:00Z to 2018-07-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 43433:2018-04-19 Briz-M No. 99563 | breakup | 2018-04-19T07:14Z | minute | C | unknown | rocket body | propulsion | 1 | gcat |  |  |
@@ -991,6 +976,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 13589:2019-04-06 Kosmos-1410 | breakup | 2019-04-06T00:00Z to 2019-04-07T00:00Z | day | C | LEO | payload | battery | 1 | gcat |  |  |
 | 43652:2019-04-06 USA 288 R/B | breakup | 2019-04-06T18:59Z | minute | A | HEO | rocket body | unknown | 183 | hoosf-16e, gcat, gcat, catalogue, catalogue, catalogue | 2019-08-01 (hoosf-16e, month) | 2019-08-01 (hoosf-16e, month) |
 | 41308:2019-04-07 Intelsat IS-29e | breakup | 2019-04-07T00:00Z to 2019-04-08T00:00Z | day | C | GEO | payload | unknown | 2 | gcat |  |  |
+| A:1988-077:2019-04-08 TITAN 34D TRANSTAGE | breakup | 2019-04-08T22:42Z to 2019-06-07T22:42Z | none | D | unknown | rocket body | unknown | 8 | catalogue |  |  |
 | 27424:2019-04-29 AQUA | anomalous | 2019-04-29T00:00Z to 2019-04-30T00:00Z | day | B | LEO | payload | unknown | 4 | hoosf-16e, gcat |  |  |
 | 23560:2019-05-01 ERS-2 | anomalous | 2019-05-01T00:00Z to 2019-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
 | 8751:2019-05-07 LES 8,9/SOLRAD 11A,11B R/B | breakup | 2019-05-07T19:02Z | minute | A | GEO | rocket body | propulsion | 0 | hoosf-16e, gcat | 2019-11-01 (hoosf-16e, month) | 2019-11-01 (hoosf-16e, month) |
@@ -1002,6 +988,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 39411:2019-08-01 CZ-4C Y14 Stage 3 | anomalous | 2019-08-01T00:00Z to 2019-11-01T00:00Z | month | C | LEO | rocket body | unknown | 1 | gcat |  |  |
 | 41309:2019-08-01 Ariane 5 L583 ESC-A | breakup | 2019-08-01T00:00Z to 2019-11-01T00:00Z | month | C | HEO | rocket body | propulsion | 1 | gcat |  |  |
 | 6909:2019-08-01 NNS 30200-16 | anomalous | 2019-08-01T00:00Z to 2019-11-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:2016-068:2019-08-03 CZ-2D | breakup | 2019-08-03T13:26Z to 2019-10-02T13:26Z | none | D | unknown | payload | unknown | 5 | catalogue |  |  |
 | 37144:2019-08-12 COSMOS 2464-2466 ULLAGE MOTOR | breakup | 2019-08-12T13:58Z | minute | A | HEO | debris | propulsion | 23 | hoosf-16e, gcat, gcat, catalogue | 2019-11-01 (hoosf-16e, month) | 2019-11-01 (hoosf-16e, month) |
 | 20826:2019-09-01 Meteor-2 | breakup | 2019-09-01T00:00Z to 2019-12-01T00:00Z | month | C | LEO | payload | battery | 4 | gcat |  |  |
 | 32958:2019-09-01 Feng Yun 3A | anomalous | 2019-09-01T00:00Z to 2019-12-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
@@ -1033,11 +1020,13 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 14064:2021-03-01 Kosmos-1461 | breakup | 2021-03-01T00:00Z to 2021-06-01T00:00Z | month | C | LEO | payload | propulsion | 3 | gcat |  |  |
 | 27453:2021-03-10 NOAA 17 | breakup | 2021-03-10T07:11Z | minute | A | LEO | payload | unknown | 117 | hoosf-16e, gcat, gcat, catalogue | 2021-06-01 (hoosf-16e, month) | 2021-06-01 (hoosf-16e, month) |
 | 44547:2021-03-18 YUNHAI 1-02 | breakup | 2021-03-18T07:41Z | minute | A | LEO | payload | unknown | 37 | hoosf-16e, gcat, gcat, catalogue | 2021-06-01 (hoosf-16e, month) | 2021-06-01 (hoosf-16e, month) |
+| A:2021-048:2021-06-03 GCAT auxiliary object A09767 | breakup | 2021-06-03T18:15Z | minute | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 2173:2021-07-01 Nimbus 2 | anomalous | 2021-07-01T00:00Z to 2021-10-01T00:00Z | month | C | LEO | payload | unknown | 10 | gcat |  |  |
 | 49010:2021-07-04 CZ-4C Y43 Stage 3 | anomalous | 2021-07-04T23:48Z | minute | C | unknown | rocket body | unknown | 1 | gcat |  |  |
 | 28492:2021-07-26 HELIOS 2A | anomalous | 2021-07-26T00:00Z to 2021-07-27T00:00Z | day | B | LEO | payload | unknown | 8 | hoosf-16e, gcat, gcat, catalogue |  |  |
 | 39375:2021-09-18 Raduga-1M | breakup | 2021-09-18T00:00Z to 2021-09-21T00:00Z | day | C | GEO | payload | unknown | 1 | gcat |  |  |
 | 11635:2021-09-30 SATCOM 3 | breakup | 2021-09-30T14:36Z to 2021-11-29T14:36Z | none | D | HEO | payload | unknown | 5 | catalogue |  |  |
+| A:1987-011:2021-10-13 COSMOS 1818 COOLANT | breakup | 2021-10-13T19:11Z to 2021-12-12T19:11Z | none | D | unknown | payload | unknown | 23 | catalogue |  |  |
 | 39765:2021-10-23 COSMOS 2499 | breakup | 2021-10-23T18:14Z | minute | A | LEO | payload | unknown | 22 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
 | 13552:2021-11-15 COSMOS 1408 | breakup | 2021-11-15T02:48Z | minute | A | LEO | payload | collision-deliberate | 1790 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
 | 25117:2021-11-18 ORBCOMM FM5 | breakup | 2021-11-18T06:30Z | minute | B | LEO | payload | unknown | 15 | hoosf-16e, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
@@ -1054,8 +1043,10 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 54258:2022-11-16 Artemis I ICPS | breakup | 2022-11-16T08:15Z | minute | C | LEO | rocket body | propulsion | 12 | gcat, gcat, catalogue |  |  |
 | 38345:2022-11-17 H-IIA lower fairing panel (GCOM-W1) | breakup | 2022-11-17T23:36Z | minute | A | LEO | debris | unknown | 1 | odqn, gcat, catalogue | 2023-03-01 (odqn, month) | 2023-03-01 (odqn, month) |
 | 39765:2023-01-04 Cosmos 2499 (second event) | breakup | 2023-01-04T03:57Z | minute | A | LEO | payload | unknown | 20 | odqn, gcat, catalogue | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
+| A:2018-081:2023-02-01 GCAT auxiliary object A09209 | breakup | 2023-02-01T00:00Z to 2023-05-01T00:00Z | month | C | unknown | payload | unknown | 11 | gcat, catalogue |  |  |
 | 55565:2023-02-10 SSLV SS3 third stage | breakup | 2023-02-10T09:00Z to 2023-02-10T21:35Z | hour | B | LEO | rocket body | unknown | 5 | odqn, gcat | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
 | 25984:2023-03-11 Orbcomm FM 36 | breakup | 2023-03-11T01:45Z | minute | B | LEO | payload | unknown | 9 | odqn, gcat, gcat, catalogue | 2023-06-01 (odqn, month) | 2023-06-01 (odqn, month) |
+| A:2013-076:2023-05-28 COSMOS 2491 | breakup | 2023-05-28T07:25Z to 2023-07-27T07:25Z | none | D | unknown | payload | unknown | 25 | catalogue |  |  |
 | 7274:2023-06-01 Meteor (M) 22L | breakup | 2023-06-01T00:00Z to 2023-09-01T00:00Z | month | C | LEO | payload | unknown | 9 | gcat, gcat, catalogue |  |  |
 | 21299:2023-06-29 Cosmos 2143 | breakup | 2023-06-29T06:49Z | minute | A | LEO | payload | unknown | 6 | odqn, gcat, gcat, catalogue | 2023-10-01 (odqn, month) | 2023-10-01 (odqn, month) |
 | 39162:2023-07-01 VESPA | breakup | 2023-07-01T00:00Z to 2023-10-01T00:00Z | month | C | LEO | debris | unknown | 7 | gcat, gcat, catalogue |  |  |
@@ -1066,26 +1057,35 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 46610:2024-01-11 Gao Fen 13 | anomalous | 2024-01-11T00:00Z to 2024-01-14T00:00Z | day | C | GEO | payload | unknown | 1 | gcat |  |  |
 | 58851:2024-01-28 Simorgh No. 7 Stage 2 | breakup | 2024-01-28T00:00Z to 2024-01-30T00:00Z | day | C | unknown | rocket body | unknown | 2 | gcat |  |  |
 | 15099:2024-03-06 METEOR 2-11 | breakup | 2024-03-06T16:56Z to 2024-05-05T16:56Z | none | D | LEO | payload | unknown | 6 | catalogue |  |  |
+| A:2018-005:2024-03-17 DELTA 4 | breakup | 2024-03-17T05:24Z to 2024-05-16T05:24Z | none | D | unknown | payload | unknown | 6 | catalogue |  |  |
 | 8860:2024-04-01 P76-5 | anomalous | 2024-04-01T00:00Z to 2024-07-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1968-081:2024-04-03 TITAN 3C TRANSTAGE | breakup | 2024-04-03T04:35Z to 2024-06-02T04:35Z | none | D | unknown | rocket body | unknown | 6 | catalogue |  |  |
 | 59884:2024-05-24 CSSHQ subsatellite 2 | breakup | 2024-05-24T18:30Z | minute | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 57166:2024-06-01 Meteor-M No. 2-3 | anomalous | 2024-06-01T00:00Z to 2024-09-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:2023-084:2024-06-01 GCAT auxiliary object A10979 | anomalous | 2024-06-01T00:00Z to 2024-09-01T00:00Z | month | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 39187:2024-06-25 Soyuz-2-1b No. 013 Blok-I | breakup | 2024-06-25T00:00Z to 2024-06-28T00:00Z | day | C | LEO | rocket body | propulsion | 18 | gcat |  |  |
 | 39186:2024-06-26 Resurs-P1 | breakup | 2024-06-26T16:32Z | minute | A | LEO | payload | unknown | 18 | odqn, gcat, catalogue | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
 | 18123:2024-07-19 DMSP 5D-2 F8 | breakup | 2024-07-19T20:41Z | minute | A | LEO | payload | unknown | 4 | odqn, gcat | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
 | 60397:2024-08-06 CZ-6A R/B (Qianfan) | breakup | 2024-08-06T17:15Z | minute | A | LEO | rocket body | unknown | 664 | odqn, gcat, gcat | 2024-10-01 (odqn, month) | 2024-10-01 (odqn, month) |
+| A:2024-149:2024-08-16 GCAT auxiliary object A11288 | breakup | 2024-08-16T20:12:02.000Z | second | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 43227:2024-09-06 Atlas V Centaur (GOES-17) | breakup | 2024-09-06T05:21Z | minute | B | HEO | rocket body | unknown | 0 | odqn, gcat | 2025-02-01 (odqn, month) | 2025-02-01 (odqn, month) |
 | 41748:2024-10-19 Intelsat 33e | breakup | 2024-10-19T04:30Z | minute | A | GEO | payload | unknown | 18 | odqn, gcat, gcat, catalogue | 2025-02-01 (odqn, month) | 2025-02-01 (odqn, month) |
+| A:2008-003:2024-11-01 GCAT auxiliary object A07325 | breakup | 2024-11-01T00:00Z to 2025-02-01T00:00Z | month | C | unknown | payload | propulsion | 1 | gcat |  |  |
+| A:2024-199:2024-11-05 GCAT auxiliary object A11343 | breakup | 2024-11-05T00:00Z to 2024-11-06T00:00Z | day | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 24753:2024-12-19 DMSP F-14 | breakup | 2024-12-19T02:10Z | minute | C | LEO | payload | battery | 0 | gcat, gcat, catalogue |  |  |
 | 57839:2025-05-01 Centaur AV-102 | breakup | 2025-05-01T00:00Z to 2025-08-01T00:00Z | month | C | unknown | rocket body | propulsion | 2 | gcat |  |  |
 | 10531:2025-05-09 COSMOS 970 | breakup | 2025-05-09T23:47Z to 2025-07-08T23:47Z | none | D | LEO | payload | unknown | 50 | catalogue |  |  |
 | 66629:2025-12-17 Starlink-35956 | breakup | 2025-12-17T00:00Z to 2025-12-18T00:00Z | day | D | LEO | payload | unknown |  | news | 2025-12-18 (news, day) |  |
 | 66378:2025-12-17 Shiyan 32-02 | breakup | 2025-12-17T00:00Z to 2025-12-20T00:00Z | day | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:2025-313:2025-12-28 GCAT auxiliary object A11727 | breakup | 2025-12-28T18:00Z | minute | C | unknown | payload | unknown | 1 | gcat |  |  |
 | 40258:2026-01-30 Luch (Olymp-K 1) | breakup | 2026-01-30T06:09Z | minute | C | GEO | payload | unknown | 1 | analyst, news, gcat | 2026-02-02 (news, day) |  |
 | 64157:2026-03-29 Starlink-34343 | breakup | 2026-03-29T00:00Z to 2026-03-30T00:00Z | day | C | LEO | payload | propulsion | 2 | news, gcat | 2026-03-30 (news, day) |  |
 | 16496:2026-04-01 Tsiklon-3 32-308 Stage 3 | breakup | 2026-04-01T00:00Z to 2026-07-01T00:00Z | month | C | LEO | rocket body | unknown | 3 | gcat |  |  |
 | 40340:2026-04-01 Yaogan Weixing 25 fu xing er | breakup | 2026-04-01T00:00Z to 2026-07-01T00:00Z | month | C | LEO | payload | unknown | 3 | gcat |  |  |
+| A:1965-027:2026-05-03 OPS 4682 | breakup | 2026-05-03T23:22Z to 2026-07-02T23:22Z | none | D | unknown | payload | unknown | 49 | catalogue |  |  |
 | 69537:2026-06-09 ZhuQue-2E upper stage | breakup | 2026-06-09T08:47Z | minute | A | LEO | rocket body | unknown | 7 | odqn, gcat | 2026-09-01 (odqn, month) | 2026-09-01 (odqn, month) |
 | 69506:2026-06-19 VERTECS | breakup | 2026-06-19T22:00Z | minute | C | LEO | payload | unknown | 1 | gcat |  |  |
+| A:1998-037:2026-06-19 INTELSAT 805 | breakup | 2026-06-19T23:35Z to 2026-08-18T23:35Z | none | D | unknown | payload | unknown | 11 | catalogue |  |  |
 | 68196:2026-07-01 Yaogan-50 02 | breakup | 2026-07-01T20:21Z to 2026-09-04T00:00Z | none | D | LEO | payload | unknown | 62 | catalogue, catalogue |  |  |
 | 100472:2026-08-25 CZ-6C R/B | breakup | 2026-08-25T00:00Z to 2026-08-27T00:00Z | day | D | LEO | rocket body | unknown |  | news | 2026-08-28 (news, day) |  |
 | 19460:2026-09-13 USA 32 | breakup | 2026-09-13T21:13Z | minute | A | LEO | payload | unknown |  | s4s-notice | 2026-09-17 (s4s-notice, day) | 2026-09-17 (s4s-notice, day) |

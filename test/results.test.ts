@@ -58,7 +58,7 @@ describe("the ground-truth page's table", () => {
   const scoreable = since.filter((b) => b.scoreable);
   const counts: Record<string, number> = {
     All: since.length,
-    "Scoreable (breakups and anomalous events of a catalogued object)": scoreable.length,
+    "Scoreable (breakups and anomalous events of a catalogued object or of a launch)": scoreable.length,
     Breakups: since.filter((b) => b.kind === "breakup").length,
     "Anomalous events (low-velocity shedding)": since.filter((b) => b.kind === "anomalous").length,
     "Aerodynamic breakups at reentry (kept out)": since.filter((b) => b.kind === "aerodynamic").length,

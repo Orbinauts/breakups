@@ -191,7 +191,8 @@ export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: C
       (status === "flagged" ? score.flagged : score.late).push(warning);
     }
   }
-  score.missed = breakups.filter((breakup) => breakup.scoreable && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
+  // A row naming a launch and no catalogued parent has no parent's orbit to warn on: it is the Confirmed line's alone.
+  score.missed = breakups.filter((breakup) => breakup.scoreable && breakup.parent.catalogueNumber !== null && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
   return score;
 }
 

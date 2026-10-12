@@ -191,3 +191,47 @@ The eleventh phase found GCAT's satellite catalogue dating a separation of debri
 The same decision named one detector change to try on the training years alone: a launch's rocket body named over a payload operating at the time, where the pieces cannot tell them apart (`attributionPrefersStageOverWorking`). It changed no training confirmation and was kept by the criterion set before the look (training not worse), on its prior; it changed no held-out confirmation either.
 
 The held-out years were read in the eleventh phase, so the twelfth phase's reading of them is a measurement under the extended truth and not a fresh blind validation. On them the line confirms 17 of 23 headline breakups (74%) at 6 false confirmations (21%, 10% to 38%), three fewer than the eleventh phase, all three now confirmations of separations GCAT dates; on the training years 22 of 35 (63%) at 2 (6%, 2% to 18%). Neither split reaches nine in ten at under one in ten.
+
+## Amended on 2026-10-12: rows kept out by the shape of their data
+
+The review of 2026-10-12 found rows kept out of the denominator, or in
+it, by the shape of their data rather than by a rule (issue #21). The
+coordinator decided each under the owner's delegation, before any
+replay:
+
+- **A launch-level row is scored on the Confirmed line by its launch.** A
+  burst of new debris under a launch, or a separation GCAT gives an
+  object the public catalogue does not list, names the launch and no
+  catalogued parent; such rows were exempt, so a confirmation of a large
+  cloud the detector is built to attribute (OPS 4682's 102 pieces in
+  2012, Cosmos 2491's 25 in 2023, Intelsat 805's 11 in 2026, published as
+  confirmed) could count neither way. They are now scoreable
+  (`isLaunchRow`, `LaunchEvent` in `scripts/kpi/match.ts`). A detection is
+  the first confirmed verdict on any body of the launch from the margin
+  before the window to 180 days after it, where the verdict lands on no
+  catalogued parent's event first; the row is a target where the launch
+  gained fresh pieces in the window (`launchFragmentsOf` in
+  `scripts/kpi/catalogue.ts`: numbered above the catalogue's mark, classed
+  as a fragment is, first published within the 180 days), with no plane
+  test, since there is no parent's orbit to test the pieces against. They
+  count on the line their kind and confidence give (most are breakups of
+  confidence D), never on the early warning's lines, which read the
+  parent's own orbit; the prospective score lands them the same way and
+  its early warning leaves them out. A step alert under the launch inside
+  such a window stays exempt, as before.
+- **A window wider than 93 days, or with no lower edge, is kept out of
+  every line** with its reason, and the results page lists the rows
+  (the second decision record's amendment of the same day gives the
+  rule); a confirmed verdict on the parent inside such a window and the
+  180 days after it is exempt rather than false.
+- **A row whose statements state no orbit takes its parent's regime** at
+  the event from the Archive, through a committed file derived from it
+  (`data/truth/regimes.json`, `npm run truth:regimes`), so the match
+  margin of five days in highly elliptical and geosynchronous orbits
+  applies to the rows GCAT alone dates there, and the regime tables are no
+  longer mostly "unknown". The truth's build reads the file and never the
+  Archive.
+
+The catalogue index (`npm run kpi:index`) holds a parent's last set for
+each truth row's window: it must be rebuilt for the truth these rules
+build, since rows gained parents and windows moved.

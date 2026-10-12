@@ -153,3 +153,16 @@ suspected and confirmed verdicts one breakup, confirmed by the Space
 Force notice), all confirmed, and Meteor 2-7 (12456) suspected on an
 analyst's report of 2026-10-07 (Jim Shell's dating, as EarthSky and
 LeoLabs reported it); none of the year's other suspected verdicts.
+
+## Amended on 2026-10-12: a row naming a launch alone is a detection
+
+The seventh decision record's amendment of this day scores a row naming
+a launch and no catalogued parent on the Confirmed line by its launch
+(issue #21), so `landConfirmed` no longer calls a confirmation inside such
+a row's window exempt: it is a detection of the row. The first of the two
+readings above therefore no longer arises for these rows. Intelsat 805's
+confirmation of 2026-08-20 lands on the catalogue's burst under its
+launch, `A:1998-037:2026-06-19`, and carries the row's dating; the
+published parent stays the body the verdict names (its number,
+designator and name from the catalogue), since the row names only the
+launch.
