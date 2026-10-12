@@ -439,6 +439,17 @@ export function refreshScatter(state: SeriesState): void {
   state.shortSigma = residuals.length >= 3 ? robustScale(residuals) : 0;
 }
 
+/** Forgets the residuals of the sets at and after an epoch, after a step that stayed: each was predicted across the step, so it measures the step and not the object's noise. */
+export function forgetResidualsFrom(state: SeriesState, epochMs: number): void {
+  let changed = false;
+  for (let i = 0; i < state.epochs.length; i++) {
+    if (state.epochs[i]! < epochMs || !Number.isFinite(state.resid[i]!)) continue;
+    state.resid[i] = Number.NaN;
+    changed = true;
+  }
+  if (changed) refreshScatter(state);
+}
+
 /** The ring's values of a quantity. */
 export function valuesOf(state: SeriesState, series: Series): number[] {
   return series === "a" ? state.a : series === "rp" ? state.rp : state.inc;

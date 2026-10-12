@@ -13,7 +13,7 @@ import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenanc
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsFrom, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
@@ -108,6 +108,8 @@ interface RunContext {
   judged: Set<Candidate>;
   /** The alerts tracked in this run, each once. */
   tracked: Set<OpenAlert>;
+  /** The objects one of whose sets in this run lay beyond the candidate threshold from its own model, before the band's common mode: their later sets in the run are measured across that jump. */
+  jumped: Set<SeriesState>;
   states: Map<number, SeriesState>;
   launches: Map<string, unknown>;
   catalogue: CatalogueRecord;
@@ -158,8 +160,14 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
         item.noise = noise;
         item.prediction = prediction;
         item.measurement = { band, regime, residual, sigmaPred, gapDays: prediction.gapDays, bstar };
-        pushSet(state, accepted, residual, params);
-        rememberResidual(state, residual, noise.sigma, accepted.epochMs, params);
+        if (context.jumped.has(state)) {
+          // An earlier set of the object in this run jumped: this one is predicted from a fit that holds the jump, and is judged as its post set where a candidate opens; its residual is not the object's noise.
+          pushSet(state, accepted, Number.NaN, params);
+        } else {
+          pushSet(state, accepted, residual, params);
+          rememberResidual(state, residual, noise.sigma, accepted.epochMs, params);
+          if (Math.abs(residual) >= params.zCand * sigmaPred) context.jumped.add(state);
+        }
       }
     }
     pending.push(item);
@@ -468,6 +476,8 @@ function closeCandidate(state: SeriesState, candidate: Candidate, outcome: numbe
   } else if (persistent || outcome === OUTCOMES.lapsed || (estimate !== null && Math.abs(estimate.rhoMedian) >= context.params.rhoRevert)) {
     state.windowFrom = candidate.afterEpoch;
   }
+  // A step that stayed: the residuals of its first post set and of any set measured after it before the candidate opened measured the step, not the object's noise.
+  if (persistent) forgetResidualsFrom(state, candidate.afterEpoch);
   if (persistent && reading !== null) {
     recordStep(state.steps, { epochMs: candidate.afterEpoch, deltaKm: reading.step.deltaKm, deltaPerigeeKm: reading.step.deltaPerigeeKm, deltaInclinationDeg: estimate?.deltaInclination ?? 0, tangentialMps: reading.impulse.tangentialMps, normalMps: reading.impulse.normalMps }, context.params);
     // The catalogue's ledger of recent steps, by which the next object's step finds its siblings.
@@ -1017,7 +1027,7 @@ export function runDetector(input: DetectorInput): DetectorOutput {
   const params = parametersWith(input.parameters);
   const states = input.states as Map<number, SeriesState>;
   const launches = input.launches as Map<string, unknown>;
-  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
+  const context: RunContext = { now: input.now, params, weather: weatherOf(input.space, params), verdicts: [], log: [], recentCandidates: 0, judged: new Set(), tracked: new Set(), jumped: new Set(), states, launches, catalogue: catalogueFor(launches), newBodies: new Map(), notices: input.notices ?? [], decays: input.decays ?? new Map() };
   if (!(context.catalogue.startedAt <= input.now)) context.catalogue.startedAt = input.now;
   const pending: Pending[] = [];
   for (const set of input.sets) {

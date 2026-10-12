@@ -106,6 +106,27 @@ describe("the detector on synthetic series", () => {
     expect(fed.verdicts.filter((v) => v.state === "dismissed")).toEqual([]);
   });
 
+  test("a step fifty times the object's noise leaves the object's own scatter as it was before it, whether its sets came one a run or the jump and the next two in one run", () => {
+    const series = decaying(7200, 0.02, 0.004, 12);
+    const stepAt = 24;
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.2;
+    const sets = series.map((s) => setOf(1, s, "rocket body"));
+    const scatter = (fed: ReturnType<typeof feed>) => fed.states.get(1) as { shortSigma: number; longSigma: number; residualCount: number };
+    const before = scatter(feed(one(sets.slice(0, stepAt))));
+    expect(before.residualCount).toBeGreaterThanOrEqual(params.residualsForScatter);
+    const apart = feed(one(sets.slice(0, stepAt + 3)));
+    const together = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 3)]);
+    for (const fed of [apart, together]) {
+      const closed = fed.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)!;
+      expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(closed.signals.outcome);
+      expect(Math.abs(closed.signals.z1!)).toBeGreaterThan(2 * params.zCand);
+      expect(scatter(fed).shortSigma).toBe(before.shortSigma);
+      expect(scatter(fed).residualCount).toBe(before.residualCount);
+    }
+    // The long memory took the jump's residual alone, clipped, in both: the sets after it in the same run are not the object's noise either.
+    expect(scatter(together).longSigma).toBe(scatter(apart).longSigma);
+  });
+
   test("a drift that grows from nothing at a rate drag can produce opens no candidate: the drag term covers it", () => {
     // A high-drag object whose decay doubles from one day: twice its drag term's worth, which the prediction's drag term allows for.
     const series = decaying(7200, 0.1, 0.004, 30, 8, 1, 1e-3);
