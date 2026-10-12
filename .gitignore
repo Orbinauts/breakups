@@ -4,7 +4,8 @@ dist/
 reference/
 *.tgz
 # No lockfile: the package is installed by its ranges, as a consumer's
-# project installs it, so CI tests what a consumer gets.
+# project installs it, so CI tests what a consumer gets. The score is made
+# on the exact versions in pins.json, which are not a lockfile.
 package-lock.json
 # Credentials for the Archive's pulls, read from the environment only.
 .env

@@ -12,7 +12,8 @@ name: Maintenance
 #    week makes no diff.
 # 2. The plan (scripts/maintenance/plan.ts) says what else is due: the
 #    scorecard is replayed where the committed aggregate no longer
-#    describes the truth or the Archive's release; a closed year is
+#    describes the truth, the Archive's release or the scoring pins
+#    (pins.json); a closed year is
 #    promoted into the Archive from the prospective test's day slices on
 #    the first run from 5 January (scripts/maintenance/promote.ts, refused
 #    with an issue where its tarball would pass the 2 GiB asset limit);
@@ -133,9 +134,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-      - name: Install the dependencies
+      # The score is made on the committed scoring pins (pins.json), not the ranges CI installs from, and the install fails naming any package not at its pin.
+      - name: Install the dependencies on the scoring pins
         working-directory: main
-        run: npm install --no-audit --no-fund
+        run: npm run -s pins -- install scoring
       # NASA's history is read from its PDF's text; pdftotext runs only when the PDF's hash changed.
       - name: Install poppler
         run: |

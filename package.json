@@ -45,6 +45,7 @@
     "test": "vitest run",
     "docs": "typedoc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json --noEmit",
+    "pins": "node --experimental-strip-types scripts/pins/pins.ts",
     "truth": "node --experimental-strip-types scripts/truth/build-truth.ts",
     "truth:fetch": "node --experimental-strip-types scripts/truth/fetch-sources.ts",
     "archive:strip": "node --experimental-strip-types scripts/archive/strip.ts",

@@ -4,6 +4,11 @@
     "name": "@orbinauts/breakups",
     "version": "0.1.0"
   },
+  "versions": {
+    "@orbinauts/engine": "0.1.2",
+    "satellite.js": "7.1.0",
+    "astronomy-engine": "2.1.19"
+  },
   "truthSha256": "11b3fe043199185f2395592ab37a90c136c997c4921b3fe6977058f52a137c3b",
   "detector": {
     "name": "confirmed-v10",

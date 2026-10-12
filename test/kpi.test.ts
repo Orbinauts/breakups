@@ -14,6 +14,7 @@ import { fromArchivedSet, loadYear, runsOf, type LoadedYear } from "../scripts/k
 import { carriedOf, catalogueOf, readTruth, replayAndScore, rematch, scoreYear, writeAggregate, writeYearFile } from "../scripts/kpi/run.ts";
 import { buildCatalogueIndex, loadCatalogue, readCatalogueIndex, writeCatalogueIndex } from "../scripts/kpi/catalogue-index.ts";
 import { readStates, writeStates } from "../scripts/kpi/states.ts";
+import { installedVersions } from "../scripts/pins/pins.ts";
 
 /**
  * The scorecard on a synthetic year, with no Archive: the fixture's few
@@ -315,6 +316,9 @@ describe("the scorecard on the synthetic year", () => {
     expect(latest.years).toEqual([YEAR]);
     expect(latest.detector.name).toBe("jump");
     expect(latest.truthSha256).toBe("synthetic");
+    // The versions the score was made with are the ones installed, whatever the pins say.
+    const versions = installedVersions(ROOT);
+    expect(read.versions).toEqual(versions);
     expect(latest.archive[String(YEAR)]).toMatchObject({ source: "bundle", sets: sets.rows.length, timeBasis: "epoch" });
     // An odd year is in the validation split and not in the training one.
     expect(latest.splits.validation.years).toEqual([YEAR]);
@@ -347,6 +351,7 @@ describe("the scorecard on the synthetic year", () => {
     expect(alertsTable).toContain("| Cloud verdicts, for review (a burst with no parent step) | 1 |");
     const markdown = readFileSync(join(dir, "latest.md"), "utf8");
     expect(markdown).toBe(renderLatest(latest));
+    expect(markdown).toContain(`on \`@orbinauts/engine\` ${versions["@orbinauts/engine"]}, \`satellite.js\` ${versions["satellite.js"]} and \`astronomy-engine\` ${versions["astronomy-engine"]}, against the ground truth`);
     expect(markdown).toContain(lines);
     expect(markdown).toContain(confirmed);
     // The dissection is written beside the aggregate (under `docs/detector/` for the committed one), one row per scoreable event with its cause.

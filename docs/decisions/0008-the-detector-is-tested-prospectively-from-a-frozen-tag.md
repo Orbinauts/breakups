@@ -19,10 +19,14 @@ sets from then on is logged where its time of logging cannot be changed.
 - **The frozen detector is a tag, run from its own worktree.** The tag
   `frozen-confirmed-v10` is the commit the detector `confirmed-v10` was
   scored at (`8729987`). A worktree beside the repository,
-  `../breakups-frozen`, is checked out at it with the dependencies main's
-  lockfile pinned when the test began, and the daily job runs the replay
-  only there, refusing to run when the worktree is not the tag or has a
-  change. Work on main never changes what is being tested; the test's
+  `../breakups-frozen`, is checked out at it with the runtime dependencies
+  at the versions the test began with (`@orbinauts/engine` 0.1.2,
+  `satellite.js` 7.1.0, `astronomy-engine` 2.1.19), committed on main as
+  the `frozenDetector` pins of `pins.json`, apart from main's scoring pins,
+  so that moving those never moves these (no lockfile is committed), and
+  the daily job runs the replay only there, refusing to run when the
+  worktree is not the tag or has a change. Work on main never changes
+  what is being tested; the test's
   detector, its truth (whose notices it reads as of each run) and its
   scorecard code are the tag's.
 - **The data are main's.** The job runs `npm run prospective` on main.
@@ -135,7 +139,11 @@ The decision stands; what changed is where its parts live.
   (`FROZEN_COMMIT`). No lockfile is committed, so the tag's runtime
   dependencies are installed at the versions the local runs used
   (`@orbinauts/engine` 0.1.2, `satellite.js` 7.1.0,
-  `astronomy-engine` 2.1.19) and checked.
+  `astronomy-engine` 2.1.19) and checked. From 2026-10-12 those versions
+  are the `frozenDetector` pins of `pins.json` on main, installed and
+  checked by `npm run pins -- install frozenDetector`, and each line of
+  `runs.jsonl` records the versions the frozen detector ran on
+  (`RunLine.versions`), read from its installed tree.
 - **The commit is the Actions bot's** (`github-actions[bot]`), pushed with
   the run's token, so the branch says which commits a run made; the first
   two lines of `runs.jsonl`, made by the launchd agent on the test's first

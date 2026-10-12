@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { DETECTOR_NAME, DETECTOR_PARAMETERS, readBreakups, type Breakup, type DetectorParameters } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, yearDir } from "../archive/archive.ts";
+import { installedVersions } from "../pins/pins.ts";
 import type { Catalogue } from "./catalogue.ts";
 import { indexWrittenAt, loadCatalogue } from "./catalogue-index.ts";
 import { jumpDetector } from "./jump.ts";
@@ -207,7 +208,7 @@ export function writeAggregate(dir: string, truth: Truth, root = ROOT, eventsPat
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { name: string; version: string };
   const detectors = new Set(files.map((f) => f.detector.name));
   if (detectors.size > 1) throw new Error(`the year files were run with different detectors (${[...detectors].join(", ")}): rerun them`);
-  const latest = aggregate(files, { package: { name: pkg.name, version: pkg.version }, truthSha256: truth.sha256, detector: files[0]!.detector });
+  const latest = aggregate(files, { package: { name: pkg.name, version: pkg.version }, versions: installedVersions(root), truthSha256: truth.sha256, detector: files[0]!.detector });
   if (approximate !== undefined && dir === KPI_DIR) throw new Error("an approximate aggregate is never written to kpi/");
   writeFileSync(join(dir, "latest.json"), latestJson(latest, approximate));
   const rendered = renderLatest(latest);
