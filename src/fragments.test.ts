@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { catalogueFor, judgeCloud, launchFor, launchKeyOf, markAt, noteBody, planeDistance, poissonTail, type ParentCandidate, type PlaneOrbit } from "./fragments.ts";
+import { catalogueFor, judgeCloud, launchFor, launchKeyOf, markAt, noteBody, normalAngleDeg, planeDistance, poissonTail, type ParentCandidate, type PlaneOrbit } from "./fragments.ts";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, meanMotionOf, setOf } from "./synthetic.test-support.ts";
@@ -49,6 +49,22 @@ describe("the plane test", () => {
   test("a piece catalogued longer after the event than the node can be carried is not tested", () => {
     const parent = orbitOf(7200, 100, 98, T0);
     expect(planeDistance(parent, orbitOf(7200, 100, 98, T0 + (params.planeMaxDays + 1) * DAY), T0, params).distance).toBe(Number.POSITIVE_INFINITY);
+  });
+});
+
+describe("the angle between orbit normals", () => {
+  test("two near-equatorial planes a third of the circle apart in node are a few hundredths of a degree apart; two polar-ish planes two degrees apart in node are nearly two degrees apart", () => {
+    // Normals at 0.02 degrees from the pole, 120 degrees apart around it: a chord of 2 x 0.02 x sin 60.
+    expect(normalAngleDeg(orbitOf(42164, 80, 0.02, T0), orbitOf(42164, 200, 0.02, T0), T0)).toBeCloseTo(0.034641, 5);
+    // At inclination 98, two degrees of node: 2 asin(sin 98 x sin 1).
+    expect(normalAngleDeg(orbitOf(7200, 100, 98, T0), orbitOf(7200, 102, 98, T0), T0)).toBeCloseTo(1.98054, 4);
+    expect(normalAngleDeg(orbitOf(7200, 100, 98, T0), orbitOf(7200, 100, 98.7, T0), T0)).toBeCloseTo(0.7, 6);
+  });
+
+  test("the parent's node is carried to the piece's epoch as the plane test carries it", () => {
+    const parent = orbitOf(7200, 100, 98, T0);
+    const rate = nodePrecessionDegPerDay(7195, 0.001, 98, meanMotionOf(7195));
+    expect(normalAngleDeg(parent, orbitOf(7195, 100 + rate * 30, 98, T0 + 30 * DAY), T0)).toBeLessThan(0.1);
   });
 });
 

@@ -736,15 +736,15 @@
             ]
           },
           "breakups C": {
-            "targets": 18,
-            "noFragments": 18,
+            "targets": 20,
+            "noFragments": 16,
             "noParentOrbit": 12,
             "detected": 3,
-            "missed": 15,
-            "rate": 0.16666666666666666,
+            "missed": 17,
+            "rate": 0.15,
             "interval": [
-              0.05836470400465757,
-              0.39222499638359243
+              0.05236779195949584,
+              0.36042329588695743
             ]
           },
           "breakups D": {
@@ -772,15 +772,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 46,
-            "noFragments": 22,
+            "targets": 47,
+            "noFragments": 21,
             "noParentOrbit": 2,
             "detected": 3,
-            "missed": 43,
-            "rate": 0.06521739130434782,
+            "missed": 44,
+            "rate": 0.06382978723404255,
             "interval": [
-              0.02242745446634356,
-              0.17503009103781358
+              0.0219449870207728,
+              0.17162877934377904
             ]
           }
         },
@@ -840,15 +840,15 @@
             ]
           },
           "breakups C": {
-            "targets": 18,
-            "noFragments": 18,
+            "targets": 20,
+            "noFragments": 16,
             "noParentOrbit": 12,
             "detected": 3,
-            "missed": 15,
-            "rate": 0.16666666666666666,
+            "missed": 17,
+            "rate": 0.15,
             "interval": [
-              0.05836470400465757,
-              0.39222499638359243
+              0.05236779195949584,
+              0.36042329588695743
             ]
           },
           "breakups D": {
@@ -876,15 +876,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 46,
-            "noFragments": 22,
+            "targets": 47,
+            "noFragments": 21,
             "noParentOrbit": 2,
             "detected": 3,
-            "missed": 43,
-            "rate": 0.06521739130434782,
+            "missed": 44,
+            "rate": 0.06382978723404255,
             "interval": [
-              0.02242745446634356,
-              0.17503009103781358
+              0.0219449870207728,
+              0.17162877934377904
             ]
           }
         },
@@ -1437,15 +1437,15 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 35,
-            "noFragments": 9,
+            "targets": 36,
+            "noFragments": 8,
             "noParentOrbit": 6,
             "detected": 22,
-            "missed": 13,
-            "rate": 0.6285714285714286,
+            "missed": 14,
+            "rate": 0.6111111111111112,
             "interval": [
-              0.46336640488021064,
-              0.7683439263110894
+              0.4486417029674347,
+              0.7521534458217705
             ]
           },
           "breakups C": {
@@ -1541,15 +1541,15 @@
       "confirmedLineTwins": {
         "lines": {
           "breakups A-B": {
-            "targets": 35,
-            "noFragments": 9,
+            "targets": 36,
+            "noFragments": 8,
             "noParentOrbit": 6,
             "detected": 22,
-            "missed": 13,
-            "rate": 0.6285714285714286,
+            "missed": 14,
+            "rate": 0.6111111111111112,
             "interval": [
-              0.46336640488021064,
-              0.7683439263110894
+              0.4486417029674347,
+              0.7521534458217705
             ]
           },
           "breakups C": {
@@ -2096,38 +2096,38 @@
           "confirmedLaterReal": 6
         },
         "breakups": {
-          "targets": 35,
-          "suspectedBeforeFragment": 14,
+          "targets": 36,
+          "suspectedBeforeFragment": 15,
           "suspectedThenConfirmed": {
             "count": 15,
-            "share": 0.42857142857142855,
+            "share": 0.4166666666666667,
             "interval": [
-              0.27984333081678914,
-              0.5914287074102662
+              0.2714033350508729,
+              0.5780003033572231
             ]
           },
           "suspectedNotConfirmed": {
-            "count": 4,
-            "share": 0.11428571428571428,
+            "count": 5,
+            "share": 0.1388888888888889,
             "interval": [
-              0.0453510585448975,
-              0.2595179478812023
+              0.060817253631150966,
+              0.2865985128039319
             ]
           },
           "confirmedWithoutSuspected": {
             "count": 7,
-            "share": 0.2,
+            "share": 0.19444444444444445,
             "interval": [
-              0.10042319445900802,
-              0.35891936609462516
+              0.09752972019453349,
+              0.350283620635152
             ]
           },
           "neverFlagged": {
             "count": 9,
-            "share": 0.2571428571428571,
+            "share": 0.25,
             "interval": [
-              0.1416286872655014,
-              0.4206962427064873
+              0.13750323839225387,
+              0.41070767683203424
             ]
           }
         }
@@ -2160,27 +2160,27 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 58,
-            "noFragments": 16,
+            "targets": 59,
+            "noFragments": 15,
             "noParentOrbit": 10,
             "detected": 39,
-            "missed": 19,
-            "rate": 0.6724137931034483,
+            "missed": 20,
+            "rate": 0.6610169491525424,
             "interval": [
-              0.5442381364257336,
-              0.779168761196579
+              0.5337223255448901,
+              0.7686251640161651
             ]
           },
           "breakups C": {
-            "targets": 38,
-            "noFragments": 32,
+            "targets": 40,
+            "noFragments": 30,
             "noParentOrbit": 26,
             "detected": 7,
-            "missed": 31,
-            "rate": 0.18421052631578946,
+            "missed": 33,
+            "rate": 0.175,
             "interval": [
-              0.09221648453257492,
-              0.33419168341511346
+              0.08745302996883066,
+              0.3195029205439244
             ]
           },
           "breakups D": {
@@ -2208,15 +2208,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 77,
-            "noFragments": 41,
+            "targets": 78,
+            "noFragments": 40,
             "noParentOrbit": 8,
             "detected": 7,
-            "missed": 70,
-            "rate": 0.09090909090909091,
+            "missed": 71,
+            "rate": 0.08974358974358974,
             "interval": [
-              0.04473514189357164,
-              0.17596311247051816
+              0.044152447186411065,
+              0.1738491559103026
             ]
           }
         },
@@ -2264,27 +2264,27 @@
       "confirmedLineTwins": {
         "lines": {
           "breakups A-B": {
-            "targets": 58,
-            "noFragments": 16,
+            "targets": 59,
+            "noFragments": 15,
             "noParentOrbit": 10,
             "detected": 39,
-            "missed": 19,
-            "rate": 0.6724137931034483,
+            "missed": 20,
+            "rate": 0.6610169491525424,
             "interval": [
-              0.5442381364257336,
-              0.779168761196579
+              0.5337223255448901,
+              0.7686251640161651
             ]
           },
           "breakups C": {
-            "targets": 38,
-            "noFragments": 32,
+            "targets": 40,
+            "noFragments": 30,
             "noParentOrbit": 26,
             "detected": 7,
-            "missed": 31,
-            "rate": 0.18421052631578946,
+            "missed": 33,
+            "rate": 0.175,
             "interval": [
-              0.09221648453257492,
-              0.33419168341511346
+              0.08745302996883066,
+              0.3195029205439244
             ]
           },
           "breakups D": {
@@ -2312,15 +2312,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 77,
-            "noFragments": 41,
+            "targets": 78,
+            "noFragments": 40,
             "noParentOrbit": 8,
             "detected": 7,
-            "missed": 70,
-            "rate": 0.09090909090909091,
+            "missed": 71,
+            "rate": 0.08974358974358974,
             "interval": [
-              0.04473514189357164,
-              0.17596311247051816
+              0.044152447186411065,
+              0.1738491559103026
             ]
           }
         },
@@ -2819,38 +2819,38 @@
           "confirmedLaterReal": 7
         },
         "breakups": {
-          "targets": 58,
-          "suspectedBeforeFragment": 22,
+          "targets": 59,
+          "suspectedBeforeFragment": 23,
           "suspectedThenConfirmed": {
             "count": 24,
-            "share": 0.41379310344827586,
+            "share": 0.4067796610169492,
             "interval": [
-              0.29627832678138283,
-              0.5420182244074607
+              0.29088843022555855,
+              0.534068286344357
             ]
           },
           "suspectedNotConfirmed": {
-            "count": 5,
-            "share": 0.08620689655172414,
+            "count": 6,
+            "share": 0.1016949152542373,
             "interval": [
-              0.03738483193379338,
-              0.18643861377265664
+              0.047447326513182495,
+              0.2046404624673654
             ]
           },
           "confirmedWithoutSuspected": {
             "count": 15,
-            "share": 0.25862068965517243,
+            "share": 0.2542372881355932,
             "interval": [
-              0.16345403519517457,
-              0.383776308133588
+              0.1605583829520582,
+              0.3779638698231735
             ]
           },
           "neverFlagged": {
             "count": 14,
-            "share": 0.2413793103448276,
+            "share": 0.23728813559322035,
             "interval": [
-              0.14958739726966278,
-              0.3653022562968685
+              0.1469448625694613,
+              0.3597513386730279
             ]
           }
         }
@@ -2865,15 +2865,15 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 2,
-            "noFragments": 2,
+            "targets": 3,
+            "noFragments": 1,
             "noParentOrbit": 2,
             "detected": 2,
-            "missed": 0,
-            "rate": 1,
+            "missed": 1,
+            "rate": 0.6666666666666666,
             "interval": [
-              0.34237195288961925,
-              1
+              0.2076549551264879,
+              0.9385096847238394
             ]
           },
           "breakups C": {
@@ -2966,15 +2966,15 @@
       "confirmedLineTwins": {
         "lines": {
           "breakups A-B": {
-            "targets": 2,
-            "noFragments": 2,
+            "targets": 3,
+            "noFragments": 1,
             "noParentOrbit": 2,
             "detected": 2,
-            "missed": 0,
-            "rate": 1,
+            "missed": 1,
+            "rate": 0.6666666666666666,
             "interval": [
-              0.34237195288961925,
-              1
+              0.2076549551264879,
+              0.9385096847238394
             ]
           },
           "breakups C": {
@@ -3512,30 +3512,30 @@
           "confirmedLaterReal": 1
         },
         "breakups": {
-          "targets": 2,
-          "suspectedBeforeFragment": 1,
+          "targets": 3,
+          "suspectedBeforeFragment": 2,
           "suspectedThenConfirmed": {
             "count": 1,
-            "share": 0.5,
+            "share": 0.3333333333333333,
             "interval": [
-              0.09452865480086614,
-              0.9054713451991339
+              0.0614903152761605,
+              0.7923450448735121
             ]
           },
           "suspectedNotConfirmed": {
-            "count": 0,
-            "share": 0,
+            "count": 1,
+            "share": 0.3333333333333333,
             "interval": [
-              0,
-              0.6576280471103807
+              0.0614903152761605,
+              0.7923450448735121
             ]
           },
           "confirmedWithoutSuspected": {
             "count": 1,
-            "share": 0.5,
+            "share": 0.3333333333333333,
             "interval": [
-              0.09452865480086614,
-              0.9054713451991339
+              0.0614903152761605,
+              0.7923450448735121
             ]
           },
           "neverFlagged": {
@@ -3543,7 +3543,7 @@
             "share": 0,
             "interval": [
               0,
-              0.6576280471103807
+              0.5615060804490177
             ]
           }
         }
@@ -3579,15 +3579,15 @@
             ]
           },
           "breakups C": {
-            "targets": 20,
-            "noFragments": 19,
+            "targets": 21,
+            "noFragments": 18,
             "noParentOrbit": 18,
             "detected": 2,
-            "missed": 18,
-            "rate": 0.1,
+            "missed": 19,
+            "rate": 0.09523809523809523,
             "interval": [
-              0.027865893984153206,
-              0.30103820641179335
+              0.026518208796947246,
+              0.2891458386074067
             ]
           },
           "breakups D": {
@@ -3615,15 +3615,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 60,
-            "noFragments": 30,
+            "targets": 61,
+            "noFragments": 29,
             "noParentOrbit": 7,
             "detected": 5,
-            "missed": 55,
-            "rate": 0.08333333333333333,
+            "missed": 56,
+            "rate": 0.08196721311475409,
             "interval": [
-              0.03611992405048589,
-              0.18069168468112481
+              0.035519042911066306,
+              0.177948854241379
             ]
           }
         },
@@ -3683,15 +3683,15 @@
             ]
           },
           "breakups C": {
-            "targets": 20,
-            "noFragments": 19,
+            "targets": 21,
+            "noFragments": 18,
             "noParentOrbit": 18,
             "detected": 2,
-            "missed": 18,
-            "rate": 0.1,
+            "missed": 19,
+            "rate": 0.09523809523809523,
             "interval": [
-              0.027865893984153206,
-              0.30103820641179335
+              0.026518208796947246,
+              0.2891458386074067
             ]
           },
           "breakups D": {
@@ -3719,15 +3719,15 @@
             ]
           },
           "anomalous C-D": {
-            "targets": 60,
-            "noFragments": 30,
+            "targets": 61,
+            "noFragments": 29,
             "noParentOrbit": 7,
             "detected": 5,
-            "missed": 55,
-            "rate": 0.08333333333333333,
+            "missed": 56,
+            "rate": 0.08196721311475409,
             "interval": [
-              0.03611992405048589,
-              0.18069168468112481
+              0.035519042911066306,
+              0.177948854241379
             ]
           }
         },
@@ -4278,27 +4278,27 @@
       "confirmedLine": {
         "lines": {
           "breakups A-B": {
-            "targets": 29,
-            "noFragments": 4,
+            "targets": 30,
+            "noFragments": 3,
             "noParentOrbit": 4,
             "detected": 16,
-            "missed": 13,
-            "rate": 0.5517241379310345,
+            "missed": 14,
+            "rate": 0.5333333333333333,
             "interval": [
-              0.37547667068067625,
-              0.715870888512542
+              0.3614201328152505,
+              0.6976787277587178
             ]
           },
           "breakups C": {
-            "targets": 18,
-            "noFragments": 13,
+            "targets": 19,
+            "noFragments": 12,
             "noParentOrbit": 8,
             "detected": 5,
-            "missed": 13,
-            "rate": 0.2777777777777778,
+            "missed": 14,
+            "rate": 0.2631578947368421,
             "interval": [
-              0.12499569146355474,
-              0.5087307754619452
+              0.11806238339540162,
+              0.48791968441070643
             ]
           },
           "breakups D": {
@@ -4382,27 +4382,27 @@
       "confirmedLineTwins": {
         "lines": {
           "breakups A-B": {
-            "targets": 29,
-            "noFragments": 4,
+            "targets": 30,
+            "noFragments": 3,
             "noParentOrbit": 4,
             "detected": 16,
-            "missed": 13,
-            "rate": 0.5517241379310345,
+            "missed": 14,
+            "rate": 0.5333333333333333,
             "interval": [
-              0.37547667068067625,
-              0.715870888512542
+              0.3614201328152505,
+              0.6976787277587178
             ]
           },
           "breakups C": {
-            "targets": 18,
-            "noFragments": 13,
+            "targets": 19,
+            "noFragments": 12,
             "noParentOrbit": 8,
             "detected": 5,
-            "missed": 13,
-            "rate": 0.2777777777777778,
+            "missed": 14,
+            "rate": 0.2631578947368421,
             "interval": [
-              0.12499569146355474,
-              0.5087307754619452
+              0.11806238339540162,
+              0.48791968441070643
             ]
           },
           "breakups D": {
@@ -4937,38 +4937,38 @@
           "confirmedLaterReal": 3
         },
         "breakups": {
-          "targets": 29,
-          "suspectedBeforeFragment": 10,
+          "targets": 30,
+          "suspectedBeforeFragment": 11,
           "suspectedThenConfirmed": {
             "count": 9,
-            "share": 0.3103448275862069,
+            "share": 0.3,
             "interval": [
-              0.17275424489768068,
-              0.49230470472718546
+              0.16664562643958933,
+              0.4787612101166018
             ]
           },
           "suspectedNotConfirmed": {
-            "count": 4,
-            "share": 0.13793103448275862,
+            "count": 5,
+            "share": 0.16666666666666666,
             "interval": [
-              0.05497350852047822,
-              0.30559357712699325
+              0.07336434240351683,
+              0.33564705185680177
             ]
           },
           "confirmedWithoutSuspected": {
             "count": 7,
-            "share": 0.2413793103448276,
+            "share": 0.23333333333333334,
             "interval": [
-              0.12218268185062131,
-              0.4210795221832869
+              0.11792239210501232,
+              0.40928672330324267
             ]
           },
           "neverFlagged": {
             "count": 9,
-            "share": 0.3103448275862069,
+            "share": 0.3,
             "interval": [
-              0.17275424489768068,
-              0.49230470472718546
+              0.16664562643958933,
+              0.4787612101166018
             ]
           }
         }

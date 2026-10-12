@@ -1,5 +1,5 @@
 import { semiMajorAxisOf, type ElementSet } from "./elements.ts";
-import { MU_KM3_PER_S2, speedAt } from "./impulse.ts";
+import { DEG, MU_KM3_PER_S2, speedAt } from "./impulse.ts";
 import { median } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
@@ -268,16 +268,41 @@ export interface PlaneDistance {
  * to the piece's set is taken off. A piece catalogued longer after the
  * event than the parameter allows is not tested.
  */
-export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: DetectorParameters, limitDays = params.planeMaxDays): PlaneDistance {
+export function planeDistance(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number, params: Pick<DetectorParameters, "planeInclinationToleranceDeg" | "planeNodeToleranceDeg" | "planeMaxDays">, limitDays = params.planeMaxDays): PlaneDistance {
   const deltaInclinationDeg = piece.inclinationDeg - parent.inclinationDeg;
+  const deltaNodeDeg = carriedNodeDifferenceDeg(parent, piece, eventMs);
+  const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
+  const distance = Math.abs(sinceEvent) > limitDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
+  return { deltaInclinationDeg, deltaNodeDeg, distance };
+}
+
+/** The node difference at the piece's epoch, the parent's node carried there at its own J2 rate and the rates' difference since the event taken off, in degrees. */
+function carriedNodeDifferenceDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
   const parentRate = nodePrecessionDegPerDay(parent.aKm, parent.eccentricity, parent.inclinationDeg, parent.meanMotion);
   const pieceRate = nodePrecessionDegPerDay(piece.aKm, piece.eccentricity, piece.inclinationDeg, piece.meanMotion);
   const sinceParent = (piece.epochMs - parent.epochMs) / DAY_MS;
   const sinceEvent = (piece.epochMs - eventMs) / DAY_MS;
   const parentNodeAtPiece = parent.raanDeg + parentRate * sinceParent;
-  const deltaNodeDeg = wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
-  const distance = Math.abs(sinceEvent) > limitDays ? Number.POSITIVE_INFINITY : Math.hypot(deltaInclinationDeg / params.planeInclinationToleranceDeg, deltaNodeDeg / params.planeNodeToleranceDeg);
-  return { deltaInclinationDeg, deltaNodeDeg, distance };
+  return wrapDegrees(piece.raanDeg - parentNodeAtPiece - (pieceRate - parentRate) * sinceEvent);
+}
+
+/**
+ * The angle between a piece's orbit normal and a parent's, in degrees,
+ * the parent's node carried to the piece's epoch as `planeDistance`
+ * carries it, with no limit on the time since the event. Unlike the plane
+ * distance it holds at near-zero inclination, where the node is undefined
+ * and pieces in the parent's plane scatter over the whole circle of nodes:
+ * there every normal lies near the pole, and so near the parent's.
+ */
+export function normalAngleDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
+  const deltaNodeRad = carriedNodeDifferenceDeg(parent, piece, eventMs) * DEG;
+  const [i1, i2] = [parent.inclinationDeg * DEG, piece.inclinationDeg * DEG];
+  // The normals in a frame whose first axis is the parent's node: (0, -sin i1, cos i1) and (sin i2 sin dN, -sin i2 cos dN, cos i2), dN the node difference.
+  const [bx, by, bz] = [Math.sin(i2) * Math.sin(deltaNodeRad), -Math.sin(i2) * Math.cos(deltaNodeRad), Math.cos(i2)];
+  const [ay, az] = [-Math.sin(i1), Math.cos(i1)];
+  const cross = Math.hypot(ay * bz - az * by, az * bx, -ay * bx);
+  const dot = ay * by + az * bz;
+  return Math.atan2(cross, dot) / DEG;
 }
 
 /**
