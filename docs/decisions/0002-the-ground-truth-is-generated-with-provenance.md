@@ -82,3 +82,42 @@ It took the truth from 599 events to 2,433 (from 2005, 248 to 623, of them
 the headline's, are unchanged; the hand row the eleventh phase had typed
 from the same catalogue (Yaogan-6, 2014) is now the parser's and was
 removed.
+
+## Amended on 2026-10-12: one source's two instants are two events
+
+The thirty-day rule merged any two statements of one parent within a month
+into one event, even where one source stated two distinct instants: NASA's
+history lists ALOS-1's stage twice (8 August 2006, 14:07, "Event 1 of 2",
+and 27 August, 16:18, "Event 2 of 2"), and the truth held one event dated
+to the first, the detector's confirmation of the big second cloud scored
+against it with a nineteen-day timing error. Issue #18.
+
+The rule now reads (`groupStatements`, `distinctInstants` in
+`scripts/truth/build-truth.ts`): statements of one parent within thirty
+days are one event, except that two instants one listing source states
+more than a day apart, both to the day or finer, are two events. The
+listing sources are those that list each event once: NASA's history,
+GCAT's cloud table and its satellite catalogue (each apart), the quarterly
+news, the notices and ESA's report. Every other statement joins the
+nearest instant (by the gap between the windows, then between their
+middles), so the order the sources are read in does not decide it. The
+news and the analysts gather many outlets under one name and the
+catalogue's bursts are windows, so neither splits an event; nor do
+aerodynamic breakups and releases, out of the denominator either way
+(NASA's aerodynamic table is read twice where its cells wrap, and a
+station's releases come weeks apart). A reviewer's merge is not split.
+
+The review proposed also merging across sources only where one states no
+instant finer than the month. That was not taken: two sources that both
+state the day disagree on one event by days in the sources, not on two
+events (NASA's 12 August 2019 at 13:58 and GCAT's 19 August at 13:58 for
+Cosmos 2464-2466's ullage motor, the same minute a week apart), and
+splitting them would add events no one reported. They stay one event, the
+disagreement a conflict, as before.
+
+From 2005 the rule adds two scoreable events (ALOS-1's stage on
+27 August 2006, confidence A; Cosmos 2392's ullage motor's second
+separation of 30 June 2005, 55 pieces, confidence C) and one exempt
+release (the station's of 22 July 2009); before 2005 it splits Cosmos 1355
+(1984), Cosmos 2227's stage (1992), Cosmos 1261 (1981) and Cosmos 2399
+(2003).

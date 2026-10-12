@@ -15,7 +15,8 @@ import { statedOnFromRef } from "./stated.ts";
  * its table, GCAT's satellite catalogue read for every piece's parent and
  * separation date, the catalogue's own bursts, and the hand-entered
  * statements. Statements about one parent
- * whose windows fall within a month of each other are one event; a
+ * whose windows fall within a month of each other are one event, unless
+ * one source lists them as two instants more than a day apart; a
  * reviewer's overrides merge or separate what the rule gets wrong. Each
  * field is then resolved by a fixed order of sources, every disagreement is
  * listed as a conflict, and the report `docs/truth.md` says what was built
@@ -117,10 +118,82 @@ function allStatements(): Statement[] {
 const lower = (time: StatedTime): number => Date.parse(time.from ?? time.to);
 const upper = (time: StatedTime): number => Date.parse(time.to);
 
+/** The time between two windows, zero where they overlap. */
+const gapOf = (a: StatedTime, b: StatedTime): number => Math.max(0, lower(a) - upper(b), lower(b) - upper(a));
+
 /** Whether two windows fall within `SAME_EVENT_DAYS` of each other. */
 function near(a: StatedTime, b: StatedTime): boolean {
-  const gap = SAME_EVENT_DAYS * DAY_MS;
-  return lower(a) <= upper(b) + gap && lower(b) <= upper(a) + gap;
+  return gapOf(a, b) <= SAME_EVENT_DAYS * DAY_MS;
+}
+
+const middle = (time: StatedTime): number => (lower(time) + upper(time)) / 2;
+/** How far apart two sets of statements are: the gap between their nearest windows, then, on a tie, between the nearest windows' middles. */
+function distanceOf(a: Statement[], b: Statement[]): [number, number] {
+  let best: [number, number] = [Infinity, Infinity];
+  for (const s of a) {
+    for (const t of b) {
+      const d: [number, number] = [gapOf(s.event, t.event), Math.abs(middle(s.event) - middle(t.event))];
+      if (d[0] < best[0] || (d[0] === best[0] && d[1] < best[1])) best = d;
+    }
+  }
+  return best;
+}
+const closer = (a: [number, number], b: [number, number]): boolean => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+
+/**
+ * The sources that list each event once: NASA's history, GCAT's cloud table
+ * and its satellite catalogue (each apart), the quarterly news, the notices
+ * and ESA's report. Two of one such source's statements on one parent are
+ * two events where both state the day or finer and they lie more than a day
+ * apart. The news and the analysts gather many outlets' reports under one
+ * name, and the catalogue's bursts are windows, not instants: neither is
+ * read so.
+ */
+const LISTING_SOURCES: ReadonlySet<SourceId> = new Set<SourceId>(["hoosf-16e", "gcat", "odqn", "s4s-notice", "esa-ser"]);
+const listingOf = (statement: Statement): string | null => (isSatcatStatement(statement) ? "gcat-satcat" : LISTING_SOURCES.has(statement.source) ? statement.source : null);
+const STATES_THE_DAY: ReadonlySet<Precision> = new Set<Precision>(["second", "minute", "hour", "day"]);
+/**
+ * The kinds the rule reads: the scorecard's targets. NASA's aerodynamic
+ * table is read twice where its cells wrap (one row, two dates), and the
+ * satellite catalogue's releases from a station or a crewed craft come
+ * weeks apart as one episode; both are out of the denominator either way.
+ */
+const isTargetKind = (statement: Statement): boolean => statement.kind === null || statement.kind === "breakup" || statement.kind === "anomalous";
+
+/** Whether one listing source states these two as distinct instants of one parent: both to the day or finer, more than a day apart. */
+export function distinctInstants(a: Statement, b: Statement): boolean {
+  const listing = listingOf(a);
+  const sameParent = a.parent.catalogueNumber === b.parent.catalogueNumber && (a.parent.catalogueNumber !== null || a.parent.designator === b.parent.designator);
+  return listing !== null && listing === listingOf(b) && sameParent && isTargetKind(a) && isTargetKind(b) && STATES_THE_DAY.has(a.event.precision) && STATES_THE_DAY.has(b.event.precision) && gapOf(a.event, b.event) > DAY_MS;
+}
+
+/**
+ * A run of statements chained within a month, split where one listing
+ * source states distinct instants: the two nearest parts (by the gap
+ * between their windows, then between the windows' middles) are joined first,
+ * then the next nearest, never two parts that hold distinct instants of one
+ * source, nor parts further apart than `SAME_EVENT_DAYS`. Each statement so
+ * joins the instant nearest it, whatever order the sources come in.
+ */
+function splitDistinct(group: Group, order: Map<Statement, number>): Group[] {
+  const all = group.statements;
+  if (!all.some((a, i) => all.slice(i + 1).some((b) => distinctInstants(a, b)))) return [group];
+  const parts = all.map((s) => [s]);
+  for (;;) {
+    let best: { i: number; j: number; distance: [number, number] } | null = null;
+    for (let i = 0; i < parts.length; i++) {
+      for (let j = i + 1; j < parts.length; j++) {
+        if (parts[i]!.some((a) => parts[j]!.some((b) => distinctInstants(a, b)))) continue;
+        const distance = distanceOf(parts[i]!, parts[j]!);
+        if (distance[0] <= SAME_EVENT_DAYS * DAY_MS && (best === null || closer(distance, best.distance))) best = { i, j, distance };
+      }
+    }
+    if (best === null) break;
+    parts[best.i]!.push(...parts[best.j]!);
+    parts.splice(best.j, 1);
+  }
+  const byOrder = (a: Statement, b: Statement): number => order.get(a)! - order.get(b)!;
+  return parts.map((part) => part.sort(byOrder)).sort((a, b) => byOrder(a[0]!, b[0]!)).map((statements) => ({ statements, overrides: [...group.overrides] }));
 }
 
 /** The key statements are first grouped by: the parent's catalogue number, else its launch, else nothing (each unnamed row stands alone). */
@@ -137,9 +210,12 @@ interface Group {
 
 /**
  * Statements grouped into events: by parent first, then by windows within
- * a month of each other, each statement joining the first group it is
- * near. An override's `merge` pulls the named parents' statements between
- * its days into one group before the rule runs.
+ * a month of each other, except that two instants one listing source
+ * states more than a day apart are two events (`distinctInstants`), each
+ * other statement joining the instant nearest it. Sources that disagree
+ * within the month stay one event, their disagreement a conflict. An
+ * override's `merge` pulls the named parents' statements between its days
+ * into one group before the rule runs, and the rule does not split it.
  */
 export function groupStatements(statements: Statement[], overrides: Override[]): Group[] {
   const groups: Group[] = [];
@@ -169,6 +245,11 @@ export function groupStatements(statements: Statement[], overrides: Override[]):
       byParent.set(key, candidates);
     }
   });
+  // A month's chain may hold two instants one listing source states apart: it is split at them.
+  const order = new Map(statements.map((s, i) => [s, i] as const));
+  const split = groups.flatMap((group) => (group.overrides.length > 0 ? [group] : splitDistinct(group, order)));
+  groups.length = 0;
+  groups.push(...split);
   // A statement that names the launch alone (the catalogue's pieces, GCAT's analyst parents) joins the event of a
   // numbered parent of that launch whose window is near; else, for the catalogue's bursts, a reported event of the
   // launch in the years before, whose cloud is still being catalogued.
@@ -181,7 +262,8 @@ export function groupStatements(statements: Statement[], overrides: Override[]):
       continue;
     }
     const sameLaunch = groups.filter((other) => other !== group && numbered(other) && !catalogueOnly(other) && launchOfGroup(other) === launch);
-    const home = numbered(group) ? undefined : sameLaunch.find((other) => other.statements.some((s) => group.statements.some((g) => near(s.event, g.event))));
+    const joinable = (other: Group): boolean => other.statements.some((s) => group.statements.some((g) => near(s.event, g.event))) && !other.statements.some((s) => group.statements.some((g) => distinctInstants(s, g)));
+    const home = numbered(group) ? undefined : sameLaunch.filter(joinable).sort((a, b) => (closer(distanceOf(a.statements, group.statements), distanceOf(b.statements, group.statements)) ? -1 : closer(distanceOf(b.statements, group.statements), distanceOf(a.statements, group.statements)) ? 1 : 0))[0];
     if (home !== undefined) {
       home.statements.push(...group.statements);
       continue;

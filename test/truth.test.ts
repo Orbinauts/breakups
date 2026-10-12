@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { buildTruth } from "../scripts/truth/build-truth.ts";
+import { buildTruth, distinctInstants } from "../scripts/truth/build-truth.ts";
 import { renderReport } from "../scripts/truth/report.ts";
 import { readBreakups, yearOf, type Breakup } from "../src/index.ts";
 
@@ -30,6 +30,20 @@ describe("the committed truth", () => {
   test("reads back, every row checked", () => {
     expect(breakups.length).toBeGreaterThan(500);
     expect(scoring.filter((b) => b.scoreable).length).toBeGreaterThan(140);
+  });
+
+  test("holds no two instants one listing source states more than a day apart in one event", () => {
+    for (const group of buildTruth().groups) {
+      if (group.overrides.length > 0) continue;
+      const s = group.statements;
+      for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) expect(distinctInstants(s[i]!, s[j]!), `${s[i]!.ref} / ${s[j]!.ref}`).toBe(false);
+    }
+  });
+
+  test("splits ALOS-1's stage into NASA's two events and Cosmos 2392's ullage motor into GCAT's two separations", () => {
+    expect(breakups.find((b) => b.id === "28932:2006-08-27")).toMatchObject({ event: { at: "2006-08-27T16:18Z" }, confidence: "A", scoreable: true });
+    expect(breakups.find((b) => b.id === "28932:2006-08-08")!.conflicts.filter((c) => c.field === "event")).toEqual([]);
+    expect(breakups.find((b) => b.id === "27474:2005-06-30")).toMatchObject({ piecesCatalogued: 55, scoreable: true });
   });
 
   test("is ordered by time, with no two events of one parent within a day", () => {

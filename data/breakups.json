@@ -58150,6 +58150,79 @@
    "firstStatement": null
   },
   {
+   "id": "12376:1981-03-31",
+   "parent": {
+    "catalogueNumber": 12376,
+    "designator": "1981-031A",
+    "name": "Kosmos-1261",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "1981-03-31"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "1981 Mar 31",
+    "at": null,
+    "from": "1981-03-31T00:00Z",
+    "to": "1981-04-01T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "deliberate",
+   "piecesCatalogued": 1,
+   "confidence": "C",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "gcat",
+    "orbit": null,
+    "cause": "gcat",
+    "pieces": "gcat",
+    "kind": "gcat"
+   },
+   "statements": [
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S12376, piece 27796",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 12376,
+      "designator": "1981-031A",
+      "name": "Kosmos-1261"
+     },
+     "event": {
+      "stated": "1981 Mar 31",
+      "at": null,
+      "from": "1981-03-31T00:00Z",
+      "to": "1981-04-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "deliberate",
+     "causeStated": "GCAT's types: DZ (breakup debris from on-board destruct device) x1",
+     "piecesCatalogued": 1,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Type: payload; Parent launched 31 Mar 1981. Separation dates GCAT states for the pieces: 1981 Mar 31 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": null
+  },
+  {
    "id": "12341:1981-03-31",
    "parent": {
     "catalogueNumber": 12341,
@@ -59439,36 +59512,6 @@
     },
     {
      "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S12376, piece 27796",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 12376,
-      "designator": "1981-031A",
-      "name": "Kosmos-1261"
-     },
-     "event": {
-      "stated": "1981 Mar 31",
-      "at": null,
-      "from": "1981-03-31T00:00Z",
-      "to": "1981-04-01T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "deliberate",
-     "causeStated": "GCAT's types: DZ (breakup debris from on-board destruct device) x1",
-     "piecesCatalogued": 1,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Type: payload; Parent launched 31 Mar 1981. Separation dates GCAT states for the pieces: 1981 Mar 31 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
-    },
-    {
-     "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S12376, 9 pieces 12892 to 12894, 27901, 27902, 29202, 33520, 35507, 48264",
      "kind": "breakup",
      "parent": {
@@ -59498,16 +59541,7 @@
      "statedOn": null
     }
    ],
-   "conflicts": [
-    {
-     "field": "day",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat 1981 May 12 against gcat 1981 Mar 31"
-    }
-   ],
+   "conflicts": [],
    "overrides": [],
    "firstStatement": null
   },
@@ -77136,54 +77170,6 @@
      "statedOn": null
     },
     {
-     "source": "hoosf-16e",
-     "ref": "p. 222",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 13150,
-      "designator": "1982-038A",
-      "name": "COSMOS 1355"
-     },
-     "event": {
-      "stated": "20 Feb 1984, Before 0340 GMT",
-      "at": null,
-      "from": "1984-02-20T00:00Z",
-      "to": "1984-02-20T03:40Z",
-      "precision": "hour"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "unknown",
-     "causeStated": "Unknown",
-     "piecesCatalogued": null,
-     "piecesStatedOn": null,
-     "preEventElements": {
-      "OBJECT_NAME": "COSMOS 1355",
-      "OBJECT_ID": "1982-038A",
-      "EPOCH": "1984-02-19T16:33:49.181184",
-      "MEAN_MOTION": 15.97914042,
-      "ECCENTRICITY": 0.0014134,
-      "INCLINATION": 65.0338,
-      "RA_OF_ASC_NODE": 316.3115,
-      "ARG_OF_PERICENTER": 254.0517,
-      "MEAN_ANOMALY": 105.8772,
-      "EPHEMERIS_TYPE": 0,
-      "CLASSIFICATION_TYPE": "U",
-      "NORAD_CAT_ID": 13150,
-      "ELEMENT_SET_NO": 0,
-      "REV_AT_EPOCH": 0,
-      "BSTAR": 0.00093344,
-      "MEAN_MOTION_DOT": 0.00430956,
-      "MEAN_MOTION_DDOT": 0.000083799
-     },
-     "note": "Type: Payload; owner: CIS; launched 29.41 Apr 1982. Location Unknown. Event 3 of 3 on this spread.",
-     "statedOn": null
-    },
-    {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S13150, 7 pieces 14682 to 14687, 14697",
      "kind": "breakup",
@@ -77216,28 +77202,12 @@
    ],
    "conflicts": [
     {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "hoosf-16e"
-     ],
-     "detail": "hoosf-16e 1 Feb 1984, 0322 GMT against hoosf-16e 20 Feb 1984, Before 0340 GMT"
-    },
-    {
      "field": "cause",
      "sources": [
       "hoosf-16e",
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 20 Feb 1984, Before 0340 GMT against gcat 1984 Feb 1 0322"
     }
    ],
    "overrides": [],
@@ -77989,6 +77959,97 @@
      "piecesStatedOn": "2026-10-11",
      "preEventElements": null,
      "note": "Type: payload; Parent launched 5 Feb 1984. Separation dates GCAT states for the pieces: 1984 Mar 7? (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": null
+  },
+  {
+   "id": "13150:1984-02-20",
+   "parent": {
+    "catalogueNumber": 13150,
+    "designator": "1982-038A",
+    "name": "COSMOS 1355",
+    "class": "payload",
+    "owner": "CIS",
+    "launchedOn": "1982-04-29"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "20 Feb 1984, Before 0340 GMT",
+    "at": null,
+    "from": "1984-02-20T00:00Z",
+    "to": "1984-02-20T03:40Z",
+    "precision": "hour"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": null,
+    "cause": "hoosf-16e",
+    "pieces": null,
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "p. 222",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 13150,
+      "designator": "1982-038A",
+      "name": "COSMOS 1355"
+     },
+     "event": {
+      "stated": "20 Feb 1984, Before 0340 GMT",
+      "at": null,
+      "from": "1984-02-20T00:00Z",
+      "to": "1984-02-20T03:40Z",
+      "precision": "hour"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "unknown",
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": {
+      "OBJECT_NAME": "COSMOS 1355",
+      "OBJECT_ID": "1982-038A",
+      "EPOCH": "1984-02-19T16:33:49.181184",
+      "MEAN_MOTION": 15.97914042,
+      "ECCENTRICITY": 0.0014134,
+      "INCLINATION": 65.0338,
+      "RA_OF_ASC_NODE": 316.3115,
+      "ARG_OF_PERICENTER": 254.0517,
+      "MEAN_ANOMALY": 105.8772,
+      "EPHEMERIS_TYPE": 0,
+      "CLASSIFICATION_TYPE": "U",
+      "NORAD_CAT_ID": 13150,
+      "ELEMENT_SET_NO": 0,
+      "REV_AT_EPOCH": 0,
+      "BSTAR": 0.00093344,
+      "MEAN_MOTION_DOT": 0.00430956,
+      "MEAN_MOTION_DDOT": 0.000083799
+     },
+     "note": "Type: Payload; owner: CIS; launched 29.41 Apr 1982. Location Unknown. Event 3 of 3 on this spread.",
      "statedOn": null
     }
    ],
@@ -117619,72 +117680,9 @@
      "preEventElements": null,
      "note": "Parent is GCAT's auxiliary-catalogue object A04923, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 1990 Dec 1 1610 (24). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
-    {
-     "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A04923, 2 pieces 21080, 21690",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": null,
-      "designator": "1990-105",
-      "name": "GCAT auxiliary object A04923"
-     },
-     "event": {
-      "stated": "1990 Dec 20?",
-      "at": null,
-      "from": "1990-12-19T00:00Z",
-      "to": "1990-12-22T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "battery",
-     "causeStated": "GCAT's types: CF (component: fairings and other covers) x1; DB (battery explosion debris) x1",
-     "piecesCatalogued": 2,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Parent is GCAT's auxiliary-catalogue object A04923, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 1990 Dec 20? (2). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
     }
    ],
-   "conflicts": [
-    {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 1 Dec 1990, 1610 GMT against gcat 1990 Dec 20?"
-    },
-    {
-     "field": "cause",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e propulsion against gcat battery"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat 1990 Dec 1 1610 against gcat 1990 Dec 20?"
-    },
-    {
-     "field": "cause",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat propulsion against gcat battery"
-    }
-   ],
+   "conflicts": [],
    "overrides": [],
    "firstStatement": null
   },
@@ -117827,6 +117825,79 @@
      "piecesStatedOn": "2026-10-11",
      "preEventElements": null,
      "note": "Type: rocket body; Parent launched 16 Nov 1990. Separation dates GCAT states for the pieces: 1990 Dec 4 0514? (3). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": null
+  },
+  {
+   "id": "A:1990-105:1990-12-19",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": "1990-105",
+    "name": "GCAT auxiliary object A04923",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "1990 Dec 20?",
+    "at": null,
+    "from": "1990-12-19T00:00Z",
+    "to": "1990-12-22T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "battery",
+   "piecesCatalogued": 2,
+   "confidence": "C",
+   "scoreable": false,
+   "exemptReason": "the parent has no catalogue number",
+   "resolvedFrom": {
+    "event": "gcat",
+    "orbit": null,
+    "cause": "gcat",
+    "pieces": "gcat",
+    "kind": "gcat"
+   },
+   "statements": [
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A04923, 2 pieces 21080, 21690",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "1990-105",
+      "name": "GCAT auxiliary object A04923"
+     },
+     "event": {
+      "stated": "1990 Dec 20?",
+      "at": null,
+      "from": "1990-12-19T00:00Z",
+      "to": "1990-12-22T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "battery",
+     "causeStated": "GCAT's types: CF (component: fairings and other covers) x1; DB (battery explosion debris) x1",
+     "piecesCatalogued": 2,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Parent is GCAT's auxiliary-catalogue object A04923, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 1990 Dec 20? (2). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
     }
    ],
@@ -124162,36 +124233,6 @@
      "statedOn": null
     },
     {
-     "source": "hoosf-16e",
-     "ref": "p. 396",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 22285,
-      "designator": "1992-093B",
-      "name": "COSMOS 2227 R/B"
-     },
-     "event": {
-      "stated": "30 Dec 1992, 0903 GMT",
-      "at": "1992-12-30T09:03Z",
-      "from": "1992-12-30T09:03Z",
-      "to": "1992-12-30T09:03Z",
-      "precision": "minute"
-     },
-     "orbit": {
-      "altitudeKm": 830,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "propulsion",
-     "causeStated": "Propulsion",
-     "piecesCatalogued": null,
-     "piecesStatedOn": null,
-     "preEventElements": null,
-     "note": "Type: Zenit Second Stage; owner: CIS; launched 25.25 Dec 1992. Location 22 S, 172 E (dsc). Event 4 of 4 on this spread.",
-     "statedOn": null
-    },
-    {
      "source": "gcat",
      "ref": "entry 182 (92093)",
      "kind": "breakup",
@@ -124283,31 +124324,7 @@
       "hoosf-16e",
       "hoosf-16e"
      ],
-     "detail": "hoosf-16e 26 Dec 1992, 0738 GMT against hoosf-16e 30 Dec 1992, 0903 GMT"
-    },
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
-      "hoosf-16e"
-     ],
      "detail": "hoosf-16e 26 Dec 1992, 2249 GMT against hoosf-16e 26 Dec 1992, 2310 GMT"
-    },
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
-      "hoosf-16e"
-     ],
-     "detail": "hoosf-16e 26 Dec 1992, 2249 GMT against hoosf-16e 30 Dec 1992, 0903 GMT"
-    },
-    {
-     "field": "cause",
-     "sources": [
-      "hoosf-16e",
-      "hoosf-16e"
-     ],
-     "detail": "hoosf-16e unknown against hoosf-16e propulsion"
     },
     {
      "field": "event",
@@ -124329,27 +124346,84 @@
      "field": "event",
      "sources": [
       "hoosf-16e",
-      "hoosf-16e"
-     ],
-     "detail": "hoosf-16e 26 Dec 1992, 2310 GMT against hoosf-16e 30 Dec 1992, 0903 GMT"
-    },
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
       "gcat"
      ],
      "detail": "hoosf-16e 26 Dec 1992, 2310 GMT against gcat 1992 Dec 26 0738"
-    },
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 30 Dec 1992, 0903 GMT against gcat 1992 Dec 26 0738"
     }
    ],
+   "overrides": [],
+   "firstStatement": null
+  },
+  {
+   "id": "22285:1992-12-30",
+   "parent": {
+    "catalogueNumber": 22285,
+    "designator": "1992-093B",
+    "name": "COSMOS 2227 R/B",
+    "class": "rocket body",
+    "owner": "CIS",
+    "launchedOn": "1992-12-25"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "30 Dec 1992, 0903 GMT",
+    "at": "1992-12-30T09:03Z",
+    "from": "1992-12-30T09:03Z",
+    "to": "1992-12-30T09:03Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": 830,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "LEO"
+   },
+   "cause": "propulsion",
+   "piecesCatalogued": null,
+   "confidence": "A",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": null,
+    "kind": "hoosf-16e"
+   },
+   "statements": [
+    {
+     "source": "hoosf-16e",
+     "ref": "p. 396",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 22285,
+      "designator": "1992-093B",
+      "name": "COSMOS 2227 R/B"
+     },
+     "event": {
+      "stated": "30 Dec 1992, 0903 GMT",
+      "at": "1992-12-30T09:03Z",
+      "from": "1992-12-30T09:03Z",
+      "to": "1992-12-30T09:03Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": 830,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Type: Zenit Second Stage; owner: CIS; launched 25.25 Dec 1992. Location 22 S, 172 E (dsc). Event 4 of 4 on this spread.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
    "overrides": [],
    "firstStatement": null
   },
@@ -128903,7 +128977,7 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 3,
+   "piecesCatalogued": 1,
    "confidence": "C",
    "scoreable": false,
    "exemptReason": "a release of objects, not a breakup",
@@ -128944,36 +129018,6 @@
      "preEventElements": null,
      "note": "Type: debris; Parent launched 14 Jun 1994. Separation dates GCAT states for the pieces: 1994 Jul 2 0140? (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
-    {
-     "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A05496, 2 pieces 23141, 23142",
-     "kind": "release",
-     "parent": {
-      "catalogueNumber": null,
-      "designator": "1994-033",
-      "name": "GCAT auxiliary object A05496"
-     },
-     "event": {
-      "stated": "1994 Jul 2 0502?",
-      "at": "1994-07-02T05:02Z",
-      "from": "1994-07-02T05:01Z",
-      "to": "1994-07-02T05:03Z",
-      "precision": "minute"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": null,
-     "causeStated": "GCAT's types: CF (component: fairings and other covers) x2",
-     "piecesCatalogued": 2,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Parent is GCAT's auxiliary-catalogue object A05496, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 1994 Jul 2 0502? (2). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
     }
    ],
    "conflicts": [],
@@ -129006,7 +129050,7 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 1,
+   "piecesCatalogued": 3,
    "confidence": "C",
    "scoreable": false,
    "exemptReason": "a release of objects, not a breakup",
@@ -129046,6 +129090,36 @@
      "piecesStatedOn": "2026-10-11",
      "preEventElements": null,
      "note": "Type: payload; Parent launched 14 Jun 1994. Separation dates GCAT states for the pieces: 1994 Jul 2 0502? (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    },
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A05496, 2 pieces 23141, 23142",
+     "kind": "release",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "1994-033",
+      "name": "GCAT auxiliary object A05496"
+     },
+     "event": {
+      "stated": "1994 Jul 2 0502?",
+      "at": "1994-07-02T05:02Z",
+      "from": "1994-07-02T05:01Z",
+      "to": "1994-07-02T05:03Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "GCAT's types: CF (component: fairings and other covers) x2",
+     "piecesCatalogued": 2,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Parent is GCAT's auxiliary-catalogue object A05496, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 1994 Jul 2 0502? (2). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
     }
    ],
@@ -151243,6 +151317,79 @@
    "firstStatement": null
   },
   {
+   "id": "27856:2003-11-18",
+   "parent": {
+    "catalogueNumber": 27856,
+    "designator": "2003-035A",
+    "name": "Kosmos-2399",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": "2003-08-12"
+   },
+   "kind": "anomalous",
+   "event": {
+    "stated": "2003 Nov 19?",
+    "at": null,
+    "from": "2003-11-18T00:00Z",
+    "to": "2003-11-21T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 4,
+   "confidence": "C",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "gcat",
+    "orbit": null,
+    "cause": null,
+    "pieces": "gcat",
+    "kind": "gcat"
+   },
+   "statements": [
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S27856, 4 pieces 28084, 28085, 28087, 28088",
+     "kind": "anomalous",
+     "parent": {
+      "catalogueNumber": 27856,
+      "designator": "2003-035A",
+      "name": "Kosmos-2399"
+     },
+     "event": {
+      "stated": "2003 Nov 19?",
+      "at": null,
+      "from": "2003-11-18T00:00Z",
+      "to": "2003-11-21T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "GCAT's types: DJ (anomalous debris (insulation, soft material, ablated material)) x4",
+     "piecesCatalogued": 4,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Type: payload; Parent launched 12 Aug 2003. Separation dates GCAT states for the pieces: 2003 Nov 19? (4). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": null
+  },
+  {
    "id": "28077:2003-11-21",
    "parent": {
     "catalogueNumber": 28077,
@@ -151510,36 +151657,6 @@
     },
     {
      "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S27856, 4 pieces 28084, 28085, 28087, 28088",
-     "kind": "anomalous",
-     "parent": {
-      "catalogueNumber": 27856,
-      "designator": "2003-035A",
-      "name": "Kosmos-2399"
-     },
-     "event": {
-      "stated": "2003 Nov 19?",
-      "at": null,
-      "from": "2003-11-18T00:00Z",
-      "to": "2003-11-21T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": null,
-     "causeStated": "GCAT's types: DJ (anomalous debris (insulation, soft material, ablated material)) x4",
-     "piecesCatalogued": 4,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Type: payload; Parent launched 12 Aug 2003. Separation dates GCAT states for the pieces: 2003 Nov 19? (4). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
-    },
-    {
-     "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S27856, 21 pieces 28100 to 28111, 28120 to 28128",
      "kind": "breakup",
      "parent": {
@@ -151569,24 +151686,7 @@
      "statedOn": null
     }
    ],
-   "conflicts": [
-    {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 9 Dec 2003, 0129Z against gcat 2003 Nov 19?"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat 2003 Dec 9 0129 against gcat 2003 Nov 19?"
-    }
-   ],
+   "conflicts": [],
    "overrides": [],
    "firstStatement": {
     "on": "2004-01-01",
@@ -155925,56 +156025,9 @@
      "preEventElements": null,
      "note": "Type: rocket body; Parent launched 25 Jul 2002. Separation dates GCAT states for the pieces: 2005 Jun 1 (6). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
-    {
-     "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S27474, 55 pieces 28715 to 28736, 28743 to 28772, 28860, 28861, 43372",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 27474,
-      "designator": "2002-037E",
-      "name": "DM5-2L SOZ-1"
-     },
-     "event": {
-      "stated": "2005 Jun 30",
-      "at": null,
-      "from": "2005-06-30T00:00Z",
-      "to": "2005-07-01T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "propulsion",
-     "causeStated": "GCAT's types: DP (propulsion related, residual-propellant breakup) x55",
-     "piecesCatalogued": 55,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Type: rocket body; Parent launched 25 Jul 2002. Separation dates GCAT states for the pieces: 2005 Jun 30 (55). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
     }
    ],
-   "conflicts": [
-    {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 1 Jun 2005, Unknown against gcat 2005 Jun 30"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat 2005 Jun 1 against gcat 2005 Jun 30"
-    }
-   ],
+   "conflicts": [],
    "overrides": [],
    "firstStatement": {
     "on": "2005-07-01",
@@ -156537,6 +156590,79 @@
     "ref": "“Recent Satellite Breakups”, ODQN 9(3), July 2005, cited by NASA's history, p. 640",
     "source": "hoosf-16e"
    }
+  },
+  {
+   "id": "27474:2005-06-30",
+   "parent": {
+    "catalogueNumber": 27474,
+    "designator": "2002-037E",
+    "name": "DM5-2L SOZ-1",
+    "class": "rocket body",
+    "owner": null,
+    "launchedOn": "2002-07-25"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "2005 Jun 30",
+    "at": null,
+    "from": "2005-06-30T00:00Z",
+    "to": "2005-07-01T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "propulsion",
+   "piecesCatalogued": 55,
+   "confidence": "C",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "gcat",
+    "orbit": null,
+    "cause": "gcat",
+    "pieces": "gcat",
+    "kind": "gcat"
+   },
+   "statements": [
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S27474, 55 pieces 28715 to 28736, 28743 to 28772, 28860, 28861, 43372",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 27474,
+      "designator": "2002-037E",
+      "name": "DM5-2L SOZ-1"
+     },
+     "event": {
+      "stated": "2005 Jun 30",
+      "at": null,
+      "from": "2005-06-30T00:00Z",
+      "to": "2005-07-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "GCAT's types: DP (propulsion related, residual-propellant breakup) x55",
+     "piecesCatalogued": 55,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Type: rocket body; Parent launched 25 Jul 2002. Separation dates GCAT states for the pieces: 2005 Jun 30 (55). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": null
   },
   {
    "id": "A:1998-067:2005-08-18",
@@ -159615,7 +159741,7 @@
     "regime": "LEO"
    },
    "cause": "unknown",
-   "piecesCatalogued": 21,
+   "piecesCatalogued": 24,
    "confidence": "A",
    "scoreable": true,
    "exemptReason": null,
@@ -159623,7 +159749,7 @@
     "event": "hoosf-16e",
     "orbit": "hoosf-16e",
     "cause": "hoosf-16e",
-    "pieces": "gcat",
+    "pieces": "hoosf-16e",
     "kind": "hoosf-16e"
    },
    "statements": [
@@ -159661,6 +159787,123 @@
       "ref": "“Three More Satellites Involved in Fragmentations”, ODQN 10(4), October 2006, cited by NASA's history, p. 482"
      }
     },
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S28932, 4 pieces 29364 to 29367",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 28932,
+      "designator": "2006-002B",
+      "name": "H-2A F8 Stage 2"
+     },
+     "event": {
+      "stated": "2006 Aug 8",
+      "at": null,
+      "from": "2006-08-08T00:00Z",
+      "to": "2006-08-09T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "GCAT's types: DP (propulsion related, residual-propellant breakup) x4",
+     "piecesCatalogued": 4,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Type: rocket body; Parent launched 24 Jan 2006. Separation dates GCAT states for the pieces: 2006 Aug 8 (4). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    },
+    {
+     "source": "catalogue",
+     "ref": "the public catalogue: 21 debris objects under launch 2006-002 with first element sets from 2006-09-08",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "2006-002",
+      "name": "H-2A"
+     },
+     "event": {
+      "stated": "before the first piece's first set, 2006-09-08T03:58Z",
+      "at": null,
+      "from": "2006-07-10T03:58Z",
+      "to": "2006-09-08T03:58Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": null,
+     "piecesCatalogued": 21,
+     "piecesStatedOn": "2006-12-07",
+     "preEventElements": null,
+     "note": "Found by the burst rule: at least 5 new debris objects within 30 days, more than 90 days after launch, at least 20% of the 0 debris the launch had before. Pieces 29370 to 29384.",
+     "statedOn": null
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "gcat"
+     ],
+     "detail": "hoosf-16e unknown against gcat propulsion"
+    }
+   ],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2006-10-01",
+    "precision": "month",
+    "ref": "“Three More Satellites Involved in Fragmentations”, ODQN 10(4), October 2006, cited by NASA's history, p. 482",
+    "source": "hoosf-16e"
+   }
+  },
+  {
+   "id": "28932:2006-08-27",
+   "parent": {
+    "catalogueNumber": 28932,
+    "designator": "2006-002B",
+    "name": "ALOS-1 R/B",
+    "class": "rocket body",
+    "owner": "Japan",
+    "launchedOn": "2006-01-24"
+   },
+   "kind": "breakup",
+   "event": {
+    "stated": "27 Aug 2006, 1618 GMT",
+    "at": "2006-08-27T16:18Z",
+    "from": "2006-08-27T16:18Z",
+    "to": "2006-08-27T16:18Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": 695,
+    "apogeeKm": 699,
+    "perigeeKm": 547,
+    "inclinationDeg": 98.19,
+    "regime": "LEO"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 21,
+   "confidence": "A",
+   "scoreable": true,
+   "exemptReason": null,
+   "resolvedFrom": {
+    "event": "hoosf-16e",
+    "orbit": "hoosf-16e",
+    "cause": "hoosf-16e",
+    "pieces": "gcat",
+    "kind": "hoosf-16e"
+   },
+   "statements": [
     {
      "source": "hoosf-16e",
      "ref": "p. 482",
@@ -159745,36 +159988,6 @@
     },
     {
      "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S28932, 4 pieces 29364 to 29367",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": 28932,
-      "designator": "2006-002B",
-      "name": "H-2A F8 Stage 2"
-     },
-     "event": {
-      "stated": "2006 Aug 8",
-      "at": null,
-      "from": "2006-08-08T00:00Z",
-      "to": "2006-08-09T00:00Z",
-      "precision": "day"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": "propulsion",
-     "causeStated": "GCAT's types: DP (propulsion related, residual-propellant breakup) x4",
-     "piecesCatalogued": 4,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Type: rocket body; Parent launched 24 Jan 2006. Separation dates GCAT states for the pieces: 2006 Aug 8 (4). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
-    },
-    {
-     "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S28932, 17 pieces 29368 to 29384",
      "kind": "breakup",
      "parent": {
@@ -159802,55 +160015,9 @@
      "preEventElements": null,
      "note": "Type: rocket body; Parent launched 24 Jan 2006. Separation dates GCAT states for the pieces: 2006 Aug 27 1618 (17). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
-    {
-     "source": "catalogue",
-     "ref": "the public catalogue: 21 debris objects under launch 2006-002 with first element sets from 2006-09-08",
-     "kind": "breakup",
-     "parent": {
-      "catalogueNumber": null,
-      "designator": "2006-002",
-      "name": "H-2A"
-     },
-     "event": {
-      "stated": "before the first piece's first set, 2006-09-08T03:58Z",
-      "at": null,
-      "from": "2006-07-10T03:58Z",
-      "to": "2006-09-08T03:58Z",
-      "precision": "none"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": null,
-     "causeStated": null,
-     "piecesCatalogued": 21,
-     "piecesStatedOn": "2006-12-07",
-     "preEventElements": null,
-     "note": "Found by the burst rule: at least 5 new debris objects within 30 days, more than 90 days after launch, at least 20% of the 0 debris the launch had before. Pieces 29370 to 29384.",
-     "statedOn": null
     }
    ],
    "conflicts": [
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
-      "hoosf-16e"
-     ],
-     "detail": "hoosf-16e 8 Aug 2006, 1407 GMT against hoosf-16e 27 Aug 2006, 1618 GMT"
-    },
-    {
-     "field": "event",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 8 Aug 2006, 1407 GMT against gcat 2006 Aug 27 1618"
-    },
     {
      "field": "cause",
      "sources": [
@@ -159858,22 +160025,6 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "hoosf-16e",
-      "gcat"
-     ],
-     "detail": "hoosf-16e 27 Aug 2006, 1618 GMT against gcat 2006 Aug 8"
-    },
-    {
-     "field": "day",
-     "sources": [
-      "gcat",
-      "gcat"
-     ],
-     "detail": "gcat 2006 Aug 27 1618 against gcat 2006 Aug 8"
     }
    ],
    "overrides": [],
@@ -161128,7 +161279,7 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 3,
+   "piecesCatalogued": 2,
    "confidence": "C",
    "scoreable": false,
    "exemptReason": "a release of objects, not a breakup",
@@ -161199,36 +161350,6 @@
      "preEventElements": null,
      "note": "Type: payload; Parent launched 10 Dec 2006. Separation dates GCAT states for the pieces: 2006 Dec 16 2325 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
-    {
-     "source": "gcat",
-     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A07149, piece 29663",
-     "kind": "release",
-     "parent": {
-      "catalogueNumber": null,
-      "designator": "2006-055",
-      "name": "GCAT auxiliary object A07149"
-     },
-     "event": {
-      "stated": "2006 Dec 21 1822",
-      "at": "2006-12-21T18:22Z",
-      "from": "2006-12-21T18:22Z",
-      "to": "2006-12-21T18:22Z",
-      "precision": "minute"
-     },
-     "orbit": {
-      "altitudeKm": null,
-      "apogeeKm": null,
-      "perigeeKm": null,
-      "inclinationDeg": null
-     },
-     "cause": null,
-     "causeStated": "GCAT's types: CV (component: ejection mechanism (deploy canister, clamp band)) x1",
-     "piecesCatalogued": 1,
-     "piecesStatedOn": "2026-10-11",
-     "preEventElements": null,
-     "note": "Parent is GCAT's auxiliary-catalogue object A07149, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 2006 Dec 21 1822 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
-     "statedOn": null
     }
    ],
    "conflicts": [],
@@ -161261,7 +161382,7 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 1,
+   "piecesCatalogued": 2,
    "confidence": "C",
    "scoreable": false,
    "exemptReason": "a release of objects, not a breakup",
@@ -161301,6 +161422,36 @@
      "piecesStatedOn": "2026-10-11",
      "preEventElements": null,
      "note": "Type: debris; Parent launched 10 Dec 2006. Separation dates GCAT states for the pieces: 2006 Dec 21 1823 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
+     "statedOn": null
+    },
+    {
+     "source": "gcat",
+     "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A07149, piece 29663",
+     "kind": "release",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": "2006-055",
+      "name": "GCAT auxiliary object A07149"
+     },
+     "event": {
+      "stated": "2006 Dec 21 1822",
+      "at": "2006-12-21T18:22Z",
+      "from": "2006-12-21T18:22Z",
+      "to": "2006-12-21T18:22Z",
+      "precision": "minute"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "GCAT's types: CV (component: ejection mechanism (deploy canister, clamp band)) x1",
+     "piecesCatalogued": 1,
+     "piecesStatedOn": "2026-10-11",
+     "preEventElements": null,
+     "note": "Parent is GCAT's auxiliary-catalogue object A07149, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 2006 Dec 21 1822 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
     }
    ],
@@ -170354,7 +170505,7 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 4,
+   "piecesCatalogued": 1,
    "confidence": "C",
    "scoreable": false,
    "exemptReason": "objects released from the station on purpose, not a breakup",
@@ -170395,7 +170546,52 @@
      "preEventElements": null,
      "note": "Parent is GCAT's auxiliary-catalogue object A06581, an object the US catalogue does not list apart. Separation dates GCAT states for the pieces: 2009 Jul 18 1742 (1). Grouped by the satellite-catalogue rule: pieces of one parent separated within 3 days of each other are one separation.",
      "statedOn": null
-    },
+    }
+   ],
+   "conflicts": [],
+   "overrides": [
+    "iss-releases"
+   ],
+   "firstStatement": null
+  },
+  {
+   "id": "A:1998-067:2009-07-22",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": "1998-067",
+    "name": "GCAT auxiliary object A06581",
+    "class": "payload",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "release",
+   "event": {
+    "stated": "2009 Jul 22 1507",
+    "at": "2009-07-22T15:07Z",
+    "from": "2009-07-22T15:07Z",
+    "to": "2009-07-22T15:07Z",
+    "precision": "minute"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": 3,
+   "confidence": "C",
+   "scoreable": false,
+   "exemptReason": "objects released from the station on purpose, not a breakup",
+   "resolvedFrom": {
+    "event": "gcat",
+    "orbit": null,
+    "cause": null,
+    "pieces": "gcat",
+    "kind": "gcat"
+   },
+   "statements": [
     {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent A06581, 3 pieces 35638 to 35640",
