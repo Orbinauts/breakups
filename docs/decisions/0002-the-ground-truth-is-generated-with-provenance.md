@@ -82,3 +82,34 @@ It took the truth from 599 events to 2,433 (from 2005, 248 to 623, of them
 the headline's, are unchanged; the hand row the eleventh phase had typed
 from the same catalogue (Yaogan-6, 2014) is now the parser's and was
 removed.
+
+## Amendment, 2026-10-12: ESA's tables by a rule, and the quarterly news checked whole
+
+Issue #20 found the truth thin in its recent years: only the 2025 edition
+of ESA's Space Environment Report was read, as five unnamed hand rows,
+and nothing showed whether a quarter with no quarterly-news row had been
+read. Both are now inputs of their own.
+
+ESA's tables of every edition from 2017 to 2026 (the fragmentations of
+2016 to 2025, 75 rows) are typed as printed into
+`data/truth/esa-ser.json`, each edition with its address and hash. ESA
+names no object, and placing a row by hand would choose it one reading
+at a time, so the build places every row by one rule, written before any
+re-scoring (`scripts/truth/parse-esa-ser.ts`): a row joins the one event
+the other sources date within a day of its epoch, in a regime its orbit
+class allows and of a class its object type allows, an event one row
+alone can be being taken from the others' candidates; a row with no
+candidate is an unnamed event; a row with several is placed nowhere and
+listed in `docs/truth.md`. A nearer day breaks no tie: ESA's epoch and
+another source's day differ by one in several rows the sources agree on
+otherwise. A row whose object a cited report names carries that parent
+(two of 2024, named by s2a systems' observations as SpaceNews quoted
+them). An unknown cause in ESA's table states none, so it never outranks
+a cause another source names. The truth went from 2,433 events to 2,444
+(from 2005, 623 to 634, of them 365 scoreable); 48 rows joined an
+event, 14 are unnamed events and 11 are placed nowhere.
+
+Every issue of NASA's Orbital Debris Quarterly News since 26(3) is listed
+in `data/truth/odqn-coverage.json` as cited by the hand file, read with no
+breakup items, never published or unread, and a test fails on a hole in
+the list or a disagreement with the hand file's citations.
