@@ -9,7 +9,7 @@ This note is a measurement only. **Nothing was changed**: not the score, the sco
 
 ## Method
 
-`scripts/kpi/heo-pieces.ts` (tests in `heo-pieces.test.ts`) reads the Archive's catalogue index, read-only. The run used the index built 2026-10-11T00:55Z, which is stale against 2026's later rebuild, and the truth of the integration branch on 2026-10-12, after the truth rules of #18, #19 and #21 were merged. The script takes every scoreable event of that truth from 2006 with a catalogued parent. It read 293 events and skipped 51:
+`scripts/kpi/heo-pieces.ts` (tests in `heo-pieces.test.ts`) reads the Archive's catalogue index, read-only. The run used the index built 2026-10-11T00:55Z, which is stale against 2026's later rebuild, and the truth of the integration branch on 2026-10-12 (commit 5329c1d), after the truth rules of #18, #19 and #21 were merged. The truth gained the Space Forces' notices after that run. Of the scoreable rows the script reads, only five LEO rows changed: the DMSP F12 and F14 events, Orbcomm FM 36 and two Starlinks. So the HEO, GEO and MEO numbers below stand as they are, and the LEO numbers may move by those rows' pieces. The rerun on the newer truth waited behind other replays for the lock and was not made. The script takes every scoreable event of that truth from 2006 with a catalogued parent. It read 293 events and skipped 51:
 
 - 41 had no parent set before the event;
 - 10 had a parent instant the index was not built for, because #21 moved their windows. One of them is HEO: ChinaSat 6A's stage, 37151, 2010-09-04. The other nine are listed in the script's report. Measuring them needs the index rebuilt for this truth.
