@@ -1,0 +1,35 @@
+Jonathan's Space Report
+No. 860                                                                   2026 Oct 1    Bromley, UK
+-----------------------------------------------------------------------------------------------------
+
+Update:
+-------
+
+Construction on my new Space Library near London is now well under way.
+The books are scheduled to arrive on Tuesday!
+Updates at https://www.gofundme.com/f/fund-jonathans-space-report-library-transition
+(further donations welcome)
+
+ISS
+----
+
+Expedition 75 is underway.
+
+On Sep 1 Adenot and Meir, in suits 3003 and 3015, carried out US EVA-99.
+They replaced a planar retroreflector antenna on IDA-2, and replaced an EHDC camera at CP3.
+They also installed some cables, obtained samples from the ISS exterior to test for
+microorganisms, and performed some prep work for maintenance of the AMS experiment.
+Depressurization to repressurization was 1231 to 1929 UTC.
+
+Cygnus NG-24 performed an orbit raising burn of 1.2m/s on Aug 27 at 1653 UTC.
+Another burn of 1.0m/s was made on Sep 25 at about 1543 UTC.
+
+Progress MS-33 undocked from the Poisk module at 1518 UTC Sep 7 and was deorbited at 1827 UTC
+with entry over the South Pacific at around 1909 UTC.
+
+The Progress MS-35 cargo ship was launched on Sep 16 and docked with the Poisk module at 1344 UTC Sep 19.
+
+Dragon Grace C213.2 was launched on Oct 1 on the Crew-13 mission, carrying Jessica Watkins,
+Luke Delaney, Joshua Kutryk, and Sergey Teteryantnikov.
+
+
