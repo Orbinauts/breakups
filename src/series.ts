@@ -104,6 +104,10 @@ export interface Candidate {
   zMean3: number;
   /** The object's envelope of held altitudes as it stood when the candidate opened, before the first post set was noted, so the post-step level is judged against where the object flew and never against itself. */
   envelope: AltitudeEnvelope;
+  /** The quantity whose residual opened the candidate and on which its persistence is judged, where the three-axis trigger opened it on the perigee radius or the inclination (`openOnThreeAxes`); absent for the semi-major axis. With it, the first post set's jump on that quantity, in its units (kilometres, degrees), and its normalised size. */
+  axis?: "rp" | "inc";
+  axisDelta1?: number;
+  axisZ1?: number;
 }
 
 export interface SeriesState {
@@ -537,13 +541,13 @@ export function ownNoise(state: SeriesState, prior: number, params: DetectorPara
 
 /**
  * Folds a residual into the long memory: an exponential average of the
- * residual's size, clipped at three times the current scatter so one
- * step does not become the object's noise, scaled to a Gaussian sigma
+ * residual's size, clipped at `longMemoryClipSigmas` times the current scatter so
+ * one step does not become the object's noise, scaled to a Gaussian sigma
  * (the mean absolute deviation is 0.798 of it), decaying with the
  * half-life in days.
  */
 export function rememberResidual(state: SeriesState, residual: number, sigma: number, epochMs: number, params: DetectorParameters): void {
-  const size = Math.min(Math.abs(residual), 3 * sigma) * 1.2533;
+  const size = Math.min(Math.abs(residual), params.longMemoryClipSigmas * sigma) * 1.2533;
   if (!Number.isFinite(state.longAt)) {
     state.longSigma = size;
     state.longAt = epochMs;

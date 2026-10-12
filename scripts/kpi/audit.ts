@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { BODY_CLASSES, DETECTOR_PARAMETERS, OPS_STATUSES, REGIMES, readBreakups, readStatements, type BodyClass, type Breakup, type Regime, type Statement, type Step, type Verdict } from "../../src/index.ts";
 import { isWorkingStatus } from "../../src/elements.ts";
-import { deltaVOfAxisChange, planeDistance, poissonTail, type PlaneOrbit } from "../../src/fragments.ts";
+import { deltaVOfAxisChange, planeTestDistance, poissonTail, type PlaneOrbit } from "../../src/fragments.ts";
 import { MANOEUVRE_CLASSES } from "../../src/manoeuvre.ts";
 import { foldedRatio } from "../../src/scope.ts";
 import { archiveHome } from "../archive/archive.ts";
@@ -312,7 +312,7 @@ export function audit(fa: FalseAlarm, catalogue: WholeCatalogue, statements: Sta
   for (const s of sets) if (s.epoch <= fa.step.beforeEpoch + 60_000) parentOrbit = s.orbit;
   const mark = Math.max(catalogue.markAt(fa.eventMs - margin), fa.number);
   const read = (b: BodyFact): Piece => {
-    const distance = parentOrbit === null ? Number.POSITIVE_INFINITY : planeDistance(parentOrbit, b.orbit, fa.eventMs, params, AFTER_DAYS).distance;
+    const distance = parentOrbit === null ? Number.POSITIVE_INFINITY : planeTestDistance(parentOrbit, b.orbit, fa.eventMs, params, AFTER_DAYS);
     const deltaKm = parentOrbit === null ? Number.NaN : b.orbit.aKm - parentOrbit.aKm;
     return { number: b.number, name: b.name, bodyClass: b.bodyClass, daysAfter: (b.firstClock - fa.eventMs) / DAY_MS, seenBefore: b.firstEpoch < fa.eventMs - DAY_MS, distance, deltaKm, deltaVMps: parentOrbit === null ? Number.NaN : deltaVOfAxisChange(parentOrbit.aKm, deltaKm) };
   };

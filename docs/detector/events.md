@@ -95,7 +95,7 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | 2024 | Resurs-P1 (39186, 2013-030), 2024-06-26 | LEO | confirmed | attributed from the pieces 17.1 d after the event, 0.1 d after the first fragment's publication, 79.2 d before the first agency statement (odqn, to the month) | missed | ramping fit | the step reads 5.6 sigma at the first post set and 12.7 at the post sets' centroid over 8 sets: the catalogue's fit converged on the new orbit over several sets | pieces 17.0 d after | – | – |
 | 2024 | DMSP 5D-2 F8 (18123, 1987-053), 2024-07-19 | LEO | confirmed | the step alert confirmed by the pieces 9.8 d after the event, 0.0 d after the first fragment's publication, 63.3 d before the first agency statement (odqn, to the month) | detected | raised | a unique step: 0.30 km, 35 sigma over 6 post sets | 4.3 d before | 4.3 d after the alert, 9.8 d after the event | 59 min |
 | 2024 | CZ-6A R/B (Qianfan) (60397, 2024-140), 2024-08-06 | LEO | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | pieces 20.1 d after | – | – |
-| 2024 | Intelsat 33e (41748, 2016-053), 2024-10-19 | GEO | no fragments catalogued |  | detected | raised | an atypical step on an occasional record (3 tests passed): -26.66 km, -11 sigma over 4 post sets, 23.4 times the record's median | 12.1 d before | no | 499 min |
+| 2024 | Intelsat 33e (41748, 2016-053), 2024-10-19 | GEO | velocity floor | 1 judgement of pieces for the parent (the step alert), at most 1 in its plane, refused: velocity floor | detected | raised | an atypical step on an occasional record (3 tests passed): -26.66 km, -11 sigma over 4 post sets, 23.4 times the record's median | 12.1 d before | no | 499 min |
 | 2026 | ZhuQue-2E upper stage (69537, 2026-128), 2026-06-09 | LEO | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | pieces 9.6 d after | – | – |
 | 2026 | USA 32 (19460, 1988-078), 2026-09-13 | LEO | no fragments catalogued |  | detected | raised | a unique step: -0.47 km, -117 sigma over 3 post sets | before a notice | 1.5 d after the alert, 3.1 d after the event | 8 min |
 
@@ -120,12 +120,12 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | ambiguous parent | 1 |
 | old cloud | 3 |
 | young launch | 1 |
-| velocity floor | 2 |
+| velocity floor | 3 |
 | single piece | 1 |
 | fresh piece | 1 |
 | parent not a candidate | 8 |
 | no piece in a plane the detector read | 1 |
-| no fragments catalogued | 16 |
+| no fragments catalogued | 15 |
 | no parent orbit | 10 |
 
 ## Breakups, confidence C
@@ -192,14 +192,14 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | 2017 | IRNSS-R1H (42928, 2017-051), 2017-08-31 | unknown | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | pieces 3.7 d after | – | – |
 | 2017 | Kosmos-1660 (15821, 1985-047), 2017-12-01 to 2018-03-01 | unknown | velocity floor | 1 judgement of pieces for the parent (an attribution), at most 1 in its plane, refused: velocity floor, cataloguing batch | missed | parent did not move | 51 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | no pieces in the year | – | – |
 | 2017 | Zenit-2 No. 2-89 Stage 2 (23705, 1995-058), 2017-12-01 to 2018-03-01 | unknown | no fragments catalogued |  | missed | parent did not move | 60 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | no pieces in the year | – | – |
-| 2017 | Ariane 5 L540 ESC-A (33057, 2008-030), 2017-12-01 to 2018-03-01 | unknown | no fragments catalogued |  | missed | parent did not move | 68 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | no pieces in the year | – | – |
+| 2017 | Ariane 5 L540 ESC-A (33057, 2008-030), 2017-12-01 to 2018-03-01 | unknown | no piece in a plane the detector read | 1 run brought the launch new bodies, none in the plane of a body the detector held | missed | parent did not move | 68 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | no pieces in the year | – | – |
 | 2018 | CZ-4C Y9 Stage 3 (39014, 2012-066), 2018-02-01 to 2018-05-01 | unknown | no fragments catalogued |  | missed | parent did not move | 58 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 78.5 d after | – | – |
 | 2018 | Briz-M No. 99563 (43433, 2018-037), 2018-04-19 | unknown | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | pieces 10.2 d after | – | – |
 | 2018 | DM2-106L SOZ-2 (28920, 2005-050), 2018-11-01 to 2019-02-01 | unknown | parent not a candidate | pieces were judged for 28919 of the launch, never for the parent | missed | no sets before the catalogue | no set of the parent in the thirty days after the event | no pieces in the year | – | – |
 | 2019 | Centaur AV-018 (35816, 2009-047), 2019-03-25 to 2019-03-26 | HEO | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | no pieces in the year | – | – |
 | 2019 | Kosmos-1410 (13589, 1982-096), 2019-04-06 to 2019-04-07 | unknown | no fragments catalogued |  | missed | parent did not move | 45 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 203.7 d after | – | – |
 | 2019 | Intelsat IS-29e (41308, 2016-004), 2019-04-07 to 2019-04-08 | unknown | no fragments catalogued |  | detected | raised | a unique step: -35.53 km, -45 sigma over 3 post sets | 175.8 d before | no | – |
-| 2019 | Ariane 5 L583 ESC-A (41309, 2016-004), 2019-08-01 to 2019-11-01 | unknown | no fragments catalogued |  | missed | parent did not move | 35 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 65.3 d after | – | – |
+| 2019 | Ariane 5 L583 ESC-A (41309, 2016-004), 2019-08-01 to 2019-11-01 | unknown | parent not a candidate | pieces were judged for 41308 of the launch, never for the parent | missed | parent did not move | 35 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 65.3 d after | – | – |
 | 2019 | Meteor-2 (20826, 1990-086), 2019-09-01 to 2019-12-01 | unknown | no fragments catalogued |  | missed | parent did not move | 50 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 55.7 d after | – | – |
 | 2019 | Briz-M No. 99520 (37603, 2011-021), 2019-09-01 to 2019-12-01 | unknown | too few pieces | 1 judgement of pieces for the parent (an attribution), at most 1 in its plane, refused: too few pieces, cataloguing batch | missed | parent did not move | 35 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 34.3 d after | – | – |
 | 2019 | Kosmos-2528 (43657, 2018-082), 2019-11-01 to 2020-02-01 | unknown | confirmed | the step alert confirmed by the pieces 83.5 d after the event, 0.1 d after the first fragment's publication | detected | raised | an atypical step on a station-keeping record (1 test passed): -0.02 km, -10 sigma over 8 post sets, 0.5 times the record's median | no pieces in the year | no | – |
@@ -252,9 +252,9 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | single piece | 5 |
 | too few pieces | 8 |
 | cataloguing batch | 1 |
-| parent not a candidate | 6 |
-| no piece in a plane the detector read | 1 |
-| no fragments catalogued | 32 |
+| parent not a candidate | 7 |
+| no piece in a plane the detector read | 2 |
+| no fragments catalogued | 30 |
 | no parent orbit | 26 |
 
 ## Breakups, confidence D
@@ -370,7 +370,7 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | 2006 | Shi Jian 6/2B (29505, 2006-046), 2006-10-23 to 2006-10-26 | unknown | no parent orbit |  | undetectable | no public sets | 0 sets of the parent in the sixty days before | pieces 1.1 d after | – | – |
 | 2007 | M-V-7 Stage 3 (29480, 2006-041), 2007-02-01 to 2007-05-01 | unknown | single piece | 1 judgement of pieces for the parent (an attribution), at most 1 in its plane, refused: single piece | missed | parent did not move | 30 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 98.7 d after | – | – |
 | 2007 | NNS 30090 (2176, 1966-041), 2007-03-01 to 2007-06-01 | unknown | too few pieces | 1 judgement of pieces for the parent (an attribution), at most 1 in its plane, refused: too few pieces, cataloguing batch | missed | parent did not move | 45 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 77.4 d after | – | – |
-| 2007 | Delta 229 (23711, 1995-059), 2007-03-01 to 2007-06-01 | unknown | no fragments catalogued |  | missed | parent did not move | 44 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 55.4 d after | – | – |
+| 2007 | Delta 229 (23711, 1995-059), 2007-03-01 to 2007-06-01 | unknown | no piece in a plane the detector read | 1 run brought the launch new bodies, none in the plane of a body the detector held | missed | parent did not move | 44 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 55.4 d after | – | – |
 | 2007 | PSLV-D3 PS4 (23828, 1996-017), 2007-03-01 to 2007-06-01 | unknown | no piece in a plane the detector read | 1 run brought the launch new bodies, none in the plane of a body the detector held | missed | parent did not move | 46 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 78.3 d after | – | – |
 | 2007 | Seasat 1 (10967, 1978-064), 2007-04-01 to 2007-05-01 | unknown | too few pieces | 1 judgement of pieces for the parent (an attribution), at most 1 in its plane, refused: too few pieces, cataloguing batch | missed | parent did not move | 43 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 46.4 d after | – | – |
 | 2007 | Nimbus 2 (2173, 1966-040), 2007-04-01 to 2007-07-01 | unknown | velocity floor | 2 judgements of pieces for the parent (an attribution), at most 1 in its plane, refused: velocity floor, cataloguing batch | missed | parent did not move | 32 sets of the parent between the event and the catalogue, none left the object's model by 6 sigma | pieces 24.4 d after | – | – |
@@ -507,8 +507,8 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | too few pieces | 26 |
 | cataloguing batch | 4 |
 | parent not a candidate | 5 |
-| no piece in a plane the detector read | 8 |
-| no fragments catalogued | 41 |
+| no piece in a plane the detector read | 9 |
+| no fragments catalogued | 40 |
 | no parent orbit | 8 |
 
 ## The Confirmed line's causes
@@ -521,14 +521,14 @@ The causes: **raised** (detected, with what raised it); **no post set before the
 | old cloud | 2 | 1 | 3 |
 | young launch | 1 | 0 | 1 |
 | backlog | 0 | 0 | 1 |
-| velocity floor | 1 | 1 | 36 |
+| velocity floor | 2 | 1 | 37 |
 | single piece | 0 | 1 | 11 |
 | fresh piece | 1 | 0 | 1 |
 | too few pieces | 0 | 0 | 41 |
 | cataloguing batch | 0 | 0 | 9 |
-| parent not a candidate | 5 | 3 | 20 |
-| no piece in a plane the detector read | 1 | 0 | 15 |
-| no fragments catalogued | 9 | 7 | 108 |
+| parent not a candidate | 5 | 3 | 21 |
+| no piece in a plane the detector read | 1 | 0 | 17 |
+| no fragments catalogued | 8 | 7 | 104 |
 | no parent orbit | 6 | 4 | 49 |
 
 ## Totals by cause, the parent-step line

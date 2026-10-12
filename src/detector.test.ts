@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { OUTCOMES, PHASES, REFUSALS } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
-import { DETECTOR_PARAMETERS, type DetectorParameters } from "./params.ts";
+import { DETECTOR_PARAMETERS, type DetectorParameters, type ParameterOverrides } from "./params.ts";
 import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
@@ -1263,7 +1263,7 @@ describe("the eleventh phase's rules", () => {
       const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, stage[from + i]!]));
       return [...both(0, 115), pieces, ...both(115, quiet.length)];
     };
-    const named = (runs: ElementSet[][], parameters: Partial<DetectorParameters>): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
+    const named = (runs: ElementSet[][], parameters: ParameterOverrides): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
     const working = runsWith({ opsStatus: "operational" });
     expect(named(working, { attributionPrefersStageOverWorking: true })).toEqual([7]);
     expect(named(working, { attributionPrefersStageOverWorking: false })).toEqual([2]);
@@ -1272,5 +1272,58 @@ describe("the eleventh phase's rules", () => {
     const row = feed(runsWith({}), { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, attributionPrefersStageOverWorking: true } }).log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
     expect(row.signals.preferNamedRank).toBe(1);
     expect(Number.isFinite(row.signals.preferAlternative)).toBe(false);
+  });
+});
+
+describe("the three-axis trigger (d13-three-axis-trigger.md)", () => {
+  // A quiet old rocket body whose orbit changes shape at constant period: on one set the perigee radius drops half a kilometre and the apogee rises as much, the semi-major axis untouched, as a mostly radial recoil leaves it.
+  const shapeStep = (): ElementSet[][] => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const stepAt = 90;
+    return one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i >= stepAt ? 0.5 / 7200 : 0) }, "rocket body")));
+  };
+  const stepEpoch = T0 + 90 * 8 * HOUR;
+
+  test("off, as fitted, a step in the perigee radius alone opens no candidate: the semi-major axis did not move", () => {
+    const fed = feed(shapeStep());
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.afterEpoch === stepEpoch)).toEqual([]);
+  });
+
+  test("on, the same step opens a candidate on the perigee radius, holds there, and is suspected on its bracket, saying which residual opened it", () => {
+    const fed = feed(shapeStep(), { parameters: { openOnThreeAxes: true } });
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(raised[0]!.step!.deltaPerigeeKm).toBeCloseTo(-0.5, 1);
+    expect(raised[0]!.reasons.join(" ")).toContain("opened on the perigee radius");
+  });
+
+  test("on, a plane change at constant period, a fiftieth of a degree of inclination, is suspected too, with the normal impulse it implies", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const sets = one(series.map((s, i) => setOf(1, { ...s, inclinationDeg: 98 + (i >= 90 ? 0.02 : 0) }, "rocket body")));
+    expect(suspected(feed(sets))).toEqual([]);
+    const raised = suspected(feed(sets, { parameters: { openOnThreeAxes: true } }));
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(raised[0]!.step!.deltaInclinationDeg).toBeCloseTo(0.02, 3);
+    expect(raised[0]!.reasons.join(" ")).toContain("opened on the inclination");
+    // 0.02 degrees at 7.44 km/s is about 2.6 m/s across the track.
+    expect(raised[0]!.reasons.join(" ")).toMatch(/2\.\d\d m\/s across it/);
+  });
+
+  test("on, an object whose own scatter is not yet measured, six sets old, opens nothing on a five-kilometre perigee drop: the fits' scales are read against that scatter", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const early = one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i >= 6 ? 5 / 7200 : 0) }, "rocket body")));
+    expect(suspected(feed(early, { parameters: { openOnThreeAxes: true } }))).toEqual([]);
+  });
+
+  test("on, a single bad set in the perigee radius the next sets undo is dismissed as a bad set, and nothing is raised", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const fed = feed(one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i === 90 ? 0.5 / 7200 : 0) }, "rocket body"))), { parameters: { openOnThreeAxes: true } });
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toEqual([]);
+    const closed = fed.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === stepEpoch);
+    expect(closed?.signals.outcome).toBe(OUTCOMES.reverted);
   });
 });

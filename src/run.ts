@@ -16,7 +16,7 @@ import { parametersWith, type DetectorParameters } from "./params.ts";
 import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsAcross, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, windowOf, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
-import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
+import { advanceCusum, axisReading, estimateStep, persistenceEstimate, resetCusum, scaleInflation, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
 /**
@@ -70,9 +70,6 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
-/** How long after a candidate closed, in days, and after a step was raised, in days, an object counts as quiet for a watch verdict. Policy: a month and a year. */
-export const QUIET_AFTER_CLOSE_DAYS = 30;
-export const QUIET_AFTER_RAISE_DAYS = 365;
 
 /** What the scorecard names this detector. */
 export const DETECTOR_NAME = "confirmed-v10";
@@ -134,7 +131,7 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     const aKm = semiMajorAxisOf(accepted);
     const regime = state.epochs.length === 0 ? regimeOf(accepted) : state.regime;
     const perigeeHeightKm = aKm * (1 - accepted.eccentricity) - WGS84_EQUATORIAL_KM;
-    const band = bandOf(regime, perigeeHeightKm);
+    const band = bandOf(regime, perigeeHeightKm, params);
     const previousEpoch = state.epochs.length === 0 ? Number.NEGATIVE_INFINITY : state.epochs[state.epochs.length - 1]!;
     const kappa = params.kappa[regimeKey(regime)];
     const item: Pending = { state, set: accepted, aKm, regime, band, perigeeHeightKm, previousEpoch, windowBstar: accepted.bstar, post: false, held: false, fit: null, noise: null, prediction: null, measurement: null };
@@ -400,11 +397,49 @@ function verdictOf(state: SeriesState, candidate: Candidate, item: Pending, verd
 /** Whether the object is quiet enough for a watch verdict to show its first post set: its own scatter is measured, nothing closed on it lately, no step was raised on it this year, and the jump alone would pass the persistence size. */
 function isQuiet(state: SeriesState, noise: OwnNoise, z1: number, context: RunContext): boolean {
   const { params, now } = context;
-  return noise.residuals >= params.residualsForScatter && now - state.closedAt > QUIET_AFTER_CLOSE_DAYS * DAY_MS && now - state.lastRaisedAt > QUIET_AFTER_RAISE_DAYS * DAY_MS && Math.abs(z1) >= params.zPersist;
+  return noise.residuals >= params.residualsForScatter && now - state.closedAt > params.quietAfterCloseDays * DAY_MS && now - state.lastRaisedAt > params.quietAfterRaiseDays * DAY_MS && Math.abs(z1) >= params.zPersist;
 }
 
-/** Opens a candidate on a bracket and freezes the pre fits at the bracket's first edge. */
-function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEpoch: number, afterEpoch: number, pre: Fit, noise: OwnNoise, bstar: number, stats: BandStats, context: RunContext): Candidate | null {
+/** The quantity other than the semi-major axis whose residual opened a candidate, and its normalised size. */
+interface AxisTrigger {
+  axis: "rp" | "inc";
+  z: number;
+}
+
+/**
+ * The three-axis trigger (the legacy `openOnThreeAxes`), read where the semi-major
+ * axis's residual did not open a candidate: the larger of the perigee
+ * radius's and the inclination's normalised residuals, each against its
+ * trailing fit at the set before (the fit a candidate would freeze), where
+ * it reaches the candidate threshold; null where neither does. Each is
+ * normalised as the step estimator reads that quantity, by the band's
+ * scale with no common mode.
+ */
+function axisTrigger(item: Pending, stats: BandStats, context: RunContext): AxisTrigger | null {
+  const { params } = context;
+  const state = item.state;
+  const at = indexOfEpoch(state, item.set.epochMs);
+  // An object whose own scatter is not yet measured opens nothing on the other two quantities: their fits' scales are grown by it.
+  if (at === -1 || item.noise === null || item.fit === null || item.noise.residuals < params.residualsForScatter) return null;
+  const kappa = params.kappa[regimeKey(state.regime)];
+  const inflation = scaleInflation(item.noise.sigma, item.fit);
+  let best: AxisTrigger | null = null;
+  for (const axis of ["rp", "inc"] as const) {
+    const fit = fitOf(state, axis, params, item.previousEpoch);
+    if (fit === null) return null;
+    const reading = axisReading(axis, fit, item.noise.sigma, kappa, context.weather.dragFactor, inflation);
+    const prediction = predictAt(fit, item.set.epochMs);
+    const value = axis === "rp" ? state.rp[at]! : state.inc[at]!;
+    const z = (value - prediction.value) / (predictionSigma(reading.sigmaOwn, prediction.leverage, prediction.gapDays, item.windowBstar, reading.kappa, reading.weather) * stats.scale);
+    if (Math.abs(z) >= params.zCand && (best === null || Math.abs(z) > Math.abs(best.z))) best = { axis, z };
+  }
+  return best;
+}
+
+const AXIS_WORDS: Record<AxisTrigger["axis"], { name: string; unit: string; digits: number }> = { rp: { name: "perigee radius", unit: "km", digits: 3 }, inc: { name: "inclination", unit: "degrees", digits: 4 } };
+
+/** Opens a candidate on a bracket and freezes the pre fits at the bracket's first edge; with a trigger, on the perigee radius or the inclination that opened it, with its first jump. */
+function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEpoch: number, afterEpoch: number, pre: Fit, noise: OwnNoise, bstar: number, stats: BandStats, context: RunContext, trigger: AxisTrigger | null = null): Candidate | null {
   const cusumAtOpen = Math.max(state.cusumPos, state.cusumNeg);
   const preRp = fitOf(state, "rp", context.params, beforeEpoch);
   const preInc = fitOf(state, "inc", context.params, beforeEpoch);
@@ -457,6 +492,12 @@ function openCandidate(state: SeriesState, origin: Candidate["origin"], beforeEp
     zMean3: Number.NaN,
     envelope: frozenEnvelope(state),
   };
+  if (trigger !== null) {
+    const axisPre = trigger.axis === "rp" ? preRp : preInc;
+    candidate.axis = trigger.axis;
+    candidate.axisDelta1 = (trigger.axis === "rp" ? state.rp[first]! : state.inc[first]!) - predictAt(axisPre, afterEpoch).value;
+    candidate.axisZ1 = trigger.z;
+  }
   state.candidate = candidate;
   const listed = candidatesListed(context);
   if (!listed.includes(state.number)) listed.push(state.number);
@@ -503,7 +544,8 @@ function closeCandidate(state: SeriesState, candidate: Candidate, outcome: numbe
 /** The gates a live candidate is judged by on a post set: the outcome and the reasons. The outcome `suspected` here means the step is persistent; the fusion below says whether it is raised. */
 function judge(candidate: Candidate, estimate: StepEstimate, regime: Regime, context: RunContext): { outcome: number; reasons: string[] } {
   const { params, weather } = context;
-  const reasons: string[] = [];
+  const axis = candidate.axis === undefined ? null : AXIS_WORDS[candidate.axis];
+  const reasons: string[] = axis === null ? [] : [`the candidate opened on the ${axis.name}, ${candidate.axisZ1!.toFixed(1)} sigma from its own model where the semi-major axis moved ${candidate.z1.toFixed(1)}, and its persistence is judged there`];
   if (estimate.k >= 2 && Number.isFinite(estimate.rhoMedian) && Math.abs(estimate.rhoMedian) < params.rhoRevert) {
     reasons.push(`the ${estimate.k - 1} set${estimate.k > 2 ? "s" : ""} after the first kept ${estimate.rhoMedian.toFixed(2)} of its jump: a bad set`);
     return { outcome: OUTCOMES.reverted, reasons };
@@ -512,8 +554,8 @@ function judge(candidate: Candidate, estimate: StepEstimate, regime: Regime, con
   const minSets = stressed ? params.persistMinSetsUnderStress : params.persistMinSets;
   const enoughSets = estimate.k >= params.persistMinSetsAlone || (estimate.k >= minSets && estimate.spanHours >= params.persistMinSpanHours[regimeKey(regime)]);
   if (enoughSets && persistent(estimate, params)) {
-    const size = params.persistOnMeanStep ? `${estimate.zMean.toFixed(1)} sigma at the post sets' centroid` : `${estimate.z.toFixed(1)} sigma`;
-    reasons.push(`a step of ${estimate.delta.toFixed(3)} km holds over ${estimate.k} post sets spanning ${estimate.spanHours.toFixed(1)} h: ${size}, the later sets keep ${estimate.rhoMedian.toFixed(2)} of the first jump, evidence ${estimate.evidence.toFixed(1)} against a drift`);
+    const size = params.legacy.persistOnMeanStep ? `${estimate.zMean.toFixed(1)} sigma at the post sets' centroid` : `${estimate.z.toFixed(1)} sigma`;
+    reasons.push(`a step of ${axis === null ? `${estimate.delta.toFixed(3)} km` : `${estimate.delta.toFixed(axis.digits)} ${axis.unit} of ${axis.name}`} holds over ${estimate.k} post sets spanning ${estimate.spanHours.toFixed(1)} h: ${size}, the later sets keep ${estimate.rhoMedian.toFixed(2)} of the first jump, evidence ${estimate.evidence.toFixed(1)} against a drift`);
     if (stressed) reasons.push(weather.stormHold ? `three post sets were required under a storm hold (Kp ${weather.kpMax})` : `three post sets were required under run stress (${context.recentCandidates} candidates in a day)`);
     return { outcome: OUTCOMES.suspected, reasons };
   }
@@ -633,7 +675,8 @@ function advance(item: Pending, stats: BandStats, context: RunContext): void {
   candidate.postSets = estimate.k;
   candidate.lastPostEpoch = estimate.lastEpoch;
   recordTrajectory(candidate, estimate);
-  const judged = judge(candidate, estimate, state.regime, context);
+  // A candidate the perigee radius or the inclination opened is judged for persistence on that quantity; everything read of the step after is the semi-major axis's estimate, which carries the perigee's and the inclination's steps.
+  const judged = judge(candidate, candidate.axis === undefined ? estimate : persistenceEstimate(state, candidate, environment, context.params)!, state.regime, context);
   if (judged.outcome === OUTCOMES.open) return;
   // Every closed candidate is read against the object's record, so the sweeps can re-threshold the persistence gates and class what they raise.
   const reading = readStep(state, candidate, estimate, item, context);
@@ -693,8 +736,10 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
   const alarm = Number.isFinite(item.previousEpoch) && advanceCusum(state, z, item.previousEpoch, params);
   const noise = item.noise!;
   let candidate: Candidate | null = null;
-  if (Math.abs(z) >= params.zCand) {
-    candidate = openCandidate(state, "step", item.previousEpoch, item.set.epochMs, item.fit!, noise, item.windowBstar, stats, context);
+  // With the three-axis trigger, a set the semi-major axis's residual leaves under the threshold still opens a candidate where the perigee radius's or the inclination's reaches it.
+  const trigger = params.legacy.openOnThreeAxes && Math.abs(z) < params.zCand ? axisTrigger(item, stats, context) : null;
+  if (Math.abs(z) >= params.zCand || trigger !== null) {
+    candidate = openCandidate(state, "step", item.previousEpoch, item.set.epochMs, item.fit!, noise, item.windowBstar, stats, context, trigger);
   } else if (alarm) {
     const first = firstAfter(state, state.cusumFrom);
     const pre = fitOf(state, "a", params, state.cusumFrom);
@@ -861,8 +906,6 @@ function pieceStatesFor(context: RunContext, pieces: readonly PieceReading[]): S
   return states;
 }
 
-/** The shorter search windows tried, in days, where the pieces cannot be propagated over the whole one: a high-drag piece's set fails far from its epoch. Policy. */
-const FALLBACK_SEARCH_DAYS = [60, 20] as const;
 
 /**
  * The pieces timed back against a parent (`eventFromPieces`), their first
@@ -885,7 +928,7 @@ function pieceTimer(context: RunContext): (parent: number, pieces: readonly Piec
     const to = Math.min(...sets.map((s) => s.epochMs));
     const parentSet = parentSetFor(context, parent, to);
     if (parentSet !== null) {
-      for (const days of [context.params.attributionSearchDays, ...FALLBACK_SEARCH_DAYS.filter((d) => d < context.params.attributionSearchDays)]) {
+      for (const days of [context.params.attributionSearchDays, ...context.params.attributionFallbackSearchDays.filter((d) => d < context.params.attributionSearchDays)]) {
         timed = eventFromPieces(parentSet, sets, to - days * DAY_MS, to, context.params);
         if (timed !== null) break;
       }
