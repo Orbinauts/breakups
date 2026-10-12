@@ -156,7 +156,9 @@ export interface SpaceWeatherDay {
  * What the detector keeps of an object between runs, and of a launch. The
  * caller stores and returns them without reading them; their shape belongs
  * to the detector and will change as it is written, which is why they are
- * opaque here.
+ * opaque here. A caller that keeps them as text writes them with
+ * `serialiseStates` and reads them with `reviveStates` (`states.ts`):
+ * plain JSON loses them.
  */
 export type ObjectState = unknown;
 export type LaunchState = unknown;

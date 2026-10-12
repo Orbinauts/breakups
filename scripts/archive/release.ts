@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, createReadStream, createWriteStream, existsSync, mkdirSync, openSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { assertFresh, readCatalogueIndex } from "../kpi/catalogue-index.ts";
@@ -67,9 +67,17 @@ const SIDE_ASSET = `${RELEASE_TAG}-side.tar`;
 /** The hash of the side files a download last extracted whole, so a later download knows its copy from one built here. */
 const sideRecordPath = (archive: string): string => join(archive, "side.sha256");
 
-/** A file's SHA-256, in hex. */
+/** A file's SHA-256, in hex, read a piece at a time: a year's tarball is up to 2 GiB, more than a runner should hold at once. */
 export function sha256File(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
+  const hash = createHash("sha256");
+  const piece = Buffer.alloc(64 * 1024);
+  const fd = openSync(path, "r");
+  try {
+    for (let read = readSync(fd, piece); read > 0; read = readSync(fd, piece)) hash.update(piece.subarray(0, read));
+  } finally {
+    closeSync(fd);
+  }
+  return hash.digest("hex");
 }
 
 /** A tarball of a directory's files, uncompressed (the columns are gzipped already). */
