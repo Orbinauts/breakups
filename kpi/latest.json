@@ -4,7 +4,7 @@
     "name": "@orbinauts/breakups",
     "version": "0.1.0"
   },
-  "truthSha256": "cde9773d916cad978bc8341c7e4e3b04d5d78bd17460fd6054403991a1cfb245",
+  "truthSha256": "11b3fe043199185f2395592ab37a90c136c997c4921b3fe6977058f52a137c3b",
   "detector": {
     "name": "confirmed-v10",
     "parameters": {

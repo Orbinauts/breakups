@@ -23,12 +23,12 @@
     },
     "gcat-satcat": {
       "url": "https://planet4589.org/space/gcat/tsv/cat/satcat.tsv",
-      "fetchedOn": "2026-10-10",
-      "originalSha256": "7c242e30102eab324a1ce05dfafd3c80a4f6b6630149070911650a0e3100b929",
-      "originalBytes": 19296210,
+      "fetchedOn": "2026-10-12",
+      "originalSha256": "e191df4bd59098a5d8d8e2858e42c2dd38218177a1b6f8b9b064be48f0514e6a",
+      "originalBytes": 19296771,
       "snapshot": "sources/gcat-satcat.tsv",
       "madeWith": "reduced to the rows typed C or D (components and fragmentation debris) and the rows they name as parent, in the columns JCAT, Satcat, Launch_Tag, Piece, Type, Name, LDate, Parent, SDate, DDate, Status, every kept cell verbatim",
-      "snapshotSha256": "5278bc199ca7244d79038ff68b92d1b1398220cef1e515ad51d100c56dd85732",
+      "snapshotSha256": "32da1a3c5fdc6b02631b101984d72af13be3c716e4b796f2ca889ae6eaeece36",
       "licence": "CC-BY-4.0, Jonathan McDowell, planet4589.org"
     },
     "gcat-satcat-columns": {
