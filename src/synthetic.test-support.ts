@@ -105,7 +105,7 @@ export function feed(batches: ElementSet[][], options: { parameters?: Partial<De
     now = at;
   };
   for (const batch of batches) {
-    const latest = Math.max(...batch.map((s) => s.epochMs));
+    const latest = Math.max(...batch.map((s) => s.epochMs).filter(Number.isFinite));
     run(batch, Math.max(now + 1, latest + HOUR));
   }
   if (options.until !== undefined) for (let at = now + 4 * HOUR; at <= options.until; at += 4 * HOUR) run([], at);

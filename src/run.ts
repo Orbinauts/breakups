@@ -13,7 +13,7 @@ import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenanc
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, isReadable, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
@@ -164,8 +164,8 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     }
     pending.push(item);
   }
-  // The body under its launch, on the first set of it the detector sees; an older set of a known body only lowers its earliest epoch.
-  if (!state.noted || set.epochMs < firstEpochBefore) {
+  // The body under its launch, on the first set of it the detector sees; an older set of a known body only lowers its earliest epoch. A set the screen could not read notes nothing: a body with no instant or no orbit would leave the launch's cloud nothing to judge by.
+  if (isReadable(set, params) && Number.isFinite(semiMajorAxisOf(set)) && (!state.noted || set.epochMs < firstEpochBefore)) {
     const record = noteBody(context.launches, set, context.now);
     state.noted = true;
     if (record !== null) {

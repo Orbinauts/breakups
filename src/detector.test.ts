@@ -745,6 +745,16 @@ describe("the Confirmed channel's attribution", () => {
     expect(row.signals).toMatchObject({ attributionPath: 1, attributionPieces: 6, attributionKept: 6, attributionRivals: 0, attributionRefused: 0, attributionRaised: 1 });
   });
 
+  test("a set the screen cannot read notes no body under its launch, so it leaves the launch's cloud to be judged", () => {
+    const body = quietBody(1, "2010-001A");
+    const pieces = cloudOf(body, 50001);
+    const junk: ElementSet = { ...pieces[0]!, number: 50007, designator: "2010-001J", epochMs: Number.NaN };
+    const fed = feed(runs(body, [[...pieces, junk]]));
+    const confirmed = attributed(fed);
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+  });
+
   test("of two bodies of the launch in different planes, the pieces are attributed to the one whose plane they share", () => {
     const first = quietBody(1, "2010-001A");
     const second = quietBody(2, "2010-001B", 60, "payload");
