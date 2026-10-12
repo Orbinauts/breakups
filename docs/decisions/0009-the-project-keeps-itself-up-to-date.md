@@ -137,10 +137,10 @@ merge is safe.
   with their citation (the second decision record). Since 2026-10-12
   ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md))
   a script finds what it can and a person still reads it: the daily
-  watcher opens a prefilled `breakup-report` issue for each new issue of
-  the quarterly news, edition of ESA's report, section of Jonathan's
-  Space Report and news article it reads; a person completes the parent
-  and the time, and the owner labels it `breakup-report-accepted`, the one
+  watcher opens an issue for each new issue of the quarterly news and
+  edition of ESA's report (to read and record), and a prefilled
+  `breakup-report` issue for each section of Jonathan's Space Report and
+  news article it reads; a person completes the parent and the time, and the owner labels it `breakup-report-accepted`, the one
   action left, after which a workflow adds the statement
   (`npm run truth:add`) on a branch and the maintenance run folds it in,
   rescores and merges it. The Space Forces notices, LeoLabs' posts and

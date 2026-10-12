@@ -109,7 +109,7 @@ export function reminderBody(quarter: Quarter, hand: HandFile, handChangedOn: st
     `- [ ] **News reports of fragmentations** since ${quarter.previous}: LeoLabs' notifications, named analysts, the space press. The hand file's latest event ends on ${hand.latestEvent?.to.slice(0, 10) ?? "no day"} (${hand.latestEvent?.ref ?? "none"}), its latest statement was made on ${hand.latestStatedOn ?? "no day"}, and the file last changed on ${handChangedOn ?? "a day git does not know"}.`,
     "- [ ] **ESA's Space Environment Report**, once a year (https://www.sdo.esoc.esa.int/publications/): type a new edition's table of fragmentations (its Table 3.7) into `data/truth/esa-ser.json`, row by row as printed; the build attributes each row to an event by its rule.",
     "",
-    "The daily watcher opens a prefilled `breakup-report` issue for each new quarterly news issue, ESA edition, Jonathan's Space Report section and news article it reads; what it does not read (the Space Forces notices among them) is for this check.",
+    "The daily watcher opens an issue for each new quarterly news issue and ESA edition (to read and record as above) and a prefilled `breakup-report` issue for each Jonathan's Space Report section and news article it reads; what it does not read (the Space Forces notices, LeoLabs' posts, the publishers it does not follow) is for this check.",
     "",
     "How to add a row:",
     "",

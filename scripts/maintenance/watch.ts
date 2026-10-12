@@ -1,24 +1,33 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { SourceId } from "../../src/truth.ts";
 import { formBody } from "../truth/report-form.ts";
 import { ACCEPT_LABEL, REPORT_LABEL } from "../truth/report-issue.ts";
 import { createIssue, ensureLabel, issuesLabelled } from "./github.ts";
+import { MAINTENANCE_COLOR, MAINTENANCE_DESCRIPTION, MAINTENANCE_LABEL } from "./reminder.ts";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /**
  * The watcher of public notices: `npm run maintenance:watch`, run once a
  * day by `.github/workflows/watch.yml`. It reads the notices of
- * fragmentations that anyone can read without an account, and opens a
- * `breakup-report` issue prefilled with each new one (its source, the day
- * it was published, a reference and the link), for a person to complete
- * and the owner to accept. It never writes the truth itself: a notice
+ * fragmentations that anyone can read without an account, and opens an
+ * issue for each new one: for a report (an analyst's section, a news
+ * article) a `breakup-report` issue prefilled with its source, the day it
+ * was published, a reference and the link, for a person to complete and
+ * the owner to accept; for a new issue of the quarterly news or edition of
+ * ESA's report, which may report many breakups or none, a `maintenance`
+ * issue asking a person to read it and record it as the truth's files do. It never writes the truth itself: a notice
  * becomes a statement only through the breakup-report workflow, once the
  * owner has labelled the issue `breakup-report-accepted`.
  *
  * What it reads, each page's shape checked as it was served on 2026-10-12:
  *
  * - NASA's Orbital Debris Quarterly News, the list of issues: each issue
- *   after the last the truth was read from.
+ *   `data/truth/odqn-coverage.json` does not record as read.
  * - ESA's Space Environment Report, the yearly edition's page: each
- *   edition after the last the truth was read from.
+ *   edition after the latest `data/truth/esa-ser.json` types.
  * - Jonathan's Space Report, the back issues: each section of an issue
  *   after the last read that reports a breakup, quoted.
  * - The news: the RSS feeds of EarthSky, Space.com, SpaceNews and Ars
@@ -27,7 +36,7 @@ import { createIssue, ensureLabel, issuesLabelled } from "./github.ts";
  *   publishers report one breakup at once.
  *
  * An issue carries its notices' keys in hidden lines, and the issues of
- * the label are read in every state first, so a notice opens one issue
+ * both labels are read in every state first, so a notice opens one issue
  * however many runs see it. A page that cannot be read, or whose shape
  * changed, fails the run after the other pages are read and their issues
  * opened.
@@ -48,15 +57,26 @@ export interface Notice {
   lines: string[];
 }
 
-/** The last notice of each source the truth was read from when the watcher began, 2026-10-12: only later ones are watched. */
-export const WATCHED_AFTER = {
-  /** Volume and issue: the truth reads the quarterly news to volume 30, issue 3 (September 2026). */
-  odqn: [30, 3] as const,
-  /** The truth reads the 2025 edition (issue 9.1); the 2026 edition was not read. */
-  esaSer: 2025,
-  /** The latest issue on 2026-10-12. */
-  jsr: 860,
-};
+/** The last issue of Jonathan's Space Report when the watcher began, 2026-10-12: only later ones are watched. The quarterly news and ESA's report are watched from what the truth's own files record as read. */
+export const JSR_AFTER = 860;
+
+/** What `data/truth/odqn-coverage.json` records: the issues read, by their address, and the list's first issue (those before it NASA's history covers). */
+export interface OdqnCoverage {
+  read: ReadonlySet<string>;
+  from: readonly [number, number];
+}
+
+export function odqnRead(coverage: string): OdqnCoverage {
+  const issues = (JSON.parse(coverage) as { issues: { issue: string; url: string }[] }).issues;
+  const numbers = issues.map((issue) => /^(\d+)\((\d+)/.exec(issue.issue)).filter((m) => m !== null).map((m) => [Number(m[1]), Number(m[2])] as const);
+  const from = numbers.reduce((a, b) => (b[0] < a[0] || (b[0] === a[0] && b[1] < a[1]) ? b : a));
+  return { read: new Set(issues.map((issue) => issue.url)), from };
+}
+
+/** The latest edition of ESA's report `data/truth/esa-ser.json` types. */
+export function esaLatest(file: string): number {
+  return Math.max(...(JSON.parse(file) as { editions: { edition: string }[] }).editions.map((e) => Number(e.edition)));
+}
 
 /** How far back the news is read: articles the runs before read are older. */
 export const NEWS_DAYS = 3;
@@ -104,11 +124,12 @@ const IN_ORBIT = /\b(?:satellites?|rockets?|stages?|spacecraft|orbit(?:al|s)?|st
 export const isBreakupTitle = (text: string): boolean => BREAKING.test(text) && IN_ORBIT.test(text);
 
 /**
- * The quarterly news' issues on its list, newest first, after the volume
- * and issue given. Each is referenced as the hand file cites the quarterly
+ * The quarterly news' issues on its list, newest first, from the
+ * coverage list's first on, that it does not record as read (by their
+ * addresses). Each is referenced as the hand file cites the quarterly
  * news (`ODQN 30(3), September 2026`), with the issue's contents.
  */
-export function odqnNotices(html: string, after: readonly [number, number] = WATCHED_AFTER.odqn): Notice[] {
+export function odqnNotices(html: string, coverage: OdqnCoverage): Notice[] {
   const notices: Notice[] = [];
   for (const article of html.split(/<article>/).slice(1)) {
     const head = /<a href="(\/quarterly-news\/pdfs\/ODQNv(\d+)i(\d+)\.pdf)"[^>]*>\s*([A-Za-z]+)\s+(\d{4})\s*<\/a>\s*<b>\s*\|\s*Volume\s+\d+\s*-\s*([^<]*?)\s*<\/b>/.exec(article);
@@ -122,10 +143,10 @@ export function odqnNotices(html: string, after: readonly [number, number] = WAT
     notices.push({ key: `odqn:ODQNv${volume}i${issue}`, source: "odqn", title: `Orbital Debris Quarterly News ${volume}(${issue}), ${monthName} ${year}`, published: `${year}-${pad(month + 1)}`, url: `${ODQN_ORIGIN}${path}`, ref, lines });
   }
   if (notices.length === 0) throw new Error(`the quarterly news' list (${ODQN_PAGE}) lists no issue: its shape changed`);
-  const [v, i] = after;
+  const [v, i] = coverage.from;
   return notices.filter((n) => {
     const [, volume, issue] = /ODQNv(\d+)i(\d+)/.exec(n.key)!.map(Number);
-    return volume! > v || (volume === v && issue! > i);
+    return !coverage.read.has(n.url) && (volume! > v || (volume === v && issue! >= i));
   });
 }
 
@@ -143,7 +164,7 @@ export function esaNotice(html: string, year: number): Notice {
     published: `${y}-${m}-${d}`,
     url: url!,
     ref: `ESA Space Environment Report ${year} (issue ${issue}.${revision}, dated ${Number(d)} ${MONTHS[Number(m) - 1]} ${y})`,
-    lines: [`The edition's table of fragmentations lists the year's events, each row a statement of its own, as the 2025 edition's are in the hand file: for many rows, \`npm run truth:add\` on a branch for each, then the maintenance workflow run from it, is quicker than a form each.`],
+    lines: [],
   };
 }
 
@@ -219,6 +240,8 @@ export function toOpen(notices: readonly Notice[], issued: ReadonlySet<string>, 
 export interface WatchIssue {
   title: string;
   body: string;
+  /** `breakup-report` for a report a form states; `maintenance` for an issue or edition a person reads and records. */
+  label: string;
 }
 
 const HOW = `Complete the fields above as the report states them (the kind, the object, the time as stated, its precision and window), one statement to an issue (the breakup-report form opens another), then label this issue \`${ACCEPT_LABEL}\`: a workflow checks it and adds it to the ground truth. Close it if it reports no breakup.`;
@@ -241,13 +264,25 @@ function body(first: Notice, others: readonly Notice[]): string {
   ].join("\n");
 }
 
-/** The issues the notices open: one per notice, the day's news gathered into one, each a prefilled breakup-report form. */
+/** What a person does with a new quarterly news issue or ESA edition, which may report many breakups or none. */
+const RECORD: Partial<Record<SourceId, string>> = {
+  odqn: "Read the issue for every on-orbit fragmentation it reports. File each as a report of its own with the breakup-report issue form (source odqn, the issue's month as the day it was published, the reference with its page), or add it with `npm run truth:add` on a branch; then record the issue in `data/truth/odqn-coverage.json`, as cited or as having no breakup items, on a branch folded in by the maintenance workflow (a test fails on an issue missing from that list).",
+  "esa-ser": "Type the edition's table of fragmentations (its Table 3.7) into `data/truth/esa-ser.json`, row by row as printed, on a branch folded in by the maintenance workflow; the build places each row by its rule. A row is never a breakup-report statement.",
+};
+
+function task(n: Notice): string {
+  return [`A new ${n.title} is out: [${n.url}](${n.url}), published ${n.published ?? "on a day the page does not give"}.`, ...(n.lines.length === 0 ? [] : ["", "Its contents:", "", ...n.lines.map((line) => `- ${line}`)]), "", RECORD[n.source] ?? "", "", "Close this issue once it is recorded.", "", keyLine(n.key), ""].join("\n");
+}
+
+/** The issues the notices open: a task per quarterly news issue or ESA edition; a prefilled breakup-report form per report, the day's news gathered into one. */
 export function issuesFor(notices: readonly Notice[]): WatchIssue[] {
   const news = notices.filter((n) => n.source === "news");
-  const issues = notices.filter((n) => n.source !== "news").map((n) => ({ title: `Report: ${n.title}`, body: body(n, []) }));
+  const issues: WatchIssue[] = notices
+    .filter((n) => n.source !== "news")
+    .map((n) => (RECORD[n.source] !== undefined ? { title: `Read the new ${n.title}`, body: task(n), label: MAINTENANCE_LABEL } : { title: `Report: ${n.title}`, body: body(n, []), label: REPORT_LABEL }));
   if (news.length > 0) {
     const [first, ...others] = news;
-    issues.push({ title: `Report: ${first!.title}${others.length === 0 ? "" : ` (and ${others.length} more article${others.length === 1 ? "" : "s"})`}`, body: body(first!, others) });
+    issues.push({ title: `Report: ${first!.title}${others.length === 0 ? "" : ` (and ${others.length} more article${others.length === 1 ? "" : "s"})`}`, body: body(first!, others), label: REPORT_LABEL });
   }
   return issues;
 }
@@ -268,6 +303,7 @@ async function ok(url: string): Promise<string> {
 
 /** Every watched page's notices after what the truth was read from, each page's failure named. */
 async function readAll(now: Date): Promise<{ notices: Notice[]; errors: string[] }> {
+  const truthFile = (name: string): string => readFileSync(resolve(ROOT, "data/truth", name), "utf8");
   const notices: Notice[] = [];
   const errors: string[] = [];
   const attempt = async (name: string, read: () => Promise<Notice[]>): Promise<void> => {
@@ -279,10 +315,10 @@ async function readAll(now: Date): Promise<{ notices: Notice[]; errors: string[]
       errors.push(`${name}: ${(error as Error).message}`);
     }
   };
-  await attempt("the Orbital Debris Quarterly News", async () => odqnNotices(await ok(ODQN_PAGE)));
+  await attempt("the Orbital Debris Quarterly News", async () => odqnNotices(await ok(ODQN_PAGE), odqnRead(truthFile("odqn-coverage.json"))));
   await attempt("ESA's Space Environment Report", async () => {
     const found: Notice[] = [];
-    for (let year = WATCHED_AFTER.esaSer + 1; year <= now.getUTCFullYear(); year++) {
+    for (let year = esaLatest(truthFile("esa-ser.json")) + 1; year <= now.getUTCFullYear(); year++) {
       const { status, text } = await get(esaPage(year));
       if (status === 404) continue;
       if (status !== 200) throw new Error(`${esaPage(year)} answered ${status}`);
@@ -293,7 +329,7 @@ async function readAll(now: Date): Promise<{ notices: Notice[]; errors: string[]
   await attempt("Jonathan's Space Report", async () => {
     const latest = jsrLatest(await ok(JSR_BACK));
     const found: Notice[] = [];
-    for (let number = Math.max(WATCHED_AFTER.jsr + 1, latest - 2); number <= latest; number++) found.push(...jsrNotices(await ok(jsrIssue(number)), number));
+    for (let number = Math.max(JSR_AFTER + 1, latest - 2); number <= latest; number++) found.push(...jsrNotices(await ok(jsrIssue(number)), number));
     return found;
   });
   for (const feed of FEEDS) await attempt(`${feed.publisher}'s feed`, async () => feedNotices(await ok(feed.url), feed.publisher));
@@ -303,11 +339,14 @@ async function readAll(now: Date): Promise<{ notices: Notice[]; errors: string[]
 /** `--dry-run` reads the pages and prints the issues it would open, asking GitHub nothing. */
 async function main(dryRun: boolean): Promise<void> {
   const now = new Date();
-  if (!dryRun) ensureLabel(REPORT_LABEL, "1d76db", "A published report of a breakup, for the owner to accept into the ground truth");
-  const issued = dryRun ? new Set<string>() : watchedKeys(issuesLabelled(REPORT_LABEL).map((issue) => issue.body));
+  if (!dryRun) {
+    ensureLabel(REPORT_LABEL, "1d76db", "A published report of a breakup, for the owner to accept into the ground truth");
+    ensureLabel(MAINTENANCE_LABEL, MAINTENANCE_COLOR, MAINTENANCE_DESCRIPTION);
+  }
+  const issued = dryRun ? new Set<string>() : watchedKeys([...issuesLabelled(REPORT_LABEL), ...issuesLabelled(MAINTENANCE_LABEL)].map((issue) => issue.body));
   const { notices, errors } = await readAll(now);
   const issues = issuesFor(toOpen(notices, issued, now.getTime()));
-  for (const issue of issues.slice(0, MAX_ISSUES)) console.log(dryRun ? `would open "${issue.title}":\n${issue.body}\n` : `${issue.title}: ${createIssue(issue.title, issue.body, REPORT_LABEL)}`);
+  for (const issue of issues.slice(0, MAX_ISSUES)) console.log(dryRun ? `would open "${issue.title}":\n${issue.body}\n` : `${issue.title}: ${createIssue(issue.title, issue.body, issue.label)}`);
   if (issues.length > MAX_ISSUES) console.log(`${issues.length - MAX_ISSUES} more wait for the next run`);
   if (issues.length === 0) console.log("no new notice");
   if (errors.length > 0) {

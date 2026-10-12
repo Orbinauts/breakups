@@ -4,9 +4,11 @@ name: Watch
 # once a day. It reads the pages anyone can read without an account (NASA's
 # Orbital Debris Quarterly News, ESA's Space Environment Report, Jonathan's
 # Space Report, and the RSS feeds of EarthSky, Space.com, SpaceNews and Ars
-# Technica's space desk) and opens a `breakup-report` issue prefilled with
-# each notice no issue carries yet, the day's news gathered into one. It
-# never writes the truth: a person completes the issue and the owner
+# Technica's space desk) and opens an issue for each notice no issue carries
+# yet: a `breakup-report` issue prefilled with a report (the day's news
+# gathered into one), or a `maintenance` issue asking a person to read a new
+# quarterly news issue or ESA edition and record it in the truth's files.
+# It never writes the truth: a person completes a report and the owner
 # accepts it (breakup-report.yml). A page that cannot be read, or whose
 # shape changed, fails the run after the others are read, with an issue
 # labelled `maintenance` (a comment on the one open). To pause it:

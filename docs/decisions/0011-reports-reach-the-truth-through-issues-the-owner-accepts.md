@@ -30,7 +30,8 @@ Both a quick hand path and a watcher, and the watcher only opens issues.
   file's own layout (every line before it left as it was; the layout is
   tested to be the committed file's, byte for byte) and rebuilds the
   truth. It refuses, saying why: a statement of a source the build reads
-  by itself (GCAT, NASA's history); a report with no day it was published,
+  by itself (GCAT, NASA's history); a row of ESA's report, whose tables
+  are typed apart, row by row, into `data/truth/esa-ser.json`; a report with no day it was published,
   which would count for nothing; a report published before the event it
   reports; and a statement the file already holds (the same source and
   reference, or the same source, link and parent). A statement the build
@@ -38,7 +39,7 @@ Both a quick hand path and a watcher, and the watcher only opens issues.
   statement landed in.
 - **A report is filed with an issue form**,
   `.github/ISSUE_TEMPLATE/breakup-report.yml`, labelled `breakup-report`:
-  the source, the day it was published, the reference, the link, the
+  the source (news, analyst, a Space Forces notice or the quarterly news), the day it was published, the reference, the link, the
   kind, the parent, the time as stated with its precision and window, the
   orbit, the cause, the pieces and a note, each a field of the hand file
   (`scripts/truth/report-form.ts` reads it back from the issue's body).
@@ -70,30 +71,36 @@ Both a quick hand path and a watcher, and the watcher only opens issues.
   whose statements main holds already is deleted at once, the others once
   their pull request is merged. A branch folded in with `from=` that is not
   a report's is merged as before.
-- **A daily watcher opens a prefilled issue for each new notice, and
-  never writes the truth.** `.github/workflows/watch.yml` runs
+- **A daily watcher opens an issue for each new notice, and never
+  writes the truth.** `.github/workflows/watch.yml` runs
   `npm run maintenance:watch` (`scripts/maintenance/watch.ts`) at 07:41 UTC.
   It reads only pages anyone can read without an account, each page's
   shape checked as it was served on 2026-10-12 (the fixtures under
   `test/fixtures/watch/`):
   - NASA's Orbital Debris Quarterly News, its list of issues: each issue
-    after volume 30, issue 3, the last the truth was read from;
+    from 26(3) on that `data/truth/odqn-coverage.json` does not record as
+    read (cited by the hand file, or read with no breakup items);
   - ESA's Space Environment Report, the yearly edition's page: each
-    edition after 2025's (the 2026 edition, issue 10.1 of 8 September 2026,
-    was not read, and is its first notice);
+    edition after the latest `data/truth/esa-ser.json` types (2026);
   - Jonathan's Space Report, the back issues: each section of an issue
-    after number 860 whose text says a body broke up, quoted;
+    after number 860, the latest on 2026-10-12, whose text says a body
+    broke up, quoted;
   - the RSS feeds of EarthSky, Space.com, SpaceNews and Ars Technica's
     space desk: each article of the last three days whose title says a
     body in orbit broke up or apart (a breakup, a fragmentation, shattered;
     never an explosion alone, which a launch's failure shares).
 
-  Each notice opens one `breakup-report` issue, prefilled with the source,
-  the day, a reference in the hand file's style and the link, and carries
-  its key in a hidden line; the issues of the label are read in every
-  state first, so a notice opens one issue however many runs see it. A
-  day's news articles are one issue, since several publishers report one
-  breakup at once. At most five issues a run. A page that cannot be read,
+  A report (a section of Jonathan's Space Report, a news article) opens a
+  `breakup-report` issue, prefilled with the source, the day, a reference
+  in the hand file's style and the link; a day's news articles are one
+  issue, since several publishers report one breakup at once. A new
+  quarterly news issue or ESA edition, which may report many breakups or
+  none, opens a `maintenance` issue asking a person to read it, file each
+  breakup it reports (or type ESA's table into its file) and record it as
+  read, since the truth's files are where "read" is kept. Each issue
+  carries its notices' keys in hidden lines, and the issues of both labels
+  are read in every state first, so a notice opens one issue however many
+  runs see it. At most five issues a run. A page that cannot be read,
   or whose shape changed, fails the run after the other pages are read,
   with an issue labelled `maintenance`. A person completes the issue (the
   kind, the parent, the time) and the owner accepts it, or closes it when
@@ -145,9 +152,10 @@ Both a quick hand path and a watcher, and the watcher only opens issues.
   after any run of the prospective test that holds the concurrency group. The next daily publishing reads it from main, so a suspected
   breakup is published the next morning at the latest.
 - The owner's one action per report is the label, by design.
-- The watcher's start (the issue and the edition after which it reads)
-  is fixed in `WATCHED_AFTER`; the issues before it were the quarterly
-  reminder's to read, and still are where they were not.
+- The watcher reads what is new against the truth's own records of what
+  was read (the quarterly news' coverage list, ESA's typed editions), so a
+  person who records an issue by hand is never asked again; only
+  Jonathan's Space Report starts from a fixed issue (`JSR_AFTER`).
 - A notice the watcher reads wrong opens one issue a person closes; a
   page that changed its shape opens a maintenance issue until the reader
   is fixed.

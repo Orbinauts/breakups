@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { readForm } from "../truth/report-form.ts";
-import { esaNotice, feedNotices, isBreakupTitle, issuesFor, jsrLatest, jsrNotices, odqnNotices, toOpen, watchedKeys, type Notice } from "./watch.ts";
+import { esaNotice, esaLatest, feedNotices, isBreakupTitle, issuesFor, jsrLatest, jsrNotices, odqnNotices, odqnRead, toOpen, watchedKeys, type Notice } from "./watch.ts";
 
 /**
  * The watcher of public notices, on the pages as they were served on
@@ -19,7 +19,7 @@ const fixture = (name: string): string => readFileSync(resolve(ROOT, "test/fixtu
 
 describe("NASA's Orbital Debris Quarterly News", () => {
   test("lists each issue with its reference as the hand file cites one, its month and its link", () => {
-    const notices = odqnNotices(fixture("odqn.html"), [29, 2]);
+    const notices = odqnNotices(fixture("odqn.html"), { read: new Set(), from: [26, 3] });
     expect(notices.map((n) => [n.key, n.ref, n.published, n.url])).toEqual([
       ["odqn:ODQNv30i3", "ODQN 30(3), September 2026", "2026-09", "https://orbitaldebris.jsc.nasa.gov/quarterly-news/pdfs/ODQNv30i3.pdf"],
       ["odqn:ODQNv30i1", "ODQN 30(1), July 2026 (Issue 1 & 2)", "2026-07", "https://orbitaldebris.jsc.nasa.gov/quarterly-news/pdfs/ODQNv30i1.pdf"],
@@ -29,17 +29,28 @@ describe("NASA's Orbital Debris Quarterly News", () => {
     expect(notices[0]!.lines).toContain("The NASA Battery Passivation Workshop");
   });
 
-  test("keeps only the issues after the last one the truth was read from", () => {
-    expect(odqnNotices(fixture("odqn.html"), [30, 1]).map((n) => n.key)).toEqual(["odqn:ODQNv30i3"]);
-    expect(odqnNotices(fixture("odqn.html"))).toEqual([]);
+  test("keeps only the issues the coverage list does not record as read", () => {
+    const read = odqnRead(readFileSync(resolve(ROOT, "data/truth/odqn-coverage.json"), "utf8"));
+    expect(odqnNotices(fixture("odqn.html"), read)).toEqual([]);
+    expect(read.from).toEqual([26, 3]);
+    const before = { ...read, read: new Set([...read.read].filter((url) => !url.endsWith("ODQNv30i3.pdf"))) };
+    expect(odqnNotices(fixture("odqn.html"), before).map((n) => n.key)).toEqual(["odqn:ODQNv30i3"]);
+  });
+
+  test("never names an issue older than the list's first, which NASA's history covers", () => {
+    expect(odqnNotices(fixture("odqn.html"), { read: new Set(), from: [30, 1] }).map((n) => n.key)).toEqual(["odqn:ODQNv30i3", "odqn:ODQNv30i1"]);
   });
 
   test("refuses a page that lists no issue: its shape changed", () => {
-    expect(() => odqnNotices("<html><body>Quarterly News</body></html>")).toThrow(/lists no issue/);
+    expect(() => odqnNotices("<html><body>Quarterly News</body></html>", { read: new Set(), from: [26, 3] })).toThrow(/lists no issue/);
   });
 });
 
 describe("ESA's Space Environment Report", () => {
+  test("is watched from the edition after the latest the truth types", () => {
+    expect(esaLatest(readFileSync(resolve(ROOT, "data/truth/esa-ser.json"), "utf8"))).toBe(2026);
+  });
+
   test("reads a year's edition from its page: the report's issue, its day and its link", () => {
     const notice = esaNotice(fixture("esa-ser-2026.html"), 2026);
     expect(notice).toMatchObject({
@@ -133,12 +144,21 @@ describe("the issues opened", () => {
   const agency = notice("odqn:ODQNv30i4", "odqn", "2026-12");
   const news = [notice("news:a", "news", "2026-10-11"), notice("news:b", "news", "2026-10-12")];
 
-  test("are one per notice, the day's news gathered into one, each a form prefilled with its source, day, reference and link", () => {
+  test("are, for a report, a form prefilled with its source, day, reference and link, the day's news gathered into one", () => {
     const issues = issuesFor([agency, ...news]);
-    expect(issues.map((issue) => issue.title)).toEqual(["Report: odqn:ODQNv30i4", "Report: news:a (and 1 more article)"]);
-    expect(readForm(issues[0]!.body)).toMatchObject({ source: "odqn", published: "2026-12", ref: "odqn:ODQNv30i4, 2026-12", url: "https://example.org/odqn:ODQNv30i4", kind: null });
-    expect(readForm(issues[1]!.body)).toMatchObject({ source: "news", published: "2026-10-11", ref: "news:a, 2026-10-11" });
+    expect(issues[1]!.title).toBe("Report: news:a (and 1 more article)");
+    expect(issues[1]!.label).toBe("breakup-report");
+    expect(readForm(issues[1]!.body)).toMatchObject({ source: "news", published: "2026-10-11", ref: "news:a, 2026-10-11", url: "https://example.org/news:a", kind: null });
     expect(issues[1]!.body).toContain("news:b, 2026-10-12");
+  });
+
+  test("are, for a new quarterly news issue or ESA edition, a maintenance issue asking a person to read it and record it", () => {
+    const [odqn, esa] = issuesFor([agency, notice("esa-ser:2027", "esa-ser", "2027-09-01")]);
+    expect(odqn).toMatchObject({ title: "Read the new odqn:ODQNv30i4", label: "maintenance" });
+    expect(odqn!.body).toContain("data/truth/odqn-coverage.json");
+    expect(odqn!.body).toContain("breakup-report");
+    expect(esa).toMatchObject({ title: "Read the new esa-ser:2027", label: "maintenance" });
+    expect(esa!.body).toContain("data/truth/esa-ser.json");
   });
 
   test("carry the keys of their notices, so no notice opens a second", () => {
