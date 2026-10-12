@@ -13,7 +13,7 @@ import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenanc
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsFrom, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsAcross, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, windowOf, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, estimateStep, resetCusum, type Environment, type StepEstimate } from "./step.ts";
@@ -91,6 +91,8 @@ interface Pending {
   windowBstar: number;
   /** Whether the set is a post set of a live candidate. */
   post: boolean;
+  /** Whether the set was measured across an earlier set of its object in the run that jumped, its residual held back until that jump is decided. */
+  held: boolean;
   fit: Fit | null;
   noise: OwnNoise | null;
   prediction: Prediction | null;
@@ -135,7 +137,7 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
     const band = bandOf(regime, perigeeHeightKm);
     const previousEpoch = state.epochs.length === 0 ? Number.NEGATIVE_INFINITY : state.epochs[state.epochs.length - 1]!;
     const kappa = params.kappa[regimeKey(regime)];
-    const item: Pending = { state, set: accepted, aKm, regime, band, perigeeHeightKm, previousEpoch, windowBstar: accepted.bstar, post: false, fit: null, noise: null, prediction: null, measurement: null };
+    const item: Pending = { state, set: accepted, aKm, regime, band, perigeeHeightKm, previousEpoch, windowBstar: accepted.bstar, post: false, held: false, fit: null, noise: null, prediction: null, measurement: null };
     const candidate = state.candidate;
     if (candidate !== null && accepted.epochMs > candidate.beforeEpoch) {
       item.post = true;
@@ -161,10 +163,12 @@ function measure(state: SeriesState, set: ElementSet, context: RunContext, pendi
         item.prediction = prediction;
         item.measurement = { band, regime, residual, sigmaPred, gapDays: prediction.gapDays, bstar };
         const jumped = context.jumped.get(state);
-        if (jumped !== undefined) {
+        // Only while the jump lies in the window this set was predicted from: past it, as in a bundle of history, the set is clear of it.
+        if (jumped !== undefined && state.epochs[windowOf(state, params)[0]]! <= jumped.jump.set.epochMs) {
           // An earlier set of the object in this run jumped: this one is predicted from a fit that holds the jump, and is a post set where the jump opens a candidate; its residual waits for that decision (`releaseHeld`).
           pushSet(state, accepted, Number.NaN, params);
           jumped.held.push(item);
+          item.held = true;
         } else {
           pushSet(state, accepted, residual, params);
           rememberResidual(state, residual, noise.sigma, accepted.epochMs, params);
@@ -478,8 +482,8 @@ function closeCandidate(state: SeriesState, candidate: Candidate, outcome: numbe
   } else if (persistent || outcome === OUTCOMES.lapsed || (estimate !== null && Math.abs(estimate.rhoMedian) >= context.params.rhoRevert)) {
     state.windowFrom = candidate.afterEpoch;
   }
-  // A step that stayed: the residuals of its first post set and of any set measured after it before the candidate opened measured the step, not the object's noise.
-  if (persistent) forgetResidualsFrom(state, candidate.afterEpoch);
+  // A step that stayed: the residuals of its first post set and of the sets measured across it before the candidate opened measured the step, not the object's noise.
+  if (persistent) forgetResidualsAcross(state, candidate.afterEpoch, context.params);
   if (persistent && reading !== null) {
     recordStep(state.steps, { epochMs: candidate.afterEpoch, deltaKm: reading.step.deltaKm, deltaPerigeeKm: reading.step.deltaPerigeeKm, deltaInclinationDeg: estimate?.deltaInclination ?? 0, tangentialMps: reading.impulse.tangentialMps, normalMps: reading.impulse.normalMps }, context.params);
     // The catalogue's ledger of recent steps, by which the next object's step finds its siblings.
@@ -684,6 +688,8 @@ function decide(item: Pending, stats: BandStats, context: RunContext): void {
     if (item.set.epochMs > state.candidate.beforeEpoch) advance(item, stats, context);
     return;
   }
+  // A post set of a jump whose candidate opened and closed earlier in this run: it was predicted across the jump, so it is not tested again.
+  if (item.held) return;
   const alarm = Number.isFinite(item.previousEpoch) && advanceCusum(state, z, item.previousEpoch, params);
   const noise = item.noise!;
   let candidate: Candidate | null = null;
@@ -718,6 +724,7 @@ function releaseHeld(item: Pending, context: RunContext): void {
   context.jumped.delete(item.state);
   const state = item.state;
   for (const held of jumped.held) {
+    held.held = false;
     const i = indexOfEpoch(state, held.set.epochMs);
     if (i === -1) continue;
     state.resid[i] = held.measurement!.residual;

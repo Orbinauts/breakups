@@ -128,7 +128,7 @@ describe("the detector on synthetic series", () => {
   });
 
   test("a step fifty times the object's noise leaves the object's own scatter as it was before it, whether its sets came one a run or the jump and the next two in one run", () => {
-    const series = decaying(7200, 0.02, 0.004, 12);
+    const series = decaying(7200, 0.02, 0.004, 24);
     const stepAt = 24;
     for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.2;
     const sets = series.map((s) => setOf(1, s, "rocket body"));
@@ -146,6 +146,13 @@ describe("the detector on synthetic series", () => {
     }
     // The long memory took the jump's residual alone, clipped, in both: the sets after it in the same run are not the object's noise either.
     expect(scatter(together).longSigma).toBe(scatter(apart).longSigma);
+    // A batch of twenty-eight sets after the jump in one run, as a bundle of history brings (among other objects' sets, so the band's common mode is not this object's alone): the sets whose trailing window no longer held the jump keep their residuals.
+    const bundled = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 29)], { parameters: { bandMinMembers: 1000 } });
+    expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(bundled.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)?.signals.outcome);
+    const state = bundled.states.get(1) as { epochs: number[]; resid: number[] };
+    const clear = state.epochs.map((e, i) => [e, state.resid[i]!] as const).filter(([e]) => e > series[stepAt + params.windowSets.LEO]!.epochMs);
+    expect(clear.length).toBeGreaterThan(10);
+    expect(clear.every(([, r]) => Number.isFinite(r))).toBe(true);
   });
 
   test("a drift that grows from nothing at a rate drag can produce opens no candidate: the drag term covers it", () => {
