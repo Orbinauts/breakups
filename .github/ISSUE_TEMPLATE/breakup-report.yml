@@ -1,0 +1,158 @@
+name: Report of a breakup
+description: A published report of a fragmentation, to be added to the ground truth as a statement of the hand file
+title: "Report: "
+labels: ["breakup-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One report, one issue: a news article, a company's public notification, a named analyst's statement, or an agency's notice, as you read it. Give what the report itself says; leave a field empty where it says nothing.
+
+        Nothing is added until the owner labels this issue `breakup-report-accepted`. A workflow then checks the fields against the hand file's schema (`npm run truth:add`), commits the statement to a branch with the truth rebuilt, and runs the maintenance workflow on it, which replays the scorecard and merges the result. A field it refuses is named in a comment, and the issue can be edited and labelled again.
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      description: "news: a news report or a company's public notification. analyst: a named analyst's statement. s4s-notice: a U.S. Space Forces-Space notice. odqn: NASA's Orbital Debris Quarterly News. esa-ser: ESA's Space Environment Report."
+      options:
+        - news
+        - analyst
+        - s4s-notice
+        - odqn
+        - esa-ser
+    validations:
+      required: true
+  - type: input
+    id: published
+    attributes:
+      label: Published on
+      description: The day the report was published, YYYY-MM-DD (or the month, YYYY-MM, for a quarterly issue). A report with no day counts for nothing.
+      placeholder: "2026-10-07"
+    validations:
+      required: true
+  - type: textarea
+    id: ref
+    attributes:
+      label: Reference
+      description: "Where it was read, as the hand file cites it: the publisher or the analyst, the day, the link, and the sentence that reports the breakup."
+      placeholder: "Jim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/...)"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Link
+      description: The article the statement is dated from (https only).
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      description: "breakup: a fragmentation. anomalous: a few pieces shed at low speed. aerodynamic: a breakup at reentry. release: objects released on purpose. unnamed: the report names no object."
+      options:
+        - breakup
+        - anomalous
+        - aerodynamic
+        - release
+        - unnamed
+    validations:
+      required: true
+  - type: input
+    id: catalogue-number
+    attributes:
+      label: Catalogue number
+      description: The parent's catalogue number, where the report or the catalogue names it.
+      placeholder: "12456"
+  - type: input
+    id: designator
+    attributes:
+      label: International designator
+      placeholder: "1981-043A"
+  - type: input
+    id: name
+    attributes:
+      label: Name of the object
+      placeholder: "Meteor 2-7"
+  - type: input
+    id: stated
+    attributes:
+      label: Time as stated
+      description: The event's time in the report's own words.
+      placeholder: "5 October 2026, about 09:45 UTC, plus or minus 10 minutes"
+    validations:
+      required: true
+  - type: dropdown
+    id: precision
+    attributes:
+      label: Precision of the time
+      options:
+        - second
+        - minute
+        - hour
+        - day
+        - month
+        - year
+        - none
+    validations:
+      required: true
+  - type: input
+    id: at
+    attributes:
+      label: Instant
+      description: The instant the report gives, in UTC (2026-10-05T09:45Z), where it gives one.
+  - type: input
+    id: from
+    attributes:
+      label: Window start
+      description: The earliest the event can have been, in UTC (2026-10-05T09:35Z, or a day, 2026-10-05).
+  - type: input
+    id: to
+    attributes:
+      label: Window end
+      description: The latest the event can have been, in UTC. Left empty for a time stated to the day, the day after the start.
+  - type: input
+    id: altitude
+    attributes:
+      label: Altitude (km)
+  - type: input
+    id: apogee
+    attributes:
+      label: Apogee (km)
+  - type: input
+    id: perigee
+    attributes:
+      label: Perigee (km)
+  - type: input
+    id: inclination
+    attributes:
+      label: Inclination (degrees)
+  - type: dropdown
+    id: cause
+    attributes:
+      label: Cause
+      options:
+        - not stated
+        - propulsion
+        - deliberate
+        - collision-accidental
+        - collision-deliberate
+        - battery
+        - aerodynamic
+        - unknown
+  - type: input
+    id: cause-stated
+    attributes:
+      label: Cause as stated
+  - type: input
+    id: pieces
+    attributes:
+      label: Pieces catalogued
+  - type: input
+    id: pieces-on
+    attributes:
+      label: Pieces counted on
+      description: The day the count was made, YYYY-MM-DD.
+  - type: textarea
+    id: note
+    attributes:
+      label: Note
+      description: Anything else the report says that a reader of the truth should know.

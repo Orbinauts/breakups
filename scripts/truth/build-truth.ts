@@ -422,11 +422,16 @@ export function buildTruth(): { file: BreakupsFile; groups: Group[]; statements:
   return { file: { format: 1, sources: sourcesOf(), breakups }, groups, statements, skipped: satcatSkipped() };
 }
 
-if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+/** The truth built and written, `data/breakups.json` and its report `docs/truth.md`; a line saying what was written. */
+export function writeTruth(): { file: BreakupsFile; line: string } {
   const { file, statements, skipped } = buildTruth();
   const json = `${JSON.stringify(file, null, 1)}\n`;
   writeFileSync(resolve(ROOT, "data/breakups.json"), json);
   writeFileSync(resolve(ROOT, "docs/truth.md"), renderReport(file, statements, skipped));
   const sha = createHash("sha256").update(json).digest("hex").slice(0, 12);
-  console.log(`data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written`);
+  return { file, line: `data/breakups.json: ${file.breakups.length} events from ${statements.length} statements (sha256 ${sha}…); docs/truth.md written` };
+}
+
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  console.log(writeTruth().line);
 }
