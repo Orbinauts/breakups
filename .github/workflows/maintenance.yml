@@ -317,6 +317,7 @@ jobs:
           fi
           # A pull request the bot opens starts CI and the KPI workflow, each held for approval as a first-time contributor's.
           # The run approves CI's, waits for it and merges only once it has passed: a second check of the tree with the configuration a person's pull request meets.
+          # A CI run never found, or never let run, stops the run as a failed one does: main's ruleset refuses a merge before CI has passed.
           # The KPI workflow's, an hour's replay of what this run has replayed already where anything moved, runs on main after the merge instead:
           # its held run, which never ran a job, is deleted, since a held run whose pull request is merged ends as a failure.
           # Both are waited for until they exist, since a run started after the merge finds no merge ref and fails.
@@ -345,7 +346,9 @@ jobs:
             fi
             echo "CI passed on the pull request"
           else
-            echo "::notice::CI did not run on the pull request; the checks this run made stand alone"
+            gh pr comment "$url" --body "CI did not run on this pull request ($RUN_URL), so it is not merged: main takes a change only once CI has passed on it."
+            echo "::error::CI did not run on the pull request"
+            exit 1
           fi
           # The release's side files (and a promoted year) go up before the merge, so the KPI workflow on main finds the index the merged truth needs.
           if [ "$RESCORED" = true ]; then

@@ -5,8 +5,8 @@ name: KPI
 # release, replaying it from the states the previous year ended with and
 # scoring it, then folding the years into the aggregate, writing the table
 # to the run's summary, keeping one comment on a pull request up to date
-# with the diff against the committed `kpi/latest.json`, and on main
-# failing when a fresh aggregate differs from the committed one: the
+# with the diff against the committed `kpi/latest.json`, and failing, on
+# main and on a pull request alike, when a fresh aggregate differs from the committed one: the
 # committed score is the record, and the proof is that this workflow can
 # make it again.
 #
@@ -157,7 +157,6 @@ jobs:
             const mine = comments.find((comment) => comment.body !== undefined && comment.body.startsWith(marker));
             if (mine === undefined) await github.rest.issues.createComment({ owner, repo, issue_number, body });
             else await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
-      # On main the committed aggregate is the record: a fresh one that differs fails the run.
+      # The committed aggregate is the record: a fresh one that differs fails the run, on a pull request as on main, so the check and the comment agree.
       - name: The committed aggregate must be reproducible
-        if: github.ref == 'refs/heads/main'
         run: git diff --exit-code -- kpi/latest.json kpi/latest.md
