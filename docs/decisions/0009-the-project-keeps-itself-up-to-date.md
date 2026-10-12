@@ -131,6 +131,18 @@ merge is safe.
   them (Settings, Actions, General: "Allow GitHub Actions to create and
   approve pull requests"), and the prospective test's catalogue login is
   a secret only the owner can renew.
+- **The repository's rulesets.** Three rulesets hold what the runs rely
+  on, whatever token pushes (Settings, Rules, Rulesets). Main takes a
+  change only through a pull request on which CI's `check (Node 22)` and
+  `check (Node 24)` have passed, and is never force-pushed or deleted;
+  the owner, as the repository's admin, may push to it directly. The
+  `prospective` and `published` branches, the prospective test's
+  evidence, are never force-pushed or deleted, by anyone. The
+  `frozen-*` tags are never moved or deleted, by anyone; a new freeze
+  creates a new tag. The KPI workflow is not a required check: on the
+  bot's pull requests it runs on main after the merge (below), and a
+  person's pull request shows its result without being held for an hour's
+  replay.
 
 ## The bot, and why the merge is safe
 
@@ -151,6 +163,8 @@ meets, on Node 22 and 24, and the merge waits for it to pass: the bot
 counts as a first-time contributor, so its pull request's runs are held for
 approval, and the run approves CI's (the KPI workflow's held run is
 deleted, never having run a job, since it runs on main after the merge).
+A CI run that cannot be found or approved stops the run with an issue, as
+a failed one does, and main's ruleset would refuse the merge regardless.
 The tree is merged only onto the main it was checked against: a main that
 moved during the run is left alone and the next run starts again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
