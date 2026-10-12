@@ -17,9 +17,9 @@
    "version": "debris clouds data last updated 2025 Jun 22; satellite catalogue updated 2026 Oct 11"
   },
   "esa-ser": {
-   "citation": "ESA Space Debris Office, ESA's Annual Space Environment Report, GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025, Table 3.7",
+   "citation": "ESA Space Debris Office, ESA's Annual Space Environment Report, Table 3.7 of each edition, https://www.sdo.esoc.esa.int/publications/",
    "licence": "ESA",
-   "version": "2025 edition, events of 2024"
+   "version": "issues 1.2 (2017-04-27) to 10.0 (2026-05-01), 10 editions, events of 2016 to 2025"
   },
   "s4s-notice": {
    "citation": "U.S. Space Forces-Space fragmentation announcements, as posted on the public catalogue's login page",
@@ -187436,6 +187436,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-01-16",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-01-16",
+      "at": null,
+      "from": "2016-01-16T00:00Z",
+      "to": "2016-01-17T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-01-16, 1600.0 kg, 7 catalogued, asserted not given, EGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 344 (15075)",
      "kind": "breakup",
@@ -187542,6 +187576,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -187864,6 +187906,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-03-26",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-03-26",
+      "at": null,
+      "from": "2016-03-26T00:00Z",
+      "to": "2016-03-27T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Attitude",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-03-26, 2700.0 kg, 16 catalogued, asserted not given, LEO, Attitude. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 345 (16012)",
      "kind": "breakup",
@@ -188041,6 +188117,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-03-26",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-03-26",
+      "at": null,
+      "from": "2016-03-26T00:00Z",
+      "to": "2016-03-27T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-03-26, 56.0 kg, 22 catalogued, asserted not given, LMO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 346 (08067G)",
      "kind": "breakup",
@@ -188209,6 +188319,40 @@
      "statedOn": null
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-04-15",
+     "kind": "aerodynamic",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-04-15",
+      "at": null,
+      "from": "2016-04-15T00:00Z",
+      "to": "2016-04-16T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "aerodynamic",
+     "causeStated": "Aerodynamics",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-04-15, 1600.0 kg, 1 catalogued, asserted not given, LEO, Aerodynamics. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 347 (04005)",
      "kind": "aerodynamic",
@@ -188250,7 +188394,12 @@
     }
    ],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2017-04-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "23342:2016-05-01",
@@ -188416,6 +188565,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-06-02",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-06-02",
+      "at": null,
+      "from": "2016-06-02T00:00Z",
+      "to": "2016-06-03T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-06-02, 56.0 kg, 20 catalogued, asserted not given, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 348 (08067H)",
      "kind": "breakup",
@@ -188476,7 +188659,24 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "day",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e 1 June 2016, 0925 GMT against esa-ser 2016-06-02"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat 2016 Jun 1 0925? against esa-ser 2016-06-02"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
     "on": "2016-07-01",
@@ -188576,6 +188776,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-06-29",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-06-29",
+      "at": null,
+      "from": "2016-06-29T00:00Z",
+      "to": "2016-06-30T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-06-29, 3060.0 kg, 1 catalogued, asserted not given, EGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 349 (09018)",
      "kind": "breakup",
@@ -188606,7 +188840,16 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
     "on": "2016-10-01",
@@ -188685,6 +188928,40 @@
       "on": "2016-10-01",
       "precision": "month",
       "ref": "“WorldView 2 Spacecraft Fragments in July 2016”, ODQN 20(4), October 2016, cited by NASA's history, p. 670"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-07-18",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-07-18",
+      "at": null,
+      "from": "2016-07-18T00:00Z",
+      "to": "2016-07-19T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-07-18, 2615.0 kg, 11 catalogued, asserted not given, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
      }
     },
     {
@@ -188824,6 +189101,88 @@
     "precision": "month",
     "ref": "“WorldView 2 Spacecraft Fragments in July 2016”, ODQN 20(4), October 2016, cited by NASA's history, p. 670",
     "source": "hoosf-16e"
+   }
+  },
+  {
+   "id": "U:1:2016-07-26",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 1600.0 kg, EGO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2016-07-26",
+    "at": null,
+    "from": "2016-07-26T00:00Z",
+    "to": "2016-07-27T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "propulsion",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": "esa-ser",
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-07-26",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 1600.0 kg, EGO (unnamed)"
+     },
+     "event": {
+      "stated": "2016-07-26",
+      "at": null,
+      "from": "2016-07-26T00:00Z",
+      "to": "2016-07-27T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-07-26, 1600.0 kg, 6 catalogued, asserted not given, EGO, Propulsion. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2017-04-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
+    "source": "esa-ser"
    }
   },
   {
@@ -189281,6 +189640,40 @@
      "statedOn": null
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-08-23",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-08-23",
+      "at": null,
+      "from": "2016-08-23T00:00Z",
+      "to": "2016-08-24T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "collision-accidental",
+     "causeStated": "Small Impactor",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-08-23, 2157.0 kg, 7 catalogued, asserted not given, LEO, Small Impactor. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 353 (14016)",
      "kind": "breakup",
@@ -189373,7 +189766,12 @@
    ],
    "conflicts": [],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2017-04-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "38248:2016-09-30",
@@ -189448,6 +189846,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-09-30",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-09-30",
+      "at": null,
+      "from": "2016-09-30T00:00Z",
+      "to": "2016-10-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-09-30, 1858.0 kg, 2 catalogued, asserted not given, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 354 (12017)",
      "kind": "breakup",
@@ -189518,6 +189950,88 @@
    }
   },
   {
+   "id": "U:2:2016-10-06",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, mass not given, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2016-10-06",
+    "at": null,
+    "from": "2016-10-06T00:00Z",
+    "to": "2016-10-07T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-10-06",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, mass not given, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2016-10-06",
+      "at": null,
+      "from": "2016-10-06T00:00Z",
+      "to": "2016-10-07T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-10-06, N/A kg, 8 catalogued, asserted not given, LEO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2017-04-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
+    "source": "esa-ser"
+   }
+  },
+  {
    "id": "23233:2016-10-23",
    "parent": {
     "catalogueNumber": 23233,
@@ -189550,7 +190064,7 @@
    "resolvedFrom": {
     "event": "gcat",
     "orbit": "hoosf-16e",
-    "cause": "gcat",
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "hoosf-16e"
    },
@@ -189584,6 +190098,40 @@
      "preEventElements": null,
      "note": "Known events: 1. Type: Payload; owner: US; launched 29 Aug. 1994.",
      "statedOn": null
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 1.2, 27 April 2017 (GEN-DB-LOG-00208-OPS-GR), Table 3.7: Fragmentation events in 2016, p. 29, row 2016-10-23",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2016-10-23",
+      "at": null,
+      "from": "2016-10-23T00:00Z",
+      "to": "2016-10-24T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "battery",
+     "causeStated": "Battery",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2016-10-23, 815.0 kg, 6 catalogued, asserted not given, LEO, Battery. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2017-04-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017"
+     }
     },
     {
      "source": "gcat",
@@ -189648,7 +190196,12 @@
    ],
    "conflicts": [],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2017-04-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 1.2, dated 27 April 2017",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "41812:2016-11-18",
@@ -190455,6 +191008,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 2.0, 18 May 2018 (GEN-DB-LOG-00239-OPS-GR), Table 3.7: Fragmentation events in 2017, p. 34, row 2017-06-17",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2017-06-17",
+      "at": null,
+      "from": "2017-06-17T00:00Z",
+      "to": "2017-06-18T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2017-06-17, 4000.0 kg, 1 catalogued, asserted not given, EGO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2018-05-18",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 2.0, dated 18 May 2018"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 356 (03024)",
      "kind": "breakup",
@@ -190570,6 +191157,88 @@
    "firstStatement": null
   },
   {
+   "id": "U:3:2017-07-01",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 4000.0 kg, EGO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2017-07-01",
+    "at": null,
+    "from": "2017-07-01T00:00Z",
+    "to": "2017-07-02T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 2.0, 18 May 2018 (GEN-DB-LOG-00239-OPS-GR), Table 3.7: Fragmentation events in 2017, p. 34, row 2017-07-01",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 4000.0 kg, EGO (unnamed)"
+     },
+     "event": {
+      "stated": "2017-07-01",
+      "at": null,
+      "from": "2017-07-01T00:00Z",
+      "to": "2017-07-02T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2017-07-01, 4000.0 kg, 13 catalogued, asserted not given, EGO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2018-05-18",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 2.0, dated 18 May 2018"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2018-05-18",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 2.0, dated 18 May 2018",
+    "source": "esa-ser"
+   }
+  },
+  {
    "id": "25880:2017-08-25",
    "parent": {
     "catalogueNumber": 25880,
@@ -190594,7 +191263,7 @@
     "inclinationDeg": 0.01,
     "regime": "GEO"
    },
-   "cause": "unknown",
+   "cause": "propulsion",
    "piecesCatalogued": 1,
    "confidence": "B",
    "scoreable": true,
@@ -190602,7 +191271,7 @@
    "resolvedFrom": {
     "event": "hoosf-16e",
     "orbit": "hoosf-16e",
-    "cause": "gcat",
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "hoosf-16e"
    },
@@ -190642,6 +191311,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 2.0, 18 May 2018 (GEN-DB-LOG-00239-OPS-GR), Table 3.7: Fragmentation events in 2017, p. 34, row 2017-08-25",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2017-08-25",
+      "at": null,
+      "from": "2017-08-25T00:00Z",
+      "to": "2017-08-26T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2017-08-25, 2763.0 kg, 0 catalogued, asserted not given, GEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2018-05-18",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 2.0, dated 18 May 2018"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 357 (99042)",
      "kind": "breakup",
@@ -190672,7 +191375,16 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser propulsion"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
     "on": "2018-02-01",
@@ -190915,6 +191627,40 @@
       "on": "2017-11-01",
       "precision": "month",
       "ref": "“Latest SOZ Breakup Occurs in September 2017”, ODQN 21(4), November 2017, cited by NASA's history, p. 532"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 2.0, 18 May 2018 (GEN-DB-LOG-00239-OPS-GR), Table 3.7: Fragmentation events in 2017, p. 34, row 2017-09-03",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2017-09-03",
+      "at": null,
+      "from": "2017-09-03T00:00Z",
+      "to": "2017-09-04T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2017-09-03, 56.0 kg, 9 catalogued, asserted not given, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2018-05-18",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 2.0, dated 18 May 2018"
      }
     },
     {
@@ -192710,6 +193456,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-02-12",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-02-12",
+      "at": null,
+      "from": "2018-02-12T00:00Z",
+      "to": "2018-02-13T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-02-12, 360.0 kg, 0 catalogued, 90 asserted, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 360 (17086)",
      "kind": "breakup",
@@ -192786,6 +193566,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -192957,6 +193745,40 @@
       "on": "2018-05-01",
       "precision": "month",
       "ref": "“Fragmentation of Titan Transtage in GEO”, ODQN 22(2), May 2018, cited by NASA's history, p. 96"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-02-28",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-02-28",
+      "at": null,
+      "from": "2018-02-28T00:00Z",
+      "to": "2018-03-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-02-28, 1486.62 kg, 58 catalogued, 100 asserted, EGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
      }
     },
     {
@@ -193451,6 +194273,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-05-22",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-05-22",
+      "at": null,
+      "from": "2018-05-22T00:00Z",
+      "to": "2018-05-23T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-05-22, 56.0 kg, 4 catalogued, 60 asserted, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 362 (10007H)",
      "kind": "breakup",
@@ -193862,6 +194718,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-08-17",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-08-17",
+      "at": null,
+      "from": "2018-08-17T00:00Z",
+      "to": "2018-08-18T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-08-17, 1000.0 kg, 4 catalogued, 6 asserted, LEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S39411, 4 pieces 43627 to 43629, 43631",
      "kind": "release",
@@ -193992,6 +194882,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-08-24",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-08-24",
+      "at": null,
+      "from": "2018-08-24T00:00Z",
+      "to": "2018-08-25T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-08-24, 56.0 kg, 1 catalogued, 20 asserted, UFO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 363 (05050F)",
      "kind": "breakup",
@@ -194101,6 +195025,40 @@
       "on": "2018-11-01",
       "precision": "month",
       "ref": "“Atlas V Upper Stage Fragmentation Event Concludes an Active August 2018”, ODQN 22(4), November 2018, cited by NASA's history, p. 560"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-08-30",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-08-30",
+      "at": null,
+      "from": "2018-08-30T00:00Z",
+      "to": "2018-08-31T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-08-30, 2020.0 kg, 453 catalogued, 491 asserted, MGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
      }
     },
     {
@@ -194242,12 +195200,36 @@
      "detail": "hoosf-16e unknown against gcat propulsion"
     },
     {
+     "field": "day",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e 31 Aug. 2018, 0200 GMT against esa-ser 2018-08-30"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
+    },
+    {
      "field": "cause",
      "sources": [
       "gcat",
       "gcat"
      ],
      "detail": "gcat unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -194716,6 +195698,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 3.0, 30 April 2019 (GEN-DB-LOG-00271-OPS-SD), Table 3.7: Fragmentation events in 2018, p. 42, row 2018-12-22",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2018-12-22",
+      "at": null,
+      "from": "2018-12-22T00:00Z",
+      "to": "2018-12-23T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2018-12-22, 42.0 kg, 12 catalogued, None asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2019-04-30",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 365 (98046)",
      "kind": "breakup",
@@ -194826,10 +195842,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2019-05-01",
-    "precision": "month",
-    "ref": "“2018 Ends with Breakup of an ORBCOMM Constellation Spacecraft”, ODQN 23(1), May 2019, cited by NASA's history, p. 452",
-    "source": "hoosf-16e"
+    "on": "2019-04-30",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 3.0, dated 30 April 2019",
+    "source": "esa-ser"
    }
   },
   {
@@ -195262,7 +196278,7 @@
    },
    "kind": "breakup",
    "event": {
-    "stated": "2019 Mar 25",
+    "stated": "2019-03-25",
     "at": null,
     "from": "2019-03-25T00:00Z",
     "to": "2019-03-26T00:00Z",
@@ -195275,19 +196291,53 @@
     "inclinationDeg": 23.28,
     "regime": "HEO"
    },
-   "cause": "unknown",
+   "cause": "propulsion",
    "piecesCatalogued": 1,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "gcat",
+    "event": "esa-ser",
     "orbit": "gcat",
-    "cause": "gcat",
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "gcat"
    },
    "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-03-25",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-03-25",
+      "at": null,
+      "from": "2019-03-25T00:00Z",
+      "to": "2019-03-26T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-03-25, 2020 kg, 667 catalogued, 60 asserted, MGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    },
     {
      "source": "gcat",
      "ref": "entry 367 (09047)",
@@ -195319,9 +196369,23 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser propulsion"
+    }
+   ],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "43947:2019-03-27",
@@ -195411,6 +196475,40 @@
       "on": "2019-08-01",
       "precision": "month",
       "ref": "“Two Breakup Events Reported”, ODQN 23(3), August 2019, cited by NASA's history, p. 574"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-03-27",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-03-27",
+      "at": null,
+      "from": "2019-03-27T00:00Z",
+      "to": "2019-03-28T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "deliberate",
+     "causeStated": "Deliberate",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-03-27, 740 kg, 122 catalogued, 400 asserted, LEO, Deliberate. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
      }
     },
     {
@@ -195512,6 +196610,22 @@
       "gcat"
      ],
      "detail": "hoosf-16e 27 Mar. 2019, 0540 GMT against gcat 2019 Mar 27 0542"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e collision-deliberate against esa-ser deliberate"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat collision-deliberate against esa-ser deliberate"
     }
    ],
    "overrides": [],
@@ -195741,6 +196855,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-04-06",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-04-06",
+      "at": null,
+      "from": "2019-04-06T00:00Z",
+      "to": "2019-04-07T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-04-06, 2020 kg, 1077 catalogued, 14 asserted, MGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 369 (18079)",
      "kind": "breakup",
@@ -195899,6 +197047,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -195921,7 +197077,7 @@
    },
    "kind": "breakup",
    "event": {
-    "stated": "2019 Apr 7",
+    "stated": "2019-04-07",
     "at": null,
     "from": "2019-04-07T00:00Z",
     "to": "2019-04-08T00:00Z",
@@ -195934,19 +197090,53 @@
     "inclinationDeg": null,
     "regime": "GEO"
    },
-   "cause": "unknown",
+   "cause": "propulsion",
    "piecesCatalogued": 2,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
-    "event": "gcat",
+    "event": "esa-ser",
     "orbit": null,
-    "cause": null,
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "gcat"
    },
    "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-04-07",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-04-07",
+      "at": null,
+      "from": "2019-04-07T00:00Z",
+      "to": "2019-04-08T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-04-07, 6552 kg, 1 catalogued, 5 asserted, GEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    },
     {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S41308, 2 pieces 45488, 62723",
@@ -195980,7 +197170,12 @@
    ],
    "conflicts": [],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "A:1988-077:2019-04-08",
@@ -196395,6 +197590,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-05-07",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-05-07",
+      "at": null,
+      "from": "2019-05-07T00:00Z",
+      "to": "2019-05-08T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-05-07, 1487 kg, 0 catalogued, None asserted, UFO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 370 (76023)",
      "kind": "breakup",
@@ -196581,6 +197810,170 @@
    "firstStatement": null
   },
   {
+   "id": "U:4:2019-06-05",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 500 kg, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2019-06-05",
+    "at": null,
+    "from": "2019-06-05T00:00Z",
+    "to": "2019-06-06T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-06-05",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 500 kg, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2019-06-05",
+      "at": null,
+      "from": "2019-06-05T00:00Z",
+      "to": "2019-06-06T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-06-05, 500 kg, 8 catalogued, None asserted, LEO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
+  },
+  {
+   "id": "U:5:2019-07-11",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 2494 kg, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2019-07-11",
+    "at": null,
+    "from": "2019-07-11T00:00Z",
+    "to": "2019-07-12T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-07-11",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 2494 kg, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2019-07-11",
+      "at": null,
+      "from": "2019-07-11T00:00Z",
+      "to": "2019-07-12T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Anomalous",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-07-11, 2494 kg, 7 catalogued, None asserted, LEO, Anomalous. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
+  },
+  {
    "id": "22079:2019-07-22",
    "parent": {
     "catalogueNumber": 22079,
@@ -196668,6 +198061,40 @@
       "on": "2019-11-01",
       "precision": "month",
       "ref": "“Three Recent Rocket Body Breakups”, ODQN 23(4), November 2019, cited by NASA's history, p. 388"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-07-22",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-07-22",
+      "at": null,
+      "from": "2019-07-22T00:00Z",
+      "to": "2019-07-23T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-07-22, 1764 kg, 8 catalogued, 8 asserted, LEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
      }
     },
     {
@@ -196777,6 +198204,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -197608,6 +199043,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-08-19",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-08-19",
+      "at": null,
+      "from": "2019-08-19T00:00Z",
+      "to": "2019-08-20T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-08-19, 56 kg, 22 catalogued, None asserted, UFO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 373 (10041H)",
      "kind": "breakup",
@@ -197706,6 +199175,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e 12 August 2019, 1358 GMT against gcat 2019 Aug 19 1358"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e 12 August 2019, 1358 GMT against esa-ser 2019-08-19"
     }
    ],
    "overrides": [],
@@ -198011,6 +199488,88 @@
    "firstStatement": null
   },
   {
+   "id": "U:6:2019-09-30",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 100 kg, N/A (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2019-09-30",
+    "at": null,
+    "from": "2019-09-30T00:00Z",
+    "to": "2019-10-01T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-09-30",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 100 kg, N/A (unnamed)"
+     },
+     "event": {
+      "stated": "2019-09-30",
+      "at": null,
+      "from": "2019-09-30T00:00Z",
+      "to": "2019-10-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-09-30, 100 kg, 9 catalogued, None asserted, N/A, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
+  },
+  {
    "id": "29682:2019-10-23",
    "parent": {
     "catalogueNumber": 29682,
@@ -198098,6 +199657,40 @@
       "on": "2020-02-01",
       "precision": "month",
       "ref": "“Fifty-first SOZ Unit Breaks Up”, ODQN 24(1), February 2020, cited by NASA's history, p. 500"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-10-23",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2019-10-23",
+      "at": null,
+      "from": "2019-10-23T00:00Z",
+      "to": "2019-10-24T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-10-23, 56 kg, 3 catalogued, 10 asserted, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
      }
     },
     {
@@ -198317,6 +199910,88 @@
     "iss-releases"
    ],
    "firstStatement": null
+  },
+  {
+   "id": "U:7:2019-12-18",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "object, 2879 kg, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2019-12-18",
+    "at": null,
+    "from": "2019-12-18T00:00Z",
+    "to": "2019-12-19T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 4.0, 11 September 2020 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2019, p. 45, row 2019-12-18",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "object, 2879 kg, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2019-12-18",
+      "at": null,
+      "from": "2019-12-18T00:00Z",
+      "to": "2019-12-19T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Anomalous",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2019-12-18, 2879 kg, 0 catalogued, None asserted, LEO, Anomalous. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2020-09-11",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2020-09-11",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 4.0, dated 11 September 2020",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "28737:2019-12-21",
@@ -199182,6 +200857,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-01-09",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2020-01-09",
+      "at": null,
+      "from": "2020-01-09T00:00Z",
+      "to": "2020-01-10T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2020-01-09, Payload, 547 kg, 17 catalogued, 17 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2021-05-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 372 (19039)",
      "kind": "breakup",
@@ -199326,6 +201035,14 @@
       "gcat"
      ],
      "detail": "gcat 2019 Aug 3? against gcat 2020 Jan 9 2200?"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat 2019 Aug 3? against esa-ser 2020-01-09"
     }
    ],
    "overrides": [
@@ -199867,6 +201584,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-02-12",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2020-02-12",
+      "at": null,
+      "from": "2020-02-12T00:00Z",
+      "to": "2020-02-13T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2020-02-12, Rocket Body, 1388 kg, 111 catalogued, 75 asserted, LEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2021-05-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 377 (91056)",
      "kind": "breakup",
@@ -200349,6 +202100,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-05-08",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2020-05-08",
+      "at": null,
+      "from": "2020-05-08T00:00Z",
+      "to": "2020-05-09T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2020-05-08, Rocket Mission Related Object, 360 kg, 323 catalogued, 65 asserted, LMO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2021-05-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 378 (11037)",
      "kind": "breakup",
@@ -200447,6 +202232,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -200675,6 +202468,88 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": null
+  },
+  {
+   "id": "U:8:2020-07-12",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "rocket mission related object, 200 kg, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2020-07-12",
+    "at": null,
+    "from": "2020-07-12T00:00Z",
+    "to": "2020-07-13T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-07-12",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "rocket mission related object, 200 kg, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2020-07-12",
+      "at": null,
+      "from": "2020-07-12T00:00Z",
+      "to": "2020-07-13T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2020-07-12, Rocket Mission Related Object, 200 kg, 87 catalogued, 53 asserted, LEO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2021-05-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2021-05-27",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "43673:2020-07-12",
@@ -201044,6 +202919,40 @@
       "on": "2020-11-01",
       "precision": "month",
       "ref": "“Two New Breakups with One Resulting in an ISS Maneuver”, ODQN 24(4), November 2020, cited by NASA's history, p. 420"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 5.0, 27 May 2021 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2020, p. 55, row 2020-08-27",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2020-08-27",
+      "at": null,
+      "from": "2020-08-27T00:00Z",
+      "to": "2020-08-28T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2020-08-27, Payload, 1900 kg, 108 catalogued, 15 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2021-05-27",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 5.0, dated 27 May 2021"
      }
     },
     {
@@ -201787,6 +203696,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-03-10",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-03-10",
+      "at": null,
+      "from": "2021-03-10T00:00Z",
+      "to": "2021-03-11T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "battery",
+     "causeStated": "Electrical",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-03-10, Payload, 1403 kg, 113 catalogued, 102 asserted, LEO, Electrical. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 381 (02032)",
      "kind": "breakup",
@@ -201885,6 +203828,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat battery"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser battery"
     }
    ],
    "overrides": [],
@@ -201986,6 +203937,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-03-18",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-03-18",
+      "at": null,
+      "from": "2021-03-18T00:00Z",
+      "to": "2021-03-19T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "collision-accidental",
+     "causeStated": "Collision",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-03-18, Payload, 800 kg, 37 catalogued, 43 asserted, LEO, Collision. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 382 (19063)",
      "kind": "breakup",
@@ -202084,6 +204069,14 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat collision-accidental"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e unknown against esa-ser collision-accidental"
     }
    ],
    "overrides": [],
@@ -203275,6 +205268,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-10-24",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-10-24",
+      "at": null,
+      "from": "2021-10-24T00:00Z",
+      "to": "2021-10-25T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-10-24, Payload, 45 kg, 22 catalogued, 21 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 384 (14028)",
      "kind": "breakup",
@@ -203373,6 +205400,22 @@
       "gcat"
      ],
      "detail": "hoosf-16e unknown against gcat propulsion"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e 23 Oct. 2021, 1814 GMT against esa-ser 2021-10-24"
+    },
+    {
+     "field": "day",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat 2021 Oct 23 1814? against esa-ser 2021-10-24"
     }
    ],
    "overrides": [],
@@ -203547,6 +205590,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-11-15",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-11-15",
+      "at": null,
+      "from": "2021-11-15T00:00Z",
+      "to": "2021-11-16T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "deliberate",
+     "causeStated": "Deliberate",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-11-15, Payload, 1750 kg, 1595 catalogued, 1500 asserted, LEO, Deliberate. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 385 (82092)",
      "kind": "breakup",
@@ -203645,6 +205722,22 @@
       "gcat"
      ],
      "detail": "hoosf-16e 15 Nov. 2021, 0248 GMT against gcat 2021 Nov 15 0250?"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "hoosf-16e",
+      "esa-ser"
+     ],
+     "detail": "hoosf-16e collision-deliberate against esa-ser deliberate"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat collision-deliberate against esa-ser deliberate"
     }
    ],
    "overrides": [],
@@ -203743,6 +205836,40 @@
       "on": "2022-03-01",
       "precision": "month",
       "ref": "“Two Minor Breakup Events in Fourth Quarter of 2021”, ODQN 26(1), March 2022, cited by NASA's history, p. 446"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-11-18",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-11-18",
+      "at": null,
+      "from": "2021-11-18T00:00Z",
+      "to": "2021-11-19T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-11-18, Payload, 42 kg, 11 catalogued, 8 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
      }
     },
     {
@@ -203918,6 +206045,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 6.0, 22 April 2022 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2021, p. 63, row 2021-11-26",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2021-11-26",
+      "at": null,
+      "from": "2021-11-26T00:00Z",
+      "to": "2021-11-27T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2021-11-26, Rocket Body, 202 kg, 13 catalogued, 8 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2022-04-22",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 387 (20046)",
      "kind": "breakup",
@@ -204020,10 +206181,10 @@
    ],
    "overrides": [],
    "firstStatement": {
-    "on": "2022-06-01",
-    "precision": "month",
-    "ref": "“Additional Minor Breakup Identified in Fourth Quarter 2021”, ODQN 26(2), June 2022, cited by NASA's history, p. 580",
-    "source": "hoosf-16e"
+    "on": "2022-04-22",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 6.0, dated 22 April 2022",
+    "source": "esa-ser"
    }
   },
   {
@@ -205452,7 +207613,7 @@
     "inclinationDeg": 98,
     "regime": "LEO"
    },
-   "cause": "unknown",
+   "cause": "collision-accidental",
    "piecesCatalogued": 36,
    "confidence": "A",
    "scoreable": true,
@@ -205460,7 +207621,7 @@
    "resolvedFrom": {
     "event": "odqn",
     "orbit": "odqn",
-    "cause": "gcat",
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "odqn"
    },
@@ -205497,6 +207658,40 @@
       "on": "2022-09-01",
       "precision": "month",
       "ref": "ODQN 26(3), September 2022, p. 2"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 7.1, 12 September 2023 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2022, p. 64, row 2022-07-03",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2022-07-03",
+      "at": null,
+      "from": "2022-07-03T00:00Z",
+      "to": "2022-07-04T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "collision-accidental",
+     "causeStated": "Small Impactor",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2022-07-03, Rocket Mission Related Object, 200 kg, 6 catalogued, 52 asserted, LEO, Small Impactor. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2023-09-12",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 7.1, dated 12 September 2023"
      }
     },
     {
@@ -205598,6 +207793,14 @@
       "gcat"
      ],
      "detail": "gcat unknown against gcat collision-accidental"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser collision-accidental"
     }
    ],
    "overrides": [],
@@ -206118,6 +208321,40 @@
       "on": "2023-03-01",
       "precision": "month",
       "ref": "ODQN 27(1), March 2023, pp. 1-2; ODQN 28(4), October 2024, p. 2"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 7.1, 12 September 2023 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2022, p. 64, row 2022-11-12",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2022-11-12",
+      "at": null,
+      "from": "2022-11-12T00:00Z",
+      "to": "2022-11-13T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2022-11-12, Rocket Body, 1850 kg, 331 catalogued, asserted not given, LEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2023-09-12",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 7.1, dated 12 September 2023"
      }
     },
     {
@@ -207113,6 +209350,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 8.0, 19 July 2024 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2023, p. 64, row 2023-01-04",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2023-01-04",
+      "at": null,
+      "from": "2023-01-04T00:00Z",
+      "to": "2023-01-05T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2023-01-04, Payload, 45 kg, 58 catalogued, asserted not given, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2024-07-19",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S39765, 51 pieces 55717 to 55736, 56566 to 56581, 57759, 59319, 59373, 60608 to 60619",
      "kind": "breakup",
@@ -207513,6 +209784,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 8.0, 19 July 2024 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2023, p. 64, row 2023-02-10",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2023-02-10",
+      "at": null,
+      "from": "2023-02-10T00:00Z",
+      "to": "2023-02-11T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2023-02-10, Rocket Body, 1500 kg, 5 catalogued, 5 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2024-07-19",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "GCAT satellite catalogue (satcat.tsv, updated 2026 Oct 11 1225:05), parent S55565, 5 pieces 55567, 55568, 55737 to 55739",
      "kind": "breakup",
@@ -207704,6 +210009,40 @@
       "on": "2023-06-01",
       "precision": "month",
       "ref": "ODQN 27(2), June 2023, p. 2"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 8.0, 19 July 2024 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2023, p. 64, row 2023-03-11",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2023-03-11",
+      "at": null,
+      "from": "2023-03-11T00:00Z",
+      "to": "2023-03-12T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2023-03-11, Payload, 44 kg, 8 catalogued, asserted not given, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2024-07-19",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024"
      }
     },
     {
@@ -208615,6 +210954,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 8.0, 19 July 2024 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2023, p. 64, row 2023-06-29",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2023-06-29",
+      "at": null,
+      "from": "2023-06-29T00:00Z",
+      "to": "2023-06-30T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "battery",
+     "causeStated": "Electrical",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2023-06-29, Payload, 223 kg, 6 catalogued, 6 asserted, LEO, Electrical. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2024-07-19",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 395 (910933)",
      "kind": "breakup",
@@ -208713,6 +211086,22 @@
       "gcat"
      ],
      "detail": "odqn unknown against gcat collision-accidental"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "odqn",
+      "esa-ser"
+     ],
+     "detail": "odqn unknown against esa-ser battery"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat collision-accidental against esa-ser battery"
     }
    ],
    "overrides": [],
@@ -209147,6 +211536,88 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": null
+  },
+  {
+   "id": "U:9:2023-07-31",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "rocket mission related object, 100 kg, LEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2023-07-31",
+    "at": null,
+    "from": "2023-07-31T00:00Z",
+    "to": "2023-08-01T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "collision-accidental",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": "esa-ser",
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 8.0, 19 July 2024 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2023, p. 64, row 2023-07-31",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "rocket mission related object, 100 kg, LEO (unnamed)"
+     },
+     "event": {
+      "stated": "2023-07-31",
+      "at": null,
+      "from": "2023-07-31T00:00Z",
+      "to": "2023-08-01T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "collision-accidental",
+     "causeStated": "Small Impactor",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2023-07-31, Rocket Mission Related Object, 100 kg, 7 catalogued, 11 asserted, LEO, Small Impactor. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2024-07-19",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2024-07-19",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 8.0, dated 19 July 2024",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "A:1998-067:2023-08-09",
@@ -210248,16 +212719,16 @@
    "firstStatement": null
   },
   {
-   "id": "U:1:2024-04-02",
+   "id": "59344:2024-04-02",
    "parent": {
-    "catalogueNumber": null,
-    "designator": null,
-    "name": "rocket body, 6,000 kg, LEO (unnamed)",
+    "catalogueNumber": 59344,
+    "designator": "2024-058B",
+    "name": "CZ-6A R/B (Yunhai-3 02)",
     "class": "rocket body",
     "owner": null,
     "launchedOn": null
    },
-   "kind": "unnamed",
+   "kind": "breakup",
    "event": {
     "stated": "2024-04-02",
     "at": null,
@@ -210273,26 +212744,26 @@
     "regime": "unknown"
    },
    "cause": "propulsion",
-   "piecesCatalogued": 0,
+   "piecesCatalogued": null,
    "confidence": "B",
-   "scoreable": false,
-   "exemptReason": "the report names no object",
+   "scoreable": true,
+   "exemptReason": null,
    "resolvedFrom": {
     "event": "esa-ser",
     "orbit": null,
     "cause": "esa-ser",
-    "pieces": "esa-ser",
-    "kind": "esa-ser"
+    "pieces": null,
+    "kind": "news"
    },
    "statements": [
     {
      "source": "esa-ser",
-     "ref": "ESA Space Environment Report 2025 (GEN-DB-LOG-00288-OPS-SD, issue 9.1, 21 October 2025), Table 3.7, row 2024-04-02",
-     "kind": "unnamed",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-04-02",
+     "kind": null,
      "parent": {
-      "catalogueNumber": null,
-      "designator": null,
-      "name": "rocket body, 6,000 kg, LEO (unnamed)"
+      "catalogueNumber": 59344,
+      "designator": "2024-058B",
+      "name": "CZ-6A R/B (Yunhai-3 02)"
      },
      "event": {
       "stated": "2024-04-02",
@@ -210309,24 +212780,59 @@
      },
      "cause": "propulsion",
      "causeStated": "Propulsion",
-     "piecesCatalogued": 0,
-     "piecesStatedOn": "2024-12-31",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
      "preEventElements": null,
-     "note": "ESA names no object; 60 asserted objects, 0 catalogued.",
+     "note": "Table row: 2024-04-02, Rocket Body, 6000 kg, 0 catalogued, 60 asserted, LEO, Propulsion. The object is named by s2a systems' post of 2024-04-13, 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews on 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/): a rocket body in LEO with some 60 objects, as ESA's row has it (6,000 kg, LEO, 60 asserted, 0 catalogued), launched on 26 March 2024 (GCAT).",
      "statedOn": {
-      "on": "2025-10-21",
+      "on": "2025-03-31",
       "precision": "day",
-      "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's"
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
+    },
+    {
+     "source": "news",
+     "ref": "s2a systems on X, 2024-04-13 (https://x.com/s2a_systems/status/1779105729904812467): 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 59344,
+      "designator": "2024-058B",
+      "name": "CZ-6A R/B (Yunhai-3 02)"
+     },
+     "event": {
+      "stated": "nearly 60 objects around the stage in images of 7 April 2024; the stage was launched on 26 March 2024",
+      "at": null,
+      "from": "2024-03-26T00:00Z",
+      "to": "2024-04-08T00:00Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "unclear; passivation of the stage or broken insulation (SpaceNews)",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "s2a systems' optical observation, a Swiss company's. SpaceNews: 'U.S. Space Force's space domain awareness has not cataloged any debris associated with the upper stage' (of the July launch). The launch day is GCAT's (LDate 2024 Mar 26). ESA's table of 2024 has a rocket body of 6,000 kg in LEO on 2024-04-02 with 60 asserted objects, named from this report in data/truth/esa-ser.json.",
+     "statedOn": {
+      "on": "2024-04-13",
+      "precision": "day",
+      "ref": "s2a systems on X, 2024-04-13 (https://x.com/s2a_systems/status/1779105729904812467): 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)"
+     },
+     "url": "https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/"
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-10-21",
+    "on": "2024-04-13",
     "precision": "day",
-    "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's",
-    "source": "esa-ser"
+    "ref": "s2a systems on X, 2024-04-13 (https://x.com/s2a_systems/status/1779105729904812467): 'An initial, more detailed analysis of the images from April 7 showed nearly 60 objects around the CZ-6A upper stage (2024-058B/59344)', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+    "source": "news"
    }
   },
   {
@@ -210403,11 +212909,11 @@
    "firstStatement": null
   },
   {
-   "id": "U:2:2024-04-08",
+   "id": "U:10:2024-04-08",
    "parent": {
     "catalogueNumber": null,
     "designator": null,
-    "name": "payload, 2,382 kg, LMO (unnamed)",
+    "name": "payload, 2382 kg, LMO (unnamed)",
     "class": "unknown",
     "owner": null,
     "launchedOn": null
@@ -210428,7 +212934,7 @@
     "regime": "unknown"
    },
    "cause": "propulsion",
-   "piecesCatalogued": 0,
+   "piecesCatalogued": null,
    "confidence": "B",
    "scoreable": false,
    "exemptReason": "the report names no object",
@@ -210436,18 +212942,18 @@
     "event": "esa-ser",
     "orbit": null,
     "cause": "esa-ser",
-    "pieces": "esa-ser",
+    "pieces": null,
     "kind": "esa-ser"
    },
    "statements": [
     {
      "source": "esa-ser",
-     "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-04-08",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-04-08",
      "kind": "unnamed",
      "parent": {
       "catalogueNumber": null,
       "designator": null,
-      "name": "payload, 2,382 kg, LMO (unnamed)"
+      "name": "payload, 2382 kg, LMO (unnamed)"
      },
      "event": {
       "stated": "2024-04-08",
@@ -210464,23 +212970,23 @@
      },
      "cause": "propulsion",
      "causeStated": "Propulsion",
-     "piecesCatalogued": 0,
-     "piecesStatedOn": "2024-12-31",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
      "preEventElements": null,
-     "note": "ESA names no object; 92 asserted objects, 0 catalogued.",
+     "note": "Table row: 2024-04-08, Payload, 2382 kg, 0 catalogued, 92 asserted, LMO, Propulsion. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
      "statedOn": {
-      "on": "2025-10-21",
+      "on": "2025-03-31",
       "precision": "day",
-      "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's"
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-10-21",
+    "on": "2025-03-31",
     "precision": "day",
-    "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's",
+    "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025",
     "source": "esa-ser"
    }
   },
@@ -210704,11 +213210,11 @@
    "firstStatement": null
   },
   {
-   "id": "U:3:2024-05-27",
+   "id": "U:11:2024-05-27",
    "parent": {
     "catalogueNumber": null,
     "designator": null,
-    "name": "payload, 2,500 kg, GEO (unnamed)",
+    "name": "payload, 2500 kg, GEO (unnamed)",
     "class": "unknown",
     "owner": null,
     "launchedOn": null
@@ -210729,26 +213235,26 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 0,
+   "piecesCatalogued": null,
    "confidence": "B",
    "scoreable": false,
    "exemptReason": "the report names no object",
    "resolvedFrom": {
     "event": "esa-ser",
     "orbit": null,
-    "cause": "esa-ser",
-    "pieces": "esa-ser",
+    "cause": null,
+    "pieces": null,
     "kind": "esa-ser"
    },
    "statements": [
     {
      "source": "esa-ser",
-     "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-05-27",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-05-27",
      "kind": "unnamed",
      "parent": {
       "catalogueNumber": null,
       "designator": null,
-      "name": "payload, 2,500 kg, GEO (unnamed)"
+      "name": "payload, 2500 kg, GEO (unnamed)"
      },
      "event": {
       "stated": "2024-05-27",
@@ -210763,25 +213269,25 @@
       "perigeeKm": null,
       "inclinationDeg": null
      },
-     "cause": "unknown",
+     "cause": null,
      "causeStated": "Unknown",
-     "piecesCatalogued": 0,
-     "piecesStatedOn": "2024-12-31",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
      "preEventElements": null,
-     "note": "ESA names no object; 1 asserted object, 0 catalogued.",
+     "note": "Table row: 2024-05-27, Payload, 2500 kg, 0 catalogued, 1 asserted, GEO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
      "statedOn": {
-      "on": "2025-10-21",
+      "on": "2025-03-31",
       "precision": "day",
-      "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's"
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-10-21",
+    "on": "2025-03-31",
     "precision": "day",
-    "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's",
+    "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025",
     "source": "esa-ser"
    }
   },
@@ -211077,6 +213583,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-06-26",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-06-26",
+      "at": null,
+      "from": "2024-06-26T00:00Z",
+      "to": "2024-06-27T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-06-26, Payload, 5691 kg, 19 catalogued, 100 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 398 (13030)",
      "kind": "breakup",
@@ -211147,16 +213687,16 @@
    }
   },
   {
-   "id": "U:4:2024-07-05",
+   "id": "60214:2024-07-05",
    "parent": {
-    "catalogueNumber": null,
-    "designator": null,
-    "name": "rocket body, 6,000 kg, LEO (unnamed; secondary reports name a CZ-6A upper stage, 2024-126C, of 4 July 2024)",
+    "catalogueNumber": 60214,
+    "designator": "2024-126D",
+    "name": "CZ-6A R/B (Tianhui-5 02)",
     "class": "rocket body",
     "owner": null,
     "launchedOn": null
    },
-   "kind": "unnamed",
+   "kind": "breakup",
    "event": {
     "stated": "2024-07-05",
     "at": null,
@@ -211174,24 +213714,24 @@
    "cause": "propulsion",
    "piecesCatalogued": 0,
    "confidence": "B",
-   "scoreable": false,
-   "exemptReason": "the report names no object",
+   "scoreable": true,
+   "exemptReason": null,
    "resolvedFrom": {
     "event": "esa-ser",
     "orbit": null,
     "cause": "esa-ser",
-    "pieces": "esa-ser",
-    "kind": "esa-ser"
+    "pieces": "news",
+    "kind": "news"
    },
    "statements": [
     {
      "source": "esa-ser",
-     "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-07-05",
-     "kind": "unnamed",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-07-05",
+     "kind": null,
      "parent": {
-      "catalogueNumber": null,
-      "designator": null,
-      "name": "rocket body, 6,000 kg, LEO (unnamed; secondary reports name a CZ-6A upper stage, 2024-126C, of 4 July 2024)"
+      "catalogueNumber": 60214,
+      "designator": "2024-126D",
+      "name": "CZ-6A R/B (Tianhui-5 02)"
      },
      "event": {
       "stated": "2024-07-05",
@@ -211208,24 +213748,59 @@
      },
      "cause": "propulsion",
      "causeStated": "Propulsion",
-     "piecesCatalogued": 0,
-     "piecesStatedOn": "2024-12-31",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
      "preEventElements": null,
-     "note": "ESA names no object; 44 asserted objects, 0 catalogued. No authority names the object; the 2024-126C attribution rests on secondary reports only.",
+     "note": "Table row: 2024-07-05, Rocket Body, 6000 kg, 0 catalogued, 44 asserted, LEO, Propulsion. The object is named by s2a systems' post of 2024-07-05, 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews on 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/), on the day of ESA's row; the stage is 2024-126D (60214), 'CZ-6A Y7 Stage 2', in GCAT's satellite catalogue, where 2024-126C is the TH-5 adapter.",
      "statedOn": {
-      "on": "2025-10-21",
+      "on": "2025-03-31",
       "precision": "day",
-      "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's"
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
+    },
+    {
+     "source": "news",
+     "ref": "s2a systems on X, 2024-07-05 (https://x.com/s2a_systems/status/1809344226947199341): 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+     "kind": "breakup",
+     "parent": {
+      "catalogueNumber": 60214,
+      "designator": "2024-126D",
+      "name": "CZ-6A R/B (Tianhui-5 02)"
+     },
+     "event": {
+      "stated": "debris around the stage recorded on 5 July 2024 at 20:01:37 UTC; the stage was launched on 4 July 2024",
+      "at": null,
+      "from": "2024-07-04T00:00Z",
+      "to": "2024-07-05T20:02Z",
+      "precision": "none"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "unclear; passivation of the stage or broken insulation (SpaceNews)",
+     "piecesCatalogued": 0,
+     "piecesStatedOn": "2024-07-12",
+     "preEventElements": null,
+     "note": "s2a systems' optical observation, a Swiss company's. SpaceNews: 'U.S. Space Force's space domain awareness has not cataloged any debris associated with the upper stage, suggesting the objects are very small.' The stage is 2024-126D (60214), 'CZ-6A Y7 Stage 2', in GCAT's satellite catalogue, launched 2024 Jul 4; 2024-126C is the TH-5 adapter there, not the stage. ESA's table of 2024 has a rocket body of 6,000 kg in LEO on 2024-07-05 with 44 asserted objects, named from this report in data/truth/esa-ser.json.",
+     "statedOn": {
+      "on": "2024-07-05",
+      "precision": "day",
+      "ref": "s2a systems on X, 2024-07-05 (https://x.com/s2a_systems/status/1809344226947199341): 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)"
+     },
+     "url": "https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/"
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-10-21",
+    "on": "2024-07-05",
     "precision": "day",
-    "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's",
-    "source": "esa-ser"
+    "ref": "s2a systems on X, 2024-07-05 (https://x.com/s2a_systems/status/1809344226947199341): 'And the CZ-6A upper stage of the Tianhui-5 2 launch. Recorded today, 05.07.2024 at 20:01:37 UTC over Australia. As last time, the upper stage produces a lot of visually detectable debris.', as quoted by SpaceNews, 'China's Long March 6A rocket appears to have an orbital debris problem', A. Jones, 2024-07-12 (https://spacenews.com/chinas-long-march-6a-rocket-appears-to-have-an-orbital-debris-problem/)",
+    "source": "news"
    }
   },
   {
@@ -211298,6 +213873,40 @@
       "on": "2024-10-01",
       "precision": "month",
       "ref": "ODQN 28(4), October 2024, p. 1"
+     }
+    },
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-07-19",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-07-19",
+      "at": null,
+      "from": "2024-07-19T00:00Z",
+      "to": "2024-07-20T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-07-19, Payload, 816 kg, 4 catalogued, 5 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
     },
     {
@@ -211422,6 +214031,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-08-06",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-08-06",
+      "at": null,
+      "from": "2024-08-06T00:00Z",
+      "to": "2024-08-07T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-08-06, Rocket Body, 6000 kg, 663 catalogued, 700 asserted, LEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 399 (24140)",
      "kind": "breakup",
@@ -211498,6 +214141,14 @@
       "gcat"
      ],
      "detail": "odqn unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "odqn",
+      "esa-ser"
+     ],
+     "detail": "odqn unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -211606,7 +214257,7 @@
     "inclinationDeg": 9.3,
     "regime": "HEO"
    },
-   "cause": "unknown",
+   "cause": "propulsion",
    "piecesCatalogued": 0,
    "confidence": "B",
    "scoreable": true,
@@ -211614,7 +214265,7 @@
    "resolvedFrom": {
     "event": "gcat",
     "orbit": "odqn",
-    "cause": "gcat",
+    "cause": "esa-ser",
     "pieces": "gcat",
     "kind": "odqn"
    },
@@ -211654,6 +214305,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-09-06",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-09-06",
+      "at": null,
+      "from": "2024-09-06T00:00Z",
+      "to": "2024-09-07T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-09-06, Rocket Body, 2020 kg, 843 catalogued, asserted not given, MGO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 400 (18022)",
      "kind": "breakup",
@@ -211684,7 +214369,16 @@
      "statedOn": null
     }
    ],
-   "conflicts": [],
+   "conflicts": [
+    {
+     "field": "cause",
+     "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser propulsion"
+    }
+   ],
    "overrides": [],
    "firstStatement": {
     "on": "2025-02-01",
@@ -212131,6 +214825,40 @@
      }
     },
     {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-10-19",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-10-19",
+      "at": null,
+      "from": "2024-10-19T00:00Z",
+      "to": "2024-10-20T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-10-19, Payload, 2946 kg, 1104 catalogued, asserted not given, GEO, Propulsion. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
+     }
+    },
+    {
      "source": "gcat",
      "ref": "entry 401 (16053)",
      "kind": "breakup",
@@ -212233,10 +214961,26 @@
     {
      "field": "cause",
      "sources": [
+      "gcat",
+      "esa-ser"
+     ],
+     "detail": "gcat unknown against esa-ser propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
       "odqn",
       "gcat"
      ],
      "detail": "odqn unknown against gcat propulsion"
+    },
+    {
+     "field": "cause",
+     "sources": [
+      "odqn",
+      "esa-ser"
+     ],
+     "detail": "odqn unknown against esa-ser propulsion"
     }
    ],
    "overrides": [],
@@ -212686,11 +215430,11 @@
    "firstStatement": null
   },
   {
-   "id": "U:5:2024-12-01",
+   "id": "U:12:2024-12-01",
    "parent": {
     "catalogueNumber": null,
     "designator": null,
-    "name": "rocket body, 6,000 kg, LEO (unnamed)",
+    "name": "rocket body, 6000 kg, LEO (unnamed)",
     "class": "rocket body",
     "owner": null,
     "launchedOn": null
@@ -212711,26 +215455,26 @@
     "regime": "unknown"
    },
    "cause": "unknown",
-   "piecesCatalogued": 0,
+   "piecesCatalogued": null,
    "confidence": "B",
    "scoreable": false,
    "exemptReason": "the report names no object",
    "resolvedFrom": {
     "event": "esa-ser",
     "orbit": null,
-    "cause": "esa-ser",
-    "pieces": "esa-ser",
+    "cause": null,
+    "pieces": null,
     "kind": "esa-ser"
    },
    "statements": [
     {
      "source": "esa-ser",
-     "ref": "ESA Space Environment Report 2025, Table 3.7, row 2024-12-01",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-12-01",
      "kind": "unnamed",
      "parent": {
       "catalogueNumber": null,
       "designator": null,
-      "name": "rocket body, 6,000 kg, LEO (unnamed)"
+      "name": "rocket body, 6000 kg, LEO (unnamed)"
      },
      "event": {
       "stated": "2024-12-01",
@@ -212745,25 +215489,25 @@
       "perigeeKm": null,
       "inclinationDeg": null
      },
-     "cause": "unknown",
+     "cause": null,
      "causeStated": "Unknown",
-     "piecesCatalogued": 0,
-     "piecesStatedOn": "2024-12-31",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
      "preEventElements": null,
-     "note": "ESA names no object; 100 asserted objects, 0 catalogued.",
+     "note": "Table row: 2024-12-01, Rocket Body, 6000 kg, 0 catalogued, 100 asserted, LEO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
      "statedOn": {
-      "on": "2025-10-21",
+      "on": "2025-03-31",
       "precision": "day",
-      "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's"
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
      }
     }
    ],
    "conflicts": [],
    "overrides": [],
    "firstStatement": {
-    "on": "2025-10-21",
+    "on": "2025-03-31",
     "precision": "day",
-    "ref": "ESA Space Environment Report 2025, issue 9.1, dated 21 October 2025: the row's reference gives the event's day, not the report's",
+    "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025",
     "source": "esa-ser"
    }
   },
@@ -212867,7 +215611,7 @@
    },
    "cause": "battery",
    "piecesCatalogued": 0,
-   "confidence": "C",
+   "confidence": "B",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -212878,6 +215622,40 @@
     "kind": "gcat"
    },
    "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 9.0, 31 March 2025 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2024, p. 69, row 2024-12-19",
+     "kind": null,
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": null
+     },
+     "event": {
+      "stated": "2024-12-19",
+      "at": null,
+      "from": "2024-12-19T00:00Z",
+      "to": "2024-12-20T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2024-12-19, Payload, 816 kg, 0 catalogued, 50 asserted, LEO, Unknown. ESA names no object; the build's rule attributes the row to the only event the other sources state within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2025-03-31",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025"
+     }
+    },
     {
      "source": "gcat",
      "ref": "entry 402 (97012)",
@@ -212971,7 +215749,12 @@
    ],
    "conflicts": [],
    "overrides": [],
-   "firstStatement": null
+   "firstStatement": {
+    "on": "2025-03-31",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 9.0, dated 31 March 2025",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "A:1998-067:2024-12-19",
@@ -213047,6 +215830,88 @@
     "iss-releases"
    ],
    "firstStatement": null
+  },
+  {
+   "id": "U:13:2025-01-17",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "payload, 3980 kg, MEO (unnamed)",
+    "class": "unknown",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2025-01-17",
+    "at": null,
+    "from": "2025-01-17T00:00Z",
+    "to": "2025-01-18T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "propulsion",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": "esa-ser",
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 10.0, 1 May 2026 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2025, p. 74, row 2025-01-17",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "payload, 3980 kg, MEO (unnamed)"
+     },
+     "event": {
+      "stated": "2025-01-17",
+      "at": null,
+      "from": "2025-01-17T00:00Z",
+      "to": "2025-01-18T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": "propulsion",
+     "causeStated": "Propulsion",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2025-01-17, Payload, 3980 kg, 0 catalogued, 67 asserted, MEO, Propulsion. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2026-05-01",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 10.0, dated 1 May 2026"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2026-05-01",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 10.0, dated 1 May 2026",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "63178:2025-03-18",
@@ -213485,6 +216350,88 @@
    "conflicts": [],
    "overrides": [],
    "firstStatement": null
+  },
+  {
+   "id": "U:14:2025-06-01",
+   "parent": {
+    "catalogueNumber": null,
+    "designator": null,
+    "name": "rocket body, 2020 kg, EGO (unnamed)",
+    "class": "rocket body",
+    "owner": null,
+    "launchedOn": null
+   },
+   "kind": "unnamed",
+   "event": {
+    "stated": "2025-06-01",
+    "at": null,
+    "from": "2025-06-01T00:00Z",
+    "to": "2025-06-02T00:00Z",
+    "precision": "day"
+   },
+   "orbit": {
+    "altitudeKm": null,
+    "apogeeKm": null,
+    "perigeeKm": null,
+    "inclinationDeg": null,
+    "regime": "unknown"
+   },
+   "cause": "unknown",
+   "piecesCatalogued": null,
+   "confidence": "B",
+   "scoreable": false,
+   "exemptReason": "the report names no object",
+   "resolvedFrom": {
+    "event": "esa-ser",
+    "orbit": null,
+    "cause": null,
+    "pieces": null,
+    "kind": "esa-ser"
+   },
+   "statements": [
+    {
+     "source": "esa-ser",
+     "ref": "ESA's Annual Space Environment Report, issue 10.0, 1 May 2026 (GEN-DB-LOG-00288-OPS-SD), Table 3.7: Fragmentation events in 2025, p. 74, row 2025-06-01",
+     "kind": "unnamed",
+     "parent": {
+      "catalogueNumber": null,
+      "designator": null,
+      "name": "rocket body, 2020 kg, EGO (unnamed)"
+     },
+     "event": {
+      "stated": "2025-06-01",
+      "at": null,
+      "from": "2025-06-01T00:00Z",
+      "to": "2025-06-02T00:00Z",
+      "precision": "day"
+     },
+     "orbit": {
+      "altitudeKm": null,
+      "apogeeKm": null,
+      "perigeeKm": null,
+      "inclinationDeg": null
+     },
+     "cause": null,
+     "causeStated": "Unknown",
+     "piecesCatalogued": null,
+     "piecesStatedOn": null,
+     "preEventElements": null,
+     "note": "Table row: 2025-06-01, Rocket Body, 2020 kg, 2 catalogued, 2 asserted, EGO, Unknown. ESA names no object, and no other source states an event within a day of it in an orbit and of an object type the row allows.",
+     "statedOn": {
+      "on": "2026-05-01",
+      "precision": "day",
+      "ref": "ESA's Annual Space Environment Report, issue 10.0, dated 1 May 2026"
+     }
+    }
+   ],
+   "conflicts": [],
+   "overrides": [],
+   "firstStatement": {
+    "on": "2026-05-01",
+    "precision": "day",
+    "ref": "ESA's Annual Space Environment Report, issue 10.0, dated 1 May 2026",
+    "source": "esa-ser"
+   }
   },
   {
    "id": "66264:2025-11-14",

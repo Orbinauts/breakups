@@ -22,7 +22,12 @@ pull request that changes only the docs, the tests, Markdown other than
 `kpi/latest.md` or another workflow cannot move the score, and no longer
 waits an hour for a replay that would make it again. The filter lists what
 it skips, so a file nobody listed is still replayed. Main's run, on every
-push, every Monday and by hand, stays the record.
+push, every Monday and by hand, stays the record. The same day, an
+unreachable release stopped turning the check off: the workflow fails
+where it cannot download the Archive's manifest, and skips the replay with
+a notice only on a pull request from a fork. Its Monday run moved to 12:23
+UTC, after the weekly maintenance run, whose concurrency group it joins
+(docs/decisions/0009).
 
 The scorecard feeds the detector every element set of every object in the
 order the catalogue published them, in runs of four hours as the product

@@ -1,0 +1,70 @@
+Jonathan's Space Report
+No. 853                                                               2026 Feb 15  Somerville, MA, USA
+----------------------------------------------------------------------------------------------------
+
+ISS
+----
+
+Expedition 74 began on Dec 9  (I forgot to note this last issue - oops.)
+
+On Jan 7 the EVA-94 spacewalk was cancelled after one of the Crew-11
+astronauts (Cardman, Fincke, Yui, Platonov) suffered an unidentified
+'serious medical issue'. Crew-11 member Kimiya Yui asked the ground for
+a "PMC" (private medical confererence), possibly on behalf of one of his
+crewmates. On Jan 8 NASA boss Jared Isaacman held a press conference to
+announce that Crew-11 would return to Earth early aboard their Dragon
+Endeavour ferry ship. It was reported that 'crew came to the aid of
+their colleague right away' and the crewmember is 'now stable'. One
+option available to NASA is what's called an 'emergency deorbit' where
+the crew return to Earth within hours. Instead, NASA elected a less
+extreme option, 'controlled medical evacuation', allowing a regular
+preparation for return, just targeting a date several weeks earlier than
+originally planned.
+
+Some questions at the press conference were not answered very clearly by NASA:
+
+- did the affected astronaut agree that return was sensible, or did they
+get all right-stuffy and want to soldier on? Isaacman gave a general answer
+that there was consensus between MCC and 'the crew' that return was right option,
+but that leaves some room for there having been some persuasion required.
+We'll know when they write their memoirs.
+
+- does 'stable' mean that they were working as normal doing regular
+duties on ISS, or were they on floaty bed rest?
+
+This was the fourth such space station medevac in history: in 1976 Vitaliy
+Zholobov became ill aboard the military Almaz OPS-3 space station (cover name
+Salyut-5), possibly from leaking toxic propellant, and the crew returned to
+Earth aboard the Soyuz-21 ferry ship. In 1985, Vladimir Vasyutin got sick
+from an infection aboard the DOS-6 (Salyut-7) space station, and was returned
+to Earth along with the rest of his crew aboard Soyuz T-14. In 1987,
+aboard the Mir space station, Aleksandr Laveykin had a minor cardiac issue.
+On the next visiting crew flight he was replaced by one of the visiting
+crewmembers, A. Aleksandrov, and returned to Earth on Soyuz TM-2 in Jul 1987
+instead of staying aboard until the end of the EO-2 expedition in Dec 1987.
+
+Editorial comment: if space is going to be a place where humans live
+and work, they will sometimes get sick. This incident is a feature, not
+a bug.
+
+The Crew-11 astronauts undocked from ISS IDA-3 in Dragon Endeavour at
+2219 UTC Jan 14. After the 13 min, 87.5m/s deorbit burn at 0751 UTC Jan 15,
+the trunk was jettisoned at 0805 UTC, reentry occurreed at 0830 UTC,
+the trunk reentered over circa 127W 40N, and Dragon splashed
+down in the San Diego recovery zone near 117.7W 32.6n at 0841:36 UTC.
+
+On Feb 3 the J-SSOD-35 deployer was extracted from the Kibo airlock by the JRMS arm
+and ejected its cubesats.
+
+The Crew-12 mission was launched on Feb 13, using Dragon C212 Freedom on its fifth flight.
+The Falcon 9 first stage landed at a new landing pad, LZ40, next to the SLC40 launch pad.
+Crew-12 consists of Jessica Meir (NASA), Jack Hathaway (NASA), Sophie Adenot (ESA) and
+Andrey Fedyaev (Roscosmos). Dragon docked at the ISS IDA-3 port at 2015 UTC Feb 14.
+
+
+Olimp
+-----
+
+On Jan 30 the retired Olimp satellite, in the GEO graveyard, underwent a breakup event, according
+to optical monitoring by the Swiss company s2a Systems.
+

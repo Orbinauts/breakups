@@ -61,7 +61,7 @@ describe("the fixtures of the real replays", () => {
 });
 
 describe("the real replays publish exactly the expected lists", () => {
-  test("the 2025 seed publishes DMSP F-14 alone, confirmed from its fragments with no report, dated by GCAT's row, and none of the 319 suspected verdicts", () => {
+  test("the 2025 seed publishes DMSP F-14 alone, confirmed from its fragments six weeks before ESA's table of 2024 reported it, dated by GCAT's row, and none of the 319 suspected verdicts", () => {
     expect(published(2025).map(shown)).toEqual([
       {
         id: "24753-2024-12-19",
@@ -72,7 +72,7 @@ describe("the real replays publish exactly the expected lists", () => {
         event: "2024-10-07T11:53:14.737Z",
         rowEvent: { at: "2024-12-19T02:10:00.000Z", from: "2024-12-19T02:10:00.000Z", to: "2024-12-19T02:10:00.000Z", precision: "minute", source: "gcat", row: "24753:2024-12-19" },
         row: "24753:2024-12-19",
-        reports: [],
+        reports: [{ source: "esa-ser", date: "2025-03-31", precision: "day", url: null }],
         verdicts: ["confirmed 2025-02-13T20:00:00.000Z"],
       },
     ]);

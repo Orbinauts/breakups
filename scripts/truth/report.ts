@@ -1,6 +1,7 @@
 import type { Breakup, BreakupsFile, FirstStatement, SourceId, Statement } from "../../src/truth.ts";
 import { AGENCY_SOURCES, firstAgencyStatement, yearOf } from "../../src/truth.ts";
 import { AT_LAUNCH_DAYS, SAME_SEPARATION_DAYS, isSatcatStatement, type Skipped } from "./parse-gcat-satcat.ts";
+import type { EsaRow } from "./parse-esa-ser.ts";
 
 /**
  * The report a reviewer reads beside the generated truth: what was built
@@ -98,7 +99,31 @@ function satcatSection(breakups: Breakup[], statements: Statement[], skipped: Sk
   ];
 }
 
-export function renderReport(file: BreakupsFile, statements: Statement[], skipped?: Skipped): string {
+/** Where each row of ESA's tables went, as the build placed it. */
+export interface EsaRowPlaced {
+  row: EsaRow;
+  placed: "named" | "joined" | "unnamed" | "unplaced";
+  events: string[];
+}
+
+/** ESA's section: the rule, then every row of every edition and where it went. */
+function esaSection(esa: readonly EsaRowPlaced[] | undefined): string[] {
+  if (esa === undefined || esa.length === 0) return [];
+  const counted = (placed: EsaRowPlaced["placed"]): number => esa.filter((p) => p.placed === placed).length;
+  const what: Record<EsaRowPlaced["placed"], string> = { named: "named by a cited source", joined: "joined by the rule", unnamed: "an unnamed event", unplaced: "not placed; could be" };
+  return [
+    "## ESA's tables",
+    "",
+    `Each edition's Table 3.7, the fragmentations of the year before, typed as printed into \`data/truth/esa-ser.json\` (\`scripts/truth/parse-esa-ser.ts\`). ESA names no object, so a row is placed by a rule applied to every row alike: its candidates are the events the other sources date within a day of its epoch (a statement's window of three days at most), excluding releases and unnamed rows, in a regime its orbit class allows (any, for an aerodynamic breakup, which ESA classes by its state at reentry) and of a class its object type allows (the type is printed from the 2021 edition on); a nearer day breaks no tie, since ESA's epoch and another source's day differ by one often enough; an event that is the only candidate of one row is that row's and leaves the others' candidates, until nothing changes. A row with no candidate is an unnamed event; one left with several, or whose only candidate is another row's only one too, is not placed. A row a cited source names is a statement of that parent. Each statement is dated by its edition's date of issue; the counts printed are kept in its note.`,
+    "",
+    `${esa.length} rows: ${counted("named")} named by a cited source, ${counted("joined")} joined to an event, ${counted("unnamed")} unnamed events, ${counted("unplaced")} not placed.`,
+    "",
+    table(["Row", "Edition", "Placed", "Event"], esa.map((p) => [`${p.row.epoch} ${[p.row.objectType, `${p.row.massKg} kg`, p.row.orbit, p.row.cause].filter((c) => c !== null).join(", ")}`, `${p.row.edition.issue}, ${p.row.edition.dateOfIssue}, p. ${p.row.edition.page}`, what[p.placed], p.events.join("; ")])),
+    "",
+  ];
+}
+
+export function renderReport(file: BreakupsFile, statements: Statement[], skipped?: Skipped, esa?: readonly EsaRowPlaced[]): string {
   const breakups = file.breakups;
   const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   const years = [...new Set(scoring.map(yearOf))].sort();
@@ -140,6 +165,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[], skippe
     "",
     ...firstStatements(scoring.filter((b) => b.scoreable)),
     ...satcatSection(breakups, statements, skipped),
+    ...esaSection(esa),
     "## Possible duplicates",
     "",
     "Events of one parent within a year of each other that no statement joins: a second event, or one event two sources date months apart. A reviewer merges the latter with an override.",

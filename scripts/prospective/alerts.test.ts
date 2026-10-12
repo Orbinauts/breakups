@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { afterAll, describe, expect, test } from "vitest";
 import type { Verdict } from "../../src/index.ts";
 import { daysToPull, historyDir, keptSettled } from "../archive/pull.ts";
@@ -127,12 +128,12 @@ describe("the daily run's housekeeping", () => {
 });
 
 describe("the pull's days", () => {
-  test("pull again every day kept before it settled, and never one kept after", () => {
+  test("pull again every day kept before it settled, and never one kept after, a bare slice read from its modification time", () => {
     const archive = join(work, "archive");
     const dir = historyDir(archive, 2026);
     mkdirSync(dir, { recursive: true });
     const keep = (day: string, at: number): void => {
-      writeFileSync(join(dir, `${day}.json.gz`), "");
+      writeFileSync(join(dir, `${day}.json.gz`), gzipSync(JSON.stringify([{ NORAD_CAT_ID: "25544", GP_ID: "1" }])));
       utimesSync(join(dir, `${day}.json.gz`), at / 1000, at / 1000);
     };
     const end = (day: string): number => Date.parse(`${day}T00:00:00Z`) + DAY;

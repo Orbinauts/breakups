@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readBreakups, regimeOf as regimeOfSet, yearOf, type Regime } from "../../src/index.ts";
+import { regimeOf as regimeOfSet } from "../../src/elements.ts";
+import { readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, readYear } from "../archive/archive.ts";
 
 /**

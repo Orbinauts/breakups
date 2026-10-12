@@ -1,4 +1,6 @@
-import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, dayOf, endedByOf, firstAgencyStatement, inScope, launchOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type ScopeSubject, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, firstAgencyStatement, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
+import { dayOf, endedByOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf } from "../../src/elements.ts";
+import { inScope, type ScopeSubject } from "../../src/scope.ts";
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { FRAGMENTS_DAYS, fragmentsOf, launchFragmentsOf, type Catalogue, type EventFragments } from "./catalogue.ts";
 import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.ts";

@@ -12,16 +12,16 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 
 | Events from 2005 | Count |
 | --- | --- |
-| All | 626 |
-| Scoreable (breakups and anomalous events of a catalogued object or of a launch) | 394 |
-| Breakups | 260 |
+| All | 637 |
+| Scoreable (breakups and anomalous events of a catalogued object or of a launch) | 396 |
+| Breakups | 262 |
 | Anomalous events (low-velocity shedding) | 146 |
 | Aerodynamic breakups at reentry (kept out) | 31 |
 | Objects released on purpose (kept out) | 184 |
-| Reports naming no object (kept out) | 5 |
+| Reports naming no object (kept out) | 14 |
 | Confidence A (an authority states the minute) | 75 |
-| Confidence B (an authority states the day, or a window of three days at most) | 45 |
-| Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant) | 221 |
+| Confidence B (an authority states the day, or a window of three days at most) | 50 |
+| Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant) | 218 |
 | Confidence D (pieces in the catalogue, or news to the day at best) | 53 |
 
 <!-- truth:counts:end -->
@@ -29,11 +29,11 @@ A positive event is a breakup that was reported, so we are sure it happened: by 
 ## The sources
 
 - **NASA, History of On-Orbit Satellite Fragmentations, 16th edition** (NASA/TP-20220019160, December 2022): every breakup and anomalous event to 1 May 2022, each with its date, time, altitude, assessed cause and the parent's pre-event element set. Read from the text of the PDF.
-- **NASA, Orbital Debris Quarterly News**: each breakup since the cut-off, in prose. Typed by hand with issue and page.
-- **GCAT, Space Debris Clouds** (Jonathan McDowell, planet4589.org, CC-BY-4.0): <!-- truth:gcat-clouds:begin -->402<!-- truth:gcat-clouds:end --> debris clouds with the parent, the event date and the orbit. Read from its table.
+- **NASA, Orbital Debris Quarterly News**: each breakup since the cut-off, in prose. Typed by hand with issue and page. Every issue since 26(3) is listed in `data/truth/odqn-coverage.json` as cited or as read with no breakup items, and a test fails on a hole in that list, so a quiet stretch is a checked one: none of the issues published since 29(1), February 2025, reports a breakup of 2025 (the next to report one is 30(3), September 2026, on an event of June 2026).
+- **GCAT, Space Debris Clouds** (Jonathan McDowell, planet4589.org, CC-BY-4.0): <!-- truth:gcat-clouds:begin -->402<!-- truth:gcat-clouds:end --> debris clouds with the parent, the event date and the orbit. Read from its table. GCAT has not updated the table since 22 June 2025 (its own line and the page's Last-Modified header, checked on 2026-10-12 at the same address; GCAT's index of catalogues has no other table of clouds), so it states nothing after mid-2025; the satellite catalogue below, updated daily, is where GCAT's later separations reach the truth.
 - **GCAT, the satellite catalogue** (Jonathan McDowell, planet4589.org, CC-BY-4.0): every catalogued fragment and component with its parent, its separation date and its type (fragmentation debris by cause, anomalous debris, aerodynamic breakup, or a component released on purpose). Read uniformly for every object and every year: the pieces of one parent separated within three days of each other are one separation, its kind the pieces' type (a release at launch is the launch's own staging and is left out); a separation no other source reports is an event of confidence C (D where GCAT dates it to a year only), one another source reports joins its event. Kept as a snapshot reduced to the rows and columns read, with the whole file's hash.
-- **ESA, Space Environment Report 2025**, Table 3.7: the fragmentations of 2024, the object unnamed.
-- **U.S. Space Forces-Space notices**, named analysts, LeoLabs' notifications and news reports for 2025 to 2026, and the public catalogue where fragments were published with no report.
+- **ESA, Space Environment Report**, Table 3.7 of each edition from 2017 to 2026: the fragmentations of 2016 to 2025, each a day, a mass, an orbit class and a cause, the object unnamed. Typed as printed into `data/truth/esa-ser.json`, each edition's address and hash beside its rows. A row is placed by a fixed rule: it joins the one event the other sources date within a day of it in an orbit and of an object type it allows; with none it is an unnamed event, kept out of scoring; with more than one it is placed nowhere, and [docs/truth.md](truth.md) lists it with the events it could be. A row whose object a cited report names is a statement of that object.
+- **U.S. Space Forces-Space notices**, named analysts, LeoLabs' and s2a systems' observations and news reports for 2024 to 2026, and the public catalogue where fragments were published with no report.
 
 Every statement also records when it can first have been public (a quarterly news issue by its month, from NASA's history's reference documents or the hand file; a notice by the day it was seen; ESA's report by its date; an analyst's or a company's post by its day), and every event its first statement, from which the scorecard reads the Confirmed line's lead over the agencies; [docs/truth.md](truth.md) counts them by source.
 
