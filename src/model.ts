@@ -25,13 +25,13 @@ const DAY_MS = 86_400_000;
 const SCALE_FLOOR = 1e-6;
 
 export interface Fit {
-  /** The polynomial's degree: 0 for the single-set fallback, where the slope is the set's drag rate. */
+  /** The polynomial's degree, one less than its coefficients: 1 for the fallback, a line through the window's last set whose slope is that set's drag rate, not fitted. */
   degree: number;
   /** Coefficients in powers of the time in days from `t0`. */
   coef: number[];
   /** The reference time, the window's last epoch, in milliseconds since 1970. */
   t0: number;
-  /** The robust scale of the fit's residuals, in the quantity's units. */
+  /** The robust scale of the fit's residuals, in the quantity's units, where the fit was asked for it (`withScale`); zero for the fallback, which leaves no residuals; NaN, not measured, where it was not asked. */
   scale: number;
   /** How many sets the window held and how many days they spanned. */
   n: number;
@@ -180,8 +180,9 @@ export function fitWindow(epochs: number[], values: number[], from: number, to: 
   const n = to - from;
   const t0 = epochs[to - 1]!;
   const spanDays = n > 0 ? (t0 - epochs[from]!) / DAY_MS : 0;
+  const fallbackScale = withScale ? 0 : Number.NaN;
   if (n < params.linearMinSets) {
-    return { degree: 0, coef: [values[to - 1]!, rate], t0, scale: 0, n, spanDays, inverse: null, fallback: true };
+    return { degree: 1, coef: [values[to - 1]!, rate], t0, scale: fallbackScale, n, spanDays, inverse: null, fallback: true };
   }
   const degree = n >= params.quadraticMinSets && spanDays >= params.quadraticMinDays ? 2 : 1;
   const p = degree + 1;
@@ -226,7 +227,7 @@ export function fitWindow(epochs: number[], values: number[], from: number, to: 
     if (inverse === null) {
       // A degenerate window (every set at one epoch): fall back to the linear fit, or to the level alone.
       if (degree === 2) return fitWindow(epochs, values, from, to, { ...params, quadraticMinSets: Number.POSITIVE_INFINITY }, rate, withScale);
-      return { degree: 0, coef: [values[to - 1]!, rate], t0, scale: 0, n, spanDays, inverse: null, fallback: true };
+      return { degree: 1, coef: [values[to - 1]!, rate], t0, scale: fallbackScale, n, spanDays, inverse: null, fallback: true };
     }
     const next = new Array<number>(p).fill(0);
     for (let r = 0; r < p; r++) for (let c = 0; c < p; c++) next[r]! += inverse[r * p + c]! * rhs[c]!;
@@ -247,7 +248,7 @@ export function fitWindow(epochs: number[], values: number[], from: number, to: 
     // Every set within the cut: the next pass would repeat this one.
     if (!changed) break;
   }
-  return { degree, coef, t0, scale, n, spanDays, inverse, fallback: false };
+  return { degree, coef, t0, scale: withScale ? scale : Number.NaN, n, spanDays, inverse, fallback: false };
 }
 
 export interface Prediction {
