@@ -1,6 +1,6 @@
-import type { BodyClass, DetectorParameters } from "../../src/index.ts";
+import type { BodyClass } from "../../src/index.ts";
 import { semiMajorAxisOf } from "../../src/elements.ts";
-import { isFragmentClass, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
+import { isFragmentClass, normalAngleDeg, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
 import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
 
@@ -145,6 +145,21 @@ export function factOf(body: ArchivedBody, firstClock: number, orbit: PlaneOrbit
 /** How long after a reported event the catalogue's fresh pieces in the parent's plane count as its fragments for the Confirmed line, in days: the owner's window, which the matcher also gives a confirmation to come. */
 export const FRAGMENTS_DAYS = 180;
 
+/**
+ * The scorecard's own plane test for the Confirmed line's targets, never
+ * read from the detector's parameters, so tuning the detector cannot move
+ * the denominator: the detector's plane test with its tolerances frozen at
+ * their values of 2026-10-12 (0.2 degrees of inclination, 1.5 of node,
+ * within distance 3), or the angle between the piece's orbit normal and
+ * the parent's within a degree, which holds at near-zero inclination where
+ * the node is undefined (issue #15).
+ */
+export const FRAGMENTS_PLANE = { planeInclinationToleranceDeg: 0.2, planeNodeToleranceDeg: 1.5, planeMaxDays: Number.POSITIVE_INFINITY, planeDistanceMax: 3, normalAngleMaxDeg: 1 } as const;
+
+/** Whether a piece lies in the parent's plane by the scorecard's own test, `FRAGMENTS_PLANE`, with no limit on the days since the event. */
+const inParentPlane = (parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): boolean =>
+  planeDistance(parent, piece, eventMs, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(parent, piece, eventMs) <= FRAGMENTS_PLANE.normalAngleMaxDeg;
+
 /** What the catalogue published of an event's fragments: the fresh pieces in the parent's plane within the window, the first of them to be published and when, and whether the parent's orbit before the event was known at all. */
 export interface EventFragments {
   inPlane: number;
@@ -161,12 +176,13 @@ export interface EventFragments {
  * range, classed as a fragment is (debris, or not said), first published
  * from the margin before the window to the window's end and the days
  * after, whose earliest set is no more than a day before the window, and
- * whose plane lies within the detector's bound of the parent's last set
- * before the event, each node carried at its own J2 rate. The parent's
+ * whose plane lies within the scorecard's own bound of the parent's last
+ * set before the event (`FRAGMENTS_PLANE`), each node carried at its own
+ * J2 rate. The parent's
  * plane is unknown where it had no set before the event in any year of the
  * Archive; then no piece can be in it.
  */
-export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string | null, from: number, to: number, eventMs: number, marginMs: number, params: DetectorParameters): EventFragments {
+export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string | null, from: number, to: number, eventMs: number, marginMs: number): EventFragments {
   const before = catalogue.orbitBefore(parent, from);
   const result: EventFragments = { inPlane: 0, firstAt: null, firstBody: null, parentOrbit: before !== null };
   if (before === null || launch === null) return result;
@@ -174,7 +190,7 @@ export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string
   for (const body of catalogue.byLaunch.get(launch) ?? []) {
     if (body.number <= mark || body.number >= ANALYST_FLOOR || !isFragmentClass(body.bodyClass)) continue;
     if (body.firstClock < from - marginMs || body.firstClock > to + FRAGMENTS_DAYS * DAY_MS || body.firstEpoch < from - DAY_MS) continue;
-    if (planeDistance(before.orbit, body.orbit, eventMs, params, Number.POSITIVE_INFINITY).distance > params.planeDistanceMax) continue;
+    if (!inParentPlane(before.orbit, body.orbit, eventMs)) continue;
     result.inPlane++;
     if (result.firstAt === null || body.firstClock < result.firstAt) [result.firstAt, result.firstBody] = [body.firstClock, body.number];
   }

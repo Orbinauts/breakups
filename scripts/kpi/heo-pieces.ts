@@ -9,7 +9,7 @@ import type { StatedTime } from "../../src/truth.ts";
 import { archiveHome, catalogueIndexPath } from "../archive/archive.ts";
 import { parseVagueDate } from "../truth/dates.ts";
 import { SAME_SEPARATION_DAYS, parseSatcat, type SatcatRow } from "../truth/parse-gcat-satcat.ts";
-import { FRAGMENTS_DAYS, fragmentsOf, type Catalogue } from "./catalogue.ts";
+import { FRAGMENTS_DAYS, FRAGMENTS_PLANE, fragmentsOf, type Catalogue } from "./catalogue.ts";
 import { catalogueFromIndex, readCatalogueIndex, stalenessOf } from "./catalogue-index.ts";
 import { lowerOf, marginDaysOf } from "./match.ts";
 import { splitOf } from "./rank.ts";
@@ -344,10 +344,10 @@ function main(): void {
       skipped.noParentOrbit++;
       continue;
     }
-    // The pieces are the scorecard's: today's test keeps exactly what its count keeps.
-    const today = reading.pieces.filter((p) => p.passesToday).length;
-    const scorecard = fragmentsOf(catalogue, parent, launch, from, to, eventMs, marginMs, DETECTOR_PARAMETERS).inPlane;
-    if (today !== scorecard) throw new Error(`${breakup.id}: today's test keeps ${today} pieces here and ${scorecard} in the scorecard's count`);
+    // The pieces are the scorecard's: today's test or the normals within the scorecard's bound keep exactly what its count keeps.
+    const today = reading.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.normalAngleMaxDeg).length;
+    const scorecard = fragmentsOf(catalogue, parent, launch, from, to, eventMs, marginMs).inPlane;
+    if (today !== scorecard) throw new Error(`${breakup.id}: the scorecard's test keeps ${today} pieces here and ${scorecard} in the scorecard's count`);
     measured.push({ ...reading, split, truthRegime: breakup.orbit.regime, confidence: breakup.confidence, kind: breakup.kind });
   }
   const bounds = boundsOf(DELTA_VS_MPS);
