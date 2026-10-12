@@ -4,14 +4,15 @@ import { gh } from "./github.ts";
  * The scheduled workflows' keep-alive: `npm run maintenance:keep-alive`.
  * GitHub disables a public repository's scheduled workflows after sixty
  * days with no activity in it, and the prospective test is meant to run for
- * years. Each scheduled run (the daily prospective test, the weekly
- * maintenance and the weekly KPI replay) ends by listing the repository's
- * workflows and enabling again any that GitHub disabled for inactivity
- * (`disabled_inactivity`), so the one still running brings the others
- * back. A workflow a person disabled (`disabled_manually`) is never
- * touched: pausing one stays a person's call. Three workflows disabled at
- * once cannot enable each other; `gh workflow list --all` shows it, and
- * `gh workflow enable <file>` ends it.
+ * years. Each scheduled run (the daily prospective test, the daily
+ * watcher of public notices, the weekly maintenance and the weekly KPI
+ * replay) ends by listing the repository's workflows and enabling again
+ * any that GitHub disabled for inactivity (`disabled_inactivity`), so the
+ * one still running brings the others back. A workflow a person disabled
+ * (`disabled_manually`) is never touched: pausing one stays a person's
+ * call. Every scheduled workflow disabled at once cannot enable another;
+ * `gh workflow list --all` shows it, and `gh workflow enable <file>` ends
+ * it.
  */
 
 /** A workflow as GitHub's REST API lists it. */

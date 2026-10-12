@@ -122,7 +122,11 @@ merge is safe.
   the last reminder: NASA's latest Orbital Debris Quarterly News, the
   U.S. Space Forces-Space notices, the news reports of fragmentations and
   ESA's yearly report, with the hand file's latest entries and how to add
-  a row. It is opened once a quarter, by its title.
+  a row. It is opened once a quarter, by its title. Since 2026-10-12 a
+  daily watcher also opens a prefilled issue for each new notice it can
+  read, and a report the owner accepts reaches main the same day
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md));
+  the reminder remains for what the watcher does not read.
 
 ## What still needs a person, and why
 
@@ -130,9 +134,20 @@ merge is safe.
   prose, the Space Forces notices are posted on a login page, and the news
   reports are scattered; none has a form a script can read without
   reading it wrong, which is why the truth keeps them as statements typed
-  with their citation (the second decision record). A row is added on a
-  branch and folded in by `gh workflow run maintenance.yml -f
-  from=<branch>`, which rescores and merges it.
+  with their citation (the second decision record). Since 2026-10-12
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md))
+  a script finds what it can and a person still reads it: the daily
+  watcher opens an issue for each new issue of the quarterly news and
+  edition of ESA's report (to read and record), and a prefilled
+  `breakup-report` issue for each section of Jonathan's Space Report and
+  news article it reads; a person completes the parent and the time, and the owner labels it `breakup-report-accepted`, the one
+  action left, after which a workflow adds the statement
+  (`npm run truth:add`) on a branch and the maintenance run folds it in,
+  rescores and merges it. The Space Forces notices, LeoLabs' posts and
+  any source the watcher does not read still wait for a person to notice
+  them: the quarterly reminder lists them, and the same form or
+  `npm run truth:add` on a branch (folded in by `gh workflow run
+  maintenance.yml -f from=<branch>`) adds them.
 - **A new form or a new edition.** A source that changes its form makes
   the parser throw, by design (the second decision record); the weekly
   run then fails, opens an issue with the log, and merges nothing. A new
@@ -218,6 +233,9 @@ is generated: snapshots, the truth built from them, the aggregate, the
 marked parts of the README and the documentation pages, and the score. It never edits code, a rule or the
 hand file; those reach main from a person, directly or in a branch the
 person asks it to fold in (`-f from=<branch>`), which meets the same checks.
+The one exception is a statement the owner accepted from a breakup-report
+issue, which the run appends to the hand file from its branch as the owner
+accepted it ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)).
 
 ## Considered options
 

@@ -28,7 +28,7 @@ name: KPI
 # A pull request is replayed only where it touches a file the replay or
 # its reproducibility step reads: the replay takes an hour, and one that
 # changes only Markdown (other than `kpi/latest.md`), `docs/`, `LICENSE`,
-# the tests or another workflow cannot move the score. The filter starts
+# the tests, another workflow or an issue form cannot move the score. The filter starts
 # from every path and lists what it skips, then adds back what those
 # patterns would skip but the replay reads; GitHub lets the last matching
 # pattern decide, so a file nobody listed is still replayed. GitHub reads
@@ -51,6 +51,7 @@ on:
       - "!test/**"
       - "!**/*.test.ts"
       - "!.github/workflows/**"
+      - "!.github/ISSUE_TEMPLATE/**"
       # Read by the replay or its reproducibility step, though a pattern above skips it.
       - "kpi/latest.md"
       - ".github/workflows/kpi.yml"

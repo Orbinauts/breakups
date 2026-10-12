@@ -65,6 +65,14 @@ describe("the reminder's body", () => {
     expect(body).toContain("gh workflow run maintenance.yml -f from=<branch>");
   });
 
+  test("gives the quick paths first: the issue form the owner accepts, and the command that checks and appends a statement", () => {
+    const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
+    expect(body).toContain("breakup-report");
+    expect(body).toContain("`breakup-report-accepted`");
+    expect(body).toContain("npm run truth:add -- <statement.json>");
+    expect(body.indexOf("breakup-report-accepted")).toBeLessThan(body.indexOf("npm run truth:add"));
+  });
+
   test("asks for every quarterly news issue read to be recorded, and each new ESA table typed into its file", () => {
     const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
     expect(body).toContain("`data/truth/odqn-coverage.json`");
