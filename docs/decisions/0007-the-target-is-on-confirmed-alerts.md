@@ -100,7 +100,7 @@ others.
 ## Consequences
 
 - The detector gains the Confirmed channel (`judgeLaunches` and
-  `attributeCloud` in `src/run.ts`): fresh pieces in the plane of a body
+  `attributeCloud` in `src/attribution.ts`): fresh pieces in the plane of a body
   with no open alert are attributed to it under the fifth phase's
   confirmation rules and the attribution's own (the launch's age, its
   backlog, the fewest pieces, the pieces' convergence on the parent and
