@@ -16,7 +16,7 @@ import { parametersWith, type DetectorParameters } from "./params.ts";
 import { cadenceBefore, envelopeOf, fitOf, firstAfter, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
-import { advanceCusum, axisReading, estimateStep, persistenceEstimate, resetCusum, type Environment, type StepEstimate } from "./step.ts";
+import { advanceCusum, axisReading, estimateStep, persistenceEstimate, resetCusum, scaleInflation, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
 
 /**
@@ -408,13 +408,15 @@ function axisTrigger(item: Pending, stats: BandStats, context: RunContext): Axis
   const { params } = context;
   const state = item.state;
   const at = indexOfEpoch(state, item.set.epochMs);
-  if (at === -1 || item.noise === null) return null;
+  // An object whose own scatter is not yet measured opens nothing on the other two quantities: their fits' scales are grown by it.
+  if (at === -1 || item.noise === null || item.fit === null || item.noise.residuals < params.residualsForScatter) return null;
   const kappa = params.kappa[regimeKey(state.regime)];
+  const inflation = scaleInflation(item.noise.sigma, item.fit);
   let best: AxisTrigger | null = null;
   for (const axis of ["rp", "inc"] as const) {
     const fit = fitOf(state, axis, params, item.previousEpoch);
     if (fit === null) return null;
-    const reading = axisReading(axis, fit, item.noise.sigma, kappa, context.weather.dragFactor);
+    const reading = axisReading(axis, fit, item.noise.sigma, kappa, context.weather.dragFactor, inflation);
     const prediction = predictAt(fit, item.set.epochMs);
     const value = axis === "rp" ? state.rp[at]! : state.inc[at]!;
     const z = (value - prediction.value) / (predictionSigma(reading.sigmaOwn, prediction.leverage, prediction.gapDays, item.windowBstar, reading.kappa, reading.weather) * stats.scale);

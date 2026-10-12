@@ -1240,6 +1240,12 @@ describe("the three-axis trigger (d13-three-axis-trigger.md)", () => {
     expect(raised[0]!.reasons.join(" ")).toMatch(/2\.\d\d m\/s across it/);
   });
 
+  test("on, an object whose own scatter is not yet measured, six sets old, opens nothing on a five-kilometre perigee drop: the fits' scales are read against that scatter", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const early = one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i >= 6 ? 5 / 7200 : 0) }, "rocket body")));
+    expect(suspected(feed(early, { parameters: { openOnThreeAxes: true } }))).toEqual([]);
+  });
+
   test("on, a single bad set in the perigee radius the next sets undo is dismissed as a bad set, and nothing is raised", () => {
     const series = decaying(7200, 0.02, 0.004, 40);
     const fed = feed(one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i === 90 ? 0.5 / 7200 : 0) }, "rocket body"))), { parameters: { openOnThreeAxes: true } });

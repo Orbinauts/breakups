@@ -168,9 +168,21 @@ function weightedMean(u: number[], sigma: number[]): { mean: number; z: number }
   return { mean, z: mean * Math.sqrt(sw) };
 }
 
-/** What a quantity other than the semi-major axis is read with against its frozen fit: its scatter (the floor, the fit's own scale and, for the perigee radius, the semi-major axis's scatter), the drag term's rate (the regime's for the perigee radius, none for the inclination) and the weather's factor on it. */
-export function axisReading(axis: "rp" | "inc", fit: Fit, sigmaOwn: number, kappa: number, weather: number): { sigmaOwn: number; kappa: number; weather: number } {
-  return axis === "rp" ? { sigmaOwn: Math.max(SIGMA_FLOOR_KM, fit.scale, sigmaOwn), kappa, weather } : { sigmaOwn: Math.max(SIGMA_FLOOR_DEG, fit.scale), kappa: 0, weather: 1 };
+/** What a quantity other than the semi-major axis is read with against its frozen fit: its scatter (the floor, the fit's own scale and, for the perigee radius, the semi-major axis's scatter), grown by `inflation`; the drag term's rate (the regime's for the perigee radius, none for the inclination) and the weather's factor on it. */
+export function axisReading(axis: "rp" | "inc", fit: Fit, sigmaOwn: number, kappa: number, weather: number, inflation = 1): { sigmaOwn: number; kappa: number; weather: number } {
+  return axis === "rp" ? { sigmaOwn: Math.max(SIGMA_FLOOR_KM, fit.scale, sigmaOwn) * inflation, kappa, weather } : { sigmaOwn: Math.max(SIGMA_FLOOR_DEG, fit.scale) * inflation, kappa: 0, weather: 1 };
+}
+
+/**
+ * How much a trailing fit's own scale under-reads the scatter of the next
+ * set: the semi-major axis's measured one-step-ahead scatter over its
+ * fit's scale, at least one. The perigee radius's and the inclination's
+ * one-step-ahead scatter is not measured, so the three-axis trigger grows
+ * their fits' scales by the semi-major axis's factor: the same window and
+ * the same fit under-read the next set alike.
+ */
+export function scaleInflation(sigmaOwn: number, aFit: Fit): number {
+  return Math.max(1, sigmaOwn / Math.max(SIGMA_FLOOR_KM, aFit.scale));
 }
 
 type Level = Pick<StepEstimate, "k" | "spanHours" | "delta" | "sigmaDelta" | "z" | "mean" | "sigmaMean" | "zMean" | "slope" | "rho" | "rhoMedian" | "chi2Step" | "chi2Drift" | "evidence" | "lastEpoch">;
@@ -250,7 +262,7 @@ export function persistenceEstimate(state: SeriesState, candidate: Candidate, en
   const indices = postIndices(state, candidate, params, maxPostSets);
   const kappa = params.kappa[state.regime === "unknown" ? "LEO" : state.regime];
   const fit = axis === "rp" ? candidate.preRp : candidate.preInc;
-  const reading = axisReading(axis, fit, candidate.sigmaOwn, kappa, environment.weather);
+  const reading = axisReading(axis, fit, candidate.sigmaOwn, kappa, environment.weather, scaleInflation(candidate.sigmaOwn, candidate.pre));
   const residuals = residualsAgainst(state, axis === "rp" ? state.rp : state.inc, fit, indices, reading.sigmaOwn, reading.kappa, candidate.bstar, 0, reading.weather);
   return { ...estimate, ...levelOf(residuals, candidate, reading.sigmaOwn, reading.kappa, reading.weather, candidate.axisDelta1 ?? Number.NaN, environment.scale, params) };
 }

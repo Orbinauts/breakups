@@ -24,6 +24,21 @@ Written and committed before the first replay with the parameter on was run, as 
 
 All four must hold for the parameter to be turned on; otherwise it stays off. The held-out years (the odd years) are read once, after the decision, and recorded; they do not move it. A replay with the parameter on is read on the training split alone, through a reader that prints nothing of the odd years, and its console log is not opened.
 
+## The first replay, and the scale it was missing
+
+The first replay with the parameter on, built as above, never reached a training year. The chunk of 2005 to 2015 starts cold, every object new, and its first year's file could not be written: its log of candidates no longer fitted in a JavaScript string (over 512 MB), where the baseline's 2005 is 18 MB with 10,825 rows. The trigger had opened some thirty times as many candidates as the semi-major axis does. Nothing of any year's score was read.
+
+The cause is the scale. The semi-major axis is normalised by the object's own one-step-ahead scatter, measured over the ring and floored by a long memory (`ownNoise`). The perigee radius and the inclination were normalised by their trailing fit's own scale, the scatter of the window's sets about the fit through them, which under-reads how far the next set lands from the fit's extrapolation. For a new object it is nearly nothing: a quadratic through six sets leaves no scatter, and the inclination's floor is the format's last digit.
+
+Replayed offline on the twelve real orbit histories of `test/fixtures/early-warning/`, the change as first built took the candidates' log rows from 46 to 94 (cosmos-2499 from 2 to 10, the geosynchronous station-keeper from 28 to 43). It also showed the second cost the replay would weigh: a candidate the perigee radius opens on a noisy set holds the object's one candidate slot, so the semi-major axis's step a few sets later is read as its post set. On Cosmos 2499 the suspected verdict on the step the full replay flags was lost, and a later step of the other sign was raised instead.
+
+Two changes were made before the second replay, neither a new number:
+
+- **The scale** (`scaleInflation`): each of the two fits' scales is grown by the semi-major axis's own factor, its measured one-step-ahead scatter over its fit's scale (at least one). The same window and the same fit under-read the next set alike.
+- **A measured object only**: an object whose own scatter rests on fewer than eight residuals (`residualsForScatter`, the count the scatter is measured from) opens nothing on the other two quantities.
+
+On the fixtures the log rows went from 94 to 73 against 46 off. The station-keeper went from 43 to 34, and Cosmos 2499 still lost its step. The criterion above was not changed.
+
 ## The reading
 
-Pending: the replay runs after this criterion is committed.
+Pending: the second replay.
