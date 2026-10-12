@@ -157,12 +157,12 @@ export function judgeStep(evidence: StepEvidence, params: DetectorParameters): S
   if (tests.direction !== null) sign(SIGNATURE_BITS.direction, tests.direction);
   if (tests.geometry !== null && evidence.radialMps >= params.geometryKickMinMps) sign(SIGNATURE_BITS.geometry, tests.geometry);
   if (tests.dragTerm !== null) sign(SIGNATURE_BITS.dragTerm, tests.dragTerm);
-  if (deltaKm < 0 && !evidence.disposalLike && evidence.n730 >= params.againstDragMinRaises && evidence.pastRaises === evidence.n730) sign(SIGNATURE_BITS.againstDrag, evidence.n730 === 0 ? `a lowering on an object with no step in its record: a move against drag` : `a lowering on an object whose ${evidence.n730} past step${evidence.n730 === 1 ? " was a raise" : "s were all raises"}: a move against drag that no make-up burn makes`);
+  if (deltaKm < 0 && !evidence.disposalLike && evidence.n730 >= params.legacy.againstDragMinRaises && evidence.pastRaises === evidence.n730) sign(SIGNATURE_BITS.againstDrag, evidence.n730 === 0 ? `a lowering on an object with no step in its record: a move against drag` : `a lowering on an object whose ${evidence.n730} past step${evidence.n730 === 1 ? " was a raise" : "s were all raises"}: a move against drag that no make-up burn makes`);
   const recordSignatures = signatures.length;
   if (params.opsStatusEvidence && params.nonoperationalOverrides && opsStatus === "nonoperational" && manoeuvreClass === "unique") sign(SIGNATURE_BITS.nonoperational, params.opsStatusDated ? `the object fell silent more than ${params.endedUnknownDays} days before the step, so no manoeuvre explanation is owed` : `the catalogue lists the object as nonoperational, so no manoeuvre explanation is owed; the status is the catalogue's today`);
   const nonoperational = (signatureBits & SIGNATURE_BITS.nonoperational) !== 0;
   const outweighed = independent >= params.independentOutweighs;
-  const occasionalNonPayload = params.occasionalRaisesNonPayload && manoeuvreClass === "occasional" && !payload;
+  const occasionalNonPayload = params.legacy.occasionalRaisesNonPayload && manoeuvreClass === "occasional" && !payload;
   const raised = explanations.length === 0 || nonoperational || (recordSignatures > 0 && !outweighed) || occasionalNonPayload;
   return { raised, explanations, explanationBits, signatures, signatureBits };
 }
@@ -257,17 +257,13 @@ export interface OpenAlert {
   damage?: { epochs: number[]; residuals: number[] };
 }
 
-/** The most residuals the damage reading keeps. Policy: the ring's size. */
-export const DAMAGE_MAX_RESIDUALS = 32;
-/** The fewest residuals the damage ratio rests on; with fewer it is not read. Policy: four, the least a robust scale means anything with. */
-export const DAMAGE_MIN_RESIDUALS = 4;
 
 /** Collects from the ring the residuals of the sets in the damage window after the step that the alert has not yet noted. */
 export function noteDamage(alert: OpenAlert, state: SeriesState, params: DetectorParameters): void {
   const damage = (alert.damage ??= { epochs: [], residuals: [] });
   const from = alert.candidate.afterEpoch + params.damageFromDays * DAY_MS;
   const to = alert.candidate.afterEpoch + params.damageToDays * DAY_MS;
-  for (let i = 0; i < state.epochs.length && damage.epochs.length < DAMAGE_MAX_RESIDUALS; i++) {
+  for (let i = 0; i < state.epochs.length && damage.epochs.length < params.damageMaxResiduals; i++) {
     const epoch = state.epochs[i]!;
     const residual = state.resid[i]!;
     if (epoch < from || epoch > to || !Number.isFinite(residual) || damage.epochs.includes(epoch)) continue;
@@ -277,9 +273,9 @@ export function noteDamage(alert: OpenAlert, state: SeriesState, params: Detecto
 }
 
 /** The damage reading: the robust scatter of the residuals collected, how many, and the ratio to the object's short scatter before the step (its own scatter where the short one was not yet measured); NaN with too few. */
-export function damageOf(alert: OpenAlert): { sigma: number; residuals: number; ratio: number } {
+export function damageOf(alert: OpenAlert, params: Pick<DetectorParameters, "damageMinResiduals">): { sigma: number; residuals: number; ratio: number } {
   const residuals = alert.damage?.residuals ?? [];
-  if (residuals.length < DAMAGE_MIN_RESIDUALS) return { sigma: Number.NaN, residuals: residuals.length, ratio: Number.NaN };
+  if (residuals.length < params.damageMinResiduals) return { sigma: Number.NaN, residuals: residuals.length, ratio: Number.NaN };
   const sigma = robustScale(residuals);
   const before = alert.candidate.sigmaShort > 0 ? alert.candidate.sigmaShort : alert.candidate.sigmaOwn;
   return { sigma, residuals: residuals.length, ratio: before > 0 ? sigma / before : Number.NaN };
@@ -287,7 +283,7 @@ export function damageOf(alert: OpenAlert): { sigma: number; residuals: number; 
 
 /** Whether the persistence gates pass on an estimate: the size (the level or the mean, by the parameter), the ratio's band and the evidence. */
 export function persistent(estimate: StepEstimate, params: DetectorParameters): boolean {
-  const size = params.persistOnMeanStep ? estimate.zMean : estimate.z;
+  const size = params.legacy.persistOnMeanStep ? estimate.zMean : estimate.z;
   const inBand = Number.isFinite(estimate.rhoMedian) && estimate.rhoMedian >= params.rhoMin && estimate.rhoMedian <= params.rhoMax;
   return Math.abs(size) >= params.zPersist && inBand && estimate.evidence >= params.evidenceMin;
 }
@@ -379,7 +375,7 @@ export function closingOutcome(alert: OpenAlert): number {
 /** The alert's row for the log: the tiers, the cadence and the pieces. */
 export function alertSignals(alert: OpenAlert, now: number, params: DetectorParameters): Partial<Record<SignalName, number>> {
   const after = cadenceAfter(alert, now, params);
-  const damage = damageOf(alert);
+  const damage = damageOf(alert, params);
   const signals: Partial<Record<SignalName, number>> = {
     damageSigma: damage.sigma,
     damageResiduals: damage.residuals,

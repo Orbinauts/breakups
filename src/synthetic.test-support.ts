@@ -2,7 +2,7 @@ import { propagate, semiMajorAxisKm } from "@orbinauts/engine";
 import type { DetectorInput, DetectorOutput, Notice, SpaceWeatherDay } from "./detector.ts";
 import type { ElementSet } from "./elements.ts";
 import { cartesianOf, elementsOf } from "./event-time.ts";
-import type { DetectorParameters } from "./params.ts";
+import type { DetectorParameters, ParameterOverrides } from "./params.ts";
 import { runDetector } from "./run.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 
@@ -89,7 +89,7 @@ export interface Fed {
  * instant is an hour after its latest epoch. Runs with no set are added
  * every four hours up to `until`, so lapses happen.
  */
-export function feed(batches: ElementSet[][], options: { parameters?: Partial<DetectorParameters>; space?: SpaceWeatherDay[]; until?: number; notices?: Notice[]; decays?: ReadonlyMap<number, number> } = {}): Fed {
+export function feed(batches: ElementSet[][], options: { parameters?: ParameterOverrides; space?: SpaceWeatherDay[]; until?: number; notices?: Notice[]; decays?: ReadonlyMap<number, number> } = {}): Fed {
   let states: DetectorInput["states"] = new Map();
   let launches: DetectorInput["launches"] = new Map();
   const verdicts: Fed["verdicts"] = [];

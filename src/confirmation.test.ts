@@ -114,11 +114,11 @@ describe("the confirmation rules judging pieces against a parent", () => {
 
   test("a debris-classed parent under an active cloud keeps only the pieces nearer its plane than the cloud lies", () => {
     const parent = body(PARENT, { bodyClass: "debris", firstEpoch: EPOCH - 2000 * DAY });
-    // The cloud lies two tolerances from the parent's plane (0.4 degrees of inclination).
+    // The cloud lies 0.4 degrees of inclination from the parent's plane: two tolerances, and its normal 0.4 degrees off, 1.2 by the normals' bound; the plane test reads the lesser.
     const cloud = [body(50, { bodyClass: "debris", firstSeenAt: NOW - 200 * DAY, inclinationDeg: 98.4 })];
     const near = [piece(101, { distance: 0.5 }), piece(102, { distance: 2.5 }), piece(103, { distance: 1 })];
     const some = judgePieces(subjectOf(parent), launchOf([parent, ...cloud, ...near.map((p) => p.body)]), verdictOf(), near.map((p) => p.reading), NO_MEMORY, viewOf());
-    expect(some.reading.parentCloudDistance).toBeCloseTo(2, 5);
+    expect(some.reading.parentCloudDistance).toBeCloseTo(1.2, 5);
     expect(some.refused).toBe(0);
     expect(some.pieces.map((p) => p.number)).toEqual([101, 103]);
     const far = [piece(101, { distance: 2.5 }), piece(102, { distance: 2.8 })];
@@ -184,7 +184,7 @@ describe("an analyst range's rules", () => {
   test("an analyst range's pieces confirm nothing unless the parameter lets them, and then only pieces the plane test names one parent for", () => {
     const one = [piece(101).reading];
     expect(analystRefusals(one, params)).toBe(REFUSALS.analyst);
-    const on = { ...params, analystAttributes: true };
+    const on = { ...params, legacy: { ...params.legacy, analystAttributes: true } };
     expect(analystRefusals(one, on)).toBe(0);
     expect(analystRefusals([{ ...one[0]!, within: [PARENT, 2] }], on)).toBe(REFUSALS.ambiguous);
   });
@@ -206,20 +206,20 @@ describe("the rules on the pieces timed back against an alert's parent", () => {
   });
 
   test("an analyst range's pieces must be timed and converge on the parent", () => {
-    const on = { ...params, analystAttributes: true, attributionMissKmMax: 50 };
+    const on = { ...params, legacy: { ...params.legacy, analystAttributes: true, attributionMissKmMax: 50 } };
     expect(alertTimingRefusals(alert, pieces, null, verdictOf(), true, on).refused).toBe(REFUSALS.untimed);
     expect(alertTimingRefusals(alert, pieces, timing({ missKm: 80 }), verdictOf(), true, on).refused).toBe(REFUSALS.miss);
     expect(alertTimingRefusals(alert, pieces, null, verdictOf(), false, on).refused).toBe(0);
   });
 
   test("with the common-origin test on, pieces that do not share an instant are refused", () => {
-    const tested = { ...params, originHoursBase: 6 };
+    const tested = { ...params, legacy: { ...params.legacy, originHoursBase: 6 } };
     expect(alertTimingRefusals(alert, pieces, timing({ dev75Hours: 40, dev50Hours: 30 }), verdictOf(), false, tested).refused).toBe(REFUSALS.origin);
     expect(alertTimingRefusals(alert, pieces, null, verdictOf(), false, tested).refused).toBe(REFUSALS.origin);
   });
 
   test("pieces crossing the parent too far from its step, or too soon after the launch was first seen, are not the step's", () => {
-    const bounded = { ...params, originStepHoursMax: 48 };
+    const bounded = { ...params, legacy: { ...params.legacy, originStepHoursMax: 48 } };
     expect(alertTimingRefusals(alert, pieces, timing({ medianAt: alert.tStep + 72 * HOUR }), verdictOf(), false, bounded).refused).toBe(REFUSALS.origin);
     expect(alertTimingRefusals(alert, pieces, timing({ ageDays: 10 }), verdictOf({ launchAgeDays: 5 }), false, params).refused).toBe(REFUSALS.origin);
   });
@@ -228,6 +228,6 @@ describe("the rules on the pieces timed back against an alert's parent", () => {
     const small = pieces.slice(0, 3);
     const loose = timing({ dev75Hours: 100, dev50Hours: 90 });
     expect(alertTimingRefusals(alert, small, loose, verdictOf(), false, params).refused).toBe(0);
-    expect(alertTimingRefusals(alert, small, loose, verdictOf(), false, { ...params, smallBatchStepsToo: true }).refused).toBe(REFUSALS.smallBatch);
+    expect(alertTimingRefusals(alert, small, loose, verdictOf(), false, { ...params, legacy: { ...params.legacy, smallBatchStepsToo: true } }).refused).toBe(REFUSALS.smallBatch);
   });
 });

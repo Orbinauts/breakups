@@ -1,6 +1,6 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BODY_CLASSES, DETECTOR_PARAMETERS, OPS_STATUSES, REGIMES, launchOf, yearOf, type DetectorParameters, type LogRow } from "../../src/index.ts";
+import { BODY_CLASSES, DETECTOR_PARAMETERS, OFF, OPS_STATUSES, isOn, REGIMES, launchOf, yearOf, type DetectorParameters, type LogRow } from "../../src/index.ts";
 import { poissonTail } from "../../src/fragments.ts";
 import { EXPLANATION_BITS, SIGNATURE_BITS, judgeStep, type StepEvidence, type StepJudgement } from "../../src/fusion.ts";
 import { OUTCOMES } from "../../src/log.ts";
@@ -130,8 +130,8 @@ export const DETECTOR_GATES: Gates = {
   bstarRatioMax: DETECTOR_PARAMETERS.bstarRatioMax,
   newObjectDays: DETECTOR_PARAMETERS.newObjectDays,
   occasionalRaises: 0,
-  occasionalRaisesNonPayload: DETECTOR_PARAMETERS.occasionalRaisesNonPayload ? 1 : 0,
-  persistOnMeanStep: DETECTOR_PARAMETERS.persistOnMeanStep ? 1 : 0,
+  occasionalRaisesNonPayload: DETECTOR_PARAMETERS.legacy.occasionalRaisesNonPayload ? 1 : 0,
+  persistOnMeanStep: DETECTOR_PARAMETERS.legacy.persistOnMeanStep ? 1 : 0,
   maintenanceToleranceSigmas: DETECTOR_PARAMETERS.maintenanceToleranceSigmas,
   maintenanceToleranceKm: DETECTOR_PARAMETERS.maintenanceToleranceKm,
   maintenanceLoweringsToo: DETECTOR_PARAMETERS.maintenanceLoweringsToo ? 1 : 0,
@@ -139,7 +139,7 @@ export const DETECTOR_GATES: Gates = {
   deployAgeDays: DETECTOR_PARAMETERS.deployAgeDays,
   opsStatusEvidence: DETECTOR_PARAMETERS.opsStatusEvidence ? 1 : 0,
   nonoperationalOverrides: DETECTOR_PARAMETERS.nonoperationalOverrides ? 1 : 0,
-  againstDragMinRaises: DETECTOR_PARAMETERS.againstDragMinRaises,
+  againstDragMinRaises: DETECTOR_PARAMETERS.legacy.againstDragMinRaises,
   geometryKickMinMps: DETECTOR_PARAMETERS.geometryKickMinMps,
   independentOutweighs: DETECTOR_PARAMETERS.independentOutweighs,
   explanationsForNonPayloads: DETECTOR_PARAMETERS.explanationsForNonPayloads ? 1 : 0,
@@ -300,7 +300,7 @@ export const EXPLANATIONS = Object.keys(EXPLANATION_BITS) as Explanation[];
 
 /** The parameters a sweep's gates stand for. */
 export function paramsOf(gates: Gates): DetectorParameters {
-  return { ...DETECTOR_PARAMETERS, typicalityMax: gates.typicalityMax, oppositeMinSteps: gates.oppositeMinSteps, consistencyMin: gates.consistencyMin, bstarRatioMax: gates.bstarRatioMax, newObjectDays: gates.newObjectDays, occasionalRaisesNonPayload: gates.occasionalRaisesNonPayload === 1, maintenanceToleranceSigmas: gates.maintenanceToleranceSigmas, maintenanceToleranceKm: gates.maintenanceToleranceKm, maintenanceLoweringsToo: gates.maintenanceLoweringsToo === 1, siblingsMin: gates.siblingsMin, deployAgeDays: gates.deployAgeDays, opsStatusEvidence: gates.opsStatusEvidence === 1, nonoperationalOverrides: gates.nonoperationalOverrides === 1, againstDragMinRaises: gates.againstDragMinRaises, geometryKickMinMps: gates.geometryKickMinMps, independentOutweighs: gates.independentOutweighs, explanationsForNonPayloads: gates.explanationsForNonPayloads === 1 };
+  return { ...DETECTOR_PARAMETERS, typicalityMax: gates.typicalityMax, oppositeMinSteps: gates.oppositeMinSteps, consistencyMin: gates.consistencyMin, bstarRatioMax: gates.bstarRatioMax, newObjectDays: gates.newObjectDays, maintenanceToleranceSigmas: gates.maintenanceToleranceSigmas, maintenanceToleranceKm: gates.maintenanceToleranceKm, maintenanceLoweringsToo: gates.maintenanceLoweringsToo === 1, siblingsMin: gates.siblingsMin, deployAgeDays: gates.deployAgeDays, opsStatusEvidence: gates.opsStatusEvidence === 1, nonoperationalOverrides: gates.nonoperationalOverrides === 1, geometryKickMinMps: gates.geometryKickMinMps, independentOutweighs: gates.independentOutweighs, explanationsForNonPayloads: gates.explanationsForNonPayloads === 1, legacy: { ...DETECTOR_PARAMETERS.legacy, occasionalRaisesNonPayload: gates.occasionalRaisesNonPayload === 1, againstDragMinRaises: gates.againstDragMinRaises } };
 }
 
 /** The fusion on a persistent candidate, with the gates' values: whether it is raised, why, its class, and the judgement with its explanations and signatures. */
@@ -599,7 +599,7 @@ export function piecesKept(c: SweptConfirmation, rules: Pick<DetectorParameters,
   return kept;
 }
 
-const OFF = { confirmDeltaVMinMps: 0, cloudMemoryDays: 0, freshPieceDays: 0, debrisParentNeedsNearerThanCloud: false, singlePieceNeedsQuietLaunch: false, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax } as const;
+const CONFIRMATION_RULES_OFF = { confirmDeltaVMinMps: 0, cloudMemoryDays: 0, freshPieceDays: 0, debrisParentNeedsNearerThanCloud: false, singlePieceNeedsQuietLaunch: false, planeDistanceMax: DETECTOR_PARAMETERS.planeDistanceMax } as const;
 
 function confirmationLine(label: string, rows: SweptConfirmation[], rules: Parameters<typeof piecesKept>[1]): string {
   const kept = rows.filter((c) => piecesKept(c, rules) > 0);
@@ -723,13 +723,13 @@ function main(): void {
       // The common-origin sweep of the tenth phase: the rule's axes with the ninth phase's rules as they are, then each of those relaxed, every point scored with the twins read both ways; the points under one false confirmation in ten, the most confirmations first, and the frontier.
       const off = (name: keyof AttributionRules): AttributionRules[keyof AttributionRules] => RULES_OFF[name];
       // With --twins-grid, the twins' two switches against the origin's override and launch margin.
-      const twinsGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = { attributionTwins: [false, true], attributionTwinsUnresolved: [false, true], originOverrideHours: [1e9, 1], originLaunchMarginDays: [-1e9, 0] };
+      const twinsGrid: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = { attributionTwins: [false, true], attributionTwinsUnresolved: [false, true], originOverrideHours: [OFF, 1], originLaunchMarginDays: [-OFF, 0] };
       // With --grid, the axes given (the eleventh phase's rules) instead of the common origin's.
       const axes: Partial<Record<keyof AttributionRules, AttributionRules[keyof AttributionRules][]>> = Object.keys(ruleGrid).length > 0 ? ruleGrid : process.argv.includes("--twins-grid") ? twinsGrid : {
-        originOverrideHours: [1e9, 1, 6, 24],
-        originLaunchMarginDays: [-1e9, 0, 30],
-        originStepHoursMax: [1e9, 48],
-        originHoursBase: [1e9, 24],
+        originOverrideHours: [OFF, 1, 6, 24],
+        originLaunchMarginDays: [-OFF, 0, 30],
+        originStepHoursMax: [OFF, 48],
+        originHoursBase: [OFF, 24],
         originHoursPerDay: [0, 1],
         originShareMin: [0.75],
         originMinPieces: [3],
@@ -754,7 +754,7 @@ function main(): void {
       let most = -1;
       for (const [, p] of [...best].sort((a, b) => a[0] - b[0])) if (pick(p).detected > most) [most] = [pick(p).detected, console.log(row(p))];
       console.log(`\n### The test alone, the ninth phase's rules as they are\n\n${header}`);
-      for (const p of points.filter((p) => p.rules.cloudMemoryDays === base.cloudMemoryDays && p.rules.attributionBatchLaunchesMax === base.attributionBatchLaunchesMax && p.rules.confirmBackgroundMax === base.confirmBackgroundMax && p.rules.youngLaunchDays === base.youngLaunchDays && p.rules.attributionMinPieces === base.attributionMinPieces && p.rules.originOverrideHours >= 1e8 && p.rules.singlePieceNeedsQuietLaunch === base.singlePieceNeedsQuietLaunch)) console.log(row(p));
+      for (const p of points.filter((p) => p.rules.cloudMemoryDays === base.cloudMemoryDays && p.rules.attributionBatchLaunchesMax === base.attributionBatchLaunchesMax && p.rules.confirmBackgroundMax === base.confirmBackgroundMax && p.rules.youngLaunchDays === base.youngLaunchDays && p.rules.attributionMinPieces === base.attributionMinPieces && !isOn(p.rules.originOverrideHours) && p.rules.singlePieceNeedsQuietLaunch === base.singlePieceNeedsQuietLaunch)) console.log(row(p));
       console.log(`\n### Every point\n\n${header}`);
       for (const p of points) console.log(row(p));
       if (show) {
@@ -771,15 +771,15 @@ function main(): void {
       ...[0, 90, 180, 730].map((x): [string, Partial<AttributionRules>] => [`the cloud memory, ${x} days (cloudMemoryDays)`, { cloudMemoryDays: x }]),
       [`a debris parent's pieces nearer than the cloud (debrisParentNeedsNearerThanCloud) ${!base.debrisParentNeedsNearerThanCloud}`, { debrisParentNeedsNearerThanCloud: !base.debrisParentNeedsNearerThanCloud }],
       [`a single piece needs a quiet launch (singlePieceNeedsQuietLaunch) ${!base.singlePieceNeedsQuietLaunch}`, { singlePieceNeedsQuietLaunch: !base.singlePieceNeedsQuietLaunch }],
-      ...[0.5, 5, 20, 1e9].map((x): [string, Partial<AttributionRules>] => [`the launch's background at most ${x} a window (confirmBackgroundMax)`, { confirmBackgroundMax: x }]),
+      ...[0.5, 5, 20, OFF].map((x): [string, Partial<AttributionRules>] => [`the launch's background at most ${x} a window (confirmBackgroundMax)`, { confirmBackgroundMax: x }]),
       [`a step on one body breaks a tie (attributionStepBreaksTies) ${!base.attributionStepBreaksTies}`, { attributionStepBreaksTies: !base.attributionStepBreaksTies }],
       [`a young launch attributes (attributionYoungLaunch) ${!base.attributionYoungLaunch}`, { attributionYoungLaunch: !base.attributionYoungLaunch }],
       ...[0, 7, 90].map((x): [string, Partial<AttributionRules>] => [`a launch is young under ${x} days (youngLaunchDays)`, { youngLaunchDays: x }]),
       ...[1, 2, 3, 5].map((x): [string, Partial<AttributionRules>] => [`at least ${x} pieces (attributionMinPieces)`, { attributionMinPieces: x }]),
-      ...[1, 2, 3, 5, 10, 1e9].map((x): [string, Partial<AttributionRules>] => [`at most ${x} old launches gaining bodies in the run (attributionBatchLaunchesMax)`, { attributionBatchLaunchesMax: x }]),
-      ...[20, 50, 100, 300, 1000, 1e9].map((x): [string, Partial<AttributionRules>] => [`the pieces miss the parent by at most ${x} km (attributionMissKmMax)`, { attributionMissKmMax: x }]),
+      ...[1, 2, 3, 5, 10, OFF].map((x): [string, Partial<AttributionRules>] => [`at most ${x} old launches gaining bodies in the run (attributionBatchLaunchesMax)`, { attributionBatchLaunchesMax: x }]),
+      ...[20, 50, 100, 300, 1000, OFF].map((x): [string, Partial<AttributionRules>] => [`the pieces miss the parent by at most ${x} km (attributionMissKmMax)`, { attributionMissKmMax: x }]),
       ...[0, 1.5, 3, 10].map((x): [string, Partial<AttributionRules>] => [`a rival must be missed ${x} times worse (attributionAmbiguityRatio)`, { attributionAmbiguityRatio: x }]),
-      ...[0, 1.5, 3, 10, 1e9].map((x): [string, Partial<AttributionRules>] => [`a rival's centre must be ${x} times further (attributionCentreRatio)`, { attributionCentreRatio: x }]),
+      ...[0, 1.5, 3, 10, OFF].map((x): [string, Partial<AttributionRules>] => [`a rival's centre must be ${x} times further (attributionCentreRatio)`, { attributionCentreRatio: x }]),
       [`an analyst range confirms an alert (analystAttributes) ${!base.analystAttributes}`, { analystAttributes: !base.analystAttributes }],
       [`debris parents tried (attributionDebrisParentsMax) ${base.attributionDebrisParentsMax > 0 ? 0 : DETECTOR_PARAMETERS.attributionDebrisParentsMax}`, { attributionDebrisParentsMax: base.attributionDebrisParentsMax > 0 ? 0 : DETECTOR_PARAMETERS.attributionDebrisParentsMax }],
     ];
@@ -803,12 +803,12 @@ function main(): void {
     console.log(`years ${files.map((f) => f.year).join(", ")}: ${rows.length} confirmation readings on the alert rows`);
     console.log("| rule | kept | on a reported event's step | on the right object, the step late | on nothing | exempt or duplicate |");
     console.log("| --- | --- | --- | --- | --- | --- |");
-    console.log(confirmationLine("as the third phase confirmed (the rules off)", rows, OFF));
-    for (const v of [0.5, 1, 2]) console.log(confirmationLine(`the pieces move at least ${v} m/s (confirmDeltaVMinMps)`, rows, { ...OFF, confirmDeltaVMinMps: v }));
-    for (const d of [30, 90, 180]) console.log(confirmationLine(`a debris-classed parent first seen under ${d} days before its step confirms nothing (freshPieceDays)`, rows, { ...OFF, freshPieceDays: d }));
-    for (const d of [180, 365, 730]) console.log(confirmationLine(`a launch with a cloud in the last ${d} days: pieces out of its plane, the parent not in it (cloudMemoryDays)`, rows, { ...OFF, cloudMemoryDays: d }));
-    console.log(confirmationLine("a debris-classed parent under an active cloud: pieces nearer than the cloud (debrisParentNeedsNearerThanCloud)", rows, { ...OFF, debrisParentNeedsNearerThanCloud: true }));
-    console.log(confirmationLine("a single piece: the parent not debris, the launch quiet (singlePieceNeedsQuietLaunch)", rows, { ...OFF, singlePieceNeedsQuietLaunch: true }));
+    console.log(confirmationLine("as the third phase confirmed (the rules off)", rows, CONFIRMATION_RULES_OFF));
+    for (const v of [0.5, 1, 2]) console.log(confirmationLine(`the pieces move at least ${v} m/s (confirmDeltaVMinMps)`, rows, { ...CONFIRMATION_RULES_OFF, confirmDeltaVMinMps: v }));
+    for (const d of [30, 90, 180]) console.log(confirmationLine(`a debris-classed parent first seen under ${d} days before its step confirms nothing (freshPieceDays)`, rows, { ...CONFIRMATION_RULES_OFF, freshPieceDays: d }));
+    for (const d of [180, 365, 730]) console.log(confirmationLine(`a launch with a cloud in the last ${d} days: pieces out of its plane, the parent not in it (cloudMemoryDays)`, rows, { ...CONFIRMATION_RULES_OFF, cloudMemoryDays: d }));
+    console.log(confirmationLine("a debris-classed parent under an active cloud: pieces nearer than the cloud (debrisParentNeedsNearerThanCloud)", rows, { ...CONFIRMATION_RULES_OFF, debrisParentNeedsNearerThanCloud: true }));
+    console.log(confirmationLine("a single piece: the parent not debris, the launch quiet (singlePieceNeedsQuietLaunch)", rows, { ...CONFIRMATION_RULES_OFF, singlePieceNeedsQuietLaunch: true }));
     console.log(confirmationLine("every rule at the detector's values", rows, p));
     if (show) {
       console.log("");

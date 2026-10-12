@@ -1,9 +1,41 @@
 ---
-status: accepted
+status: accepted; its target test amended on 2026-10-12 (issue #15), and the detector's plane test noted (issue #37)
 date: 2026-10-10
 ---
 
 # The target is on Confirmed alerts
+
+Status note, 2026-10-12: the target test's plane is the scorecard's own,
+no longer the detector's (issue #15). Read through the detector's plane
+test, the denominator had two faults. At near-zero inclination the node is
+undefined and pieces in the parent's plane scatter over the whole circle
+of nodes, so none passed: Intelsat 33e (2024), at 0.02 degrees, had 18
+fresh pieces, 16 of them with their orbit normal within half a degree of
+the parent's, and was listed as "no fragments catalogued". And any tuning
+of the detector's plane parameters moved the denominator the detector is
+scored against. A piece is now in the parent's plane when it passes the
+detector's test with the tolerances it had on 2026-10-12 (0.2 degrees of
+inclination, 1.5 of node, distance 3), frozen as scorecard constants
+(`FRAGMENTS_PLANE` in `scripts/kpi/catalogue.ts`), or when its orbit
+normal lies within a degree of the parent's, the parent's node carried to
+the piece's epoch for J2 as the plane test carries it. The test can only
+add targets, and the replay on the scoring pins confirms that no event
+stopped being one. Four became targets, all of them misses: Intelsat 33e
+(2024, headline, training), Ariane 5 L540's ESC-A (2017) and L583's
+(2019) on the C line, and Delta 229 (2007) on the anomalous C-D line. No
+detection or false confirmation moved; the training headline reads 22 of
+36 where it read 22 of 35, and the held-out headline is unchanged at 17
+of 23.
+
+Status note, 2026-10-12, the detector's side (issue #37): the detector's
+own plane test, which the Confirmed channel reads to judge a cloud, to
+attribute it and to refuse pieces in a remembered cloud's plane, had the
+same fault at near-zero inclination, so it could not confirm a
+geosynchronous breakup from its pieces. It now passes a piece by its
+tolerances or by its orbit normal within `planeNormalAngleMaxDeg` of the
+parent's, one degree, chosen on the training years
+(`docs/detector/d12-fitting.md`). The scorecard's target test above stays
+its own and does not read this parameter.
 
 The owner's targets were set on the parent's own orbit: nine reported
 breakups in ten raised as an alert on the parent's step before the first
@@ -61,7 +93,8 @@ owner, who may correct it:
   the parent's plane in the Archive: at least one body under the launch,
   numbered above the catalogue's mark at the event, classed as a fragment
   is, first published within 180 days after the event, its plane within
-  the detector's bound of the parent's last set before the event. Events
+  the scorecard's own bound of the parent's last set before the event
+  (amended on 2026-10-12, issue #15; the note above). Events
   with no such piece are listed apart, out of the denominator, with their
   count stated per line. A detection is the first confirmed verdict on the
   event's parent within 180 days after its window, wherever its year file

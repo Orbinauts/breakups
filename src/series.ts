@@ -521,13 +521,13 @@ export function ownNoise(state: SeriesState, prior: number, params: DetectorPara
 
 /**
  * Folds a residual into the long memory: an exponential average of the
- * residual's size, clipped at three times the current scatter so one
- * step does not become the object's noise, scaled to a Gaussian sigma
+ * residual's size, clipped at `longMemoryClipSigmas` times the current scatter so
+ * one step does not become the object's noise, scaled to a Gaussian sigma
  * (the mean absolute deviation is 0.798 of it), decaying with the
  * half-life in days.
  */
 export function rememberResidual(state: SeriesState, residual: number, sigma: number, epochMs: number, params: DetectorParameters): void {
-  const size = Math.min(Math.abs(residual), 3 * sigma) * 1.2533;
+  const size = Math.min(Math.abs(residual), params.longMemoryClipSigmas * sigma) * 1.2533;
   if (!Number.isFinite(state.longAt)) {
     state.longSigma = size;
     state.longAt = epochMs;
