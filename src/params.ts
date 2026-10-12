@@ -56,6 +56,8 @@ export interface DetectorParameters {
   bandScaleFloor: number;
   /** The normalised step at which a first post set opens a candidate and is logged. Fitted on the training split: the lowest value whose candidates stay a few a day, so the log stays small and the persistence tests have something to judge. */
   zCand: number;
+  /** Whether a set opens a candidate on the largest of its three normalised residuals (the semi-major axis, the perigee radius and the inclination, each against its trailing fit at the set before) rather than on the semi-major axis's alone, the candidate then judged for persistence on the quantity that opened it. A breakup whose recoil on the parent is mostly radial or normal changes the orbit's shape or plane at constant period and leaves the semi-major axis alone. Fitted on the training split, by a criterion written before the replay. */
+  openOnThreeAxes: boolean;
   /** The persistent step, in units of its own uncertainty, from which a candidate is suspected. Fitted on the training split by sweeping the log. */
   zPersist: number;
   /** The least the post sets after the first may keep of the first set's jump (their median plain residual over it) before the first set is dismissed as a bad set. Policy, from the earlier attempt's evidence: a bad set is undone by the next, a real step is kept. */
@@ -366,6 +368,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   bandMinMembers: 30,
   bandScaleFloor: 1,
   zCand: 6,
+  openOnThreeAxes: false,
   zPersist: 10,
   rhoRevert: 0.5,
   rhoMin: 0.5,
@@ -535,6 +538,7 @@ export const PARAMETER_PROVENANCE: Record<keyof DetectorParameters, Provenance> 
   bandMinMembers: { kind: "policy", source: "thirty residuals for a band's own common mode and scale" },
   bandScaleFloor: { kind: "policy", source: "a calm band never makes a step look larger than the object's own scatter says" },
   zCand: { kind: "fitted", source: "d1-fitting.md, the candidate threshold: the smallest first set that hit a training event is 6.3 sigma" },
+  openOnThreeAxes: { kind: "fitted", source: "d13-three-axis-trigger.md, the criterion written before the replay and its reading on the training years" },
   zPersist: { kind: "fitted", source: "d1-fitting.md, the zPersist table: hits flat to 10, falling from 12" },
   rhoRevert: { kind: "policy", source: "the earlier attempt's evidence: a bad set is undone by the next, a real step is kept" },
   rhoMin: { kind: "fitted", source: "d1-fitting.md, the ratio's lower bound: 0.5 keeps Yaogan 1" },

@@ -17,7 +17,7 @@ describe("the parameters' provenance", () => {
     for (const [name, provenance] of Object.entries(PARAMETER_PROVENANCE)) {
       expect(["physical", "policy", "fitted"], name).toContain(provenance.kind);
       expect(provenance.source.length, name).toBeGreaterThan(10);
-      if (provenance.kind === "fitted") expect(provenance.source, name).toMatch(/^(?:as \w+|d\d+-(?:fitting|scope|confirmed)\.md, )/);
+      if (provenance.kind === "fitted") expect(provenance.source, name).toMatch(/^(?:as \w+|d\d+-(?:fitting|scope|confirmed|three-axis-trigger)\.md, )/);
     }
   });
 

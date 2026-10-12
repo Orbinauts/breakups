@@ -8,7 +8,7 @@ import { robustScale } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import type { Candidate, SeriesState } from "./series.ts";
 import { isDeploying, type Mates, type Siblings } from "./siblings.ts";
-import { estimateStep, type Environment, type StepEstimate } from "./step.ts";
+import { estimateStep, persistenceEstimate, type Environment, type StepEstimate } from "./step.ts";
 import type { BodyClass, Regime } from "./truth.ts";
 
 /**
@@ -355,7 +355,8 @@ export function trackAlert(state: SeriesState, alert: OpenAlert, epochMs: number
   const estimate = estimateStep(state, alert.candidate, environment, params, params.alertMaxPostSets);
   if (estimate === null) return;
   alert.last = estimate;
-  recordTiers(alert, estimate, now, params);
+  // The tiers read the step's persistence where it was judged: on the perigee radius or the inclination where either opened the candidate.
+  recordTiers(alert, alert.candidate.axis === undefined ? estimate : persistenceEstimate(state, alert.candidate, environment, params, params.alertMaxPostSets)!, now, params);
 }
 
 /** The sets a day the object had in the days after the step, from the post sets the alert saw; NaN until those days have passed. */

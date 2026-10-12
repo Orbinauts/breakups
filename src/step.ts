@@ -168,6 +168,45 @@ function weightedMean(u: number[], sigma: number[]): { mean: number; z: number }
   return { mean, z: mean * Math.sqrt(sw) };
 }
 
+/** What a quantity other than the semi-major axis is read with against its frozen fit: its scatter (the floor, the fit's own scale and, for the perigee radius, the semi-major axis's scatter), the drag term's rate (the regime's for the perigee radius, none for the inclination) and the weather's factor on it. */
+export function axisReading(axis: "rp" | "inc", fit: Fit, sigmaOwn: number, kappa: number, weather: number): { sigmaOwn: number; kappa: number; weather: number } {
+  return axis === "rp" ? { sigmaOwn: Math.max(SIGMA_FLOOR_KM, fit.scale, sigmaOwn), kappa, weather } : { sigmaOwn: Math.max(SIGMA_FLOOR_DEG, fit.scale), kappa: 0, weather: 1 };
+}
+
+type Level = Pick<StepEstimate, "k" | "spanHours" | "delta" | "sigmaDelta" | "z" | "mean" | "sigmaMean" | "zMean" | "slope" | "rho" | "rhoMedian" | "chi2Step" | "chi2Drift" | "evidence" | "lastEpoch">;
+
+/** The step's level and slope, the later sets' ratio to the first jump and the evidence against a drift, from one quantity's post residuals, in that quantity's units. */
+function levelOf(residuals: { u: number[]; sigma: number[]; epochs: number[] }, candidate: Candidate, sigmaOwn: number, kappa: number, weather: number, jump: number, scale: number, params: DetectorParameters): Level {
+  const { u, sigma, epochs } = residuals;
+  const xLevel = epochs.map((t) => (t - candidate.afterEpoch) / DAY_MS);
+  const xDrift = epochs.map((t) => (t - candidate.tStep) / DAY_MS);
+  // What drag and noise can do to the slope in a day; the step's own slope may also settle at the jump's scale a day.
+  const driftPrior = (params.slopePriorSigmas * sigmaOwn + kappa * Math.abs(candidate.bstar)) * weather;
+  const fit = fitSegment(xLevel, u, sigma, driftPrior + Math.abs(jump));
+  const chi2Drift = driftChi2(xDrift, u, sigma, driftPrior);
+  const k = epochs.length;
+  const spanHours = (epochs[k - 1]! - epochs[0]!) / HOUR_MS;
+  const delta1 = jump === 0 ? Number.NaN : jump;
+  const rhoMedian = k >= 2 ? median(u.slice(1)) / delta1 : Number.NaN;
+  return {
+    k,
+    spanHours,
+    delta: fit.delta,
+    sigmaDelta: fit.sigmaDelta * scale,
+    z: fit.delta / (fit.sigmaDelta * scale),
+    mean: fit.mean,
+    sigmaMean: fit.sigmaMean * scale,
+    zMean: fit.mean / (fit.sigmaMean * scale),
+    slope: fit.slope,
+    rho: fit.delta / delta1,
+    rhoMedian,
+    chi2Step: fit.chi2,
+    chi2Drift,
+    evidence: (chi2Drift - fit.chi2) / (scale * scale),
+    lastEpoch: epochs[k - 1]!,
+  };
+}
+
 /**
  * The step as the post sets so far measure it, against the candidate's
  * frozen pre fits, the band's common-mode term taken off each residual of
@@ -181,42 +220,39 @@ export function estimateStep(state: SeriesState, candidate: Candidate, environme
   const kappa = params.kappa[regime];
   const bstar = candidate.bstar;
   const a = residualsAgainst(state, state.a, candidate.pre, indices, candidate.sigmaOwn, kappa, bstar, environment.commonMode, environment.weather);
-  const xLevel = a.epochs.map((t) => (t - candidate.afterEpoch) / DAY_MS);
-  const xDrift = a.epochs.map((t) => (t - candidate.tStep) / DAY_MS);
-  // What drag and noise can do to the slope in a day; the step's own slope may also settle at the jump's scale a day.
-  const driftPrior = (params.slopePriorSigmas * candidate.sigmaOwn + kappa * Math.abs(bstar)) * environment.weather;
-  const fit = fitSegment(xLevel, a.u, a.sigma, driftPrior + Math.abs(candidate.delta1));
-  const chi2Drift = driftChi2(xDrift, a.u, a.sigma, driftPrior);
-  const k = indices.length;
-  const spanHours = (a.epochs[k - 1]! - a.epochs[0]!) / HOUR_MS;
-  const delta1 = candidate.delta1 === 0 ? Number.NaN : candidate.delta1;
-  const rhoMedian = k >= 2 ? median(a.u.slice(1)) / delta1 : Number.NaN;
-  const sigmaRp = Math.max(SIGMA_FLOOR_KM, candidate.preRp.scale, candidate.sigmaOwn);
-  const rp = residualsAgainst(state, state.rp, candidate.preRp, indices, sigmaRp, kappa, bstar, 0, environment.weather);
-  const inc = residualsAgainst(state, state.inc, candidate.preInc, indices, Math.max(SIGMA_FLOOR_DEG, candidate.preInc.scale), 0, bstar, 0, 1);
+  const level = levelOf(a, candidate, candidate.sigmaOwn, kappa, environment.weather, candidate.delta1, environment.scale, params);
+  const rpReading = axisReading("rp", candidate.preRp, candidate.sigmaOwn, kappa, environment.weather);
+  const incReading = axisReading("inc", candidate.preInc, candidate.sigmaOwn, kappa, environment.weather);
+  const rp = residualsAgainst(state, state.rp, candidate.preRp, indices, rpReading.sigmaOwn, rpReading.kappa, bstar, 0, rpReading.weather);
+  const inc = residualsAgainst(state, state.inc, candidate.preInc, indices, incReading.sigmaOwn, incReading.kappa, bstar, 0, incReading.weather);
   const perigee = weightedMean(rp.u, rp.sigma);
   const inclination = weightedMean(inc.u, inc.sigma);
   return {
-    k,
-    spanHours,
-    delta: fit.delta,
-    sigmaDelta: fit.sigmaDelta * environment.scale,
-    z: fit.delta / (fit.sigmaDelta * environment.scale),
-    mean: fit.mean,
-    sigmaMean: fit.sigmaMean * environment.scale,
-    zMean: fit.mean / (fit.sigmaMean * environment.scale),
-    slope: fit.slope,
-    rho: fit.delta / delta1,
-    rhoMedian,
-    chi2Step: fit.chi2,
-    chi2Drift,
-    evidence: (chi2Drift - fit.chi2) / (environment.scale * environment.scale),
+    ...level,
     deltaPerigee: perigee.mean,
     zPerigee: perigee.z / environment.scale,
     deltaInclination: inclination.mean,
     zInclination: inclination.z / environment.scale,
-    lastEpoch: a.epochs[k - 1]!,
   };
+}
+
+/**
+ * The step its persistence is judged on: the semi-major axis's, as
+ * `estimateStep` measures it, or, where the three-axis trigger opened the
+ * candidate on the perigee radius or the inclination, the same level,
+ * ratio and evidence read on that quantity against its frozen fit, in its
+ * units. The perigee's and the inclination's means stay the estimate's.
+ */
+export function persistenceEstimate(state: SeriesState, candidate: Candidate, environment: Environment, params: DetectorParameters, maxPostSets = params.maxPostSets): StepEstimate | null {
+  const estimate = estimateStep(state, candidate, environment, params, maxPostSets);
+  const axis = candidate.axis;
+  if (estimate === null || axis === undefined) return estimate;
+  const indices = postIndices(state, candidate, params, maxPostSets);
+  const kappa = params.kappa[state.regime === "unknown" ? "LEO" : state.regime];
+  const fit = axis === "rp" ? candidate.preRp : candidate.preInc;
+  const reading = axisReading(axis, fit, candidate.sigmaOwn, kappa, environment.weather);
+  const residuals = residualsAgainst(state, axis === "rp" ? state.rp : state.inc, fit, indices, reading.sigmaOwn, reading.kappa, candidate.bstar, 0, reading.weather);
+  return { ...estimate, ...levelOf(residuals, candidate, reading.sigmaOwn, reading.kappa, reading.weather, candidate.axisDelta1 ?? Number.NaN, environment.scale, params) };
 }
 
 /**
