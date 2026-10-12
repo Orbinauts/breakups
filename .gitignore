@@ -14,3 +14,10 @@ kpi/work/
 # workflow as artifacts and made again by `npm run kpi -- --all`; only the
 # aggregate `kpi/latest.{json,md}` is committed.
 kpi/years/
+
+# Claude
+.claude
+.agents
+skills-lock.json
+docs/agents
+CLAUDE.md
