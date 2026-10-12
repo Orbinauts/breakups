@@ -143,7 +143,9 @@ merge is safe.
   creates a new tag. The KPI workflow is not a required check: on the
   bot's pull requests it runs on main after the merge (below), and a
   person's pull request shows its result without being held for an hour's
-  replay.
+  replay. Since 2026-10-12 a pull request that touches no file the replay
+  reads (only the docs, the tests or another workflow) starts no KPI run
+  at all (`.github/workflows/kpi.yml`, docs/decisions/0004).
 
 ## The bot, and why the merge is safe
 

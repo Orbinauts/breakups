@@ -323,6 +323,8 @@ jobs:
           # The KPI workflow's, an hour's replay of what this run has replayed already where anything moved, runs on main after the merge instead:
           # its held run, which never ran a job, is deleted, since a held run whose pull request is merged ends as a failure.
           # Both are waited for until they exist, since a run started after the merge finds no merge ref and fails.
+          # A pull request that folds in only files the KPI workflow's path filter skips (its header says which) starts no KPI run:
+          # the wait then ends after its minute with CI's run alone, and nothing is deleted.
           sha=$(git rev-parse HEAD)
           ci=""
           kpi=""

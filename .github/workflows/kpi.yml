@@ -24,11 +24,36 @@ name: KPI
 # Where the release is unreachable (an outage, a fork with no release) the
 # scorecard is skipped with a notice rather than failed: the score cannot
 # be checked, which is not the same as being wrong.
+#
+# A pull request is replayed only where it touches a file the replay or
+# its reproducibility step reads: the replay takes an hour, and one that
+# changes only Markdown (other than `kpi/latest.md`), `docs/`, `LICENSE`,
+# the tests or another workflow cannot move the score. The filter starts
+# from every path and lists what it skips, then adds back what those
+# patterns would skip but the replay reads; GitHub lets the last matching
+# pattern decide, so a file nobody listed is still replayed. GitHub reads
+# only the first 300 files a pull request changes against the filter: a
+# larger one whose first 300 all match a skipped pattern starts no run.
+# A push to main, the Monday schedule and a run by hand always replay:
+# main's run is the record (docs/decisions/0004), and the release and the
+# truth can change without a push. The KPI check is not among main's
+# required checks, so a pull request it skips is never held waiting on it.
 
 on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!docs/**"
+      - "!LICENSE"
+      - "!test/**"
+      - "!**/*.test.ts"
+      - "!.github/workflows/**"
+      # Read by the replay or its reproducibility step, though a pattern above skips it.
+      - "kpi/latest.md"
+      - ".github/workflows/kpi.yml"
   schedule:
     # Mondays at 06:00 UTC: the release and the truth may change without a push.
     - cron: "0 6 * * 1"

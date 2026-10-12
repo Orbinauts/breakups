@@ -14,6 +14,16 @@ below (the replay, the matching, the parity split, the committed number
 CI must make again) stand; the parent-step lines they define stay in the
 scorecard as secondary measurements, below the Confirmed line.
 
+Status note, 2026-10-12: the KPI workflow replays a pull request only
+where it touches a file the replay or its reproducibility step reads (the
+detector, the scorecard, Archive, pins and truth scripts, the truth, the
+manifest, the pins, the committed aggregate and the workflow itself). A
+pull request that changes only the docs, the tests, Markdown other than
+`kpi/latest.md` or another workflow cannot move the score, and no longer
+waits an hour for a replay that would make it again. The filter lists what
+it skips, so a file nobody listed is still replayed. Main's run, on every
+push, every Monday and by hand, stays the record.
+
 The scorecard feeds the detector every element set of every object in the
 order the catalogue published them, in runs of four hours as the product
 will, and matches what the detector raises against the ground truth. A
