@@ -73,6 +73,7 @@
     "maintenance:pr": "node --experimental-strip-types scripts/maintenance/pr-body.ts",
     "maintenance:reminder": "node --experimental-strip-types scripts/maintenance/reminder.ts",
     "maintenance:alert-issues": "node --experimental-strip-types scripts/maintenance/alert-issues.ts",
+    "maintenance:moved": "node --experimental-strip-types scripts/maintenance/moved.ts",
     "pages:site": "node --experimental-strip-types scripts/pages/site.ts",
     "published": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/cli.ts",
     "published:daily": "node --max-old-space-size=8192 --experimental-strip-types scripts/published/daily.ts",

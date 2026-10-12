@@ -71,7 +71,14 @@ merge is safe.
   matching reported events, the false confirmations, the truth's last
   change and the caveat that recent events are not in the truth yet. It
   then runs every check, the typecheck, the tests and the documentation
-  build. Where anything changed, the Actions bot commits it to a branch
+  build. Since 2026-10-12 the typecheck and the tests also run once
+  before any download or replay, on the folded tree with the refreshed
+  sources and the rebuilt truth, the generated parts written from the
+  aggregate as committed, so a test bound to a source's edition or a
+  folded branch that breaks the build fails in minutes, not after the
+  replay's hour; the one test the replay makes good, that the aggregate
+  was scored against the truth the package ships, is left out of that
+  first run where a replay is due (`BREAKUPS_SCORECARD_PENDING`). Where anything changed, the Actions bot commits it to a branch
   `maintenance/<date>`, opens a pull request saying what moved and why
   (each source refreshed with its hashes, each event added, removed or
   changed by id, each cell of the aggregate with its old and new value,
@@ -168,8 +175,24 @@ approval, and the run approves CI's (the KPI workflow's held run is
 deleted, never having run a job, since it runs on main after the merge).
 A CI run that cannot be found or approved stops the run with an issue, as
 a failed one does, and main's ruleset would refuse the merge regardless.
-The tree is merged only onto the main it was checked against: a main that
-moved during the run is left alone and the next run starts again. And CI and
+The tree is merged only onto the main it was checked against. A main that
+moved during the run, which an hour's run makes likely, is followed only
+where the move touched nothing the run generated or was made from: no file
+under `data/` or `kpi/`, no page with generated parts (the README,
+`docs/results.md`, `docs/ground-truth.md`, `docs/detector/events.md`,
+`docs/truth.md`), no dependency manifest or pin (`package.json`,
+`package-lock.json`, `pins.json`), and no file the run itself changed, a
+folded branch's included (`scripts/maintenance/moved.ts`). The run's
+change is then put on the new main as one commit, which applies cleanly
+since none of its files moved, and the typecheck and the whole test suite
+run again on that tree before the pull request is opened and CI runs on
+it; main moving again is followed the same way, three times at most.
+Where the move touched any of those files, the pull request is left
+unmerged with the files named, and the next run starts again from main.
+A moved main that changed the detector's code but not the aggregate is
+followed: such a change reached main past the KPI workflow's check that
+the committed aggregate is reproducible, and the KPI run on main after
+the merge checks it again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
 replaying the Archive from the release to make the committed aggregate
 again and failing where it cannot, so a merged change that only the
