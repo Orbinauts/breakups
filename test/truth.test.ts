@@ -88,9 +88,12 @@ describe("links to the statements' pages", () => {
     ]);
   });
 
-  test("only news and analyst statements carry one: the Space Force notice and the tables have none", () => {
-    const linked = breakups.flatMap((b) => b.statements).filter((s) => s.url !== undefined);
-    expect(linked.map((s) => s.source).sort()).toEqual(["analyst", "analyst", "news", "news", "news", "news"]);
+  test("only statements read from a page carry one: the news, the analysts and the notices read from a post or an article; the tables and the login page's notice have none", () => {
+    const statements = breakups.flatMap((b) => b.statements);
+    const linked = statements.filter((s) => s.url !== undefined);
+    expect([...new Set(linked.map((s) => s.source))].sort()).toEqual(["analyst", "news", "s4s-notice"]);
+    for (const s of linked) expect(s.ref).toContain(s.url!);
+    expect(statements.filter((s) => s.source === "s4s-notice" && s.url === undefined).map((s) => s.parent.name)).toEqual(["USA 32"]);
   });
 });
 
