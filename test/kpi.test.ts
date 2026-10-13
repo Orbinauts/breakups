@@ -578,6 +578,18 @@ describe("the Confirmed line's landings: the stations, the crewed and cargo craf
     expect(readingOf(single, true)).toEqual(single);
   });
 
+  test("a verdict naming twins lands at the launch on the candidates' event nearest it as the body landing reads nearness: by the window, not its start", () => {
+    // The first motor's event is known only to a window holding the verdict's instant; the second's is a day, closer to that instant by its start.
+    const wide = { ...rowOn(33472, T - 60 * DAY, "2008-067"), to: T + 30 * DAY };
+    const day = rowOn(33473, T + 20 * DAY, "2008-067");
+    expect(readingOf(landConfirmed(verdict(99999, [99999, 33472, 33473]), 0, [wide, day]), true).event).toBe(wide.breakup.id);
+    // With no instant of the event, the window nearest the raising, as on the body, not the latest.
+    const early = rowOn(33472, T + 35 * DAY, "2008-067");
+    const late = rowOn(33473, T + 60 * DAY, "2008-067");
+    const noInstant = { ...verdict(99999, [99999, 33472, 33473]), event: null };
+    expect(readingOf(landConfirmed(noInstant, 0, [early, late]), true).event).toBe(early.breakup.id);
+  });
+
   test("a confirmed verdict under a crewed station's launch is exempt, whatever it names", () => {
     expect(STATION_LAUNCHES).toContain("1998-067");
     expect(STATION_LAUNCHES).toContain("2021-035");

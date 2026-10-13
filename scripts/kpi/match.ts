@@ -449,17 +449,17 @@ export function subjectAt(parent: number, at: number, regime: Regime, index: Set
  * launch is exempt, whatever it names. A verdict naming candidates (twins)
  * is landed on the body it names first, and carries beside it the landing
  * at the launch's level (`twin`): a detection of the reported event on any
- * candidate within the window, the one nearest the verdict's instant.
+ * candidate within the window, the one nearest the verdict's instant of
+ * the event, else its raising (`nearestRow`, as on the body).
  */
 export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence" | "candidates">, i: number, rows: readonly Row[], stations: readonly string[] = STATION_LAUNCHES, visiting: readonly string[] = VISITING_LAUNCHES, regime: Regime = "unknown"): ConfirmedLanding {
   const landing = landOnBody(verdict, i, rows, stations, visiting, regime);
   const candidates = verdict.candidates;
   if (candidates === undefined || candidates.length < 2 || (landing.outcome === "exempt" && landing.note.startsWith("a crewed"))) return landing;
-  // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant where it gave one (twins may each break up within the half year), else the latest.
+  // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant of the event, else its raising, as on the body (twins may each break up within the half year).
   const after = FRAGMENTS_DAYS * DAY_MS;
   const onCandidates = rows.filter((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber !== null && candidates.includes(row.breakup.parent.catalogueNumber) && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after);
-  const at = verdict.event?.at;
-  const nearest = onCandidates.sort((a, b) => (at === undefined ? b.from - a.from : Math.abs(a.from - at) - Math.abs(b.from - at) || b.from - a.from))[0];
+  const nearest = nearestRow(onCandidates, verdict.event?.at ?? verdict.raisedAt);
   const twin = nearest === undefined ? { outcome: landing.outcome, event: landing.event, note: landing.note } : { outcome: "detection" as const, event: nearest.breakup.id, note: `a confirmed verdict naming the launch with ${nearest.breakup.parent.catalogueNumber}, a reported event's parent, among its candidates` };
   return { ...landing, candidates: [...candidates], twin };
 }
