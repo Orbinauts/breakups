@@ -43,14 +43,14 @@ describe("the breakup-report workflow", () => {
     expect(accept.if).toBe("github.event.label.name == 'breakup-report-accepted'");
   });
 
-  test("may write a branch, the issue and a run of another workflow, and nothing else", () => {
-    expect(report.permissions).toEqual({ contents: "write", issues: "write", actions: "write" });
+  test("may write the issue and a run of another workflow, and nothing else", () => {
+    expect(report.permissions).toEqual({ contents: "read", issues: "write", actions: "write" });
   });
 
   test("checks who applied the label before it adds anything, and adds only what it accepted", () => {
     const check = indexOf(accept.steps, "Check who accepted it");
-    const add = indexOf(accept.steps, "Add the statement and rebuild the truth");
-    const commit = indexOf(accept.steps, "Commit it to a branch and fold it in with the maintenance workflow");
+    const add = indexOf(accept.steps, "Check the statement against the hand file and the truth");
+    const commit = indexOf(accept.steps, "Say it is accepted and close the issue");
     expect(accept.steps[check]!.run).toContain("npm run -s truth:report -- check");
     expect(check).toBeLessThan(add);
     expect(add).toBeLessThan(commit);
@@ -58,11 +58,10 @@ describe("the breakup-report workflow", () => {
     expect(accept.steps[add]!.run).toContain("npm run -s truth:add -- --form");
   });
 
-  test("checks out main without leaving the token in the checkout before it installs anything, and pushes with the token named", () => {
+  test("checks out main without leaving the token in the checkout before it installs anything", () => {
     const checkout = accept.steps[indexOf(accept.steps, "Check out main")]! as Step & { with?: Record<string, unknown> };
     expect(checkout.with?.["persist-credentials"]).toBe(false);
     expect(indexOf(accept.steps, "Check out main")).toBeLessThan(indexOf(accept.steps, "Install the dependencies"));
-    for (const step of accept.steps) expect(step.run ?? "").not.toMatch(/git push(?![^\n]*x-access-token)/);
   });
 
   test("passes the repository's owner to the check, which accepts the owner's label alone", () => {
@@ -77,11 +76,9 @@ describe("the breakup-report workflow", () => {
     }
   });
 
-  test("commits to the issue's branch and runs the maintenance workflow from it", () => {
-    const run = accept.steps[indexOf(accept.steps, "Commit it to a branch and fold it in with the maintenance workflow")]!.run!;
-    expect(run).toContain('git switch -q -c "$BRANCH"');
-    expect(run).toContain("git add data/truth/hand.json data/breakups.json docs/truth.md");
-    expect(run).toContain('gh workflow run maintenance.yml --ref main -f from="$BRANCH"');
+  test("writes no branch: the statement is read again from the issue by the maintenance run", () => {
+    for (const step of accept.steps) expect(step.run ?? "").not.toMatch(/git (?:push|commit|switch)/);
+    expect(report.permissions["contents"]).toBe("read");
   });
 });
 
@@ -89,11 +86,13 @@ describe("the maintenance workflow's accepted reports", () => {
   const maintenance = read("maintenance.yml");
   const steps = maintenance.jobs["maintain"]!.steps;
 
-  test("are folded in by their statements, never merged as a branch", () => {
+  test("are read again from the accepted issues, the owner's label and the form, never from a branch", () => {
     const fold = steps[indexOf(steps, "Fold in a branch")]!.run!;
     expect(fold.indexOf("report/*)")).toBeLessThan(fold.indexOf("git merge"));
-    const add = steps[indexOf(steps, "Add the statements of the accepted reports")]!.run!;
-    expect(add).toContain("npm run -s truth:add -- --missing-from");
+    const add = steps[indexOf(steps, "Add the statements of the accepted reports")]!;
+    expect(add.run!.indexOf('npm run -s truth:report -- accepted "$RUNNER_TEMP/accepted.json"')).toBeLessThan(add.run!.indexOf('npm run -s truth:add -- --missing-from "$RUNNER_TEMP/accepted.json"'));
+    expect(add.env).toMatchObject({ GH_TOKEN: "${{ github.token }}", OWNER: "${{ github.repository_owner }}" });
+    for (const step of steps) expect(step.run ?? "").not.toMatch(/git show "?origin\/\$ref/);
   });
 
   test("are added after the dependencies are installed and before the truth is rebuilt, whatever started the run", () => {
@@ -103,8 +102,8 @@ describe("the maintenance workflow's accepted reports", () => {
     expect(add).toBeLessThan(indexOf(steps, "Fetch the machine-readable sources and rebuild the truth"));
   });
 
-  test("lose their branches once main holds them", () => {
-    const merge = steps[indexOf(steps, "Open the pull request and merge it")]!.run!;
-    expect(merge.indexOf("report-branches.txt")).toBeGreaterThan(merge.indexOf("gh pr merge"));
+  test("leave no branch: the report branches of the old way are deleted unread", () => {
+    expect(steps[indexOf(steps, "Add the statements of the accepted reports")]!.run).toContain("--delete");
+    expect(steps[indexOf(steps, "Open the pull request and merge it")]!.run).not.toContain("report-branches.txt");
   });
 });

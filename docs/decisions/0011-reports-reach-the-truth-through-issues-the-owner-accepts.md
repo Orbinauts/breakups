@@ -172,3 +172,27 @@ owner is refused as anyone else is. The workflow checks main out without
 leaving the token in the checkout (`persist-credentials: false`), since the
 dependencies' install scripts run in it, and names the token in the one
 command that needs it.
+
+## Amended on 2026-10-13: a report is read from the issue the owner accepted, never from a branch
+
+The review of issue #9 found that the maintenance run took statements from
+the contents of any `report/` branch: anyone who could push such a branch
+(a workflow, a collaborator) could put a statement into the truth that no
+one accepted. The branches are gone. The acceptance workflow still checks
+the owner's label and runs `npm run truth:add -- --form` on the body, so a
+refused form is answered at once, but it commits nothing; it closes the
+issue with a comment. Every maintenance run, whatever started it, reads
+each accepted report again from the issue itself (`npm run truth:report --
+accepted`, `acceptedStatement` in `scripts/truth/report-issue.ts`): an
+issue labelled `breakup-report` and `breakup-report-accepted` on which the
+last application of the accepting label, in the issue's events (GitHub's
+issue events API), was the repository owner's, and whose body was not
+edited after it (GraphQL's `lastEditedAt`), its form read by the form
+reader. The statements main lacks are appended
+(`npm run truth:add -- --missing-from`), as the branches' were. A body
+edited after the owner's label is no longer what the owner read: it waits
+until the owner labels the issue again. The `report/` branches an earlier
+run wrote are deleted unread, and `-f from=report/...` folds nothing in.
+The decision's bullet on folding reports in by their statements stands for
+the reason it gave: two reports accepted on one day both append to the
+hand file, and a run started for one also folds in the other.

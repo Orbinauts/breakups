@@ -11,15 +11,18 @@ name: Breakup report
 #    label, and an admin is not the owner. A label applied by anyone else
 #    is taken off again with a comment saying why.
 # 2. `npm run truth:add -- --form` reads the form's fields from the issue's
-#    body, checks the statement against the hand file's schema, appends it
-#    to data/truth/hand.json and rebuilds the truth. A statement it refuses
-#    leaves everything as it was: the label is taken off and a comment
-#    quotes the refusal, so the issue can be edited and labelled again.
-# 3. The hand file and the rebuilt truth are committed by the Actions bot
-#    to a branch `report/issue-<number>`, named by the issue's number alone,
-#    and the maintenance workflow is run on it (`-f from=<branch>`), which
-#    folds it in, replays the scorecard, runs every check and merges the
-#    result into main; the issue is closed with a link to its runs.
+#    body, checks the statement against the hand file's schema and builds
+#    the truth with it, on this runner only. A statement it refuses: the
+#    label is taken off and a comment quotes the refusal, so the issue can
+#    be edited and labelled again.
+# 3. An accepted statement is committed nowhere here. The issue is closed
+#    with a comment, and the maintenance workflow is run, which reads the
+#    statement again from the issue itself (the owner's label in the
+#    issue's events, the body unedited since; `npm run truth:report --
+#    accepted`), with every other accepted report's, appends those main
+#    lacks, replays the scorecard, runs every check and merges the result
+#    into main. No branch carries a statement, so none can carry one the
+#    owner did not accept.
 #
 # The issue's text is read only by the scripts, from the event's file,
 # never pasted into a shell command.
@@ -34,8 +37,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  # The branch the statement is committed to.
-  contents: write
+  # main, read; nothing is committed.
+  contents: read
   # The labels, the comments and the closing.
   issues: write
   # The maintenance workflow, run on the branch.
@@ -44,8 +47,6 @@ permissions:
 env:
   GH_REPO: ${{ github.repository }}
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  BOT_NAME: github-actions[bot]
-  BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
   accept:
@@ -54,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # The token is not left in the checkout: the dependencies' install scripts run next, and the one push names the token itself.
+      # The token is not left in the checkout: the dependencies' install scripts run next.
       - name: Check out main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,37 +72,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
         run: npm run -s truth:report -- check "$RUNNER_TEMP/report.md"
-      - name: Add the statement and rebuild the truth
+      - name: Check the statement against the hand file and the truth
         if: steps.check.outputs.accepted == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ steps.check.outputs.number }}
         run: |
           set -uo pipefail
-          if npm run -s truth:add -- --form "$RUNNER_TEMP/report.md" --message "$RUNNER_TEMP/message.txt" > "$RUNNER_TEMP/add.log" 2>&1; then
+          if npm run -s truth:add -- --form "$RUNNER_TEMP/report.md" > "$RUNNER_TEMP/add.log" 2>&1; then
             cat "$RUNNER_TEMP/add.log"
           else
             cat "$RUNNER_TEMP/add.log"
             npm run -s truth:report -- refused "$NUMBER" "$RUNNER_TEMP/add.log"
             exit 1
           fi
-      - name: Commit it to a branch and fold it in with the maintenance workflow
+      - name: Say it is accepted and close the issue
         if: steps.check.outputs.accepted == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ steps.check.outputs.number }}
-          BRANCH: ${{ steps.check.outputs.branch }}
-          ACCEPTED_BY: ${{ steps.check.outputs.by }}
         run: |
           set -euo pipefail
-          git config user.name "$BOT_NAME"
-          git config user.email "$BOT_EMAIL"
-          git switch -q -c "$BRANCH"
-          git add data/truth/hand.json data/breakups.json docs/truth.md
-          printf 'From the breakup-report issue %s, accepted by %s, in the run %s.\n' "$NUMBER" "$ACCEPTED_BY" "$RUN_URL" >> "$RUNNER_TEMP/message.txt"
-          git commit -q -F "$RUNNER_TEMP/message.txt"
-          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" "$BRANCH"
-          gh workflow run maintenance.yml --ref main -f from="$BRANCH"
+          gh workflow run maintenance.yml --ref main
           runs="https://github.com/$GH_REPO/actions/workflows/maintenance.yml"
-          gh issue comment "$NUMBER" --body "Accepted: the statement is on the branch \`$BRANCH\` with the truth rebuilt ($RUN_URL), and the maintenance workflow is folding it into main: $runs. A failure there opens its own issue."
+          gh issue comment "$NUMBER" --body "Accepted: the statement passes the hand file's checks and the truth builds with it ($RUN_URL). The maintenance workflow reads it again from this issue and folds it into main: $runs. Editing the issue now withdraws the acceptance until it is labelled again. A failure there opens its own issue."
           gh issue close "$NUMBER" --reason completed
