@@ -2,8 +2,10 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { afterAll, describe, expect, test } from "vitest";
-import { ATTRIBUTION_PATHS, DETECTOR_PARAMETERS, PHASES, REFUSALS, readBreakups, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { DETECTOR_PARAMETERS, readBreakups, reviveStates, serialiseStates, type Breakup, type DetectorInput, type LogRow, type Verdict } from "../src/index.ts";
+import { ATTRIBUTION_PATHS, PHASES, REFUSALS } from "../src/log.ts";
 import { decide, namedOf, rulesOf } from "../scripts/kpi/attributions.ts";
 import { REQUIRED_COLUMNS, catalogueIndexPath, releaseManifestPath, writeYear, type ArchivedBody, type Columns, type Manifest } from "../scripts/archive/archive.ts";
 import { readCatalogue } from "../scripts/kpi/catalogue.ts";
@@ -327,11 +329,13 @@ describe("the scorecard on the synthetic year", () => {
     const [headline, confirmedLines, confirmedVerdicts, earlyHeadline, lines, scoped, alertsTable, tiers, confirmed] = resultsTables(latest);
     // The early warning's headline: one detection, one late, one false alarm in the one year, the rates with their intervals.
     expect(earlyHeadline).toContain(`| Validation: the odd years (${YEAR}) | 2 | 1 | 1 | 1 | 0 | 50% (9% to 91%) | 1 | 50% (9% to 91%) | 1.0 |`);
-    // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body a false confirmation.
-    expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 1 | 50% (9% to 91%) | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
-    expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – |");
+    // The Confirmed headline, its lines and its verdicts: ALPHA confirmed, BETA and EPSILON listed apart, GAMMA's rocket body on no row, raised under 90 days before the truth's date (its last statement, 1 April 2013): unreported and pending, in neither count.
+    expect(headline).toContain(`| Validation: the odd years (${YEAR}) | 1 | 2 | 1 | 0 | 100% (21% to 100%) | 0 | 0% (0% to 79%) | – | – | 45.8 (45.8) | 1 of 1 | 1.2 (1.2) | 30.0 (30.0) |`);
+    expect(headline).toContain("| Training: the even years (no year) | 0 | 0 | 0 | 0 | – | 0 | – | – | – | – | – | – | – |");
     expect(confirmedLines).toContain("| Breakups, confidence A and B (the target is 90%) | 1 | 2 | 0 | 1 | 0 | 100% (21% to 100%) |");
-    expect(confirmedVerdicts).toContain("| False confirmations (matching no reported event) | 1 |");
+    expect(confirmedVerdicts).toContain("| False confirmations (matching no reported event) | 0 |");
+    expect(confirmedVerdicts).toContain("| Unreported and pending (no reported event yet, raised under 90 days before the truth's date; in neither count) | 1 |");
+    expect(latest.truthAsOf).toBe("2013-04-01");
     expect(confirmedVerdicts).toContain("| Of which the statement dated to the day / to the month | 0 / 1 |");
     // The scoped line: the synthetic bodies carry no launch day, so no parent is known to be five years old and the scope leaves every headline event out, which the table says.
     expect(scoped).toContain("| The whole catalogue | 2 | 1 | 1 | 1 | 0 |");
@@ -451,6 +455,21 @@ describe("the matching rule's pieces", () => {
     expect(state.nested.get("a")).toBe(Number.POSITIVE_INFINITY);
   });
 
+  test("the states file is the library's text with the year beside it, so the files already written still read, and a caller's stored states read as a file", () => {
+    // A file as the replay has always written it.
+    const written = '{"format":1,"year":2013,"states":{"__map":[[1,{"never":"-Infinity","unmeasured":"NaN","first":1500,"marks":[0,"Infinity"]}]]},"launches":{"__map":[["2010-001",{"firstSeenAt":"Infinity"}]]}}';
+    const path = join(work, "states", "compatible.json.gz");
+    writeStates(path, { format: 1, year: YEAR, states: new Map([[1, { never: Number.NEGATIVE_INFINITY, unmeasured: Number.NaN, first: 1500, marks: [0, Number.POSITIVE_INFINITY] }]]), launches: new Map([["2010-001", { firstSeenAt: Number.POSITIVE_INFINITY }]]) });
+    expect(gunzipSync(readFileSync(path)).toString("utf8")).toBe(written);
+    const expected = { states: new Map([[1, { never: Number.NEGATIVE_INFINITY, unmeasured: Number.NaN, first: 1500, marks: [0, Number.POSITIVE_INFINITY] }]]), launches: new Map([["2010-001", { firstSeenAt: Number.POSITIVE_INFINITY }]]) };
+    writeFileSync(path, gzipSync(written));
+    expect(readStates(path)).toEqual({ format: 1, year: YEAR, ...expected });
+    expect(reviveStates(written)).toEqual(expected);
+    // The library's text, stored by a caller, read as a states file.
+    writeFileSync(path, gzipSync(serialiseStates(expected)));
+    expect(readStates(path)).toMatchObject(expected);
+  });
+
   test("the lines by kind and confidence", () => {
     expect(lineOf({ kind: "breakup", confidence: "A" })).toBe("breakups A-B");
     expect(lineOf({ kind: "breakup", confidence: "B" })).toBe("breakups A-B");
@@ -557,6 +576,18 @@ describe("the Confirmed line's landings: the stations, the crewed and cargo craf
     const single = landConfirmed(verdict(33473), 0, rows);
     expect(single.twin).toBeUndefined();
     expect(readingOf(single, true)).toEqual(single);
+  });
+
+  test("a verdict naming twins lands at the launch on the candidates' event nearest it as the body landing reads nearness: by the window, not its start", () => {
+    // The first motor's event is known only to a window holding the verdict's instant; the second's is a day, closer to that instant by its start.
+    const wide = { ...rowOn(33472, T - 60 * DAY, "2008-067"), to: T + 30 * DAY };
+    const day = rowOn(33473, T + 20 * DAY, "2008-067");
+    expect(readingOf(landConfirmed(verdict(99999, [99999, 33472, 33473]), 0, [wide, day]), true).event).toBe(wide.breakup.id);
+    // With no instant of the event, the window nearest the raising, as on the body, not the latest.
+    const early = rowOn(33472, T + 35 * DAY, "2008-067");
+    const late = rowOn(33473, T + 60 * DAY, "2008-067");
+    const noInstant = { ...verdict(99999, [99999, 33472, 33473]), event: null };
+    expect(readingOf(landConfirmed(noInstant, 0, [early, late]), true).event).toBe(early.breakup.id);
   });
 
   test("a confirmed verdict under a crewed station's launch is exempt, whatever it names", () => {

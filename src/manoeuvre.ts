@@ -1,5 +1,7 @@
-import type { DetectorParameters } from "./params.ts";
+import { median } from "./model.ts";
+import type { DetectorParameters, LegacyParameters } from "./params.ts";
 import type { BodyClass, Regime } from "./truth.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The object's own step history, and what it says about the step being
@@ -22,8 +24,6 @@ import type { BodyClass, Regime } from "./truth.ts";
  * the step, which is what a live run has. End-of-life dates and other
  * hindsight are not read.
  */
-
-const DAY_MS = 86_400_000;
 
 /** One accepted step of the object's past, as the history keeps it: when, how far, and the impulse it implied. */
 export interface StepRecord {
@@ -106,12 +106,6 @@ export function recordStep(steps: StepRecord[], record: StepRecord, params: Dete
   pruneHistory(steps, record.epochMs, params);
 }
 
-const median = (values: number[]): number => {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
-};
-
 /** Whether the step has the size and shape of an end-of-life move: in low orbit a perigee lowered by the parameter with the apogee kept, or a raise past the parameter; at geosynchronous altitude a raise past the graveyard parameter. */
 export function isDisposalLike(step: CurrentStep, params: DetectorParameters): boolean {
   const deltaApogee = 2 * step.deltaKm - step.deltaPerigeeKm;
@@ -128,7 +122,7 @@ export function featuresOf(steps: StepRecord[], step: CurrentStep, firstEpochMs:
   const oldest = step.epochMs - params.historyDays * DAY_MS;
   const past = steps.filter((s) => s.epochMs < step.epochMs && s.epochMs >= oldest);
   const n730 = past.length;
-  const n365 = past.filter((s) => s.epochMs >= step.epochMs - 365 * DAY_MS).length;
+  const n365 = past.filter((s) => s.epochMs >= step.epochMs - params.stationKeepingWindowDays * DAY_MS).length;
   const ageDays = Number.isFinite(firstEpochMs) ? (step.epochMs - firstEpochMs) / DAY_MS : 0;
   const sign = Math.sign(step.deltaKm);
   let regularity = Number.NaN;
@@ -212,7 +206,7 @@ export function atypicalReasons(features: HistoryFeatures, step: CurrentStep, pa
 }
 
 /** Whether a step of the class is raised on the parent alone: a unique step, one the atypical tests single out, or, where the parameter says so, an occasional step on an object the catalogue does not class as a payload, since a stage or a fragment does not manoeuvre and its past step was the catalogue's fit absorbing something. */
-export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[], bodyClass: BodyClass = "payload", params?: Pick<DetectorParameters, "occasionalRaisesNonPayload">): boolean {
+export function isRaised(manoeuvreClass: ManoeuvreClass, atypical: string[], bodyClass: BodyClass = "payload", params?: { legacy: Pick<LegacyParameters, "occasionalRaisesNonPayload"> }): boolean {
   if (manoeuvreClass === "unique" || atypical.length > 0) return true;
-  return params?.occasionalRaisesNonPayload === true && manoeuvreClass === "occasional" && bodyClass !== "payload";
+  return params?.legacy.occasionalRaisesNonPayload === true && manoeuvreClass === "occasional" && bodyClass !== "payload";
 }

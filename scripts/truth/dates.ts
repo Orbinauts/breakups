@@ -1,4 +1,5 @@
 import type { Precision, StatedTime } from "../../src/truth.ts";
+import { isoMinute } from "../time.ts";
 
 /**
  * The dates and times the sources write, read into the window a statement
@@ -41,12 +42,12 @@ export function utc(year: number, m: number, d: number, h = 0, min = 0, s = 0): 
 /** A window, both edges included, over whole days: from the first day's midnight to the midnight after the last. */
 function days(year: number, m: number, first: number, last: number, precision: Precision = "day"): Omit<StatedTime, "stated"> {
   const end = new Date(Date.UTC(year, m - 1, last + 1));
-  return { at: null, from: utc(year, m, first), to: `${end.toISOString().slice(0, 16)}Z`, precision };
+  return { at: null, from: utc(year, m, first), to: isoMinute(end), precision };
 }
 
 function months(year: number, first: number, last: number, precision: Precision = "month"): Omit<StatedTime, "stated"> {
   const end = new Date(Date.UTC(year, last, 1));
-  return { at: null, from: utc(year, first, 1), to: `${end.toISOString().slice(0, 16)}Z`, precision };
+  return { at: null, from: utc(year, first, 1), to: isoMinute(end), precision };
 }
 
 function years(first: number, last: number): Omit<StatedTime, "stated"> {
@@ -83,9 +84,9 @@ export function parseNasaDate(text: string): Shape {
   if ((m = /^(\d{1,2})\.(\d+) ([A-Za-z]+\.?) (\d{4})$/.exec(s)) !== null) {
     const [year, mo, d] = [Number(m[4]), month(m[3]!), Number(m[1])];
     const minutes = Math.round(Number(`0.${m[2]}`) * 1440);
-    const at = `${new Date(Date.UTC(year, mo - 1, d, 0, minutes)).toISOString().slice(0, 16)}Z`;
+    const at = isoMinute(new Date(Date.UTC(year, mo - 1, d, 0, minutes)));
     const half = Math.ceil((1440 / 10 ** m[2]!.length) / 2);
-    const edge = (offset: number): string => `${new Date(Date.UTC(year, mo - 1, d, 0, minutes + offset)).toISOString().slice(0, 16)}Z`;
+    const edge = (offset: number): string => isoMinute(new Date(Date.UTC(year, mo - 1, d, 0, minutes + offset)));
     return { at, from: edge(-half), to: edge(half), precision: m[2]!.length >= 3 ? "minute" : "hour" };
   }
   // "23 Dec. 2019", "25 Dec 2013", "3 Apr 2014", "14 Feb 2006"
@@ -152,7 +153,7 @@ export function parseNasaDate(text: string): Shape {
 function widened(year: number, mo: number, d: number): Shape {
   const start = new Date(Date.UTC(year, mo - 1, d - 1));
   const end = new Date(Date.UTC(year, mo - 1, d + 2));
-  return { at: null, from: `${start.toISOString().slice(0, 16)}Z`, to: `${end.toISOString().slice(0, 16)}Z`, precision: "day" };
+  return { at: null, from: isoMinute(start), to: isoMinute(end), precision: "day" };
 }
 
 function dayOf(iso: string): [number, number, number] {
@@ -228,7 +229,7 @@ export function nasaWindow(date: string, time: string | null): StatedTime {
   const [y, mo, d] = dayOf(day.from!);
   const minute = (minutes: number, extraDays = 0): string => {
     const t = new Date(Date.UTC(y, mo - 1, d + extraDays, 0, minutes));
-    return `${t.toISOString().slice(0, 16)}Z`;
+    return isoMinute(t);
   };
   if (clock.before) return { stated, at: null, from: minute(0), to: minute(clock.end!), precision: "hour" };
   if (clock.start === clock.end) {
@@ -258,7 +259,7 @@ export function parseVagueDate(text: string): StatedTime {
     if (!uncertain) return { stated, ...months(year, mo, mo) };
     const before = new Date(Date.UTC(year, mo - 2, 1));
     const after = new Date(Date.UTC(year, mo + 1, 1));
-    return { stated, at: null, from: `${before.toISOString().slice(0, 16)}Z`, to: `${after.toISOString().slice(0, 16)}Z`, precision: "month" };
+    return { stated, at: null, from: isoMinute(before), to: isoMinute(after), precision: "month" };
   }
   const d = Number(m[3]);
   if (m[4] === undefined) return { stated, ...(uncertain ? widened(year, mo, d) : days(year, mo, d, d)) };
@@ -266,6 +267,6 @@ export function parseVagueDate(text: string): StatedTime {
   const seconds = m[6] === undefined ? 0 : Number(m[6]);
   const at = utc(year, mo, d, h, min, seconds);
   if (!uncertain) return { stated, at, from: at, to: at, precision: seconds === 0 ? "minute" : "second" };
-  const edge = (offset: number): string => `${new Date(Date.UTC(year, mo - 1, d, h, min + offset)).toISOString().slice(0, 16)}Z`;
+  const edge = (offset: number): string => isoMinute(new Date(Date.UTC(year, mo - 1, d, h, min + offset)));
   return { stated, at, from: edge(-1), to: edge(1), precision: "minute" };
 }

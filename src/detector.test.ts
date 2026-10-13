@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { OUTCOMES, PHASES, REFUSALS } from "./log.ts";
 import { MANOEUVRE_CLASSES } from "./manoeuvre.ts";
-import { DETECTOR_PARAMETERS, type DetectorParameters } from "./params.ts";
+import { DETECTOR_PARAMETERS, type DetectorParameters, type ParameterOverrides } from "./params.ts";
 import { OPEN_GATES, WHOLE_CATALOGUE } from "./scope.ts";
 import { nodePrecessionDegPerDay } from "./series.ts";
 import { DAY, HOUR, feed, meanMotionOf, noise, one, pieceOf, setOf, type SyntheticSet } from "./synthetic.test-support.ts";
 import type { ElementSet } from "./elements.ts";
 import type { PiecesEventTime } from "./event-time.ts";
-import { passesSmallBatch } from "./run.ts";
+import { passesSmallBatch } from "./confirmation.ts";
+import type { DetectorInput, LogRow } from "./detector.ts";
+import { CATALOGUE_KEY, type CatalogueRecord, type LaunchRecord } from "./fragments.ts";
+import { runDetector } from "./run.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
@@ -66,6 +69,27 @@ describe("the detector on synthetic series", () => {
     expect(suspected(alone).length).toBeGreaterThan(0);
   });
 
+  test("a storm's jump, taken off as common mode, opens no candidate and leaves the later sets of the same run their residuals", () => {
+    // The storm of the test above, each object's sets coming two to a run: the first of the pair at the storm's onset jumps before the common mode is taken off.
+    const objects = Array.from({ length: 40 }, (_, i) => ({ number: 100 + i, bstar: 2e-4 * (1 + (i % 5)), gauss: noise(10 + i) }));
+    const batches: ReturnType<typeof setOf>[][] = [];
+    for (let t = 0; t <= 24 * DAY; t += 16 * HOUR) {
+      const batch = [t, t + 8 * HOUR].flatMap((at) =>
+        objects.map((o) => setOf(o.number, { epochMs: T0 + at, aKm: 7100 - 0.05 * (at / DAY) * (o.bstar / 2e-4) + (at >= 20 * DAY ? -200 * o.bstar : 0) + 0.003 * o.gauss(), bstar: o.bstar })),
+      );
+      batches.push(batch);
+    }
+    const fed = feed(batches);
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.phase === PHASES.open)).toEqual([]);
+    for (const o of objects) {
+      const state = fed.states.get(o.number) as { epochs: number[]; resid: number[] };
+      const onset = state.epochs.findIndex((e) => e >= T0 + 20 * DAY);
+      expect(onset).toBeGreaterThan(0);
+      expect(state.resid.slice(onset).every(Number.isFinite)).toBe(true);
+    }
+  });
+
   test("a bad set is dismissed when the next sets are back where the model said", () => {
     const series = decaying(7200, 0.02, 0.004, 30);
     series[60]!.aKm += 0.5;
@@ -101,6 +125,34 @@ describe("the detector on synthetic series", () => {
     expect(watch!.raisedAt).toBeLessThan(verdict.raisedAt);
     // No second verdict on the same step, and the object's window restarted on the post sets.
     expect(fed.verdicts.filter((v) => v.state === "dismissed")).toEqual([]);
+  });
+
+  test("a step fifty times the object's noise leaves the object's own scatter as it was before it, whether its sets came one a run or the jump and the next two in one run", () => {
+    const series = decaying(7200, 0.02, 0.004, 24);
+    const stepAt = 24;
+    for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.2;
+    const sets = series.map((s) => setOf(1, s, "rocket body"));
+    const scatter = (fed: ReturnType<typeof feed>) => fed.states.get(1) as { shortSigma: number; longSigma: number; residualCount: number };
+    const before = scatter(feed(one(sets.slice(0, stepAt))));
+    expect(before.residualCount).toBeGreaterThanOrEqual(params.residualsForScatter);
+    const apart = feed(one(sets.slice(0, stepAt + 3)));
+    const together = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 3)]);
+    for (const fed of [apart, together]) {
+      const closed = fed.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)!;
+      expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(closed.signals.outcome);
+      expect(Math.abs(closed.signals.z1!)).toBeGreaterThan(2 * params.zCand);
+      expect(scatter(fed).shortSigma).toBe(before.shortSigma);
+      expect(scatter(fed).residualCount).toBe(before.residualCount);
+    }
+    // The long memory took the jump's residual alone, clipped, in both: the sets after it in the same run are not the object's noise either.
+    expect(scatter(together).longSigma).toBe(scatter(apart).longSigma);
+    // A batch of twenty-eight sets after the jump in one run, as a bundle of history brings (among other objects' sets, so the band's common mode is not this object's alone): the sets whose trailing window no longer held the jump keep their residuals.
+    const bundled = feed([...one(sets.slice(0, stepAt)), sets.slice(stepAt, stepAt + 29)], { parameters: { bandMinMembers: 1000 } });
+    expect([OUTCOMES.suspected, OUTCOMES.manoeuvre]).toContain(bundled.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === series[stepAt]!.epochMs)?.signals.outcome);
+    const state = bundled.states.get(1) as { epochs: number[]; resid: number[] };
+    const clear = state.epochs.map((e, i) => [e, state.resid[i]!] as const).filter(([e]) => e > series[stepAt + params.windowSets.LEO]!.epochMs);
+    expect(clear.length).toBeGreaterThan(10);
+    expect(clear.every(([, r]) => Number.isFinite(r))).toBe(true);
   });
 
   test("a drift that grows from nothing at a rate drag can produce opens no candidate: the drag term covers it", () => {
@@ -148,6 +200,36 @@ describe("the detector on synthetic series", () => {
     expect(suspected(fed)).toEqual([]);
     expect(fed.verdicts.map((v) => v.state)).toEqual(["watch", "dismissed"]);
     expect(fed.log.at(-1)!.signals.outcome).toBe(OUTCOMES.lapsed);
+  });
+
+  test("candidates that lapse in one run lapse in the order the detector first met their objects, whatever order they opened in, and a record written before the catalogue listed its candidates still lapses them", () => {
+    const stepAt = 45;
+    const seriesOf = (seed: number): SyntheticSet[] => {
+      const series = decaying(7200, 0.02, 0.004, 20, 8, seed);
+      series.splice(stepAt + 1);
+      series[stepAt]!.aKm += -0.3;
+      return series;
+    };
+    const [first, second] = [seriesOf(1), seriesOf(2)];
+    // Object 2 is met first; at the step, object 1's set comes first in the run, so its candidate opens first.
+    const batches = first.map((s, i) => (i === stepAt ? [setOf(1, s), setOf(2, second[i]!)] : [setOf(2, second[i]!), setOf(1, s)]));
+    const lapsedOrder = (forget: boolean): number[] => {
+      let states: DetectorInput["states"] = new Map();
+      let launches: DetectorInput["launches"] = new Map();
+      const log: LogRow[] = [];
+      let now = 0;
+      const run = (sets: ElementSet[], at: number): void => {
+        const output = runDetector({ states, launches, sets, now: at });
+        [states, launches, now] = [output.states, output.launches, at];
+        log.push(...output.log);
+      };
+      for (const batch of batches) run(batch, batch[0]!.epochMs + HOUR);
+      if (forget) delete (launches.get(CATALOGUE_KEY) as CatalogueRecord).candidates;
+      for (let at = now + 4 * HOUR; at <= first[stepAt]!.epochMs + 8 * DAY; at += 4 * HOUR) run([], at);
+      return log.filter((row) => row.signals.outcome === OUTCOMES.lapsed).map((row) => row.number);
+    };
+    expect(lapsedOrder(false)).toEqual([2, 1]);
+    expect(lapsedOrder(true)).toEqual([2, 1]);
   });
 
   test("a quiet old rocket body with one large step is suspected as a unique step, with the impulse it implies", () => {
@@ -266,9 +348,10 @@ describe("the detector on synthetic series", () => {
     const series = decaying(7200, 0.02, 0.004, 40, 20);
     const stepAt = 30;
     for (let i = stepAt; i < series.length; i++) series[i]!.aKm += -0.3;
-    const day = (kp: number) => ({ day: "2020-04-21", kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null });
-    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: [day(2)] });
-    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: [day(7)] });
+    // The run's own day, whichever it is: the run reads its day and the two before it.
+    const day = (kp: number) => (at: number) => [{ day: new Date(at).toISOString().slice(0, 10), kp: [kp, kp, kp, kp, kp, kp, kp, kp], ap: [], Ap: 50, f107: 120, f107Adjusted: 120, dst: null }];
+    const quiet = feed(one(series.map((s) => setOf(1, s))), { space: day(2) });
+    const stormy = feed(one(series.map((s) => setOf(1, s))), { space: day(7) });
     expect(suspected(quiet)[0]!.step!.postSets).toBe(2);
     expect(suspected(stormy)[0]!.step!.postSets).toBe(3);
     expect(suspected(stormy)[0]!.reasons.join(" ")).toContain("storm hold");
@@ -653,6 +736,29 @@ describe("the confirmation rules", () => {
     expect(row.signals.confirmDeltaVMps).toBeLessThan(params.confirmDeltaVMinMps);
     expect(row.signals.confirmRefused).toBe(1);
   });
+
+  test("an alert whose pieces were refused, closed by a second persistent step before its time ran out, expires and says so", () => {
+    // The parent of the test above, stepping again ten days after its first step, while the first alert is still open.
+    const series = decaying(7200, 0.02, 0.004, 48);
+    for (let i = 105; i < series.length; i++) series[i]!.aKm += -0.3;
+    for (let i = 135; i < series.length; i++) series[i]!.aKm += -0.3;
+    const parent = series.map((s) => withNode(setOf(1, s, "rocket body")));
+    const stepEpoch = parent[105]!.epochMs;
+    const fed = feed(runsWith(parent, [debris(50001, 6, stepEpoch + 5 * DAY, 0, { aKm: 7199.7, spreadKm: 0.1 })]));
+    const raised = fed.verdicts.filter((v) => (v.state === "suspected" || v.state === "manoeuvre") && v.number === 1).map((v) => v.step!.afterEpoch);
+    expect(raised).toEqual([stepEpoch, parent[135]!.epochMs]);
+    expect(confirmedOn(fed, 1)).toEqual([]);
+    const first = fed.log.filter((r) => r.signals.phase === PHASES.alert && r.number === 1)[0]!;
+    expect(first.signals.afterEpoch).toBe(stepEpoch);
+    expect(first.signals.confirmRefused).toBe(1);
+    expect(first.signals.outcome).toBe(OUTCOMES.expired);
+    const expired = fed.verdicts.filter((v) => v.state === "expired" && v.number === 1);
+    expect(expired).toHaveLength(1);
+    expect(expired[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(expired[0]!.evidence.piecesInPlane).toBe(6);
+    expect(expired[0]!.reasons.join(" ")).toContain("refused");
+    expect(expired[0]!.reasons.join(" ")).toContain("a second persistent step");
+  });
 });
 
 /**
@@ -709,6 +815,25 @@ describe("the Confirmed channel's attribution", () => {
     // Its row in the log carries the readings the sweep re-applies the rules from.
     const row = fed.log.find((r) => r.signals.phase === PHASES.attribution && r.number === 1)!;
     expect(row.signals).toMatchObject({ attributionPath: 1, attributionPieces: 6, attributionKept: 6, attributionRivals: 0, attributionRefused: 0, attributionRaised: 1 });
+  });
+
+  test("a set the screen cannot read notes no body under its launch, so it leaves the launch's cloud to be judged", () => {
+    const body = quietBody(1, "2010-001A");
+    const pieces = cloudOf(body, 50001);
+    const junk: ElementSet = { ...pieces[0]!, number: 50007, designator: "2010-001J", epochMs: Number.NaN };
+    const fed = feed(runs(body, [[...pieces, junk]]));
+    const confirmed = attributed(fed);
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0]!.bodies).toEqual([50001, 50002, 50003, 50004, 50005, 50006]);
+  });
+
+  test("a set whose drag derivative alone is junk still notes its body, when it was first published: its instant and orbit are sound", () => {
+    const first = { ...setOf(60001, { epochMs: T0, aKm: 7200, meanMotionDot: -2e-4 }, "debris"), designator: "2010-009C" };
+    const later = { ...setOf(60001, { epochMs: T0 + DAY, aKm: 7200 }, "debris"), designator: "2010-009C" };
+    const one = runDetector({ states: new Map(), launches: new Map(), sets: [first], now: T0 + HOUR });
+    const two = runDetector({ states: one.states, launches: one.launches, sets: [later], now: T0 + DAY + HOUR });
+    const launch = two.launches.get("2010-009") as LaunchRecord;
+    expect(launch.bodies.map((b) => [b.number, b.firstSeenAt])).toEqual([[60001, T0 + HOUR]]);
   });
 
   test("of two bodies of the launch in different planes, the pieces are attributed to the one whose plane they share", () => {
@@ -1150,7 +1275,7 @@ describe("the eleventh phase's rules", () => {
 
   test("in its narrower form a rocket body is preferred only over a payload operating at the time", () => {
     // The scene above, the payload operating or not by its status.
-    const runsWith = (status: Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
+    const runsWith = (status: Pick<ElementSet, "opsStatus" | "endedByMs"> | Pick<ElementSet, "opsStatus"> | Record<string, never>): ElementSet[][] => {
       const quiet = decaying(7200, 0.02, 0.004, 48).map((s) => setOf(2, s, "payload", status));
       const stage = decaying(7210, 0.02, 0.004, 48, 8, 3).map((s) => ({ ...setOf(7, s, "rocket body"), designator: "2010-002B" }));
       const at = quiet[110]!.epochMs;
@@ -1158,7 +1283,7 @@ describe("the eleventh phase's rules", () => {
       const both = (from: number, to: number): ElementSet[][] => one(quiet.slice(from, to).flatMap((s, i) => [s, stage[from + i]!]));
       return [...both(0, 115), pieces, ...both(115, quiet.length)];
     };
-    const named = (runs: ElementSet[][], parameters: Partial<DetectorParameters>): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
+    const named = (runs: ElementSet[][], parameters: ParameterOverrides): number[] => feed(runs, { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, ...parameters } }).verdicts.filter((v) => v.state === "confirmed").map((v) => v.number!);
     const working = runsWith({ opsStatus: "operational" });
     expect(named(working, { attributionPrefersStageOverWorking: true })).toEqual([7]);
     expect(named(working, { attributionPrefersStageOverWorking: false })).toEqual([2]);
@@ -1167,5 +1292,62 @@ describe("the eleventh phase's rules", () => {
     const row = feed(runsWith({}), { parameters: { ...PLANE_ONLY, attributionPreferCentreRatio: 6, attributionPrefersStageOverWorking: true } }).log.find((r) => r.signals.phase === PHASES.attribution && r.signals.launch === 2010002)!;
     expect(row.signals.preferNamedRank).toBe(1);
     expect(Number.isFinite(row.signals.preferAlternative)).toBe(false);
+    // The status is read at the event, not at the run: a payload whose dated end of contact falls just over the margin after the pieces' first epoch was operating then, though at the run, an hour later, the end is within the margin and its status unknown.
+    const event = decaying(7200, 0.02, 0.004, 48)[110]!.epochMs + HOUR;
+    const endedByMs = event + (params.endedUnknownDays + 1) * DAY + 30 * 60_000;
+    expect(named(runsWith({ opsStatus: "nonoperational", endedByMs }), { attributionPrefersStageOverWorking: true })).toEqual([7]);
+  });
+});
+
+describe("the three-axis trigger (d13-three-axis-trigger.md)", () => {
+  // A quiet old rocket body whose orbit changes shape at constant period: on one set the perigee radius drops half a kilometre and the apogee rises as much, the semi-major axis untouched, as a mostly radial recoil leaves it.
+  const shapeStep = (): ElementSet[][] => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const stepAt = 90;
+    return one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i >= stepAt ? 0.5 / 7200 : 0) }, "rocket body")));
+  };
+  const stepEpoch = T0 + 90 * 8 * HOUR;
+
+  test("off, as fitted, a step in the perigee radius alone opens no candidate: the semi-major axis did not move", () => {
+    const fed = feed(shapeStep());
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.log.filter((r) => r.signals.afterEpoch === stepEpoch)).toEqual([]);
+  });
+
+  test("on, the same step opens a candidate on the perigee radius, holds there, and is suspected on its bracket, saying which residual opened it", () => {
+    const fed = feed(shapeStep(), { parameters: { openOnThreeAxes: true } });
+    const raised = suspected(fed);
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(raised[0]!.step!.deltaPerigeeKm).toBeCloseTo(-0.5, 1);
+    expect(raised[0]!.reasons.join(" ")).toContain("opened on the perigee radius");
+  });
+
+  test("on, a plane change at constant period, a fiftieth of a degree of inclination, is suspected too, with the normal impulse it implies", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const sets = one(series.map((s, i) => setOf(1, { ...s, inclinationDeg: 98 + (i >= 90 ? 0.02 : 0) }, "rocket body")));
+    expect(suspected(feed(sets))).toEqual([]);
+    const raised = suspected(feed(sets, { parameters: { openOnThreeAxes: true } }));
+    expect(raised).toHaveLength(1);
+    expect(raised[0]!.step!.afterEpoch).toBe(stepEpoch);
+    expect(raised[0]!.step!.deltaInclinationDeg).toBeCloseTo(0.02, 3);
+    expect(raised[0]!.reasons.join(" ")).toContain("opened on the inclination");
+    // 0.02 degrees at 7.44 km/s is about 2.6 m/s across the track.
+    expect(raised[0]!.reasons.join(" ")).toMatch(/2\.\d\d m\/s across it/);
+  });
+
+  test("on, an object whose own scatter is not yet measured, six sets old, opens nothing on a five-kilometre perigee drop: the fits' scales are read against that scatter", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const early = one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i >= 6 ? 5 / 7200 : 0) }, "rocket body")));
+    expect(suspected(feed(early, { parameters: { openOnThreeAxes: true } }))).toEqual([]);
+  });
+
+  test("on, a single bad set in the perigee radius the next sets undo is dismissed as a bad set, and nothing is raised", () => {
+    const series = decaying(7200, 0.02, 0.004, 40);
+    const fed = feed(one(series.map((s, i) => setOf(1, { ...s, eccentricity: 0.001 + (i === 90 ? 0.5 / 7200 : 0) }, "rocket body"))), { parameters: { openOnThreeAxes: true } });
+    expect(suspected(fed)).toEqual([]);
+    expect(fed.verdicts.filter((v) => v.state === "manoeuvre")).toEqual([]);
+    const closed = fed.log.find((r) => r.signals.phase === PHASES.close && r.signals.afterEpoch === stepEpoch);
+    expect(closed?.signals.outcome).toBe(OUTCOMES.reverted);
   });
 });

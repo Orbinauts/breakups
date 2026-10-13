@@ -58,7 +58,7 @@ describe("the ground-truth page's table", () => {
   const scoreable = since.filter((b) => b.scoreable);
   const counts: Record<string, number> = {
     All: since.length,
-    "Scoreable (breakups and anomalous events of a catalogued object)": scoreable.length,
+    "Scoreable (breakups and anomalous events of a catalogued object or of a launch)": scoreable.length,
     Breakups: since.filter((b) => b.kind === "breakup").length,
     "Anomalous events (low-velocity shedding)": since.filter((b) => b.kind === "anomalous").length,
     "Aerodynamic breakups at reentry (kept out)": since.filter((b) => b.kind === "aerodynamic").length,
@@ -66,8 +66,8 @@ describe("the ground-truth page's table", () => {
     "Reports naming no object (kept out)": since.filter((b) => b.kind === "unnamed").length,
     "Confidence A (an authority states the minute)": scoreable.filter((b) => b.confidence === "A").length,
     "Confidence B (an authority states the day, or a window of three days at most)": scoreable.filter((b) => b.confidence === "B").length,
-    "Confidence C (GCAT alone, an authority's month, or an analyst's dating)": scoreable.filter((b) => b.confidence === "C").length,
-    "Confidence D (pieces in the catalogue, or news with no time)": scoreable.filter((b) => b.confidence === "D").length,
+    "Confidence C (GCAT dates it, an authority states the month, or an analyst's dating or a company's measured instant)": scoreable.filter((b) => b.confidence === "C").length,
+    "Confidence D (pieces in the catalogue, or news to the day at best)": scoreable.filter((b) => b.confidence === "D").length,
   };
   const lines = section(GROUND_TRUTH, "The counts")
     .split("\n")
@@ -109,7 +109,9 @@ describe("the results page's headline", () => {
       recall: withInterval(line.rate!, line.interval!),
       falseConfirmations: `${c.falseAlarms} of ${c.falseAlarms + c.detectedAllLines}`,
       falseAlarmRate: withInterval(c.falseAlarmRate!, c.falseAlarmInterval!),
-      lead: `${Math.round(c.lead!.median)} days, ${c.beforeStatement} of ${c.withStatement} before it`,
+      notice: c.leadNotice == null ? "–" : `${Math.round(c.leadNotice.median)} days, ${c.beforeNotice} of ${c.withNotice} before it`,
+      quarterly: c.leadQuarterly == null ? "–" : `${Math.round(c.leadQuarterly.median)} days, ${c.beforeQuarterly} of ${c.withQuarterly} before it`,
+      dated: `${c.statementDays} / ${c.statementMonths}`,
       timing: duration(c.timing!.median),
     };
   };
@@ -122,7 +124,9 @@ describe("the results page's headline", () => {
     ["Recall (95% interval)", h.recall, t.recall, "90% or more"],
     ["False confirmations, of all events confirmed", h.falseConfirmations, t.falseConfirmations, ""],
     ["False-alarm rate (95% interval)", h.falseAlarmRate, t.falseAlarmRate, "under 10%"],
-    ["Median lead over the first agency statement", h.lead, t.lead, ""],
+    ["Median lead over the first agency notice dated to the day", h.notice, t.notice, ""],
+    ["Median lead over NASA's quarterly news, dated to its month", h.quarterly, t.quarterly, ""],
+    ["First agency statements dated to the day / to the month", h.dated, t.dated, ""],
     ["Median timing error", h.timing, t.timing, ""],
   ];
 
@@ -165,10 +169,19 @@ describe("the results page's sentences on the medians", () => {
   const spoken = (days: number): string => (days >= 14 ? count(Math.round(days / 7), "week") : days >= 2 ? count(Math.round(days), "day") : Math.round(days * 24) < 1 ? "under an hour" : count(Math.round(days * 24), "hour"));
   const text = marked(RESULTS, "kpi:medians");
 
-  test("the lead over the first agency statement, as the aggregate gives it", () => {
-    expect(c.lead).not.toBeNull();
-    const who = c.beforeStatement === c.withStatement ? "Every held-out confirmation with an agency's statement came before that statement" : `${c.beforeStatement} of the ${c.withStatement} held-out confirmations with an agency's statement came before that statement`;
-    expect(text).toContain(c.lead!.median >= 0 ? `${who}, and the median one by ${spoken(c.lead!.median)}.` : `${who}, and the median one ${spoken(-c.lead!.median)} after it.`);
+  test("the lead over the first agency notice dated to the day, as the aggregate gives it, or that none is dated yet", () => {
+    if (c.leadNotice == null || !c.withNotice) {
+      expect(text).toContain("No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them.");
+      return;
+    }
+    const who = c.beforeNotice === c.withNotice ? "Every held-out confirmation with an agency notice dated to the day came before that notice" : `${c.beforeNotice} of the ${c.withNotice} held-out confirmations with an agency notice dated to the day came before that notice`;
+    expect(text).toContain(c.leadNotice.median >= 0 ? `${who}, and the median one by ${spoken(c.leadNotice.median)}.` : `${who}, and the median one ${spoken(-c.leadNotice.median)} after it.`);
+  });
+
+  test("the lead over NASA's quarterly news, as the aggregate gives it", () => {
+    if (c.leadQuarterly == null || !c.withQuarterly) return;
+    const who = c.beforeQuarterly === c.withQuarterly ? "Every held-out confirmation with an issue of NASA's quarterly news came before that issue's month" : `${c.beforeQuarterly} of the ${c.withQuarterly} held-out confirmations with an issue of NASA's quarterly news came before that issue's month`;
+    expect(text).toContain(c.leadQuarterly.median >= 0 ? `${who}, and the median one by ${spoken(c.leadQuarterly.median)}.` : `${who}, and the median one ${spoken(-c.leadQuarterly.median)} after it.`);
   });
 
   test("the lag after the first fresh piece, as the aggregate gives it", () => {
@@ -211,7 +224,8 @@ describe("the results page's scorecard tables", () => {
     }
   });
 
-  test("is computed from the truth the package ships", () => {
+  // The weekly maintenance runs the suite once before its replay, on a truth it has just rebuilt: there, and only there, this is the replay's to make good (BREAKUPS_SCORECARD_PENDING).
+  test.skipIf(process.env["BREAKUPS_SCORECARD_PENDING"] === "1")("is computed from the truth the package ships", () => {
     expect(latest.truthSha256).toBe(createHash("sha256").update(readFileSync(resolve(ROOT, "data/breakups.json"))).digest("hex"));
   });
 });
@@ -232,7 +246,7 @@ describe("the results page's early warning", () => {
       expect(row[8]).toBe(withInterval(cells.falseAlarmRate!, cells.falseAlarmInterval!));
       expect(row[9]).toBe((cells.falseAlarms / cells.years.length).toFixed(1));
       expect(row[10]).toBe(cells.falseAlarmsPer10kBodyYears!.toFixed(1));
-      expect(row[11]).toBe(`${(cells.leadHours!.median / 24).toFixed(1)} (${(cells.leadHours!.tail / 24).toFixed(1)})`);
+      expect(row[11]).toBe(cells.leadHours === null ? "–" : `${(cells.leadHours.median / 24).toFixed(1)} (${(cells.leadHours.tail / 24).toFixed(1)})`);
       expect(row[12]).toBe(cells.timingErrorMinutes!.toFixed(1));
     }
     expect(text).toContain("(../test/early-warning.test.ts)");

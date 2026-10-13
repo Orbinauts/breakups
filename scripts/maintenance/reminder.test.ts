@@ -54,6 +54,16 @@ describe("the reminder's body", () => {
     expect(hand.latestStatedOn).toBe("2026-10-07");
   });
 
+  test("dates a statement as the truth does where the hand file leaves its day out: a notice by the day it was seen", () => {
+    const unstated = (source: Statement["source"], ref: string, to: string): Statement => ({ source, ref, event: { to }, statedOn: null }) as unknown as Statement;
+    const read = handFileOf([
+      unstated("s4s-notice", "the notice on the catalogue's login page, seen 2026-09-17", "2026-09-14T00:00Z"),
+      unstated("odqn", "ODQN 30(3), September 2026, p. 4", "2026-07-01T00:00Z"),
+    ]);
+    expect(read.latestNotice).toBe("2026-09-17");
+    expect(read.latestStatedOn).toBe("2026-09-17");
+  });
+
   test("lists the three checks, the last reminder's day and how to add a row", () => {
     const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
     expect(body).toContain("Orbital Debris Quarterly News");
@@ -63,5 +73,19 @@ describe("the reminder's body", () => {
     expect(body).toContain("last changed on 2026-10-11");
     expect(body).toContain("data/truth/hand.json");
     expect(body).toContain("gh workflow run maintenance.yml -f from=<branch>");
+  });
+
+  test("gives the quick paths first: the issue form the owner accepts, and the command that checks and appends a statement", () => {
+    const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
+    expect(body).toContain("breakup-report");
+    expect(body).toContain("`breakup-report-accepted`");
+    expect(body).toContain("npm run truth:add -- <statement.json>");
+    expect(body.indexOf("breakup-report-accepted")).toBeLessThan(body.indexOf("npm run truth:add"));
+  });
+
+  test("asks for every quarterly news issue read to be recorded, and each new ESA table typed into its file", () => {
+    const body = reminderBody({ label: "2027 Q1", from: "2027-01-04", previous: "2026-10-05" }, hand, "2026-10-11");
+    expect(body).toContain("`data/truth/odqn-coverage.json`");
+    expect(body).toContain("`data/truth/esa-ser.json`");
   });
 });

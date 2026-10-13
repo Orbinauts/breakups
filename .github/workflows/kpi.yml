@@ -21,14 +21,14 @@ name: KPI
 # whole Archive and refused where stale, never from the two years on disk.
 # The per-year files are kept as artifacts of the run, not in git.
 #
-# Where the release is unreachable (an outage, a fork with no release) the
-# scorecard is skipped with a notice rather than failed: the score cannot
-# be checked, which is not the same as being wrong.
+# Where the release is unreachable (an outage, a release deleted or
+# renamed) the run fails: a check that cannot run is not a check passed.
+# Only a pull request from a fork skips the replay, with a notice.
 #
 # A pull request is replayed only where it touches a file the replay or
 # its reproducibility step reads: the replay takes an hour, and one that
 # changes only Markdown (other than `kpi/latest.md`), `docs/`, `LICENSE`,
-# the tests or another workflow cannot move the score. The filter starts
+# the tests, another workflow or an issue form cannot move the score. The filter starts
 # from every path and lists what it skips, then adds back what those
 # patterns would skip but the replay reads; GitHub lets the last matching
 # pattern decide, so a file nobody listed is still replayed. GitHub reads
@@ -51,18 +51,25 @@ on:
       - "!test/**"
       - "!**/*.test.ts"
       - "!.github/workflows/**"
+      - "!.github/ISSUE_TEMPLATE/**"
       # Read by the replay or its reproducibility step, though a pattern above skips it.
       - "kpi/latest.md"
       - ".github/workflows/kpi.yml"
   schedule:
-    # Mondays at 06:00 UTC: the release and the truth may change without a push.
-    - cron: "0 6 * * 1"
+    # Mondays at 12:23 UTC: the release and the truth may change without a push. After the maintenance run's
+    # longest window (04:17, or 05:37 where it waited for the daily test, plus its 330 minutes), off the hour.
+    - cron: "23 12 * * 1"
   workflow_dispatch:
 
-# A new push supersedes the run of the last one.
+# On its schedule the run joins the group of the maintenance run and the prospective test, so it never
+# downloads the Archive's release while the maintenance run replaces its files, and never cancels either.
+# Every other run keeps a group of its own, where a new run supersedes the last: GitHub keeps one pending run
+# per group and a newer one displaces it, so a push's run, or the run the maintenance run starts by hand on
+# main after its merge (when its uploads are done), queued in the shared group could displace a daily run of
+# the test waiting there.
 concurrency:
-  group: kpi-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'schedule' && 'prospective' || format('kpi-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 permissions:
   contents: read
@@ -90,14 +97,20 @@ jobs:
           years=$(node -p 'require("./kpi/latest.json").years.join(" ")')
           echo "years=$years" >> "$GITHUB_OUTPUT"
           echo "years: $years"
+      # An unreachable release fails the run, but on a pull request from a fork, which cannot be expected to read it.
       - id: reach
+        env:
+          FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           set -euo pipefail
           if curl --silent --fail --head --location --max-time 60 --output /dev/null "$ARCHIVE_MANIFEST_URL"; then
             echo "reachable=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::the Archive's release is unreachable; the scorecard is skipped"
+          elif [ "$FORK" = true ]; then
+            echo "::notice::the Archive's release is unreachable from this fork's pull request; the scorecard is skipped"
             echo "reachable=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::the Archive's release is unreachable ($ARCHIVE_MANIFEST_URL), so the committed scorecard cannot be made again: the check fails rather than pass unchecked"
+            exit 1
           fi
 
   replay:
@@ -187,3 +200,25 @@ jobs:
       # The committed aggregate is the record: a fresh one that differs fails the run, on a pull request as on main, so the check and the comment agree.
       - name: The committed aggregate must be reproducible
         run: git diff --exit-code -- kpi/latest.json kpi/latest.md
+
+  # GitHub disables a scheduled workflow after sixty days with no activity in the repository; the weekly run enables again
+  # any it disabled so, never one a person disabled (scripts/maintenance/keep-alive.ts).
+  keep-alive:
+    name: keep the scheduled workflows enabled
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Enable the workflows GitHub disabled for inactivity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: npm run -s maintenance:keep-alive

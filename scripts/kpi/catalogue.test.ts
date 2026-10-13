@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { DETECTOR_PARAMETERS, semiMajorAxisOf, type PlaneOrbit } from "../../src/index.ts";
+import { DETECTOR_PARAMETERS } from "../../src/index.ts";
+import { semiMajorAxisOf } from "../../src/elements.ts";
+import type { PlaneOrbit } from "../../src/fragments.ts";
 import { nodePrecessionDegPerDay } from "../../src/series.ts";
 import { catalogueOver, fragmentsOf, type BodyFact, type Catalogue } from "./catalogue.ts";
 import { DAY_MS } from "./replay.ts";

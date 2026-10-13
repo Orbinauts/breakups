@@ -1,8 +1,8 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { archiveHome } from "../archive/archive.ts";
+import { gitOutput } from "../git.ts";
 import type { Latest } from "../kpi/kpi.ts";
 import { GENERATED_PARTS, markedPart, RESULTS } from "../kpi/pages.ts";
 import type { SnapshotRecord } from "../truth/fetch-sources.ts";
@@ -204,7 +204,7 @@ export function prBody(report: RunReport): string {
   return body.length <= BODY_LIMIT ? body : `${body.slice(0, BODY_LIMIT - 200)}\n\nThe body is cut here to fit; the diff has the rest.\n`;
 }
 
-const git = (...args: string[]): string => execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 30 });
+const git = (...args: string[]): string => gitOutput(ROOT, ...args);
 
 /** A file as the base commit has it, or null where it has none. */
 function atBase(base: string, path: string): string | null {

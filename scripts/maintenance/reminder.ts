@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readStatements, type Statement } from "../../src/index.ts";
+import { statedOnFromRef } from "../truth/stated.ts";
 import { createIssue, ensureLabel, issuesLabelled } from "./github.ts";
 
 /**
@@ -77,7 +78,7 @@ export interface HandFile {
   latestNotice: string | null;
 }
 
-/** Reads what the reminder names from the hand file's statements. */
+/** Reads what the reminder names from the hand file's statements, each dated as the truth dates it (`statedOnFromRef`): its own `statedOn`, else the day its reference gives by its source's convention (a notice by the day it was seen). */
 export function handFileOf(statements: readonly Statement[]): HandFile {
   let latestEvent: HandFile["latestEvent"] = null;
   let latestStatedOn: string | null = null;
@@ -85,7 +86,7 @@ export function handFileOf(statements: readonly Statement[]): HandFile {
   let latestNotice: string | null = null;
   for (const s of statements) {
     if (latestEvent === null || s.event.to > latestEvent.to) latestEvent = { to: s.event.to, ref: s.ref };
-    const on = s.statedOn?.on ?? null;
+    const on = statedOnFromRef({ ...s, statedOn: s.statedOn ?? null })?.on ?? null;
     if (on !== null && (latestStatedOn === null || on > latestStatedOn)) latestStatedOn = on;
     const odqn = /ODQN (\d+)\((\d+)\)[^;:]*/.exec(s.ref);
     if (s.source === "odqn" && odqn !== null) {
@@ -104,15 +105,21 @@ export function reminderBody(quarter: Quarter, hand: HandFile, handChangedOn: st
     "",
     "What to check:",
     "",
-    `- [ ] **NASA's Orbital Debris Quarterly News**, the latest issue (https://orbitaldebris.jsc.nasa.gov/quarterly-news/): every fragmentation it reports. The hand file's latest issue is ${hand.latestOdqn ?? "none"}.`,
+    `- [ ] **NASA's Orbital Debris Quarterly News**, the latest issue (https://orbitaldebris.jsc.nasa.gov/quarterly-news/): every fragmentation it reports. The hand file's latest issue is ${hand.latestOdqn ?? "none"}. Record every issue read in \`data/truth/odqn-coverage.json\`, as cited by the hand file or as having no breakup items, so a quiet quarter is a checked one; a test fails on an issue missing from that list.`,
     `- [ ] **U.S. Space Forces-Space fragmentation notices**, posted on the public catalogue's login page: every notice since the last reminder. The hand file's latest notice was seen on ${hand.latestNotice ?? "no day"}.`,
     `- [ ] **News reports of fragmentations** since ${quarter.previous}: LeoLabs' notifications, named analysts, the space press. The hand file's latest event ends on ${hand.latestEvent?.to.slice(0, 10) ?? "no day"} (${hand.latestEvent?.ref ?? "none"}), its latest statement was made on ${hand.latestStatedOn ?? "no day"}, and the file last changed on ${handChangedOn ?? "a day git does not know"}.`,
-    "- [ ] **ESA's Space Environment Report**, once a year: a new edition's table of fragmentations.",
+    "- [ ] **ESA's Space Environment Report**, once a year (https://www.sdo.esoc.esa.int/publications/): type a new edition's table of fragmentations (its Table 3.7) into `data/truth/esa-ser.json`, row by row as printed; the build attributes each row to an event by its rule.",
+    "",
+    "The daily watcher opens an issue for each new quarterly news issue and ESA edition (to read and record as above) and a prefilled `breakup-report` issue for each Jonathan's Space Report section and news article it reads; what it does not read (the Space Forces notices, LeoLabs' posts, the publishers it does not follow) is for this check.",
     "",
     "How to add a row:",
     "",
-    "1. Add a statement to `data/truth/hand.json` as the others are written: the source, the reference (issue and page, or the post's address and day), the kind, the parent (catalogue number, designator, name), the event as stated and as a window, the orbit, the cause, the pieces catalogued, and when it was stated (`statedOn`). Never edit `data/breakups.json`.",
-    "2. Run `npm run truth` and read the diff of `docs/truth.md`: the event added or joined, and any conflict it makes.",
+    "- The quick path: file the report with the breakup-report issue form (or complete an issue the watcher opened), then label it `breakup-report-accepted`. A workflow checks the fields, adds the statement on a branch and runs the maintenance workflow on it.",
+    "",
+    "By hand, for several rows at once:",
+    "",
+    "1. Write each statement as JSON, as the others in `data/truth/hand.json` are written: the source, the reference (issue and page, or the post's address and day), the kind, the parent (catalogue number, designator, name), the event as stated and as a window, the orbit, the cause, the pieces catalogued, and when it was stated (`statedOn`), and run `npm run truth:add -- <statement.json>` for each, which checks it, appends it to the hand file and rebuilds the truth. Never edit `data/breakups.json`.",
+    "2. Read the diff of `docs/truth.md`: the event added or joined, and any conflict it makes.",
     "3. Commit the hand file with `data/breakups.json` and `docs/truth.md` on a branch and push it, then run `gh workflow run maintenance.yml -f from=<branch>`. The maintenance workflow folds the branch in, rebuilds the truth, replays the scorecard, regenerates the README's tables, runs every check and merges the result into main as one commit; the branch can then be deleted.",
     "",
     "Close this issue once the checks are done, with a word on what was added.",

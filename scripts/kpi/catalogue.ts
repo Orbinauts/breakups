@@ -1,4 +1,6 @@
-import { isFragmentClass, normalAngleDeg, planeDistance, semiMajorAxisOf, type BodyClass, type PlaneOrbit } from "../../src/index.ts";
+import type { BodyClass } from "../../src/index.ts";
+import { semiMajorAxisOf } from "../../src/elements.ts";
+import { isFragmentClass, normalAngleDeg, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { builtYears, readYear, type ArchivedBody } from "../archive/archive.ts";
 import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
 
@@ -18,7 +20,7 @@ import { ANALYST_FLOOR, DAY_MS, clockOf, orderOf } from "./replay.ts";
  * It is read two ways. `readCatalogue` reads every built year of the
  * Archive's columns, about a minute over twenty-two years, and is what the
  * catalogue index is built from (`catalogue-index.ts`) and what the truth
- * audit reads, since it wants every set of the bodies it asks for. The
+ * audit read, since it wanted every set of the bodies it asked for. The
  * scorecard reads it from the index alone, since a replay holds a year
  * and the one before it, not the whole Archive: a year downloaded with its
  * predecessor, as the KPI workflow does, must score as it does beside
@@ -152,11 +154,11 @@ export const FRAGMENTS_DAYS = 180;
  * the parent's within a degree, which holds at near-zero inclination where
  * the node is undefined (issue #15).
  */
-export const FRAGMENTS_PLANE = { planeInclinationToleranceDeg: 0.2, planeNodeToleranceDeg: 1.5, planeMaxDays: Number.POSITIVE_INFINITY, planeDistanceMax: 3, normalAngleMaxDeg: 1 } as const;
+export const FRAGMENTS_PLANE = { planeInclinationToleranceDeg: 0.2, planeNodeToleranceDeg: 1.5, planeMaxDays: Number.POSITIVE_INFINITY, planeDistanceMax: 3, planeNormalAngleMaxDeg: 1 } as const;
 
 /** Whether a piece lies in the parent's plane by the scorecard's own test, `FRAGMENTS_PLANE`, with no limit on the days since the event. */
 const inParentPlane = (parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): boolean =>
-  planeDistance(parent, piece, eventMs, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(parent, piece, eventMs) <= FRAGMENTS_PLANE.normalAngleMaxDeg;
+  planeDistance(parent, piece, eventMs, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(parent, piece, eventMs) <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg;
 
 /** What the catalogue published of an event's fragments: the fresh pieces in the parent's plane within the window, the first of them to be published and when, and whether the parent's orbit before the event was known at all. */
 export interface EventFragments {
@@ -189,6 +191,27 @@ export function fragmentsOf(catalogue: Catalogue, parent: number, launch: string
     if (body.number <= mark || body.number >= ANALYST_FLOOR || !isFragmentClass(body.bodyClass)) continue;
     if (body.firstClock < from - marginMs || body.firstClock > to + FRAGMENTS_DAYS * DAY_MS || body.firstEpoch < from - DAY_MS) continue;
     if (!inParentPlane(before.orbit, body.orbit, eventMs)) continue;
+    result.inPlane++;
+    if (result.firstAt === null || body.firstClock < result.firstAt) [result.firstAt, result.firstBody] = [body.firstClock, body.number];
+  }
+  return result;
+}
+
+/**
+ * The fresh pieces the catalogue published under a launch within
+ * `FRAGMENTS_DAYS` of a launch-level event, one whose parent has no
+ * catalogue number (a burst under the launch, a separation GCAT gives an
+ * object the public catalogue does not list): as `fragmentsOf`, but with
+ * no parent's plane to test them against, every such piece counts. The
+ * count is carried as `inPlane` and the parent's orbit as known, so the
+ * Confirmed line reads the row as any other target.
+ */
+export function launchFragmentsOf(catalogue: Catalogue, launch: string, from: number, to: number, marginMs: number): EventFragments {
+  const result: EventFragments = { inPlane: 0, firstAt: null, firstBody: null, parentOrbit: true };
+  const mark = catalogue.markAt(from - marginMs);
+  for (const body of catalogue.byLaunch.get(launch) ?? []) {
+    if (body.number <= mark || body.number >= ANALYST_FLOOR || !isFragmentClass(body.bodyClass)) continue;
+    if (body.firstClock < from - marginMs || body.firstClock > to + FRAGMENTS_DAYS * DAY_MS || body.firstEpoch < from - DAY_MS) continue;
     result.inPlane++;
     if (result.firstAt === null || body.firstClock < result.firstAt) [result.firstAt, result.firstBody] = [body.firstClock, body.number];
   }

@@ -1,6 +1,7 @@
 import type { Breakup, BreakupsFile, FirstStatement, SourceId, Statement } from "../../src/truth.ts";
 import { AGENCY_SOURCES, firstAgencyStatement, yearOf } from "../../src/truth.ts";
 import { AT_LAUNCH_DAYS, SAME_SEPARATION_DAYS, isSatcatStatement, type Skipped } from "./parse-gcat-satcat.ts";
+import type { EsaRow } from "./parse-esa-ser.ts";
 
 /**
  * The report a reviewer reads beside the generated truth: what was built
@@ -85,7 +86,7 @@ function satcatSection(breakups: Breakup[], statements: Statement[], skipped: Sk
   return [
     "## GCAT's satellite catalogue",
     "",
-    `Read uniformly, for every object and every year, with no regard to the detector (\`scripts/truth/parse-gcat-satcat.ts\`). A piece is a row typed as a component (\`C\`) or fragmentation debris (\`D\`) whose parent is a standard-catalogue object (\`S\`) or an auxiliary-catalogue one (\`A\`, keyed by its launch) and whose separation date is stated. Its kind is its SatType's: fragmentation debris is a breakup, anomalous debris (subtype \`J\`) an anomalous event, an aerodynamic breakup (\`Q\`) aerodynamic, slag (\`K\`), coolant (\`N\`), debris released at orbit insertion (\`O\`) and every other component a release. A release separated by the end of the ${AT_LAUNCH_DAYS === 1 ? "day" : `${AT_LAUNCH_DAYS} days`} after its launch day is the launch's own staging and makes no statement; a separation dated before its parent's launch is a slip and makes none. The pieces of one parent whose separation windows lie within ${SAME_SEPARATION_DAYS} days of each other (GCAT's own \`?\` on a day) are one separation and one statement, dated as GCAT dates most of them, its kind the first of breakup, anomalous, aerodynamic and release among them. The statements then join the other sources' events by the build's rule (same parent, windows within thirty days, \`SAME_EVENT_DAYS\`); where another source states the event, that source's instant, kind, orbit, cause and count stand, and the satellite catalogue's are kept beside them. An event it alone states is of confidence C where GCAT dates it to the month or finer, D where to a year.`,
+    `Read uniformly, for every object and every year, with no regard to the detector (\`scripts/truth/parse-gcat-satcat.ts\`). A piece is a row typed as a component (\`C\`) or fragmentation debris (\`D\`) whose parent is a standard-catalogue object (\`S\`) or an auxiliary-catalogue one (\`A\`, keyed by its launch) and whose separation date is stated. Its kind is its SatType's: fragmentation debris is a breakup, anomalous debris (subtype \`J\`) an anomalous event, an aerodynamic breakup (\`Q\`) aerodynamic, slag (\`K\`), coolant (\`N\`), debris released at orbit insertion (\`O\`) and every other component a release. A release separated by the end of the ${AT_LAUNCH_DAYS === 1 ? "day" : `${AT_LAUNCH_DAYS} days`} after its launch day is the launch's own staging and makes no statement; a separation dated before its parent's launch is a slip and makes none. The pieces of one parent whose separation windows lie within ${SAME_SEPARATION_DAYS} days of each other (GCAT's own \`?\` on a day) are one separation and one statement, dated as GCAT dates most of them, its kind the first of breakup, anomalous, aerodynamic and release among them. The statements then join the other sources' events by the build's rule (same parent, windows within thirty days, \`SAME_EVENT_DAYS\`, never two separations it dates more than a day apart, each joining the instant nearest it); where another source states the event, that source's instant, kind, orbit, cause and count stand, and the satellite catalogue's are kept beside them. An event it alone states is of confidence C where GCAT dates it to the month or finer, D where to a year.`,
     "",
     `${statements.filter(isSatcatStatement).length} statements${skipped === undefined ? "" : `; left out: ${skipped.releasedAtLaunch} releases at launch, ${skipped.separatedBeforeLaunch} separations dated before the parent's launch, ${skipped.parentNotACatalogueObject} pieces whose parent is not a catalogue object, ${skipped.noSeparationDate} with no separation date (and ${skipped.notAPiece} parent rows, kept to name the parents)`}.`,
     "",
@@ -98,7 +99,31 @@ function satcatSection(breakups: Breakup[], statements: Statement[], skipped: Sk
   ];
 }
 
-export function renderReport(file: BreakupsFile, statements: Statement[], skipped?: Skipped): string {
+/** Where each row of ESA's tables went, as the build placed it. */
+export interface EsaRowPlaced {
+  row: EsaRow;
+  placed: "named" | "joined" | "unnamed" | "unplaced";
+  events: string[];
+}
+
+/** ESA's section: the rule, then every row of every edition and where it went. */
+function esaSection(esa: readonly EsaRowPlaced[] | undefined): string[] {
+  if (esa === undefined || esa.length === 0) return [];
+  const counted = (placed: EsaRowPlaced["placed"]): number => esa.filter((p) => p.placed === placed).length;
+  const what: Record<EsaRowPlaced["placed"], string> = { named: "named by a cited source", joined: "joined by the rule", unnamed: "an unnamed event", unplaced: "not placed; could be" };
+  return [
+    "## ESA's tables",
+    "",
+    `Each edition's Table 3.7, the fragmentations of the year before, typed as printed into \`data/truth/esa-ser.json\` (\`scripts/truth/parse-esa-ser.ts\`). ESA names no object, so a row is placed by a rule applied to every row alike: its candidates are the events the other sources date within a day of its epoch (a statement's window of three days at most), excluding releases and unnamed rows, in a regime its orbit class allows (any, for an aerodynamic breakup, which ESA classes by its state at reentry) and of a class its object type allows (the type is printed from the 2021 edition on); a nearer day breaks no tie, since ESA's epoch and another source's day differ by one often enough; an event that is the only candidate of one row is that row's and leaves the others' candidates, until nothing changes. A row with no candidate is an unnamed event; one left with several, or whose only candidate is another row's only one too, is not placed. A row a cited source names is a statement of that parent. Each statement is dated by its edition's date of issue; the counts printed are kept in its note.`,
+    "",
+    `${esa.length} rows: ${counted("named")} named by a cited source, ${counted("joined")} joined to an event, ${counted("unnamed")} unnamed events, ${counted("unplaced")} not placed.`,
+    "",
+    table(["Row", "Edition", "Placed", "Event"], esa.map((p) => [`${p.row.epoch} ${[p.row.objectType, `${p.row.massKg} kg`, p.row.orbit, p.row.cause].filter((c) => c !== null).join(", ")}`, `${p.row.edition.issue}, ${p.row.edition.dateOfIssue}, p. ${p.row.edition.page}`, what[p.placed], p.events.join("; ")])),
+    "",
+  ];
+}
+
+export function renderReport(file: BreakupsFile, statements: Statement[], skipped?: Skipped, esa?: readonly EsaRowPlaced[]): string {
   const breakups = file.breakups;
   const scoring = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   const years = [...new Set(scoring.map(yearOf))].sort();
@@ -130,7 +155,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[], skippe
     "",
     table(["Year", "Events", "Scoreable", "Breakup", "Anomalous", "Aerodynamic", "Release", "Unnamed", ...SOURCES], perYear),
     "",
-    `Scoreable events from ${SCORING_FROM}: ${scoring.filter((b) => b.scoreable).length}. By confidence: ${["A", "B", "C", "D"].map((c) => `${c} ${confidences.get(c) ?? 0}`).join(", ")}. By regime: ${[...regimes].map(([r, n]) => `${r} ${n}`).join(", ")}. By class: ${[...classes].map(([c, n]) => `${c} ${n}`).join(", ")}.`,
+    `Scoreable events from ${SCORING_FROM}: ${scoring.filter((b) => b.scoreable).length}. By confidence: ${["A", "B", "C", "D"].map((c) => `${c} ${confidences.get(c) ?? 0}`).join(", ")}. By regime: ${[...regimes].map(([r, n]) => `${r} ${n}`).join(", ")} (${scoring.filter((b) => b.scoreable && b.orbit.regime !== "unknown" && ((b.orbit.apogeeKm ?? b.orbit.altitudeKm) === null || (b.orbit.perigeeKm ?? b.orbit.altitudeKm) === null)).length} of them read from the parent's last set before the window in the Archive, \`data/truth/regimes.json\`, where no statement gives the orbit). By class: ${[...classes].map(([c, n]) => `${c} ${n}`).join(", ")}.`,
     "",
     "## Conflicts between sources",
     "",
@@ -140,6 +165,7 @@ export function renderReport(file: BreakupsFile, statements: Statement[], skippe
     "",
     ...firstStatements(scoring.filter((b) => b.scoreable)),
     ...satcatSection(breakups, statements, skipped),
+    ...esaSection(esa),
     "## Possible duplicates",
     "",
     "Events of one parent within a year of each other that no statement joins: a second event, or one event two sources date months apart. A reviewer merges the latter with an override.",

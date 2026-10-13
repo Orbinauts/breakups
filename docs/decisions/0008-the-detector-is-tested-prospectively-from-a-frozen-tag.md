@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its daily inputs corrected, its early warning scored from the commit and its lasting record stated on 2026-10-12 (issue #25), its failures made loud (issue #24) and its day slices marked with their pull time (issue #31) amended on 2026-10-12
 date: 2026-10-11
 ---
 
@@ -34,10 +34,16 @@ sets from then on is logged where its time of logging cannot be changed.
   (the days not yet kept, and again each day kept before it settled, two
   to four requests a day, throttled and written to the ledger
   `requests.log`), fetch the satellite catalogue and the space weather at
-  most once a day, and annotate the year's body table with the latest
-  satellite and payload catalogues, as the product would see them that
-  day. The Archive's format is shared, so a change to it on main must
-  stay readable by the tag.
+  most once a day, and annotate the year's body table with that day's
+  satellite catalogue and the payload catalogue the Archive holds. The
+  Archive's format is shared, so a change to it on main must stay
+  readable by the tag. (Corrected 2026-10-12: this record said "the latest
+  satellite and payload catalogues". GCAT's payload catalogue, which gives
+  the end-of-transmission dates, is not fetched by the daily run, nor by
+  the weekly maintenance; it is the snapshot in the Archive's side files,
+  which changes only when a person runs `npm run archive:gcat` and uploads
+  the side files. The run's inputs were left as they were, so the test
+  keeps reading what it has read since it began.)
 - **The frozen replay reads a view of the Archive with an index of its
   own.** The scorecard reads every year's catalogue through the catalogue
   index and refuses a stale one or one built for another truth, and the
@@ -67,7 +73,21 @@ sets from then on is logged where its time of logging cannot be changed.
   An alert's lead over a reported event is measured from the commit that
   logged it, not from the replay's clock: the daily re-replay may raise an
   alert dated days back (a set published late, a status that changed), and
-  it was known only when it was committed.
+  it was known only when it was committed. This holds on both lines: the
+  Confirmed line from the start, and the early warning since 2026-10-12,
+  which until then was called flagged where the replay's clock raised it
+  before the first sign of the fragments, so a warning raised dated back
+  and committed after the pieces appeared would have counted as flagged.
+  It is now flagged only where its commit came first, and its lead is
+  counted from the commit.
+- **The branch is the lasting record.** The Actions run each line of
+  `runs.jsonl` names is a second timestamp, but GitHub keeps a run's log
+  for ninety days. The commit times on `prospective` last because the
+  branch cannot be rewritten: a ruleset of the repository refuses a
+  force-push or a deletion of `prospective`, by anyone, the owner
+  included (the ninth decision record lists it). No signing or
+  timestamping service is added: the bot's commits are unsigned, and the
+  ruleset is what keeps their times.
 - **The score waits for the truth.** `npm run prospective:score` lands
   each confirmed alert on the truth as it then stands, as the Confirmed
   line does, and prints the headline for the events after the freeze, the
@@ -85,10 +105,14 @@ into it, so an alert is known up to a day after the replay's clock raised
 it, and the lead measured from the commit is the lead of a daily run. The
 frozen truth's notices are the ones known at the freeze, so a notice
 published after it confirms nothing in the test; the Confirmed line
-excludes confirmations by a notice alone in any case. The satellite and
-payload catalogues are read as they stand each day, which is what a live
-detector would read, so the hindsight the backtest's fifth decision record
-states does not arise here. The scratch directories hold a year's file
+excludes confirmations by a notice alone in any case. The satellite
+catalogue is read as it stands each day, which is what a live detector
+would read, but the year is replayed whole each day against that day's
+status: a satellite that died in a breakup and gained an end date weeks
+later is read as dead at its breakup on the next day's replay, so the
+hindsight the backtest's fifth decision record states does arise for the
+days already replayed, and a step can be raised dated back. That is why
+both lines are scored from the commit, which no later replay moves. The scratch directories hold a year's file
 and its end states, a couple of hundred megabytes a day, and the last
 seven are kept.
 
@@ -101,6 +125,16 @@ The job is the scheduled workflow `.github/workflows/prospective.yml`
 runs it at once. Stopping it ends the record; a gap in `runs.jsonl` shows
 when it was not running, and a run after a gap logs the alerts of the gap
 with the commit time of that run.
+
+Since 2026-10-12 a stop is never silent. A failed run opens an issue
+labelled `maintenance` with the end of its log, one a failing day (a run
+made again that day comments on it, `scripts/maintenance/failure-issue.ts`).
+GitHub disables a public repository's scheduled workflows after sixty days
+with no activity in it; each scheduled run of this workflow, of the weekly
+maintenance and of the weekly KPI replay enables again any of them GitHub
+disabled for that reason, and never one a person disabled
+(`scripts/maintenance/keep-alive.ts`). Three disabled at once cannot
+enable each other: `gh workflow list --all` shows it.
 
 ## As built
 
@@ -125,8 +159,11 @@ The decision stands; what changed is where its parts live.
   closed year with their provenance (`states-2025.json.gz`, the starting
   states above, its hash the one its provenance names), the day slices
   pulled from the history class for each year replayed
-  (`history-2026.tar`, the days with their modification times, which say
-  which were kept for good), and a manifest of hashes. The run downloads
+  (`history-2026.tar`, each day marked with the time it was pulled, which
+  says whether it was kept for good, so the reading does not hang on a
+  copy keeping file times; the days kept before the marks say it by their
+  modification times, which the tarball keeps, until the next pull marks
+  them), and a manifest of hashes. The run downloads
   them and the Archive's released years before the year it replays,
   verifying every hash, and afterwards uploads the year's slices again, and
   a closed year's end states with their provenance once it settles. The

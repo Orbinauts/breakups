@@ -1,0 +1,100 @@
+name: Watch
+
+# The watcher of public notices of fragmentations (scripts/maintenance/watch.ts),
+# once a day. It reads the pages anyone can read without an account (NASA's
+# Orbital Debris Quarterly News, ESA's Space Environment Report, Jonathan's
+# Space Report, and the RSS feeds of EarthSky, Space.com, SpaceNews and Ars
+# Technica's space desk) and opens an issue for each notice no issue carries
+# yet: a `breakup-report` issue prefilled with a report (the day's news
+# gathered into one), or a `maintenance` issue asking a person to read a new
+# quarterly news issue or ESA edition and record it in the truth's files.
+# It never writes the truth: a person completes a report and the owner
+# accepts it (breakup-report.yml). A page that cannot be read, or whose
+# shape changed, fails the run after the others are read, with an issue
+# labelled `maintenance` (a comment on the one open).
+#
+# It also starts the maintenance run for the reports the owner accepted
+# (`npm run maintenance:watch -- --fold`): where at least one accepted
+# report's statement is missing from main's hand file and no run of the
+# `prospective` concurrency group (prospective.yml, maintenance.yml, the
+# KPI workflow's scheduled run) is queued or in progress, read from the
+# Actions API. Otherwise the next day's watch, or Monday's maintenance run,
+# folds it in. GitHub keeps one pending run per concurrency group, so a
+# start made while a run waits could displace the prospective test's; the
+# acceptance workflow (breakup-report.yml) therefore starts nothing. From
+# 07:41, a maintenance run of at most 330 minutes ends before the test's
+# next daily run at 02:37. To pause it: gh workflow disable watch.yml.
+
+on:
+  schedule:
+    # Every day at 07:41 UTC, after the prospective test's run and away from the hour.
+    - cron: "41 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # The notices' issues, and the failure's.
+  issues: write
+  # The maintenance run started for the accepted reports, and the scheduled workflows GitHub disabled for the repository's inactivity, enabled again.
+  actions: write
+
+env:
+  GH_REPO: ${{ github.repository }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  watch:
+    name: read the public notices
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the dependencies
+        run: npm install --no-audit --no-fund
+      - name: Read the notices and open their issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          npm run -s maintenance:watch 2>&1 | tee "$RUNNER_TEMP/watch.log"
+      - name: Start the maintenance run for the accepted reports waiting
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          npm run -s maintenance:watch -- --fold 2>&1 | tee -a "$RUNNER_TEMP/watch.log"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run -s maintenance:keep-alive
+      - name: Open an issue with the log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh label create maintenance --color 0e8a16 --description "The project's automatic upkeep: a failed run, a refused step, or a check a person must make" --force
+          title="The watcher of public notices failed"
+          body="$RUNNER_TEMP/failure.md"
+          {
+            echo "The watch run $RUN_URL failed: a page could not be read or its shape changed, and its notices were not read (the issues of the other pages were opened), or the maintenance run for the accepted reports could not be started. The end of its log:"
+            echo
+            echo '```text'
+            tail -c 20000 "$RUNNER_TEMP/watch.log" 2>/dev/null || echo "(no log)"
+            echo '```'
+          } > "$body"
+          number=$(gh issue list --label maintenance --state open --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file "$body"
+          else
+            gh issue create --title "$title" --label maintenance --body-file "$body"
+          fi

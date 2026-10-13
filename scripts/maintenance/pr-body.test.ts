@@ -8,6 +8,8 @@ import { commitMessage, kpiMoves, MOVES_SHOWN, prBody, prTitle, changedParts, so
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const latest = JSON.parse(readFileSync(join(ROOT, "kpi/latest.json"), "utf8")) as Latest;
+// The committed headline's detections, read rather than written in, so a new score moves no expectation.
+const DETECTED = latest.splits.validation.confirmedLine.lines["breakups A-B"].detected;
 
 const record = (sha: string, on: string): SnapshotRecord => ({ url: "https://example.org", fetchedOn: on, originalSha256: sha.repeat(64).slice(0, 64), originalBytes: 1, snapshot: "sources/x", madeWith: "fetched as served", snapshotSha256: sha.repeat(64).slice(0, 64), licence: "CC-BY-4.0" });
 const row = (id: string, fields: Record<string, unknown> = {}): TruthRow => ({ id, parent: { name: `parent of ${id}` }, kind: "breakup", ...fields });
@@ -33,12 +35,12 @@ describe("what a maintenance run moved", () => {
   test("the scorecard's cells that moved, old and new, and none where nothing moved", () => {
     expect(kpiMoves(latest, latest)).toEqual([]);
     const moved = JSON.parse(JSON.stringify(latest)) as Latest;
-    moved.splits.validation.confirmedLine.lines["breakups A-B"].detected = 18;
+    moved.splits.validation.confirmedLine.lines["breakups A-B"].detected = DETECTED + 1;
     moved.splits.validation.confirmedLine.falseAlarmRate = 0.123456789;
     moved.years = [...moved.years, 2027];
     const moves = kpiMoves(latest, moved);
-    expect(moves).toContainEqual({ path: "splits.validation.confirmedLine.lines.breakups A-B.detected", before: "17", after: "18" });
-    expect(moves).toContainEqual({ path: "splits.validation.confirmedLine.falseAlarmRate", before: "0.2069", after: "0.1235" });
+    expect(moves).toContainEqual({ path: "splits.validation.confirmedLine.lines.breakups A-B.detected", before: String(DETECTED), after: String(DETECTED + 1) });
+    expect(moves).toContainEqual({ path: "splits.validation.confirmedLine.falseAlarmRate", before: String(Math.round(latest.splits.validation.confirmedLine.falseAlarmRate! * 1e4) / 1e4), after: "0.1235" });
     expect(moves.find((move) => move.path === "years")?.after.endsWith("2026, 2027]")).toBe(true);
     expect(moves).toHaveLength(3);
   });
@@ -52,7 +54,7 @@ describe("what a maintenance run moved", () => {
 
 describe("the pull request and its commit", () => {
   const moved = JSON.parse(JSON.stringify(latest)) as Latest;
-  moved.splits.validation.confirmedLine.lines["breakups A-B"].detected = 18;
+  moved.splits.validation.confirmedLine.lines["breakups A-B"].detected = DETECTED + 1;
   const report: RunReport = {
     date: "2026-10-19",
     runUrl: "https://example.org/run",
@@ -72,7 +74,7 @@ describe("the pull request and its commit", () => {
     expect(body).toContain("| gcat-satcat | 2026-10-10 → 2026-10-19 | `bbbbbbbbbbbb` → `cccccccccccc` |");
     expect(body).toContain("- `4:2026-09-01` parent of 4:2026-09-01");
     expect(body).toContain("because the truth's sha256 changed");
-    expect(body).toContain("| `splits.validation.confirmedLine.lines.breakups A-B.detected` | 17 | 18 |");
+    expect(body).toContain(`| \`splits.validation.confirmedLine.lines.breakups A-B.detected\` | ${DETECTED} | ${DETECTED + 1} |`);
     expect(body).toContain("So far: 0 alerts logged since the freeze.");
     expect(body).toContain("[the run](https://example.org/run)");
   });

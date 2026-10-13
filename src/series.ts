@@ -6,6 +6,7 @@ import type { StepRecord } from "./manoeuvre.ts";
 import { dragRateKmPerDay, fitWindow, median, robustScale, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import type { Regime } from "./truth.ts";
+import { DAY_MS, wrapDegrees } from "./units.ts";
 
 /**
  * What the detector keeps of one object between runs: a ring of its last
@@ -13,7 +14,9 @@ import type { Regime } from "./truth.ts";
  * when it arrived; the long memory of its scatter; the two-sided CUSUM;
  * a set held in quarantine as possibly another object's; and the live
  * candidate, if a step is being judged. Everything is flat numbers and
- * arrays so a caller can serialise it, about two kilobytes an object.
+ * arrays, about two kilobytes an object; the infinities and NaN in it
+ * ("not yet", "never", "not measured") do not survive plain JSON, so a
+ * caller stores it as `serialiseStates` writes it (`states.ts`).
  *
  * The ring is what makes the detector incremental: a set is judged
  * against the sets before it, never against the year, and the work per
@@ -24,7 +27,6 @@ import type { Regime } from "./truth.ts";
  * a prediction's target when it arrived.
  */
 
-const DAY_MS = 86_400_000;
 /** Two epochs this close are the same set re-published, in milliseconds: the catalogue re-issues a set at its epoch, and no two fits of one object are made a second apart. */
 const SAME_EPOCH_MS = 1000;
 /** Earth's second zonal harmonic (EGM96), which precesses the node: the test for a foreign set compares the node against this precession. Physical. */
@@ -102,6 +104,10 @@ export interface Candidate {
   zMean3: number;
   /** The object's envelope of held altitudes as it stood when the candidate opened, before the first post set was noted, so the post-step level is judged against where the object flew and never against itself. */
   envelope: AltitudeEnvelope;
+  /** The quantity whose residual opened the candidate and on which its persistence is judged, where the three-axis trigger opened it on the perigee radius or the inclination (`openOnThreeAxes`); absent for the semi-major axis. With it, the first post set's jump on that quantity, in its units (kilometres, degrees), and its normalised size. */
+  axis?: "rp" | "inc";
+  axisDelta1?: number;
+  axisZ1?: number;
 }
 
 export interface SeriesState {
@@ -244,8 +250,6 @@ export function nodePrecessionDegPerDay(aKm: number, eccentricity: number, incli
   return -1.5 * J2 * ratio * ratio * meanMotion * 360 * Math.cos((inclinationDeg * Math.PI) / 180);
 }
 
-const wrapDegrees = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
-
 /** What a foreign-set test reads of a reference set. */
 interface Reference {
   epochMs: number;
@@ -254,26 +258,37 @@ interface Reference {
   raanDeg: number;
   eccentricity: number;
   meanMotion: number;
+  meanMotionDot: number;
 }
 
 /** Below this inclination, in degrees, the node is not defined well enough to test: a geostationary set's node swings freely. Physical. */
 export const NODE_TEST_MIN_INCLINATION_DEG = 1;
 
-/** Whether a set is too far from a reference set to be the same object's: the semi-major axis, the inclination or the node off its J2 precession by more than the bounds; the node is not tested on a near-equatorial orbit, where it is undefined. */
+/**
+ * Whether a set is too far from a reference set to be the same object's:
+ * the semi-major axis off the drag the two sets say the object is under
+ * (the mean of their own drag rates over the gap between them), the
+ * inclination, or the node off its J2 precession, by more than the bounds;
+ * the node is not tested on a near-equatorial orbit, where it is
+ * undefined. The drag is what keeps a sparse object decaying fast (sets
+ * weeks apart, tens of kilometres lower each time) from being held as
+ * foreign set after set.
+ */
 export function isForeign(reference: Reference, set: ElementSet, aKm: number, params: DetectorParameters): boolean {
-  if (Math.abs(aKm - reference.aKm) > params.foreignDeltaAKm) return true;
+  const days = (set.epochMs - reference.epochMs) / DAY_MS;
+  const drag = (dragRateKmPerDay(reference.aKm, reference.meanMotion, reference.meanMotionDot) + dragRateKmPerDay(aKm, set.meanMotion, set.meanMotionDot)) / 2;
+  if (Math.abs(aKm - (reference.aKm + drag * days)) > params.foreignDeltaAKm) return true;
   if (Math.abs(set.inclinationDeg - reference.inclinationDeg) > params.foreignDeltaIncDeg) return true;
   if (reference.inclinationDeg < NODE_TEST_MIN_INCLINATION_DEG || set.inclinationDeg < NODE_TEST_MIN_INCLINATION_DEG) return false;
-  const days = (set.epochMs - reference.epochMs) / DAY_MS;
   const expected = reference.raanDeg + nodePrecessionDegPerDay(reference.aKm, reference.eccentricity, reference.inclinationDeg, reference.meanMotion) * days;
   return Math.abs(wrapDegrees(set.raanDeg - expected)) > params.foreignRaanDeg;
 }
 
 function referenceAt(state: SeriesState, i: number): Reference {
-  return { epochMs: state.epochs[i]!, aKm: state.a[i]!, inclinationDeg: state.inc[i]!, raanDeg: state.raan[i]!, eccentricity: 1 - state.rp[i]! / state.a[i]!, meanMotion: state.meanMotion[i]! };
+  return { epochMs: state.epochs[i]!, aKm: state.a[i]!, inclinationDeg: state.inc[i]!, raanDeg: state.raan[i]!, eccentricity: 1 - state.rp[i]! / state.a[i]!, meanMotion: state.meanMotion[i]!, meanMotionDot: state.meanMotionDot[i]! };
 }
 
-const referenceOf = (held: Held): Reference => ({ epochMs: held.set.epochMs, aKm: held.aKm, inclinationDeg: held.set.inclinationDeg, raanDeg: held.set.raanDeg, eccentricity: held.set.eccentricity, meanMotion: held.set.meanMotion });
+const referenceOf = (held: Held): Reference => ({ epochMs: held.set.epochMs, aKm: held.aKm, inclinationDeg: held.set.inclinationDeg, raanDeg: held.set.raanDeg, eccentricity: held.set.eccentricity, meanMotion: held.set.meanMotion, meanMotionDot: held.set.meanMotionDot });
 
 /** The index of the ring set at the epoch, or -1. */
 export function indexOfEpoch(state: SeriesState, epochMs: number): number {
@@ -437,13 +452,33 @@ export function refreshScatter(state: SeriesState): void {
   state.shortSigma = residuals.length >= 3 ? robustScale(residuals) : 0;
 }
 
+/**
+ * Forgets the residuals of a step that stayed: the set at the epoch and the
+ * sets after it whose trailing window could hold it (`windowSets`), each
+ * predicted across the step, so measuring the step and not the object's
+ * noise. The sets further on were predicted from windows past it, as a
+ * bundle of history brings them, and keep theirs.
+ */
+export function forgetResidualsAcross(state: SeriesState, epochMs: number, params: DetectorParameters): void {
+  const first = state.epochs.findIndex((epoch) => epoch >= epochMs);
+  if (first === -1) return;
+  const last = Math.min(state.epochs.length - 1, first + params.windowSets[regimeKey(state.regime)]);
+  let changed = false;
+  for (let i = first; i <= last; i++) {
+    if (!Number.isFinite(state.resid[i]!)) continue;
+    state.resid[i] = Number.NaN;
+    changed = true;
+  }
+  if (changed) refreshScatter(state);
+}
+
 /** The ring's values of a quantity. */
 export function valuesOf(state: SeriesState, series: Series): number[] {
   return series === "a" ? state.a : series === "rp" ? state.rp : state.inc;
 }
 
 /** The regime the window parameters are read for: an object not yet filed is treated as low. */
-const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
+export const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
 
 /**
  * The trailing window as `[from, to)` over the ring: the sets with an
@@ -462,13 +497,13 @@ export function windowOf(state: SeriesState, params: DetectorParameters, before 
   return [from, to];
 }
 
-/** The robust fit of a quantity over the trailing window, the fallback rate the last set's drag rate for the axis and the perigee radius and zero for the inclination. */
-export function fitOf(state: SeriesState, series: Series, params: DetectorParameters, before = Number.POSITIVE_INFINITY): Fit | null {
+/** The robust fit of a quantity over the trailing window, the fallback rate the last set's drag rate for the axis and the perigee radius and zero for the inclination; the residuals' scale is computed for the perigee radius and the inclination, and for the axis only where `withScale` asks (its hot path reads the coefficients alone). */
+export function fitOf(state: SeriesState, series: Series, params: DetectorParameters, before = Number.POSITIVE_INFINITY, withScale = series !== "a"): Fit | null {
   const [from, to] = windowOf(state, params, before);
   if (to === from) return null;
   const last = to - 1;
   const rate = series === "inc" ? 0 : dragRateKmPerDay(state.a[last]!, state.meanMotion[last]!, state.meanMotionDot[last]!) * (series === "rp" ? state.rp[last]! / state.a[last]! : 1);
-  return fitWindow(state.epochs, valuesOf(state, series), from, to, params, rate, series !== "a");
+  return fitWindow(state.epochs, valuesOf(state, series), from, to, params, rate, withScale);
 }
 
 /** The drag term the object's window agrees on, in inverse Earth radii: the median of the window's values, so one set whose fit absorbed an event into its B* (a breakup can move it seventyfold) does not set the drag term the prediction is judged by. */
@@ -515,13 +550,13 @@ export function ownNoise(state: SeriesState, prior: number, params: DetectorPara
 
 /**
  * Folds a residual into the long memory: an exponential average of the
- * residual's size, clipped at three times the current scatter so one
- * step does not become the object's noise, scaled to a Gaussian sigma
+ * residual's size, clipped at `longMemoryClipSigmas` times the current scatter so
+ * one step does not become the object's noise, scaled to a Gaussian sigma
  * (the mean absolute deviation is 0.798 of it), decaying with the
  * half-life in days.
  */
 export function rememberResidual(state: SeriesState, residual: number, sigma: number, epochMs: number, params: DetectorParameters): void {
-  const size = Math.min(Math.abs(residual), 3 * sigma) * 1.2533;
+  const size = Math.min(Math.abs(residual), params.longMemoryClipSigmas * sigma) * 1.2533;
   if (!Number.isFinite(state.longAt)) {
     state.longSigma = size;
     state.longAt = epochMs;

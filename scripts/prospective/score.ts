@@ -1,9 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gitOutput } from "../git.ts";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
-import { brackets, landConfirmed, lowerOf, marginDaysOf, type Row } from "../kpi/match.ts";
+import { STATION_LAUNCHES, UNREPORTED_PENDING_DAYS, VISITING_LAUNCHES, brackets, carriedRegime, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, truthAsOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
 import { replacePart, RESULTS } from "../kpi/pages.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
@@ -16,24 +16,37 @@ import { runUrlOf } from "./run.ts";
  * stands (`data/breakups.json`), and prints the Confirmed headline for the
  * events after the freeze: the confirmed alerts that land on a reported
  * event, each with its lead over the event's first agency statement from
- * the commit that logged it; the false confirmations, which land on none;
+ * the commit that logged it; the false confirmations, which land on none
+ * and were raised `UNREPORTED_PENDING_DAYS` or more before the truth's
+ * date (`truthAsOf`), and the unreported ones raised since, pending, as
+ * the scorecard reads them;
  * and the reported events with fragments that no alert confirmed. A
  * confirmation lands as the scorecard's Confirmed line lands it
  * (`landConfirmed`), on the parent within the window and the half year
- * after, a confirmation by a notice alone excluded.
+ * after, a confirmation by a notice alone excluded. The score has no orbit
+ * of the object (it reads no Archive): a report naming no object but a
+ * regime bounds a confirmation by the regime its verdict carries
+ * (`carriedRegime`), which a verdict on a step carries and one from the
+ * pieces alone does not; such a one is read with the regime unknown, so it
+ * is not exempt here where the scorecard, reading the object's last set,
+ * could exempt it.
  *
  * Beside it, the early warning: the suspected alerts logged since the
  * freeze, each landed as the scorecard's parent-step line lands it, on a
  * reported event whose parent it names and whose window its step bracket
  * covers, each widened by the matcher's margin. It flagged the event
- * where it was raised before the first sign of the fragments, and is late
- * after it; a suspected alert on no reported event is a false alarm. The
+ * where the commit that logged it came before the first sign of the
+ * fragments, and is late after it; a suspected alert on no reported event
+ * is a false alarm. As on the Confirmed line, an alert is known when it was
+ * committed, never when the replay's clock raised it: the year is replayed
+ * whole each day against the day's catalogue status, so a step can be
+ * raised dated back, after the fragments were public. The
  * score reads no Archive, so the first sign of the fragments is the
  * earliest the log and the truth give: a confirmation by pieces landing
  * on the event, a cloud verdict under its launch after it, or the first
  * agency statement (from the first day of its month for a quarterly
  * news issue), a bound later than or equal to the first fragment's
- * publication. The lead is the days from the alert to that sign, and the
+ * publication. The lead is the days from the commit to that sign, and the
  * timing error is the detector's instant against the truth's where the
  * truth states the minute.
  *
@@ -58,7 +71,7 @@ import { runUrlOf } from "./run.ts";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** How long the truth may lag the events: the agencies' quarterly reports. */
-export const TRUTH_LAG_DAYS = 90;
+export const TRUTH_LAG_DAYS = UNREPORTED_PENDING_DAYS;
 
 /** When each alert was committed, by its key: the first commit that added its line. */
 export type CommittedAt = Map<string, number>;
@@ -105,13 +118,13 @@ export interface Detection extends Landed {
   leadDays: number | null;
 }
 
-/** A suspected alert landed on a reported event after the freeze: before the first sign of the fragments, or after it. */
+/** A suspected alert landed on a reported event after the freeze: committed before the first sign of the fragments, or after it (or never). */
 export interface EarlyWarning extends Landed {
   breakup: Breakup;
   status: "flagged" | "late";
   /** The first sign of the fragments the score knows of, in milliseconds since 1970; null where none yet. */
   firstSignAt: number | null;
-  /** Days from the alert's raising to that sign; positive where the alert came first. */
+  /** Days from the commit that logged the alert to that sign; positive where the alert came first; null where no commit carries it. */
   leadDays: number | null;
   /** The detector's instant against the truth's, in minutes, where the truth states the minute. */
   timingMinutes: number | null;
@@ -136,6 +149,10 @@ export interface ProspectiveScore {
   confirmed: number;
   detections: Detection[];
   falseConfirmations: Landed[];
+  /** Confirmed alerts on no reported event raised under `UNREPORTED_PENDING_DAYS` before the truth's date: unreported, pending, neither true nor false yet. */
+  pending: Landed[];
+  /** The truth's date (`truthAsOf`), in milliseconds since 1970. */
+  truthAsOf: number;
   /** Confirmed alerts that land elsewhere: on an event before the freeze, inside an exempt row's window, or on an event already confirmed. */
   notCounted: Landed[];
   /** The scoreable events after the freeze with catalogued pieces that no confirmed alert landed on. */
@@ -156,7 +173,9 @@ function statedAtOf(statement: FirstStatement | null): number | null {
 
 /** The early warning's line: every suspected alert since the freeze, landed on the truth, against the first sign of each event's fragments the log and the truth give. */
 export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: CommittedAt, breakups: readonly Breakup[], confirmations: readonly Detection[], freezeMs = FREEZE_MS): EarlyWarningScore {
-  const suspected = alerts.filter((alert) => alert.kind === "object" && alert.state === "suspected" && alert.number !== null).sort((a, b) => Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
+  // The first warning of an event counts, so they are read in the order they were known, as the Confirmed line reads its alerts.
+  const known = (alert: LoggedAlert): number => committedAt.get(alert.key) ?? Number.POSITIVE_INFINITY;
+  const suspected = alerts.filter((alert) => alert.kind === "object" && alert.state === "suspected" && alert.number !== null).sort((a, b) => known(a) - known(b) || Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
   const clouds = alerts.filter((alert) => alert.kind === "cloud");
   const firstSign = (breakup: Breakup): number | null => {
     const launch = launchOf(breakup.parent.designator);
@@ -183,20 +202,24 @@ export function scoreEarlyWarning(alerts: readonly LoggedAlert[], committedAt: C
     else if (caught.has(breakup.id)) score.notCounted.push({ ...landed, outcome: "duplicate", event: breakup.id, note: "a later early warning of an event already flagged" });
     else {
       caught.add(breakup.id);
-      const raisedAt = Date.parse(alert.raisedAt);
+      // Known when the commit logged it: the daily re-replay can raise a step dated back, after the fragments were public.
+      const committed = landed.committedAt;
       const sign = firstSign(breakup);
       const instant = breakup.event.precision === "minute" && breakup.event.at !== null && breakup.event.at !== undefined ? Date.parse(breakup.event.at) : null;
-      const status = sign === null || raisedAt < sign ? "flagged" : "late";
-      const warning: EarlyWarning = { ...landed, outcome: status, event: breakup.id, note: status === "flagged" ? "before the first sign of the fragments" : "after the first sign of the fragments", breakup, status, firstSignAt: sign, leadDays: sign === null ? null : Math.round(((sign - raisedAt) / DAY_MS) * 10) / 10, timingMinutes: instant === null || alert.verdict.event === null ? null : Math.round(Math.abs(alert.verdict.event.at - instant) / 60_000) };
+      const status = committed !== null && (sign === null || committed < sign) ? "flagged" : "late";
+      const note = committed === null ? "no commit of the log carries it" : status === "flagged" ? "committed before the first sign of the fragments" : "committed after the first sign of the fragments";
+      const warning: EarlyWarning = { ...landed, outcome: status, event: breakup.id, note, breakup, status, firstSignAt: sign, leadDays: sign === null || committed === null ? null : Math.round(((sign - committed) / DAY_MS) * 10) / 10, timingMinutes: instant === null || alert.verdict.event === null ? null : Math.round(Math.abs(alert.verdict.event.at - instant) / 60_000) };
       (status === "flagged" ? score.flagged : score.late).push(warning);
     }
   }
-  score.missed = breakups.filter((breakup) => breakup.scoreable && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
+  // A row naming a launch and no catalogued parent has no parent's orbit to warn on: it is the Confirmed line's alone.
+  score.missed = breakups.filter((breakup) => breakup.scoreable && breakup.parent.catalogueNumber !== null && lowerOf(breakup) >= freezeMs && (breakup.piecesCatalogued ?? 0) > 0 && !caught.has(breakup.id));
   return score;
 }
 
 /** The Confirmed headline over the alerts logged since the freeze, against the truth. */
 export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: CommittedAt, breakups: readonly Breakup[], freezeMs = FREEZE_MS): ProspectiveScore {
+  const asOf = truthAsOf(breakups);
   const rows = rowsOf(breakups);
   const byId = new Map(breakups.map((breakup) => [breakup.id, breakup]));
   const logged: Record<string, number> = {};
@@ -209,16 +232,19 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
   const confirmed = alerts.filter((alert) => alert.kind === "object" && alert.state === "confirmed" && alert.number !== null && alert.verdict.evidence.noticed !== 1).sort((a, b) => known(a) - known(b) || Date.parse(a.raisedAt) - Date.parse(b.raisedAt));
   const detections: Detection[] = [];
   const falseConfirmations: Landed[] = [];
+  const pending: Landed[] = [];
   const notCounted: Landed[] = [];
   const caught = new Set<string>();
   confirmed.forEach((alert, i) => {
     // The headline's reading: a verdict naming twins lands on the body it names first.
-    const landing = landConfirmed(alert.verdict, i, rows);
+    // The score reads no Archive, so the object's regime is the one its verdict carries (unknown for one from the pieces alone).
+    const landing = landConfirmed(alert.verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, carriedRegime(alert.verdict));
     const { outcome, event } = landing;
     const twin = landing.twin !== undefined && landing.twin.event !== event ? `; matched at the launch it would land on ${landing.twin.event ?? "nothing"}` : "";
     const landed: Landed = { alert, committedAt: committedAt.get(alert.key) ?? null, outcome, event, note: `${landing.note}${twin}` };
     const breakup = event === null ? undefined : byId.get(event);
-    if (outcome === "false-alarm") falseConfirmations.push(landed);
+    // A confirmation on no row is unreported: pending while the truth may still catch up, then false (the scorecard's reading).
+    if (outcome === "false-alarm") (isPendingUnreported(Date.parse(alert.raisedAt), asOf) ? pending : falseConfirmations).push(landed);
     else if (outcome === "detection" && breakup !== undefined && caught.has(breakup.id)) notCounted.push({ ...landed, outcome: "duplicate", note: "a later confirmation of an event already confirmed" });
     else if (outcome === "detection" && breakup !== undefined && lowerOf(breakup) >= freezeMs) {
       caught.add(breakup.id);
@@ -236,6 +262,8 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
     confirmed: confirmed.length,
     detections,
     falseConfirmations,
+    pending,
+    truthAsOf: asOf,
     notCounted,
     missed: withPieces.filter((breakup) => !caught.has(breakup.id)),
     awaitingPieces: after.filter((breakup) => breakup.piecesCatalogued === null && !caught.has(breakup.id)),
@@ -255,12 +283,14 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
     `Truth: data/breakups.json last changed ${truthChangedAt}.`,
     `Warning: the truth is built from the agencies' reports, which come months after an event; the events since about ${lagFrom} may not be reported yet, so this score is not final for them.`,
     "",
-    `Confirmed headline, events after the freeze: ${score.detections.length} of ${score.reported} reported events with pieces confirmed; ${score.falseConfirmations.length} false ${score.falseConfirmations.length === 1 ? "confirmation" : "confirmations"} of ${score.confirmed} confirmed alerts.`,
+    `Confirmed headline, events after the freeze: ${score.detections.length} of ${score.reported} reported events with pieces confirmed; ${score.falseConfirmations.length} false ${score.falseConfirmations.length === 1 ? "confirmation" : "confirmations"} of ${score.confirmed} confirmed alerts${score.pending.length === 0 ? "" : `; ${score.pending.length} unreported and pending`}.`,
   ];
   if (score.detections.length > 0) lines.push("", "Confirmed on a reported event (lead over the first agency statement, from the commit that logged the alert):");
   for (const d of score.detections) lines.push(`  ${named(d.breakup)}: alert raised ${iso(Date.parse(d.alert.raisedAt))}, committed ${iso(d.committedAt)}; first agency statement ${d.statement === null ? "none dated" : `${d.statement.on} (${d.statement.source})`}; lead ${d.leadDays === null ? "unknown" : `${d.leadDays} days`}`);
   if (score.falseConfirmations.length > 0) lines.push("", "False confirmations (no reported event):");
   for (const f of score.falseConfirmations) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
+  if (score.pending.length > 0) lines.push("", `Unreported and pending (no reported event yet, raised under ${UNREPORTED_PENDING_DAYS} days before the truth's date, ${new Date(score.truthAsOf).toISOString().slice(0, 10)}):`);
+  for (const f of score.pending) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
   if (score.notCounted.length > 0) lines.push("", "Confirmed alerts not counted (an event before the freeze, an exempt row, or a duplicate):");
   for (const n of score.notCounted) lines.push(`  ${n.alert.number} ${n.alert.launch ?? "-"}: ${n.outcome} ${n.event ?? ""}: ${n.note}`);
   if (score.missed.length > 0) lines.push("", "Reported events with pieces that no alert confirmed:");
@@ -269,7 +299,7 @@ export function renderScore(score: ProspectiveScore, truthChangedAt: string, now
   for (const a of score.awaitingPieces) lines.push(`  ${named(a)}`);
   const ew = score.earlyWarning;
   lines.push("", `Early warning (suspected), events after the freeze: ${ew.flagged.length} of ${score.reported} reported events with pieces flagged before the first sign of their fragments, ${ew.late.length} late; ${ew.falseAlarms.length} false ${ew.falseAlarms.length === 1 ? "alarm" : "alarms"} of ${ew.suspected} suspected alerts.`);
-  if (ew.flagged.length + ew.late.length > 0) lines.push("", "Early warnings on a reported event (lead over the first sign of the fragments; timing error against the truth's minute):");
+  if (ew.flagged.length + ew.late.length > 0) lines.push("", "Early warnings on a reported event (lead over the first sign of the fragments, from the commit that logged the alert; timing error against the truth's minute):");
   for (const w of [...ew.flagged, ...ew.late]) lines.push(`  ${named(w.breakup)}: ${w.status}, raised ${iso(Date.parse(w.alert.raisedAt))}, committed ${iso(w.committedAt)}; first sign of the fragments ${w.firstSignAt === null ? "none yet" : iso(w.firstSignAt)}; lead ${w.leadDays === null ? "unknown" : `${w.leadDays} days`}; timing error ${w.timingMinutes === null ? "unknown" : `${w.timingMinutes} minutes`}`);
   if (ew.falseAlarms.length > 0) lines.push("", "False early warnings (no reported event's step):");
   for (const f of ew.falseAlarms) lines.push(`  ${f.alert.number} ${f.alert.launch ?? "-"}: raised ${iso(Date.parse(f.alert.raisedAt))}, committed ${iso(f.committedAt)}`);
@@ -298,7 +328,7 @@ export function resultsSummary(score: ProspectiveScore, truthChangedOn: string):
   return [
     `So far: ${plural(logged, "alert", "alerts")} logged since the freeze${logged === 0 ? "" : ` (${byState})`};`,
     `${plural(score.detections.length, "confirmed alert matches", "confirmed alerts match")} a reported event after the freeze, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
-    `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}.`,
+    `${plural(score.falseConfirmations.length, "false confirmation", "false confirmations")} of ${plural(score.confirmed, "confirmed alert", "confirmed alerts")}${score.pending.length === 0 ? "" : `, and ${plural(score.pending.length, "unreported confirmation", "unreported confirmations")} pending, neither true nor false until ${UNREPORTED_PENDING_DAYS} days pass with no report`}.`,
     `Early warning: ${plural(score.earlyWarning.flagged.length, "suspected alert flags", "suspected alerts flag")} a reported event after the freeze before the first sign of its fragments, and ${score.earlyWarning.late.length} after it, of ${plural(score.reported, "reported event", "reported events")} with pieces;`,
     `${plural(score.earlyWarning.falseAlarms.length, "false early warning", "false early warnings")} of ${plural(score.earlyWarning.suspected, "suspected alert", "suspected alerts")}.`,
     `The truth last changed on ${truthChangedOn}.`,
@@ -312,7 +342,7 @@ export function scoreMarkdown(printed: string, scoredOn: string, runUrl: string 
   return [`# The prospective test's score`, "", `Scored on ${scoredOn}${runUrl === null ? "" : ` by ${runUrl}`}, by \`npm run prospective:score\` over this branch's \`alerts.jsonl\` and the truth on main.`, "", "```text", printed.trimEnd(), "```", ""].join("\n");
 }
 
-const git = (...args: string[]): string => execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 30 });
+const git = (...args: string[]): string => gitOutput(ROOT, ...args);
 
 /** When the truth last changed: now where the working tree's file differs from the base commit's (the last commit, or the commit a run started from), else when the last commit that changed it was made. */
 function truthChanged(base = "HEAD"): string {

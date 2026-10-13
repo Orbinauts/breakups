@@ -5,6 +5,7 @@ import { gunzipSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { runDetector, type DetectorInput, type ElementSet, type SpaceWeatherDay, type Verdict } from "../src/index.ts";
 import type { EarlyWarningFixture, FixtureRow } from "../scripts/kpi/early-warning-fixtures.ts";
+import { regimeOf } from "../src/elements.ts";
 import type { Latest } from "../scripts/kpi/kpi.ts";
 import { brackets, marginDaysOf } from "../scripts/kpi/match.ts";
 import { RUN_HOURS, spaceFor } from "../scripts/kpi/replay.ts";
@@ -14,7 +15,8 @@ import { RUN_HOURS, spaceFor } from "../scripts/kpi/replay.ts";
  * detector raises on a parent's own orbit jump, before the first fragment
  * is catalogued, checked case by case. Each fixture under
  * `test/fixtures/early-warning/` is one object's element sets from the
- * Archive, from a hundred days before an instant to ten days after it,
+ * Archive, from a hundred days before an instant to ten days after it
+ * (to a stated end where the sets come days apart),
  * each with the four-hour run the scorecard's replay handed it over in
  * (`scripts/kpi/early-warning-fixtures.ts` says how they were cut and
  * why no band-mate is carried). Each is replayed here through
@@ -29,11 +31,12 @@ import { RUN_HOURS, spaceFor } from "../scripts/kpi/replay.ts";
  * notice, with the detector's instant of the event within the tolerance
  * of the truth's. The tolerance is three times the held-out years' median
  * timing error of the early warning (`kpi/latest.json`), and at least two
- * hours, in low orbit; near the geostationary ring, where the sets come a
- * day or more apart and the instant is placed less finely, it is a day
- * and a half. An orbit change that is not a breakup (a station's reboost,
- * a constellation satellite raising its orbit, a geosynchronous
- * satellite's station-keeping burn) must raise no suspected verdict, the
+ * hours, in low orbit; near the geostationary ring and in a high eccentric
+ * orbit, where the sets come a day or more apart and the instant is placed
+ * less finely, it is a day and a half. The cases reach every regime. An
+ * orbit change that is not a breakup (a station's reboost, a
+ * constellation satellite raising its orbit, a geosynchronous satellite's
+ * station-keeping burn, a navigation satellite's burn in medium orbit) must raise no suspected verdict, the
  * change still seen and called a manoeuvre; and a quiet rocket body must
  * raise nothing at all.
  */
@@ -46,7 +49,7 @@ const latest = JSON.parse(readFileSync(resolve(ROOT, "kpi/latest.json"), "utf8")
 
 /** The tolerance on the instant in low orbit: three times the held-out median timing error, at least two hours. */
 const LOW_ORBIT_TOLERANCE_MS = Math.max(2 * HOUR_MS, 3 * latest.splits.validation.timingErrorMinutes! * 60_000);
-/** Near the geostationary ring: a day and a half. */
+/** Near the geostationary ring and in a high eccentric orbit: a day and a half. */
 const DEEP_SPACE_TOLERANCE_MS = 36 * HOUR_MS;
 
 const fixtures: EarlyWarningFixture[] = readdirSync(DIR)
@@ -97,6 +100,15 @@ describe("the early warning's fixtures", () => {
   test("hold at least six reported breakups and four orbit changes, or none, that are not breakups", () => {
     expect(positives.length).toBeGreaterThanOrEqual(6);
     expect(negatives.length).toBeGreaterThanOrEqual(4);
+  });
+
+  test("reach every regime: a breakup in low orbit, near the geostationary ring and in a high eccentric orbit, and an orbit change in medium Earth orbit", () => {
+    const regimeOfCase = (fixture: EarlyWarningFixture): string => {
+      const [year, , rows] = fixture.runs[0]!;
+      return regimeOf(setOf(fixture, year, rows[0]!));
+    };
+    expect(new Set(positives.map(regimeOfCase))).toEqual(new Set(["LEO", "GEO", "HEO"]));
+    expect(new Set(fixtures.map(regimeOfCase))).toEqual(new Set(["LEO", "MEO", "GEO", "HEO"]));
   });
 
   test.each(fixtures.map((f) => [f.case.name, f] as const))("%s says where it came from and is small", (_, fixture) => {

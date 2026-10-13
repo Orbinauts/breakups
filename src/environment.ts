@@ -1,6 +1,6 @@
 import type { SpaceWeatherDay } from "./detector.ts";
 import { median, robustScale } from "./model.ts";
-import type { DetectorParameters } from "./params.ts";
+import { DETECTOR_PARAMETERS, type DetectorParameters } from "./params.ts";
 import type { Regime } from "./truth.ts";
 
 /**
@@ -29,8 +29,6 @@ import type { Regime } from "./truth.ts";
  * with both.
  */
 
-/** The width of a low-orbit band, in kilometres of perigee height. Policy. */
-export const LEO_BAND_KM = 50;
 
 /** A residual as the environment reads it: which band, the residual in kilometres, its prediction sigma, the gap in days and the drag term. */
 export interface Measurement {
@@ -43,9 +41,9 @@ export interface Measurement {
 }
 
 /** The band a set is filed in: `LEO:16` for a perigee height of 800 to 850 km, else the regime's name. */
-export function bandOf(regime: Regime, perigeeHeightKm: number): string {
+export function bandOf(regime: Regime, perigeeHeightKm: number, params: Pick<DetectorParameters, "leoBandKm"> = DETECTOR_PARAMETERS): string {
   if (regime !== "LEO") return regime;
-  return `LEO:${Math.max(0, Math.floor(perigeeHeightKm / LEO_BAND_KM))}`;
+  return `LEO:${Math.max(0, Math.floor(perigeeHeightKm / params.leoBandKm))}`;
 }
 
 export interface BandStats {
@@ -112,50 +110,38 @@ export interface Weather {
   dragFactor: number;
 }
 
-/**
- * How an object's scatter scales with the 10.7 cm flux, as the earlier
- * attempt measured it over seven hundred and fifty objects: the
- * normalised monthly scatter by flux band, one at about a hundred solar
- * flux units. Fitted, read off that table.
- */
-export const FLUX_SCATTER: readonly [number, number][] = [
-  [80, 0.68],
-  [100, 0.95],
-  [130, 1.21],
-  [160, 1.68],
-  [200, 2.29],
-  [Number.POSITIVE_INFINITY, 3.8],
-];
-
-/** The same for the daily Ap: 0.67 on the quietest days to 1.79 on the stormiest, read as a line in the logarithm of Ap from 5 to 100. Fitted, read off the same table. */
-export const AP_SCATTER_QUIET = 0.67;
-export const AP_SCATTER_STORM = 1.79;
-export const AP_QUIET = 5;
-export const AP_STORM = 100;
-
-export function fluxFactor(f107: number): number {
+/** The factor the scatter scales by at the 10.7 cm flux, from the parameters' table (`fluxScatter`); one where no flux was given. */
+export function fluxFactor(f107: number, params: Pick<DetectorParameters, "fluxScatter"> = DETECTOR_PARAMETERS): number {
   if (!Number.isFinite(f107)) return 1;
-  for (const [upTo, factor] of FLUX_SCATTER) if (f107 <= upTo) return factor;
+  for (const [upTo, factor] of params.fluxScatter) if (f107 <= upTo) return factor;
   return 1;
 }
 
-export function apFactor(ap: number): number {
+/** The factor the scatter scales by at the daily Ap, a line in its logarithm between the parameters' quiet and storm days (`apScatter`); one where no Ap was given. */
+export function apFactor(ap: number, params: Pick<DetectorParameters, "apScatter"> = DETECTOR_PARAMETERS): number {
   if (!Number.isFinite(ap)) return 1;
-  const position = (Math.log10(Math.max(AP_QUIET, Math.min(AP_STORM, ap))) - Math.log10(AP_QUIET)) / (Math.log10(AP_STORM) - Math.log10(AP_QUIET));
-  return AP_SCATTER_QUIET + (AP_SCATTER_STORM - AP_SCATTER_QUIET) * position;
+  const { quiet, storm, quietAp, stormAp } = params.apScatter;
+  const position = (Math.log10(Math.max(quietAp, Math.min(stormAp, ap))) - Math.log10(quietAp)) / (Math.log10(stormAp) - Math.log10(quietAp));
+  return quiet + (storm - quiet) * position;
 }
 
-/** The weather of a run from the days the caller handed in, the run's day last. */
-export function weatherOf(space: SpaceWeatherDay[] | undefined, params: DetectorParameters): Weather {
-  if (space === undefined || space.length === 0) return { kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 };
+/** How many days of space weather a run reads: its own day and the two before it, so a storm's onset is in view. Policy. */
+export const WEATHER_DAYS = 3;
+
+/** The weather of a run at `now` from the days the caller handed in, oldest first: the highest Kp and Ap of the run's day and the `WEATHER_DAYS - 1` days before it, and the latest flux among them; any other day handed in is not read. */
+export function weatherOf(space: SpaceWeatherDay[] | undefined, now: number, params: DetectorParameters): Weather {
+  const last = new Date(now).toISOString().slice(0, 10);
+  const first = new Date(now - (WEATHER_DAYS - 1) * 86_400_000).toISOString().slice(0, 10);
+  const days = (space ?? []).filter((day) => day.day >= first && day.day <= last);
+  if (days.length === 0) return { kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 };
   let kpMax = 0;
   let apMax = 0;
   let f107 = Number.NaN;
-  for (const day of space) {
+  for (const day of days) {
     for (const kp of day.kp) if (Number.isFinite(kp) && kp > kpMax) kpMax = kp;
     if (Number.isFinite(day.Ap) && day.Ap > apMax) apMax = day.Ap;
     if (day.f107 !== null && Number.isFinite(day.f107)) f107 = day.f107;
   }
-  const ap = apFactor(apMax);
-  return { kpMax, apMax, f107, stormHold: kpMax >= params.stormKp, priorFactor: fluxFactor(f107) * ap, dragFactor: ap };
+  const ap = apFactor(apMax, params);
+  return { kpMax, apMax, f107, stormHold: kpMax >= params.stormKp, priorFactor: fluxFactor(f107, params) * ap, dragFactor: ap };
 }

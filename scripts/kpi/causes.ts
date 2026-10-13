@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
-import { BODY_CLASSES, EXPLANATION_BITS, MANOEUVRE_CLASSES, SIGNATURE_BITS, type LogRow, type Verdict } from "../../src/index.ts";
+import { BODY_CLASSES, type LogRow, type Verdict } from "../../src/index.ts";
+import { EXPLANATION_BITS, SIGNATURE_BITS } from "../../src/fusion.ts";
+import { MANOEUVRE_CLASSES } from "../../src/manoeuvre.ts";
 import { alertKey, type YearFile } from "./kpi.ts";
 import { readYearFiles } from "./run.ts";
 

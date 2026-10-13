@@ -1,6 +1,8 @@
-import { isAgencySource, type Breakup, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
-import { brackets, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
+import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { isAgencyWord } from "../../src/truth.ts";
+import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
+import { isoInstant } from "../time.ts";
 
 /** What the satellite catalogue says of a body: the fields of the Archive's body table (`ArchivedBody`) the parent is filled from. */
 export interface BodyIdentity {
@@ -13,6 +15,9 @@ export interface BodyIdentity {
 /** The catalogue's identity of a body by its number; undefined where it has none. */
 export type BodyOf = (number: number) => BodyIdentity | undefined;
 
+/** The regime of a body by its last set before an instant, as the Archive's sets give it (`regimeBefore`); unknown where they give none. */
+export type RegimeAt = (number: number, at: number) => Regime;
+
 type ObjectVerdict = Verdict & { number: number };
 
 /** A suspected or confirmed object verdict, with the ground-truth row it lands on (null for none). */
@@ -21,10 +26,9 @@ interface Landed {
   row: Breakup | null;
 }
 
-const iso = (ms: number): string => new Date(ms).toISOString();
 /** The detector's step, estimate and verdict in their published shape: instants in milliseconds become ISO strings. */
-const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: iso(step.beforeEpoch), afterEpoch: iso(step.afterEpoch) });
-const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: iso(event.at), from: iso(event.from), to: iso(event.to) });
+const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: isoInstant(step.beforeEpoch), afterEpoch: isoInstant(step.afterEpoch) });
+const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: isoInstant(event.at), from: isoInstant(event.from), to: isoInstant(event.to) });
 const canLand = (row: Breakup): boolean => row.kind === "breakup" || row.kind === "anomalous";
 
 /** The precisions fine enough to name the day of a row's event. */
@@ -56,6 +60,9 @@ type Dated = Statement & { statedOn: NonNullable<Statement["statedOn"]> };
 const isOutside = (s: Statement): s is Dated => s.statedOn !== null && (s.source === "news" || s.source === "analyst");
 const isAgencyNotice = (row: Breakup) => (s: Statement): s is Dated => s.statedOn !== null && isAgencySource(s.source) && s.statedOn.on >= eventDayOf(row);
 
+/** The day of the row's first agency notice on its object (`isAgencyWord`), which confirms a breakup: an ESA row the truth's build placed by its own rule is listed among the reports, but confirms nothing. */
+const firstNoticeOn = (row: Breakup | null): string | undefined => (row === null ? undefined : row.statements.filter(isAgencyNotice(row)).filter(isAgencyWord).map((s) => s.statedOn.on).sort()[0]);
+
 /** The statements of a row that count as reports, earliest first: dated outside reports, and dated agency notices no earlier than the event's day. */
 function reportsOf(row: Breakup | null): PublishedReport[] {
   if (row === null) return [];
@@ -67,7 +74,7 @@ function reportsOf(row: Breakup | null): PublishedReport[] {
 }
 
 function publishedVerdictOf(verdict: Verdict): PublishedVerdict {
-  return { state: verdict.state as PublishedState, raisedAt: iso(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
+  return { state: verdict.state as PublishedState, raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
 }
 
 /** The row a suspected verdict lands on by its step: a breakup or anomalous row of its object whose window, widened by the regime's margin, the step brackets; the latest such. */
@@ -81,12 +88,18 @@ function landSuspected(verdict: ObjectVerdict, breakups: readonly Breakup[]): Br
  * it (`landConfirmed`): on the row of a detection. It is exempt, a release
  * on purpose, under a crewed station's launch, under a crewed or cargo
  * craft's launch other than on its rocket body, or inside a release row's
- * window: then it lands nowhere and is left out (null), on its own. Any
- * other landing (a row naming the launch alone or no object, an
- * aerodynamic row, no row at all) is a breakup on no row.
+ * window: then it lands nowhere and is left out (null), on its own. A
+ * detection lands on its row, a row naming the launch alone among them
+ * (the Confirmed line scores those by their launch). Any other landing (a
+ * row naming no object, an aerodynamic row, no row at all) is a breakup on
+ * no row. A report naming no object but a regime is read with the
+ * object's regime by its last set before the raising (`regimeAt`), as the
+ * scorecard reads it; a caller with no sets passes none, and the regime
+ * the verdict carries is read instead (`carriedRegime`). Exempt by a
+ * regime or not, such a confirmation is a breakup on no row.
  */
-function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>): Landed | null {
-  const landing = landConfirmed(verdict, i, rows);
+function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>, regimeAt: RegimeAt | undefined): Landed | null {
+  const landing = landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, regimeAt === undefined ? carriedRegime(verdict) : regimeAt(verdict.number, verdict.raisedAt));
   const on = landing.event === null ? null : (byId.get(landing.event) ?? null);
   const exempt = landing.outcome === "exempt" && (landing.note.startsWith("a crewed") || on?.kind === "release");
   return exempt ? null : { verdict, row: landing.outcome === "detection" ? on : null };
@@ -151,22 +164,24 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const row = [...cluster].reverse().find((landed) => landed.row !== null)?.row ?? null;
   const confirmedVerdict = cluster.find(({ verdict }) => verdict.state === "confirmed")?.verdict;
   const reports = reportsOf(row);
-  const firstNotice = reports.find((report) => isAgencySource(report.source));
-  const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice.date}T00:00:00.000Z`)].filter((t) => t !== undefined);
-  const confirmedAt = confirmedOn.length === 0 ? null : iso(Math.min(...confirmedOn));
+  const firstNotice = firstNoticeOn(row);
+  const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
+  const confirmedAt = confirmedOn.length === 0 ? null : isoInstant(Math.min(...confirmedOn));
   const state: PublishedState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
   if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
-  const raisedAt = iso(cluster[0]!.verdict.raisedAt);
+  const raisedAt = isoInstant(cluster[0]!.verdict.raisedAt);
   const event = publishedEventOf(latest.event);
   const rowEvent = rowEventOf(row);
+  const named = row !== null && row.parent.catalogueNumber === number ? row : null;
   return {
     id: publishedIdOf(number, rowEvent, event, raisedAt),
     state,
     raisedAt,
     confirmedAt,
-    parent: { catalogueNumber: number, designator: row?.parent.designator ?? body?.designator ?? null, name: row?.parent.name ?? body?.name ?? null, launchedOn: row?.parent.launchedOn ?? body?.launch ?? null },
+    // The parent as the row names it where the row names this body; a row naming the launch alone leaves the body's own identity.
+    parent: { catalogueNumber: number, designator: named?.parent.designator ?? body?.designator ?? null, name: named?.parent.name ?? body?.name ?? null, launchedOn: named?.parent.launchedOn ?? body?.launch ?? null },
     event,
     rowEvent,
     step: publishedStepOf(latest.step),
@@ -184,7 +199,9 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * The breakups fit to show from one replay: the frozen detector's verdicts
  * (the year file's, every state, in the order raised) landed on the ground
  * truth as it stands on main, earliest raised first. Pure: the catalogue's
- * identity of a parent comes in through `bodyOf`.
+ * identity of a parent comes in through `bodyOf`, and a confirmed object's
+ * regime by its last set through `regimeAt` (the verdict's own where none
+ * is given).
  *
  * A suspected verdict lands by its step on a `breakup` or `anomalous` row
  * of its object, the window widened by the regime's margin; a confirmed one
@@ -193,7 +210,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * of the row it lands on (the latest raised where the row holds two), and
  * two whose steps do not overlap are two breakups, whatever row they land
  * on. It is published
- * confirmed when the detector confirmed it or an agency notice on its row,
+ * confirmed when the detector confirmed it or an agency notice on its row's object (`isAgencyWord`),
  * dated no earlier than the event, did; suspected when a dated outside
  * report (news, an analyst) names its row and no later verdict on its step
  * expired or dismissed it. A confirmation exempt as a release on purpose
@@ -204,7 +221,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * of the first raising (`publishedIdOf`); merging with what is already
  * published, which may fix an earlier id, is the caller's.
  */
-export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf): PublishedBreakup[] {
+export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf, regimeAt?: RegimeAt): PublishedBreakup[] {
   const rows = rowsOf(breakups);
   const byId = new Map(breakups.map((row) => [row.id, row]));
   const landed: Landed[] = [];
@@ -213,7 +230,7 @@ export function selectPublished(verdicts: readonly Verdict[], breakups: readonly
     const object = verdict as ObjectVerdict;
     if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups) });
     if (verdict.state === "confirmed") {
-      const confirmation = landedConfirmation(object, i, rows, byId);
+      const confirmation = landedConfirmation(object, i, rows, byId, regimeAt);
       if (confirmation !== null) landed.push(confirmation);
     }
   });

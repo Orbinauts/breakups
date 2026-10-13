@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { Verdict } from "../../src/index.ts";
-import { ARCHIVE_FORMAT } from "../archive/archive.ts";
+import { writeFixtureYear } from "./archive-fixture.ts";
 import { publishDaily, type DailyPlaces } from "./daily.ts";
 import { readPublished } from "./files.ts";
 
@@ -41,9 +41,7 @@ beforeEach(() => {
   places = { root: ROOT, archive, home: join(archive, "prospective"), branch: join(scratch, "prospective"), published: join(scratch, "published") };
 
   // The Archive as the day's run left it: the year's manifest and body table, and the replay's year file in the day's scratch.
-  mkdirSync(join(archive, "2026"), { recursive: true });
-  writeFileSync(join(archive, "2026", "manifest.json"), JSON.stringify({ format: ARCHIVE_FORMAT, year: 2026, source: { kind: "history", from: "2026-01-01", through: "2026-10-10", missing: [] } }));
-  writeFileSync(join(archive, "2026", "bodies.json"), "[]");
+  writeFixtureYear(archive, 2026, { kind: "history", from: "2026-01-01", through: "2026-10-10", missing: [] }, []);
   yearFile("2026-10-11", 2026, [confirmed(40258, "2026-02-27T04:00:00.000Z")]);
 
   // The prospective log, whose last line is the run that just committed.
@@ -113,9 +111,7 @@ describe("the daily publishing", () => {
   });
 
   test("reads both year files of an early-January run", () => {
-    mkdirSync(join(places.archive, "2025"));
-    writeFileSync(join(places.archive, "2025", "manifest.json"), JSON.stringify({ format: ARCHIVE_FORMAT, year: 2025, source: { kind: "bundle", file: "tle2025.txt.zip", bytes: 1 } }));
-    writeFileSync(join(places.archive, "2025", "bodies.json"), "[]");
+    writeFixtureYear(places.archive, 2025, { kind: "bundle", file: "tle2025.txt.zip", bytes: 1, sha256: "", member: "tle2025.txt", memberBytes: 1 }, []);
     yearFile("2026-01-03", 2025, [confirmed(24753, "2025-11-20T04:00:00.000Z")]);
     yearFile("2026-01-03", 2026, [confirmed(40258, "2026-02-27T04:00:00.000Z")]);
     writeFileSync(join(places.branch, "runs.jsonl"), `${JSON.stringify(runLine("2026-01-03", [2025, 2026]))}\n`);

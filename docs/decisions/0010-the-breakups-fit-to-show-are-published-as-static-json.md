@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its row naming a launch alone (issue #21) and its unreported confirmation and nearest row (issue #17) amended on 2026-10-12, and its object's regime read by its last set (issue #17) and its ESA rows the truth's build placed (issues #19 and #20) on 2026-10-13
 date: 2026-10-11
 ---
 
@@ -131,7 +131,12 @@ is new. Issue #8 is the specification.
   replays (`test/fixtures/published/`), which must publish exactly the
   lists the specification expects.
 - A suspected breakup is rare until the outside reports in the truth are
-  kept current (issue #9).
+  kept current (issue #9). Since 2026-10-12 a daily watcher opens an issue
+  for each new report it can read and a report the owner accepts reaches
+  the truth the next morning, where the live test's runs leave room for
+  the maintenance run the watcher starts, else on Monday's run
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)),
+  and it is published by the next daily run after that.
 - A change to the files' shape that breaks a reader is a new version, and
   the package's types say which. Adding `rowEvent` broke none, and the
   ids were re-keyed once under the new rule, by the first run that read
@@ -153,3 +158,36 @@ suspected and confirmed verdicts one breakup, confirmed by the Space
 Force notice), all confirmed, and Meteor 2-7 (12456) suspected on an
 analyst's report of 2026-10-07 (Jim Shell's dating, as EarthSky and
 LeoLabs reported it); none of the year's other suspected verdicts.
+
+## Amended on 2026-10-12: a row naming a launch alone is a detection
+
+The seventh decision record's amendment of this day scores a row naming
+a launch and no catalogued parent on the Confirmed line by its launch
+(issue #21), so `landConfirmed` no longer calls a confirmation inside such
+a row's window exempt: it is a detection of the row. The first of the two
+readings above therefore no longer arises for these rows. Intelsat 805's
+confirmation of 2026-08-20 lands on the catalogue's burst under its
+launch, `A:1998-037:2026-06-19`, and carries the row's dating; the
+published parent stays the body the verdict names (its number,
+designator and name from the catalogue), since the row names only the
+launch.
+
+## Amended on 2026-10-12: an unreported confirmation, and the nearest row
+
+The seventh decision record's amendment of 2026-10-12 (issue #17) changed two readings the published files share with the scorecard:
+
+- **An unreported confirmation.** A detector confirmation that lands on no row is the detector's own news, as before, and is shown with no report. It now has one name everywhere: unreported. The scorecard and the live test's score count it pending, neither true nor false, while it was raised less than 90 days before the truth's date (the latest day the ground truth knows of), and false once 90 days pass with no report. The published list keeps it after that, since a confirmed breakup stays for good and the site may already show it; its `reports` stay empty and its `row` null, so a reader can apply the same reading from `raisedAt`. The files' shape is unchanged. Dropping a confirmation from the list once it turns false is left to the owner: it would change "a confirmed breakup stays for good".
+- **The nearest row.** A confirmation lands as `landConfirmed` lands it, now on the row of its object nearest the detector's instant of the event, else its raising, rather than the latest scoreable row in the window; and a confirmation inside a report naming no object, no launch and no regime lands as `unnamed`, which, like every landing other than a detection or a release on purpose, the selection publishes as a breakup on no row. Inside a report naming a regime, the confirmed object's regime is read by its last set before the raising, from the sets of the Archive the publishing run reads, as the scorecard reads it; exempt by the regime or not, such a confirmation is a breakup on no row.
+
+## Amended on 2026-10-13: an ESA row the truth's build placed confirms nothing
+
+The second decision record's amendment of this day (issues #19 and #20)
+reads an ESA row that names no object, placed on an event by the truth
+build's own rule, as no agency's word on the object. The published files
+follow it: such a row is still listed among a breakup's `reports`, dated as
+ESA's edition, but it no longer makes a breakup confirmed by an agency
+notice (`isAgencyWord` in `src/truth.ts`, `firstNoticeOn` in
+`scripts/published/select.ts`). A breakup with no other notice and no
+confirmation by the detector is published suspected on it, as on a dated
+outside report. The 2025 seed's list is unchanged: DMSP F-14 is confirmed by
+the Space Forces' notice of the event's day.

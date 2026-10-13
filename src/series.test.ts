@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { DETECTOR_PARAMETERS } from "./params.ts";
 import { isReadable, newState, nodePrecessionDegPerDay, ownNoise, priorSigma, pushSet, rememberResidual, screenSet, windowOf } from "./series.ts";
-import { DAY, setOf } from "./synthetic.test-support.ts";
+import { DAY, meanMotionOf, setOf } from "./synthetic.test-support.ts";
 
 const params = DETECTOR_PARAMETERS;
 const T0 = Date.UTC(2020, 0, 1);
@@ -69,6 +69,37 @@ describe("the ring", () => {
     screenSet(state, moved, params);
     const stays = setOf(1, { epochMs: T0 + 6 * DAY, aKm: 7100.01 });
     expect(screenSet(state, stays, params)).toEqual([moved, stays]);
+  });
+
+  test("a sparse object decaying fast is not held as foreign for the drag its own sets say it is under, but a set that rose as far is", () => {
+    // Sets twenty-four days apart on an object losing 2.5 km of axis a day, which each set's drag derivative says: sixty kilometres between sets, past the foreign bound.
+    const rate = 2.5;
+    const gapDays = 24;
+    const sets: ReturnType<typeof setOf>[] = [];
+    let raanDeg = 100;
+    for (let k = 0; k < 4; k++) {
+      const aKm = 6700 - rate * gapDays * k;
+      const n = meanMotionOf(aKm);
+      if (k > 0) {
+        const previous = 6700 - rate * gapDays * (k - 1);
+        raanDeg += nodePrecessionDegPerDay(previous, 0.001, 98, meanMotionOf(previous)) * gapDays;
+      }
+      // The half-derivative the format prints for that decay: `da/dt = -(2/3)(a/n) dn/dt`.
+      const meanMotionDot = rate / ((2 / 3) * (aKm / n) * 2);
+      sets.push(setOf(1, { epochMs: T0 + k * gapDays * DAY, aKm, raanDeg, meanMotionDot }));
+    }
+    const state = newState(1);
+    pushSet(state, sets[0]!, Number.NaN, params);
+    for (const set of sets.slice(1)) {
+      expect(screenSet(state, set, params)).toEqual([set]);
+      pushSet(state, set, Number.NaN, params);
+    }
+    expect(state.held).toBeNull();
+    // A set as far above the last as the drag took it below: no drag raises an orbit.
+    const last = 6700 - rate * gapDays * 3;
+    const risen = setOf(1, { epochMs: T0 + 4 * gapDays * DAY, aKm: last + rate * gapDays, raanDeg: raanDeg + nodePrecessionDegPerDay(last, 0.001, 98, meanMotionOf(last)) * gapDays, meanMotionDot: sets[3]!.meanMotionDot });
+    expect(screenSet(state, risen, params)).toEqual([]);
+    expect(state.held?.set).toBe(risen);
   });
 
   test("a node far off its J2 precession is foreign, except on a near-equatorial orbit where the node means nothing", () => {

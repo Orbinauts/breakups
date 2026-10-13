@@ -101,6 +101,14 @@ describe("a statement's publication day", () => {
     expect(firstAgencyStatement({ statements: [at("news", "2023-07-02"), at("analyst", "2023-07-01"), at("odqn", "2023-10-01", "month")] })).toMatchObject({ source: "odqn", on: "2023-10-01" });
     expect(firstAgencyStatement({ statements: [at("news", "2023-07-02")] })).toBeNull();
   });
+
+  test("the first agency statement leaves out an ESA row naming no object, which the truth's build placed on the event by its own rule", () => {
+    const placed = { ...at("esa-ser", "2023-07-01"), parent: { catalogueNumber: null, designator: null, name: null } };
+    expect(firstAgencyStatement({ statements: [placed, at("odqn", "2023-10-01", "month")] })).toMatchObject({ source: "odqn", on: "2023-10-01" });
+    expect(firstAgencyStatement({ statements: [placed] })).toBeNull();
+    // A row that names its object is ESA's word on it.
+    expect(firstAgencyStatement({ statements: [at("esa-ser", "2023-07-01")] })).toMatchObject({ source: "esa-ser" });
+  });
 });
 
 describe("the breakups file", () => {
@@ -141,5 +149,7 @@ describe("helpers", () => {
   test("the year an event counts in", () => {
     expect(yearOf({ event: { stated: "", at: null, from: "2019-12-31T23:00Z", to: "2020-01-02T00:00Z", precision: "day" } })).toBe(2019);
     expect(yearOf({ event: { stated: "", at: null, from: null, to: "2026-09-04T00:00Z", precision: "none" } })).toBe(2026);
+    // GCAT's "2018 Jan 1 0000?" widens to the minute before midnight: the instant it states decides.
+    expect(yearOf({ event: { stated: "2018 Jan 1 0000?", at: "2018-01-01T00:00Z", from: "2017-12-31T23:59Z", to: "2018-01-01T00:01Z", precision: "minute" } })).toBe(2018);
   });
 });

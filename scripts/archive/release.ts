@@ -1,10 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { assertFresh, readCatalogueIndex } from "../kpi/catalogue-index.ts";
-import { archiveHome, builtYears, catalogueIndexPath, readManifest, releaseManifestPath, yearDir } from "./archive.ts";
+import { archiveHome, builtYears, catalogueIndexPath, readManifest, releaseManifestPath, sha256File, yearDir } from "./archive.ts";
 import { spaceDir } from "./space-weather.ts";
 
 /**
@@ -66,11 +65,6 @@ const SIDE_ASSET = `${RELEASE_TAG}-side.tar`;
 
 /** The hash of the side files a download last extracted whole, so a later download knows its copy from one built here. */
 const sideRecordPath = (archive: string): string => join(archive, "side.sha256");
-
-/** A file's SHA-256, in hex. */
-export function sha256File(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
-}
 
 /** A tarball of a directory's files, uncompressed (the columns are gzipped already). */
 function tar(out: string, dir: string, parent: string): void {

@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Statement } from "../../src/truth.ts";
 import { archiveHome, builtYears, readBodies, readColumn, readManifest, yearDir } from "../archive/archive.ts";
+import { isoMinute } from "../time.ts";
 
 /**
  * The catalogue as a source of the truth: a breakup is reported, in the
@@ -130,20 +131,18 @@ export function findBursts(objects: FirstSeen[], parentsOf: (launch: string, deb
   return bursts.sort((a, b) => a.start - b.start);
 }
 
-const day = (ms: number): string => `${new Date(ms).toISOString().slice(0, 16)}Z`;
-
 export function catalogueStatements(bursts: Burst[]): Statement[] {
   return bursts.map((burst) => ({
     source: "catalogue" as const,
-    ref: `the public catalogue: ${burst.pieces.length} debris objects under launch ${burst.launch} with first element sets from ${day(burst.start).slice(0, 10)}`,
+    ref: `the public catalogue: ${burst.pieces.length} debris objects under launch ${burst.launch} with first element sets from ${isoMinute(burst.start).slice(0, 10)}`,
     kind: "breakup" as const,
     parent: { catalogueNumber: burst.parentNumber, designator: burst.launch, name: burst.parentName },
-    event: { stated: `before the first piece's first set, ${day(burst.start)}`, at: null, from: day(burst.start - BEFORE_FIRST_PIECE_DAYS * DAY_MS), to: day(burst.start), precision: "none" as const },
+    event: { stated: `before the first piece's first set, ${isoMinute(burst.start)}`, at: null, from: isoMinute(burst.start - BEFORE_FIRST_PIECE_DAYS * DAY_MS), to: isoMinute(burst.start), precision: "none" as const },
     orbit: { altitudeKm: null, apogeeKm: null, perigeeKm: null, inclinationDeg: null },
     cause: null,
     causeStated: null,
     piecesCatalogued: burst.pieces.length,
-    piecesStatedOn: day(burst.start + COUNT_DAYS * DAY_MS).slice(0, 10),
+    piecesStatedOn: isoMinute(burst.start + COUNT_DAYS * DAY_MS).slice(0, 10),
     preEventElements: null,
     note: `Found by the burst rule: at least ${BURST_PIECES} new debris objects within ${BURST_DAYS} days, more than ${AFTER_LAUNCH_DAYS} days after launch, at least ${Math.round(BURST_SHARE * 100)}% of the ${burst.debrisBefore} debris the launch had before. Pieces ${burst.pieces[0]!.number} to ${burst.pieces.at(-1)!.number}.`,
     statedOn: null,

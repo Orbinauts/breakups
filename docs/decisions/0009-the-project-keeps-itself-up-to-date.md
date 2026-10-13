@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its reports accepted through issues and its daily watcher (issue #9), its failures made loud and the KPI workflow's group (issue #24), and its check before the replay and its following of a moved main (issue #14) amended on 2026-10-12, and its accepted reports read from their issues and started by the watcher on 2026-10-13 (issue #9)
 date: 2026-10-11
 ---
 
@@ -71,7 +71,14 @@ merge is safe.
   matching reported events, the false confirmations, the truth's last
   change and the caveat that recent events are not in the truth yet. It
   then runs every check, the typecheck, the tests and the documentation
-  build. Where anything changed, the Actions bot commits it to a branch
+  build. Since 2026-10-12 the typecheck and the tests also run once
+  before any download or replay, on the folded tree with the refreshed
+  sources and the rebuilt truth, the generated parts written from the
+  aggregate as committed, so a test bound to a source's edition or a
+  folded branch that breaks the build fails in minutes, not after the
+  replay's hour; the one test the replay makes good, that the aggregate
+  was scored against the truth the package ships, is left out of that
+  first run where a replay is due (`BREAKUPS_SCORECARD_PENDING`). Where anything changed, the Actions bot commits it to a branch
   `maintenance/<date>`, opens a pull request saying what moved and why
   (each source refreshed with its hashes, each event added, removed or
   changed by id, each cell of the aggregate with its old and new value,
@@ -92,13 +99,36 @@ merge is safe.
   the last day each year holds, so a year held through 31 December is
   never promoted again. A tarball over GitHub's 2 GiB limit on an asset is
   refused before anything is touched, with an issue saying so.
+- **Nothing ends green or silent.** Since 2026-10-12: the KPI workflow
+  fails where the Archive's release cannot be reached (a release deleted
+  or renamed, an outage), on main, on its schedule, by hand and on the
+  repository's own pull requests, and skips the replay with a notice only
+  on a pull request from a fork; a failed run of the prospective test opens
+  an issue labelled `maintenance` with the end of its log, one a failing
+  day; and each scheduled run (the daily test, the weekly maintenance, the
+  weekly KPI replay) enables again any scheduled workflow GitHub disabled
+  after sixty days without activity in the repository, never one a person
+  disabled (`scripts/maintenance/keep-alive.ts`). The KPI workflow's
+  Monday run moved from 06:00 to 12:23 UTC, after the maintenance run's
+  longest window (04:17, or 05:37 where it waited for the daily test, and
+  its 330 minutes), and joins the maintenance run's concurrency group, so
+  it never downloads the release while the maintenance run replaces its
+  files. Its other runs keep a group of their own: GitHub keeps one pending
+  run per group and a newer one displaces it, so a push's run waiting in
+  the shared group could displace a daily run of the test.
 - **A person is reminded of what no script reads.** In the week of the
   first Monday of January, April, July and October the weekly run opens
   an issue, labelled `maintenance`, listing what to check by hand since
   the last reminder: NASA's latest Orbital Debris Quarterly News, the
   U.S. Space Forces-Space notices, the news reports of fragmentations and
   ESA's yearly report, with the hand file's latest entries and how to add
-  a row. It is opened once a quarter, by its title.
+  a row. It is opened once a quarter, by its title. Since 2026-10-12 a
+  daily watcher also opens a prefilled issue for each new notice it can
+  read, and a report the owner accepts reaches main the next morning, when
+  the watcher starts the maintenance run and the prospective test's runs
+  leave room, or on Monday's run
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md));
+  the reminder remains for what the watcher does not read.
 
 ## What still needs a person, and why
 
@@ -106,9 +136,20 @@ merge is safe.
   prose, the Space Forces notices are posted on a login page, and the news
   reports are scattered; none has a form a script can read without
   reading it wrong, which is why the truth keeps them as statements typed
-  with their citation (the second decision record). A row is added on a
-  branch and folded in by `gh workflow run maintenance.yml -f
-  from=<branch>`, which rescores and merges it.
+  with their citation (the second decision record). Since 2026-10-12
+  ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md))
+  a script finds what it can and a person still reads it: the daily
+  watcher opens an issue for each new issue of the quarterly news and
+  edition of ESA's report (to read and record), and a prefilled
+  `breakup-report` issue for each section of Jonathan's Space Report and
+  news article it reads; a person completes the parent and the time, and the owner labels it `breakup-report-accepted`, the one
+  action left, after which a workflow checks the statement
+  (`npm run truth:add`) and the maintenance run reads it again from the
+  issue, folds it in, rescores and merges it. The Space Forces notices, LeoLabs' posts and
+  any source the watcher does not read still wait for a person to notice
+  them: the quarterly reminder lists them, and the same form or
+  `npm run truth:add` on a branch (folded in by `gh workflow run
+  maintenance.yml -f from=<branch>`) adds them.
 - **A new form or a new edition.** A source that changes its form makes
   the parser throw, by design (the second decision record); the weekly
   run then fails, opens an issue with the log, and merges nothing. A new
@@ -168,8 +209,24 @@ approval, and the run approves CI's (the KPI workflow's held run is
 deleted, never having run a job, since it runs on main after the merge).
 A CI run that cannot be found or approved stops the run with an issue, as
 a failed one does, and main's ruleset would refuse the merge regardless.
-The tree is merged only onto the main it was checked against: a main that
-moved during the run is left alone and the next run starts again. And CI and
+The tree is merged only onto the main it was checked against. A main that
+moved during the run, which an hour's run makes likely, is followed only
+where the move touched nothing the run generated or was made from: no file
+under `data/` or `kpi/`, no page with generated parts (the README,
+`docs/results.md`, `docs/ground-truth.md`, `docs/detector/events.md`,
+`docs/truth.md`), no dependency manifest or pin (`package.json`,
+`package-lock.json`, `pins.json`), and no file the run itself changed, a
+folded branch's included (`scripts/maintenance/moved.ts`). The run's
+change is then put on the new main as one commit, which applies cleanly
+since none of its files moved, and the typecheck and the whole test suite
+run again on that tree before the pull request is opened and CI runs on
+it; main moving again is followed the same way, three times at most.
+Where the move touched any of those files, the pull request is left
+unmerged with the files named, and the next run starts again from main.
+A moved main that changed the detector's code but not the aggregate is
+followed: such a change reached main past the KPI workflow's check that
+the committed aggregate is reproducible, and the KPI run on main after
+the merge checks it again. And CI and
 the KPI workflow run again on main after the merge, the KPI workflow
 replaying the Archive from the release to make the committed aggregate
 again and failing where it cannot, so a merged change that only the
@@ -178,6 +235,9 @@ is generated: snapshots, the truth built from them, the aggregate, the
 marked parts of the README and the documentation pages, and the score. It never edits code, a rule or the
 hand file; those reach main from a person, directly or in a branch the
 person asks it to fold in (`-f from=<branch>`), which meets the same checks.
+The one exception is a statement the owner accepted from a breakup-report
+issue, which the run reads again from the issue and appends to the hand
+file as the owner accepted it ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)).
 
 ## Considered options
 
@@ -200,3 +260,5 @@ person asks it to fold in (`-f from=<branch>`), which meets the same checks.
   `gh workflow disable prospective.yml` (the eighth decision record).
 - The KPI workflow's weekly replay: `gh workflow disable kpi.yml`, which
   also stops it on pushes and pull requests.
+- A workflow disabled by hand stays disabled: the keep-alive enables again
+  only a workflow GitHub disabled for the repository's inactivity.

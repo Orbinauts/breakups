@@ -118,7 +118,9 @@ describe("the README's summary of the results", () => {
       ["---", "---", "---"],
       ["Reported breakups confirmed", rateOf(line.rate!, line.detected, line.targets), "90% or more"],
       ["Confirmations that were false", rateOf(c.falseAlarmRate!, c.falseAlarms, c.falseAlarms + c.detectedAllLines), "under 10%"],
-      ["Median lead over the first official report", `${Math.round(c.lead!.median)} days (${c.beforeStatement} of ${c.withStatement} confirmed before it)`, ""],
+      ["Median lead over the first agency notice dated to the day", c.leadNotice == null ? "–" : `${Math.round(c.leadNotice.median)} days (${c.beforeNotice} of ${c.withNotice} confirmed before it)`, ""],
+      ["Median lead over NASA's quarterly news, dated to its month", c.leadQuarterly == null ? "–" : `${Math.round(c.leadQuarterly.median)} days (${c.beforeQuarterly} of ${c.withQuarterly} confirmed before it)`, ""],
+      ["First agency statements dated to the day, to the month", `${c.statementDays} to the day, ${c.statementMonths} to the month`, ""],
       ["Median error in the time of the breakup", duration(c.timing!.median), ""],
     ]);
   });

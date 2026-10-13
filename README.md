@@ -4,7 +4,7 @@ Detects satellites and rocket stages that break up in orbit, from public orbital
 
 ## What it does
 
-When a satellite or a spent rocket stage breaks up in orbit, its fragments appear in the public catalogue of tracked objects over the following days and weeks. This library reads that catalogue and the orbits it publishes. It names the object that broke up and works out when it happened, typically weeks before the first official report. It is for satellite operators, researchers, journalists and anyone curious about the space around Earth. It also ships the list of every reported breakup since 1961, which it is scored against. It is the detector behind [Orbinauts](https://orbinauts.com), a live satellite map.
+When a satellite or a spent rocket stage breaks up in orbit, its fragments appear in the public catalogue of tracked objects over the following days and weeks. This library reads that catalogue and the orbits it publishes. It names the object that broke up and works out when it happened, typically within hours of the catalogue publishing the first fragment. It is for satellite operators, researchers, journalists and anyone curious about the space around Earth. It also ships the list of every reported breakup since 1961, which it is scored against. It is the detector behind [Orbinauts](https://orbinauts.com), a live satellite map.
 
 ## How well it works
 
@@ -16,9 +16,11 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 | Held-out years (the odd years, 2007 to 2025) | Result | Target |
 | --- | --- | --- |
-| Reported breakups confirmed | 74% (17 of 23) | 90% or more |
-| Confirmations that were false | 21% (6 of 29) | under 10% |
-| Median lead over the first official report | 42 days (17 of 17 confirmed before it) |  |
+| Reported breakups confirmed | 73% (19 of 26) | 90% or more |
+| Confirmations that were false | 17% (5 of 30) | under 10% |
+| Median lead over the first agency notice dated to the day | -16 days (0 of 9 confirmed before it) |  |
+| Median lead over NASA's quarterly news, dated to its month | 42 days (19 of 19 confirmed before it) |  |
+| First agency statements dated to the day, to the month | 9 to the day, 10 to the month |  |
 | Median error in the time of the breakup | 41 minutes |  |
 
 <!-- kpi:summary:end -->
@@ -27,15 +29,15 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 | Early warning (suspected), the same years | Result |
 | --- | --- |
-| Reported breakups flagged before the first fragment was catalogued | 36% (10 of 28) |
-| Flagged only after the first fragment (late) | 2 of 28 |
-| False alarms | 245 a year, 99% of all early warnings (2448 of 2464) |
-| Median lead over the first catalogued fragment | 20 days |
+| Reported breakups flagged before the first fragment was catalogued | 23% (7 of 30) |
+| Flagged only after the first fragment (late) | 6 of 30 |
+| False alarms | 245 a year, 100% of all early warnings (2448 of 2460) |
+| Median lead over the first catalogued fragment | 24 days |
 | Median error in the time of the breakup | 35 minutes |
 
 <!-- kpi:early-warning:end -->
 
-A false confirmation is an alert for a breakup that no one reported. The lead of a confirmation counts the days from the detector's alert to the first report by NASA, ESA or the U.S. Space Force. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end -->
+A false confirmation is an alert for a breakup that no one reported; one with no report yet is pending for 90 days, counted neither way, since the agencies report months after an event. The lead of a confirmation is read two ways: the days from the detector's alert to the first agency notice dated to the day (a U.S. Space Force notice, ESA's report), and to NASA's quarterly news, which is dated only to its month, so that lead is the least it can have been. The U.S. Space Force often posts a notice within a day or two of a breakup; so the first lead is the one that says whether a confirmation was news. The target is to confirm nine reported breakups in ten, with fewer than one confirmation in ten false. <!-- kpi:target:begin -->**It does not reach that target yet.**<!-- kpi:target:end -->
 
 An early warning is raised when a satellite or a rocket stage jumps to a new orbit and stays there, and nothing it is known to do explains the jump. When it is right, it comes weeks before the first fragment is catalogued, and it typically places the moment of the breakup to within the hour. But most early warnings are other orbit changes, mostly satellites firing their own engines (manoeuvres) in ways the detector cannot tell apart from a breakup. So an early warning is a watch list, not a confirmation. The target is set on confirmed breakups; the early warning is measured and reported beside it, and [tests on real orbit histories](https://github.com/Orbinauts/breakups/blob/main/test/early-warning.test.ts) check that it still flags known breakups and stays quiet on known manoeuvres.
 
@@ -70,23 +72,23 @@ On the held-out years, this is how often each stage came, and how likely each wa
 
 | What became of each orbit jump that held, on the held-out years | How many | Chance it was a reported breakup |
 | --- | --- | --- |
-| Cleared as a manoeuvre | 69179 | 0.04% (28 of 69179) |
-| Raised as an early warning, a median of six days after the breakup and three weeks before the first fragment | 2633 | 0.77% (19 of 2463) |
-| ... then confirmed by fragments or a notice, a median of four days later | 8 (0.30%) | 75% (6 of 8) |
-| ... then dismissed: the new pieces under its launch were all old | 110 (4.2%) | 1.0% (1 of 96) |
-| ... then expired: nothing confirmed it within 30 days | 2488 (94%) | 0.47% (11 of 2335) |
-| ... still open where the data ends | 27 (1.0%) | 4.2% (1 of 24) |
+| Cleared as a manoeuvre | 67166 | 0.03% (21 of 67166) |
+| Raised as an early warning, a median of six days after the breakup and three weeks before the first fragment | 2660 | 0.77% (19 of 2461) |
+| ... then confirmed by fragments or a notice, a median of nine days later | 11 (0.41%) | 80% (8 of 10) |
+| ... then dismissed: the new pieces under its launch were all old | 121 (4.5%) | 0.93% (1 of 108) |
+| ... then expired: nothing confirmed it within 30 days | 2509 (94%) | 0.39% (9 of 2325) |
+| ... still open where the data ends | 19 (0.71%) | 5.6% (1 of 18) |
 
-| What happened to the 23 reported breakups whose fragments were catalogued, on the held-out years | Share |
+| What happened to the 26 reported breakups whose fragments were catalogued, on the held-out years | Share |
 | --- | --- |
-| An early warning first, then confirmed | 39% (9 of 23) |
-| An early warning, never confirmed | 4% (1 of 23) |
-| Confirmed from the fragments, with no early warning first | 35% (8 of 23) |
-| Never flagged | 22% (5 of 23) |
+| An early warning first, then confirmed | 38% (10 of 26) |
+| An early warning, never confirmed | 4% (1 of 26) |
+| Confirmed from the fragments, with no early warning first | 35% (9 of 26) |
+| Never flagged | 23% (6 of 26) |
 
 <!-- kpi:lifecycle:end -->
 
-<!-- kpi:lifecycle-caveat:begin -->A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, 0.47% of the expired early warnings (11) and 0.04% of the jumps cleared as manoeuvres (28) were on a reported breakup.<!-- kpi:lifecycle-caveat:end --> The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-life-of-an-alert) give the same on the training years, with the uncertainty of each number.
+<!-- kpi:lifecycle-caveat:begin -->A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, 0.39% of the expired early warnings (9) and 0.03% of the jumps cleared as manoeuvres (21) were on a reported breakup.<!-- kpi:lifecycle-caveat:end --> The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-life-of-an-alert) give the same on the training years, with the uncertainty of each number.
 
 ## Install
 
@@ -95,6 +97,8 @@ npm install @orbinauts/breakups
 ```
 
 It needs Node 22 or later, and also runs in browsers through a bundler and in Cloudflare Workers. The package is ESM only, ships TypeScript types, and imports no Node built-in.
+
+A caller that runs the detector hands each run the states the last one returned. To keep them between runs in a key-value store or a file, write them with `serialiseStates` and read them back with `reviveStates`: plain `JSON.stringify` loses them, since they are kept in maps and hold the infinities and NaN, which JSON writes as `null`.
 
 ## Quick start
 
@@ -121,7 +125,7 @@ It prints:
 <!-- truth:quick-start:begin -->
 
 ```text
-by 2026-09-04T00:00Z Yaogan-50 02 (68196), breakup, confidence D, LEO
+by 2026-08-27T00:00Z CZ-6C R/B (100472), breakup, confidence D, LEO
 2026-09-13T21:13Z USA 32 (19460), breakup, confidence A, LEO
 2026-10-05T09:45Z Meteor 2-7 (second event) (12456), breakup, confidence C, LEO
 ```

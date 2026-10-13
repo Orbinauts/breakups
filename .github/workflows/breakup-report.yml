@@ -1,0 +1,101 @@
+name: Breakup report
+
+# A report of a breakup, filed with the breakup-report issue form (or opened
+# prefilled by the watcher, watch.yml), reaches the ground truth the day the
+# owner accepts it. When an issue is labelled `breakup-report-accepted`:
+#
+# 1. `npm run truth:report -- check` (scripts/truth/report-issue.ts) reads
+#    the event and accepts the report only where whoever applied the label
+#    is the repository's owner (github.repository_owner; the repository
+#    belongs to a user account): anyone with triage permission can apply a
+#    label, and an admin is not the owner. A label applied by anyone else
+#    is taken off again with a comment saying why.
+# 2. `npm run truth:add -- --form` reads the form's fields from the issue's
+#    body, checks the statement against the hand file's schema and builds
+#    the truth with it, on this runner only. A statement it refuses: the
+#    label is taken off and a comment quotes the refusal, so the issue can
+#    be edited and labelled again.
+# 3. An accepted statement is committed nowhere here, and no workflow is
+#    started: GitHub keeps one pending run per concurrency group, so a
+#    maintenance run started here could displace a run of the prospective
+#    test waiting in the group. The issue is closed with a comment. The
+#    daily watcher (watch.yml, 07:41 UTC) starts the maintenance run where
+#    an accepted report waits and the group is free, else the next day's
+#    watch or Monday's run folds it in. That run reads the statement again
+#    from the issue itself (the owner's label in the issue's events, the
+#    body unedited since; `npm run truth:report -- accepted`), with every
+#    other accepted report's, appends those main lacks, replays the
+#    scorecard, runs every check and merges the result into main. No
+#    branch carries a statement, so none can carry one the owner did not
+#    accept.
+#
+# The issue's text is read only by the scripts, from the event's file,
+# never pasted into a shell command.
+
+on:
+  issues:
+    types: [labeled]
+
+# Two labellings of one issue are handled one after the other.
+concurrency:
+  group: breakup-report-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  # main, read; nothing is committed.
+  contents: read
+  # The labels, the comments and the closing.
+  issues: write
+
+env:
+  GH_REPO: ${{ github.repository }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  accept:
+    name: add the accepted report to the ground truth
+    if: github.event.label.name == 'breakup-report-accepted'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # The token is not left in the checkout: the dependencies' install scripts run next.
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check who accepted it
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: npm run -s truth:report -- check "$RUNNER_TEMP/report.md"
+      - name: Check the statement against the hand file and the truth
+        if: steps.check.outputs.accepted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.check.outputs.number }}
+        run: |
+          set -uo pipefail
+          if npm run -s truth:add -- --form "$RUNNER_TEMP/report.md" > "$RUNNER_TEMP/add.log" 2>&1; then
+            cat "$RUNNER_TEMP/add.log"
+          else
+            cat "$RUNNER_TEMP/add.log"
+            npm run -s truth:report -- refused "$NUMBER" "$RUNNER_TEMP/add.log"
+            exit 1
+          fi
+      - name: Say it is accepted and close the issue
+        if: steps.check.outputs.accepted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.check.outputs.number }}
+        run: |
+          set -euo pipefail
+          runs="https://github.com/$GH_REPO/actions/workflows/maintenance.yml"
+          gh issue comment "$NUMBER" --body "Accepted: the statement passes the hand file's checks and the truth builds with it ($RUN_URL). The next maintenance run, started by tomorrow morning's watch where the prospective test's runs leave room, or Monday's, reads it again from this issue and folds it into main: $runs. Editing the issue now withdraws the acceptance until it is labelled again. A failure there opens its own issue."
+          gh issue close "$NUMBER" --reason completed

@@ -1,0 +1,98 @@
+[
+  {
+    "id": 20011,
+    "node_id": "LE_lADO20011",
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/events/20011",
+    "actor": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "event": "labeled",
+    "commit_id": null,
+    "commit_url": null,
+    "created_at": "2026-10-08T07:50:00Z",
+    "performed_via_github_app": null,
+    "label": {
+      "name": "breakup-report",
+      "color": "1d76db"
+    }
+  },
+  {
+    "id": 20012,
+    "node_id": "LE_lADO20012",
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/events/20012",
+    "actor": {
+      "login": "the-owner",
+      "id": 231907351,
+      "node_id": "U_kgDO231907351",
+      "avatar_url": "https://avatars.githubusercontent.com/u/231907351?v=4",
+      "url": "https://api.github.com/users/the-owner",
+      "html_url": "https://github.com/the-owner",
+      "type": "User",
+      "site_admin": false
+    },
+    "event": "labeled",
+    "commit_id": null,
+    "commit_url": null,
+    "created_at": "2026-10-08T09:01:05Z",
+    "performed_via_github_app": null,
+    "label": {
+      "name": "breakup-report-accepted",
+      "color": "0e8a16"
+    }
+  },
+  {
+    "id": 20013,
+    "node_id": "LE_lADO20013",
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/events/20013",
+    "actor": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "event": "unlabeled",
+    "commit_id": null,
+    "commit_url": null,
+    "created_at": "2026-10-09T10:00:00Z",
+    "performed_via_github_app": null,
+    "label": {
+      "name": "breakup-report-accepted",
+      "color": "0e8a16"
+    }
+  },
+  {
+    "id": 20014,
+    "node_id": "LE_lADO20014",
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/events/20014",
+    "actor": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "event": "labeled",
+    "commit_id": null,
+    "commit_url": null,
+    "created_at": "2026-10-09T10:00:30Z",
+    "performed_via_github_app": null,
+    "label": {
+      "name": "breakup-report-accepted",
+      "color": "0e8a16"
+    }
+  }
+]

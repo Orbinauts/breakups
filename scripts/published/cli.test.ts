@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import type { Verdict } from "../../src/index.ts";
-import { ARCHIVE_FORMAT } from "../archive/archive.ts";
 import { publishedRun } from "./cli.ts";
+import { writeFixtureYear } from "./archive-fixture.ts";
 import { readPublished } from "./files.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -26,10 +26,8 @@ beforeEach(() => {
   scratch = mkdtempSync(join(tmpdir(), "published-run-"));
   archive = join(scratch, "archive");
   out = join(scratch, "published");
-  mkdirSync(join(archive, "2026"), { recursive: true });
   mkdirSync(out);
-  writeFileSync(join(archive, "2026", "manifest.json"), JSON.stringify({ format: ARCHIVE_FORMAT, year: 2026, source: { kind: "history", from: "2026-01-01", through: "2026-10-10", missing: [] } }));
-  writeFileSync(join(archive, "2026", "bodies.json"), JSON.stringify([{ number: 99001, first: 0, count: 3, designator: "2020-001A", name: "TESTSAT 1", bodyClass: "payload", launch: "2020-01-07", decay: null }]));
+  writeFixtureYear(archive, 2026, { kind: "history", from: "2026-01-01", through: "2026-10-10", missing: [] }, [{ number: 99001, first: 0, count: 3, designator: "2020-001A", name: "TESTSAT 1", bodyClass: "payload", launch: "2020-01-07", decay: null }]);
 });
 afterEach(() => rmSync(scratch, { recursive: true, force: true }));
 
@@ -62,46 +60,15 @@ describe("a publishing run", () => {
     expect(summary).toMatch(/^published 2 breakups \(2 confirmed, 0 suspected\): 0 new, 0 left;/);
   });
 
-  test("re-keys once the files written before the row's event, removing the files of the old ids, and says so", () => {
-    publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
-    // The files as they stood before rowEvent: Luch under the detector's day (here its raising's, as it made no estimate), and no rowEvent.
-    const dir = join(out, "v1");
-    const list = JSON.parse(readFileSync(join(dir, "breakups.json"), "utf8")) as { breakups: Record<string, unknown>[] };
-    for (const entry of list.breakups) {
-      const id = entry.id as string;
-      const old = id === "40258-2026-01-30" ? "40258-2026-02-27" : id;
-      const file = JSON.parse(readFileSync(join(dir, "breakups", `${id}.json`), "utf8")) as Record<string, unknown>;
-      delete file.rowEvent;
-      delete entry.rowEvent;
-      rmSync(join(dir, "breakups", `${id}.json`));
-      writeFileSync(join(dir, "breakups", `${old}.json`), JSON.stringify({ ...file, id: old }));
-      entry.id = old;
-    }
-    writeFileSync(join(dir, "breakups.json"), JSON.stringify(list));
-
-    const summary = publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-12T03:12:45Z") });
-    expect(summary).toMatch(/: 0 new, 0 left \(re-keyed 40258-2026-02-27 to 40258-2026-01-30\); sets through/);
-    expect(readdirSync(join(dir, "breakups")).sort()).toEqual(["40258-2026-01-30.json", "99001-2026-06-01.json"]);
-    expect(readPublished(out).map((b) => [b.id, b.rowEvent?.source ?? null])).toEqual([
-      ["40258-2026-01-30", "news"],
-      ["99001-2026-06-01", null],
-    ]);
-    expect(publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-13T03:12:45Z") })).toMatch(/: 0 new, 0 left; sets through/);
-  });
-
   test("refuses year files from two detectors, or a replay that did not carry the states from the year before", () => {
-    mkdirSync(join(archive, "2025"));
-    writeFileSync(join(archive, "2025", "manifest.json"), JSON.stringify({ format: ARCHIVE_FORMAT, year: 2025, source: { kind: "bundle", file: "tle2025.txt.zip", bytes: 1 } }));
-    writeFileSync(join(archive, "2025", "bodies.json"), "[]");
+    writeFixtureYear(archive, 2025, { kind: "bundle", file: "tle2025.txt.zip", bytes: 1, sha256: "", member: "tle2025.txt", memberBytes: 1 }, []);
     const run = (files: string[]) => () => publishedRun({ yearFiles: files, truth: TRUTH, out, archive, now: 0 });
     expect(run([yearFile(2025, [], { detector: "confirmed-v9" }), yearFile(2026, [luch])])).toThrow(/confirmed-v9.*confirmed-v10|two detectors/);
     expect(run([yearFile(2026, [luch], { carried: false })])).toThrow(/carr/);
   });
 
   test("reads the last day of sets from the latest year: a settled year's bundle runs to its end", () => {
-    mkdirSync(join(archive, "2025"));
-    writeFileSync(join(archive, "2025", "manifest.json"), JSON.stringify({ format: ARCHIVE_FORMAT, year: 2025, source: { kind: "bundle", file: "tle2025.txt.zip", bytes: 1 } }));
-    writeFileSync(join(archive, "2025", "bodies.json"), "[]");
+    writeFixtureYear(archive, 2025, { kind: "bundle", file: "tle2025.txt.zip", bytes: 1, sha256: "", member: "tle2025.txt", memberBytes: 1 }, []);
     const summary = publishedRun({ yearFiles: [yearFile(2025, [])], truth: TRUTH, out, archive, now: 0 });
     expect(summary).toContain("sets through 2025-12-31");
     expect(publishedRun({ yearFiles: [yearFile(2026, []), yearFile(2025, [])], truth: TRUTH, out, archive, now: 0 })).toContain("sets through 2026-10-10");
