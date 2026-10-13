@@ -24,12 +24,16 @@ describe("the Pages site", () => {
     expect(readFileSync(join(out, "index.html"), "utf8")).toBe("<title>reference</title>");
   });
 
-  test("carries the published branch's v1/ beside the reference, and nothing else of that branch", () => {
+  test("carries every version the published branch holds beside the reference, the frozen v1/ with the current v2/, and nothing else of that branch", () => {
     const published = tree({
       "v1/breakups.json": '{"version":1}\n',
       "v1/breakups/19460-2026-09-13.json": '{"version":1,"id":"19460-2026-09-13"}\n',
       "v1/status.json": '{"version":1}\n',
+      "v2/breakups.json": '{"version":2}\n',
+      "v2/breakups/19460-2026-09-13.json": '{"version":2,"id":"19460-2026-09-13"}\n',
+      "v2/status.json": '{"version":2}\n',
       "README.md": "the branch's own readme",
+      "vendor/notes.txt": "not a version",
       ".git/HEAD": "ref: refs/heads/published",
     });
     const out = join(tree({}), "site");
@@ -41,11 +45,15 @@ describe("the Pages site", () => {
       "v1/breakups.json",
       "v1/breakups/19460-2026-09-13.json",
       "v1/status.json",
+      "v2/breakups.json",
+      "v2/breakups/19460-2026-09-13.json",
+      "v2/status.json",
     ]);
     expect(readFileSync(join(out, "v1/breakups/19460-2026-09-13.json"), "utf8")).toBe('{"version":1,"id":"19460-2026-09-13"}\n');
+    expect(readFileSync(join(out, "v2/breakups/19460-2026-09-13.json"), "utf8")).toBe('{"version":2,"id":"19460-2026-09-13"}\n');
   });
 
-  test("is the reference alone when the published branch has no v1/ yet", () => {
+  test("is the reference alone when the published branch has no version yet", () => {
     const out = join(tree({}), "site");
     const files = assembleSite({ reference: tree(REFERENCE), published: tree({ "README.md": "empty" }), out });
     expect(files).toEqual([".nojekyll", "classes/Verdict.html", "index.html"]);

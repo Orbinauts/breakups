@@ -2,26 +2,39 @@ import type { EventEstimate, Step, Verdict } from "./detector.ts";
 import type { Precision, SourceId, StatedPrecision } from "./truth.ts";
 
 /**
- * The breakups fit to show, as the daily job publishes them under `v1/` on
+ * The breakups fit to show, as the daily job publishes them under `v2/` on
  * this repository's GitHub Pages: the frozen detector's verdicts, landed on
  * the ground truth as it stands that day, kept when the detector confirmed
  * the breakup, when an agency notice dated no earlier than the event
  * confirms it, or, as suspected, when an outside report (news or an
  * analyst) names it. A consumer reads the three files and checks them
- * against these types: the list (`v1/breakups.json`, a
+ * against these types: the list (`v2/breakups.json`, a
  * {@link PublishedBreakupsFile}), one file per breakup with its whole
- * evidence (`v1/breakups/<id>.json`, a {@link PublishedBreakupFile}) and
- * the job's status (`v1/status.json`, a {@link PublishedStatusFile}).
+ * evidence (`v2/breakups/<id>.json`, a {@link PublishedBreakupFile}) and
+ * the job's status (`v2/status.json`, a {@link PublishedStatusFile}).
  * Every instant is an ISO string (`2026-09-17T00:00:00.000Z`) and every
  * day `YYYY-MM-DD`; each file carries the {@link PUBLISHED_VERSION} it was
  * written in.
  */
 
-/** The version of the published files' shape: the `v1/` of their path and the `version` each carries. */
-export const PUBLISHED_VERSION = 1;
+/**
+ * The version of the published files' shape: the `v2/` of their path and
+ * the `version` each carries. A change a strict reader can trip on raises
+ * it. Version 2 added the state `unreported` and `unreportedAt`; the files
+ * of version 1, under `v1/`, are no longer written.
+ */
+export const PUBLISHED_VERSION = 2;
 
-/** How a published breakup stands: confirmed (by the detector or an agency notice; it stays for good) or suspected (reported by news or an analyst; it leaves when its step expires or is dismissed). */
-export const PUBLISHED_STATES = ["suspected", "confirmed"] as const;
+/**
+ * How a published breakup stands: suspected (reported by news or an
+ * analyst; it leaves when its step expires or is dismissed), confirmed (by
+ * the detector or an agency notice) or unreported (confirmed by the
+ * detector alone and still on no row of the ground truth once 90 days have
+ * passed, which the scorecard reads as a false confirmation; confirmed
+ * again if a report lands later). A confirmed or unreported breakup stays
+ * for good.
+ */
+export const PUBLISHED_STATES = ["suspected", "confirmed", "unreported"] as const;
 export type PublishedState = (typeof PUBLISHED_STATES)[number];
 
 /** The parent of a published breakup: from the ground-truth row it landed on, what the row leaves out filled from the satellite catalogue; null where neither names it. */
@@ -90,7 +103,7 @@ export interface PublishedReport {
   url: string | null;
 }
 
-/** One entry of the list, `v1/breakups.json`. */
+/** One entry of the list, `v2/breakups.json`. */
 export interface PublishedBreakupEntry {
   /** `<catalogue number>-<UTC day>` (`40258-2026-01-30`), fixed the first time the breakup is published. The day is the row's ({@link PublishedBreakupEntry.rowEvent}) where it is dated to the day or finer, else the detector's estimate's, else {@link PublishedBreakupEntry.raisedAt}'s. */
   id: string;
@@ -99,6 +112,8 @@ export interface PublishedBreakupEntry {
   raisedAt: string;
   /** The earlier of the first confirmed verdict and the first agency notice's day (at midnight UTC); null while suspected. */
   confirmedAt: string | null;
+  /** When it turned unreported: 90 days after {@link PublishedBreakupEntry.confirmedAt}, when the scorecard's reading of a confirmation on no row turns false; null unless unreported. */
+  unreportedAt: string | null;
   parent: PublishedParent;
   /** The latest verdict's estimate of the event; null where it made none. */
   event: PublishedEvent | null;
@@ -114,7 +129,7 @@ export interface PublishedBreakupEntry {
 
 /** A verdict merged into a published breakup, as the detector raised it ({@link Verdict}), its instants as ISO strings. */
 export interface PublishedVerdict {
-  state: PublishedState;
+  state: Exclude<PublishedState, "unreported">;
   raisedAt: string;
   step: PublishedStep | null;
   event: PublishedEvent | null;
@@ -126,7 +141,7 @@ export interface PublishedVerdict {
   candidates: number[];
 }
 
-/** One published breakup with its whole evidence: the body of `v1/breakups/<id>.json`. */
+/** One published breakup with its whole evidence: the body of `v2/breakups/<id>.json`. */
 export interface PublishedBreakup extends PublishedBreakupEntry {
   /** The latest verdict's evidence numbers, by name. */
   evidence: Record<string, number>;
@@ -140,18 +155,18 @@ export interface PublishedBreakup extends PublishedBreakupEntry {
   verdicts: PublishedVerdict[];
 }
 
-/** `v1/breakups.json`: every published breakup. */
+/** `v2/breakups.json`: every published breakup. */
 export interface PublishedBreakupsFile {
   version: typeof PUBLISHED_VERSION;
   breakups: PublishedBreakupEntry[];
 }
 
-/** `v1/breakups/<id>.json`: one breakup with its whole evidence. */
+/** `v2/breakups/<id>.json`: one breakup with its whole evidence. */
 export interface PublishedBreakupFile extends PublishedBreakup {
   version: typeof PUBLISHED_VERSION;
 }
 
-/** `v1/status.json`: the last run that wrote the files. */
+/** `v2/status.json`: the last run that wrote the files. */
 export interface PublishedStatusFile {
   version: typeof PUBLISHED_VERSION;
   /** When the job last ran. */

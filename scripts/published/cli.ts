@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { readBreakups } from "../../src/index.ts";
+import { readBreakups, type PublishedState } from "../../src/index.ts";
 import { builtYears, readBodies, readManifest, type ArchivedBody } from "../archive/archive.ts";
-import { regimeBefore } from "../kpi/match.ts";
+import { regimeBefore, truthAsOf } from "../kpi/match.ts";
 import { indexOf, loadSlice } from "../kpi/replay.ts";
 import { readYearFile, throughOf } from "../prospective/run.ts";
 import { readPublished, writePublished } from "./files.ts";
@@ -63,16 +63,17 @@ export function publishedRun(options: PublishedRunOptions): string {
   const index = indexOf(loadSlice(options.archive, latestYear), builtYears(options.archive).includes(latestYear - 1) ? loadSlice(options.archive, latestYear - 1) : null);
 
   const previous = readPublished(options.out);
-  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number), (number, at) => regimeBefore(index, number, at)), verdicts);
+  // Every breakup read at the truth's date, as the scorecard reads a confirmation on no row.
+  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number), (number, at) => regimeBefore(index, number, at)), verdicts, truthAsOf(breakups));
   const detector = detectors[0]!;
   writePublished(options.out, merged, { ranAt: new Date(options.now).toISOString(), setsThrough, detector, truthSha256 });
 
   const before = new Set(previous.map((b) => b.id));
   const after = new Set(merged.map((b) => b.id));
-  const confirmed = merged.filter((b) => b.state === "confirmed").length;
+  const counted = (state: PublishedState): number => merged.filter((b) => b.state === state).length;
   const added = merged.filter((b) => !before.has(b.id)).length;
   const left = previous.filter((b) => !after.has(b.id)).length;
-  return `published ${merged.length} breakup${merged.length === 1 ? "" : "s"} (${confirmed} confirmed, ${merged.length - confirmed} suspected): ${added} new, ${left} left; sets through ${setsThrough}, detector ${detector}, truth ${truthSha256.slice(0, 12)}`;
+  return `published ${merged.length} breakup${merged.length === 1 ? "" : "s"} (${counted("confirmed")} confirmed, ${counted("unreported")} unreported, ${counted("suspected")} suspected): ${added} new, ${left} left; sets through ${setsThrough}, detector ${detector}, truth ${truthSha256.slice(0, 12)}`;
 }
 
 function main(): void {

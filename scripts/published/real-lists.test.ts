@@ -5,6 +5,8 @@ import { gunzipSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { readBreakups, type PublishedBreakup } from "../../src/index.ts";
 import type { PublishedFixture } from "./real-fixtures.ts";
+import { truthAsOf } from "../kpi/match.ts";
+import { mergePublished } from "./merge.ts";
 import { selectPublished } from "./select.ts";
 
 /**
@@ -27,9 +29,10 @@ function fixture(year: number): PublishedFixture {
   return JSON.parse(gunzipSync(readFileSync(resolve(ROOT, `test/fixtures/published/${year}.json.gz`))).toString("utf8")) as PublishedFixture;
 }
 
+/** The list a run publishes from a year's replay onto an empty list: the selection, merged and read at the truth's date. */
 function published(year: number): PublishedBreakup[] {
   const { verdicts, bodies } = fixture(year);
-  return selectPublished(verdicts, breakups, (number) => bodies[String(number)]);
+  return mergePublished([], selectPublished(verdicts, breakups, (number) => bodies[String(number)]), verdicts, truthAsOf(breakups));
 }
 
 /** What a reader of the list sees of a breakup (the detector's estimate by its instant), with the row it landed on and the verdicts merged into it. */
@@ -38,6 +41,7 @@ const shown = (breakup: PublishedBreakup) => ({
   state: breakup.state,
   raisedAt: breakup.raisedAt,
   confirmedAt: breakup.confirmedAt,
+  unreportedAt: breakup.unreportedAt,
   parent: breakup.parent,
   event: breakup.event?.at ?? null,
   rowEvent: breakup.rowEvent,
@@ -68,6 +72,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "confirmed",
         raisedAt: "2025-02-13T20:00:00.000Z",
         confirmedAt: "2024-12-19T00:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 24753, designator: "1997-012A", name: "DMSP 5D-2 F14 (USA 131)", launchedOn: "1997-04-04" },
         event: "2024-10-07T11:53:14.737Z",
         rowEvent: { at: "2024-12-19T02:10:00.000Z", from: "2024-12-19T02:00:00.000Z", to: "2024-12-19T02:20:00.000Z", precision: "minute", source: "s4s-notice", row: "24753:2024-12-19" },
@@ -85,6 +90,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "confirmed",
         raisedAt: "2026-02-27T04:00:00.000Z",
         confirmedAt: "2026-02-27T04:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 40258, designator: "2014-058A", name: "Luch (Olymp-K 1)", launchedOn: "2014-09-27" },
         event: "2026-01-31T08:15:35.399Z",
         rowEvent: { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" },
@@ -100,6 +106,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "confirmed",
         raisedAt: "2026-07-31T20:00:00.000Z",
         confirmedAt: "2026-08-20T04:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 25371, designator: "1998-037A", name: "INTELSAT 805 (IS-805)", launchedOn: "1998-06-18" },
         event: "2026-07-30T04:50:11.605Z",
         rowEvent: { at: null, from: "2026-06-19T23:35:00.000Z", to: "2026-08-18T23:35:00.000Z", precision: "none", source: "catalogue", row: "A:1998-037:2026-06-19" },
@@ -112,6 +119,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "confirmed",
         raisedAt: "2026-09-03T20:00:00.000Z",
         confirmedAt: "2026-09-03T20:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 68196, designator: "2026-051A", name: "Yaogan-50 02", launchedOn: "2026-03-15" },
         event: "2026-07-24T06:35:44.804Z",
         rowEvent: { at: null, from: "2026-07-01T20:21:00.000Z", to: "2026-09-04T00:00:00.000Z", precision: "none", source: "catalogue", row: "68196:2026-07-01" },
@@ -124,6 +132,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "confirmed",
         raisedAt: "2026-09-15T12:00:00.000Z",
         confirmedAt: "2026-09-17T00:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 19460, designator: "1988-078A", name: "USA 32", launchedOn: "1988-09-05" },
         event: "2026-09-13T21:20:42.966Z",
         rowEvent: { at: "2026-09-13T21:13:00.000Z", from: "2026-09-13T21:03:00.000Z", to: "2026-09-13T21:23:00.000Z", precision: "minute", source: "s4s-notice", row: "19460:2026-09-13" },
@@ -136,6 +145,7 @@ describe("the real replays publish exactly the expected lists", () => {
         state: "suspected",
         raisedAt: "2026-10-06T12:00:00.000Z",
         confirmedAt: null,
+        unreportedAt: null,
         parent: { catalogueNumber: 12456, designator: "1981-043A", name: "Meteor 2-7 (second event)", launchedOn: "1981-05-14" },
         event: "2026-10-05T09:46:14.575Z",
         rowEvent: { at: "2026-10-05T09:45:00.000Z", from: "2026-10-05T09:35:00.000Z", to: "2026-10-05T09:55:00.000Z", precision: "minute", source: "analyst", row: "12456:2026-10-05" },

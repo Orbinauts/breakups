@@ -4,20 +4,25 @@ import { PUBLISHED_VERSION, type PublishedBreakup, type PublishedBreakupEntry, t
 
 /**
  * The published files under a checkout of the `published` branch:
- * `v1/breakups.json` (the list), `v1/breakups/<id>.json` (one per breakup,
- * its whole evidence) and `v1/status.json` (the last run). Each is written
+ * `v2/breakups.json` (the list), `v2/breakups/<id>.json` (one per breakup,
+ * its whole evidence) and `v2/status.json` (the last run). Each is written
  * with its keys in the order the types declare them, one space deep, with a
  * final newline, so a run that changes nothing changes no byte but the
- * status's.
+ * status's. The first version's files, `v1/`, stay as their last run left
+ * them: the first run of the second version reads them where it finds no
+ * list of its own, and nothing writes them again.
  */
 
 /** The directory the published files sit under, on the `published` branch and on Pages alike: `v` and the files' version. */
 export const PUBLISHED_DIR = `v${PUBLISHED_VERSION}`;
 
-const versionDir = (dir: string): string => join(dir, PUBLISHED_DIR);
-const listPath = (dir: string): string => join(versionDir(dir), "breakups.json");
-const breakupsDir = (dir: string): string => join(versionDir(dir), "breakups");
-const breakupPath = (dir: string, id: string): string => join(breakupsDir(dir), `${id}.json`);
+/** The version before this one, whose files the first run of this version carries over. */
+const PREVIOUS_VERSION = PUBLISHED_VERSION - 1;
+
+const versionDir = (dir: string, version = PUBLISHED_VERSION): string => join(dir, `v${version}`);
+const listPath = (dir: string, version = PUBLISHED_VERSION): string => join(versionDir(dir, version), "breakups.json");
+const breakupsDir = (dir: string, version = PUBLISHED_VERSION): string => join(versionDir(dir, version), "breakups");
+const breakupPath = (dir: string, id: string, version = PUBLISHED_VERSION): string => join(breakupsDir(dir, version), `${id}.json`);
 const statusPath = (dir: string): string => join(versionDir(dir), "status.json");
 
 const text = (value: unknown): string => JSON.stringify(value, null, 1) + "\n";
@@ -32,25 +37,36 @@ const inKeyOrderVerdict = (v: PublishedVerdict): PublishedVerdict => ({ state: v
 
 function entryOf(b: PublishedBreakupEntry): PublishedBreakupEntry {
   const { catalogueNumber, designator, name, launchedOn } = b.parent;
-  return { id: b.id, state: b.state, raisedAt: b.raisedAt, confirmedAt: b.confirmedAt, parent: { catalogueNumber, designator, name, launchedOn }, event: inKeyOrderEvent(b.event), rowEvent: inKeyOrderRowEvent(b.rowEvent), step: inKeyOrderStep(b.step), reasons: b.reasons, reports: b.reports.map(inKeyOrderReport) };
+  return { id: b.id, state: b.state, raisedAt: b.raisedAt, confirmedAt: b.confirmedAt, unreportedAt: b.unreportedAt, parent: { catalogueNumber, designator, name, launchedOn }, event: inKeyOrderEvent(b.event), rowEvent: inKeyOrderRowEvent(b.rowEvent), step: inKeyOrderStep(b.step), reasons: b.reasons, reports: b.reports.map(inKeyOrderReport) };
 }
 
-function readVersioned<T extends { version: number }>(path: string): T {
+function readVersioned<T extends { version: number }>(path: string, version: number): T {
   const file = JSON.parse(readFileSync(path, "utf8")) as T;
-  if (file.version !== PUBLISHED_VERSION) throw new Error(`${path} is in version ${file.version}, not ${PUBLISHED_VERSION}`);
+  if (file.version !== version) throw new Error(`${path} is in version ${file.version}, not ${version}`);
   return file;
 }
 
-/** The breakups published under a `published` checkout, in the list's order; none where the files were never written. */
-export function readPublished(dir: string): PublishedBreakup[] {
-  if (!existsSync(listPath(dir))) return [];
-  return readVersioned<PublishedBreakupsFile>(listPath(dir)).breakups.map(({ id }) => {
-    const { version, ...breakup } = readVersioned<PublishedBreakupFile>(breakupPath(dir, id));
-    void version;
+/** The breakups listed under one version's directory, in the list's order. A breakup of the first version has no unreported day: none was unreported then. */
+function readVersion(dir: string, version: number): PublishedBreakup[] {
+  return readVersioned<PublishedBreakupsFile>(listPath(dir, version), version).breakups.map(({ id }) => {
+    const { version: read, ...breakup } = readVersioned<PublishedBreakupFile>(breakupPath(dir, id, version), version);
+    void read;
     // Every file has carried the row's event since the one run that re-keyed the files written before it.
-    if (breakup.rowEvent === undefined) throw new Error(`${breakupPath(dir, id)}: ${id} carries no rowEvent; every published breakup has carried one since the run that re-keyed the files written before it`);
-    return breakup;
+    if (breakup.rowEvent === undefined) throw new Error(`${breakupPath(dir, id, version)}: ${id} carries no rowEvent; every published breakup has carried one since the run that re-keyed the files written before it`);
+    return { ...breakup, unreportedAt: breakup.unreportedAt ?? null };
   });
+}
+
+/**
+ * The breakups published under a `published` checkout, in the list's
+ * order: this version's, else, before this version's first run, the
+ * version before's, so the list and its ids carry over; none where neither
+ * was ever written.
+ */
+export function readPublished(dir: string): PublishedBreakup[] {
+  if (existsSync(listPath(dir))) return readVersion(dir, PUBLISHED_VERSION);
+  if (PREVIOUS_VERSION >= 1 && existsSync(listPath(dir, PREVIOUS_VERSION))) return readVersion(dir, PREVIOUS_VERSION);
+  return [];
 }
 
 /** Writes the three files for these breakups and this run under a `published` checkout, removing the file of every breakup no longer listed. */

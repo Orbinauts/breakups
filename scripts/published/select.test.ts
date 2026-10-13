@@ -76,6 +76,7 @@ describe("a detector confirmation landing on a reported breakup", () => {
         state: "confirmed",
         raisedAt: "2026-02-27T04:00:00.000Z",
         confirmedAt: "2026-02-27T04:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 40258, designator: "2014-058A", name: "Luch (Olymp-K 1)", launchedOn: "2014-09-27" },
         event: { at: "2026-01-31T08:15:00.000Z", from: "2026-01-31T00:00:00.000Z", to: "2026-01-31T16:00:00.000Z" },
         rowEvent: { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" },

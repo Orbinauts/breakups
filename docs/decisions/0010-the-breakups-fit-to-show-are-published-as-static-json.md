@@ -1,5 +1,5 @@
 ---
-status: accepted; its row naming a launch alone (issue #21) and its unreported confirmation and nearest row (issue #17) amended on 2026-10-12, and its object's regime read by its last set (issue #17) and its ESA rows the truth's build placed (issues #19 and #20) on 2026-10-13
+status: accepted; its row naming a launch alone (issue #21) and its unreported confirmation and nearest row (issue #17) amended on 2026-10-12, and its object's regime read by its last set (issue #17), its ESA rows the truth's build placed (issues #19 and #20) and its unreported confirmation relabelled in the files, version 2 (issue #41) on 2026-10-13
 date: 2026-10-11
 ---
 
@@ -191,3 +191,48 @@ notice (`isAgencyWord` in `src/truth.ts`, `firstNoticeOn` in
 confirmation by the detector is published suspected on it, as on a dated
 outside report. The 2025 seed's list is unchanged: DMSP F-14 is confirmed by
 the Space Forces' notice of the event's day.
+
+## Amended on 2026-10-13: an unreported confirmation is relabelled, in version 2
+
+The amendment of 2026-10-12 kept an unreported confirmation listed as
+confirmed for good, after the scorecard and the live test's score turn it
+false, and left dropping it to the owner (issue #41). The owner decided on
+2026-10-13 to keep it listed and relabel it: deleting it would break the
+list's promise that a confirmed breakup stays, which the site may already
+show, and rewrite what was public; keeping it confirmed contradicts the
+score.
+
+- **The state `unreported`.** A breakup the detector confirmed that is on
+  no row of the truth once 90 days have passed since its confirmation, at
+  the truth's date (`truthAsOf`), is published with the state
+  `unreported`, and `unreportedAt`, the instant the 90 days ran out. It
+  stays listed for good, as a confirmed one does. Until then it is
+  `confirmed`, pending as the scorecard reads it. It is `confirmed` again,
+  `unreportedAt` null, once a run lands it on a row, the way a report
+  reaches it.
+- **One reading.** The 90 days are the scorecard's constant,
+  `UNREPORTED_PENDING_DAYS` in `scripts/kpi/match.ts`, read by the same
+  test (`isPendingUnreported`, with `unreportedFrom` for the instant) and
+  measured from the confirmation's raising, `confirmedAt`, which on no row
+  is the detector's first confirmation, the verdict the scorecard reads.
+  The merge (`mergePublished`) reads every breakup of the list at the
+  truth's date after each run, so a breakup a run no longer finds (an
+  earlier year's) turns unreported too.
+- **Where the readings part.** The list knows a breakup's row, not the
+  scorecard's whole landing: a confirmation inside a report naming no
+  object, which the scorecard counts apart or exempts by a regime, is
+  on no row in the list, as the amendment of 2026-10-12 publishes it,
+  and turns unreported the same, since no report names its object. And a
+  breakup no run finds again keeps its row as it stood: a report typed in
+  after its year has left the daily replay does not make it confirmed
+  again, though the scorecard's replay of that year would count it.
+- **Version 2.** A new state is a change a strict reader can trip on, so
+  the files' version is 2 (`PUBLISHED_VERSION`) and they live under `v2/`.
+  The first run of version 2 reads the list from `v1/`, keeping every id,
+  and writes `v2/`; `v1/` stays on the branch and on Pages as that run
+  found it, written no more. `unreportedAt` is when the 90 days ran out,
+  not the day of the run that relabelled it, so a replay of the same truth
+  writes the same files.
+
+Neither real replay publishes an unreported breakup with the truth of this
+day: every confirmation they publish lands on a row.

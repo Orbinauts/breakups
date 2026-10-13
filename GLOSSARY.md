@@ -10,3 +10,7 @@ A body catalogued under a breakup's launch after the event, numbered above the c
 **Target**:
 A reported breakup that counts in the Confirmed line's recall: the parent's orbit was known before it, and at least one fresh piece published within 180 days lies in the parent's plane by the scorecard's own bound, never the detector's.
 _Avoid_: scoreable event (the truth's wider set), denominator event
+
+**Unreported**:
+A confirmation by the detector that lands on no row of the truth. It is pending, neither true nor false, while it was raised under 90 days before the truth's date, and a false confirmation after that. The published list shows it as confirmed while it is pending, and with the state `unreported` once the 90 days have passed; it is confirmed again if a report lands later.
+_Avoid_: unconfirmed, orphan confirmation, false positive (for one still pending)

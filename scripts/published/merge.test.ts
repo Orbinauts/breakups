@@ -4,11 +4,14 @@ import { mergePublished } from "./merge.ts";
 
 const at = (iso: string): number => Date.parse(iso);
 
+/** The truth's date the merges below are read at, where it changes nothing: every breakup confirmed on no row in them is merged into one on a row, or is not looked at for its state. */
+const ASOF = at("2026-10-13T00:00:00.000Z");
+
 function step(before: string, after: string): PublishedStep {
   return { beforeEpoch: before, afterEpoch: after, deltaKm: -1.5, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 4, z: 12 };
 }
 
-function published(number: number, state: PublishedBreakup["state"], raisedAt: string, s: PublishedStep | null, overrides: Partial<PublishedBreakup> = {}): PublishedBreakup {
+function published(number: number, state: PublishedVerdict["state"], raisedAt: string, s: PublishedStep | null, overrides: Partial<PublishedBreakup> = {}): PublishedBreakup {
   const verdict: PublishedVerdict = { state, raisedAt, step: s, event: null, evidence: { bodyClass: 0 }, reasons: [`${state} at ${raisedAt}`], bodies: [], candidates: [] };
   const row = overrides.row === undefined ? `${number}:${raisedAt.slice(0, 10)}` : overrides.row;
   return {
@@ -16,6 +19,7 @@ function published(number: number, state: PublishedBreakup["state"], raisedAt: s
     state,
     raisedAt,
     confirmedAt: state === "confirmed" ? raisedAt : null,
+    unreportedAt: null,
     parent: { catalogueNumber: number, designator: "1988-018A", name: `SAT ${number}`, launchedOn: "1988-03-08" },
     event: null,
     rowEvent: row === null ? null : { at: null, from: `${raisedAt.slice(0, 10)}T00:00:00.000Z`, to: null, precision: "month", source: "gcat", row },
@@ -52,26 +56,26 @@ describe("a run merged into what is already published", () => {
   const luch = published(40258, "confirmed", "2026-02-27T04:00:00.000Z", step("2026-01-30T08:18:00.000Z", "2026-02-01T08:12:00.000Z"));
 
   test("keeps a confirmed breakup the run no longer mentions, for good", () => {
-    expect(mergePublished([luch], [], [])).toEqual([luch]);
+    expect(mergePublished([luch], [], [], ASOF)).toEqual([luch]);
   });
 
   test("keeps a suspected breakup the run does not mention until a verdict on its step lets it go", () => {
-    expect(mergePublished([meteor], [], [])).toEqual([meteor]);
-    expect(mergePublished([meteor], [], [verdict(12456, "suspected", "2026-10-06T04:00:00.000Z", meteorStep)])).toEqual([meteor]);
+    expect(mergePublished([meteor], [], [], ASOF)).toEqual([meteor]);
+    expect(mergePublished([meteor], [], [verdict(12456, "suspected", "2026-10-06T04:00:00.000Z", meteorStep)], ASOF)).toEqual([meteor]);
   });
 
   test("drops a suspected breakup once the latest verdict on its step expired it, while a confirmed one stays", () => {
     const expiry = [verdict(12456, "suspected", "2026-10-06T04:00:00.000Z", meteorStep), verdict(12456, "expired", "2026-11-05T04:00:00.000Z", meteorStep)];
-    expect(mergePublished([luch, meteor], [], expiry)).toEqual([luch]);
+    expect(mergePublished([luch, meteor], [], expiry, ASOF)).toEqual([luch]);
     const dismissal = [verdict(12456, "dismissed", "2026-10-09T04:00:00.000Z", meteorStep)];
-    expect(mergePublished([luch, meteor], [], dismissal)).toEqual([luch]);
+    expect(mergePublished([luch, meteor], [], dismissal, ASOF)).toEqual([luch]);
     const luchExpired = [verdict(40258, "expired", "2026-03-27T04:00:00.000Z", luch.step)];
-    expect(mergePublished([luch], [], luchExpired)).toEqual([luch]);
+    expect(mergePublished([luch], [], luchExpired, ASOF)).toEqual([luch]);
   });
 
   test("ignores a verdict on another step or another object", () => {
     const elsewhere = [verdict(12456, "expired", "2026-11-05T04:00:00.000Z", step("2026-08-01T00:00:00.000Z", "2026-08-02T00:00:00.000Z")), verdict(99999, "expired", "2026-11-05T04:00:00.000Z", meteorStep)];
-    expect(mergePublished([meteor], [], elsewhere)).toEqual([meteor]);
+    expect(mergePublished([meteor], [], elsewhere, ASOF)).toEqual([meteor]);
   });
 
   test("keeps the id fixed on first publish when a later estimate moves the day, with the earlier raising and the latest verdict's fields", () => {
@@ -87,7 +91,7 @@ describe("a run merged into what is already published", () => {
       evidence: { bodyClass: 0, pieces: 3 },
       bodies: [70001],
     });
-    const [merged, ...rest] = mergePublished([first], [later], []);
+    const [merged, ...rest] = mergePublished([first], [later], [], ASOF);
     expect(rest).toEqual([]);
     expect(merged).toEqual({
       ...later,
@@ -105,7 +109,7 @@ describe("a run merged into what is already published", () => {
     const rowEvent: PublishedRowEvent = { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" };
     const later = published(40258, "confirmed", "2026-02-27T04:00:00.000Z", luchStep, { id: "40258-2026-01-30", event: estimate, row: "40258:2026-01-30", rowEvent });
     expect(first.rowEvent).toBeNull();
-    const [merged, ...rest] = mergePublished([first], [later], []);
+    const [merged, ...rest] = mergePublished([first], [later], [], ASOF);
     expect(rest).toEqual([]);
     expect(merged!.id).toBe("40258-2026-01-31");
     expect(merged!.row).toBe("40258:2026-01-30");
@@ -116,7 +120,7 @@ describe("a run merged into what is already published", () => {
     const s = step("2026-09-12T00:00:00.000Z", "2026-09-14T00:00:00.000Z");
     const confirmed = published(19460, "confirmed", "2026-09-17T04:00:00.000Z", s);
     const suspectedAgain = published(19460, "suspected", "2026-09-20T04:00:00.000Z", s);
-    const [merged] = mergePublished([confirmed], [suspectedAgain], []);
+    const [merged] = mergePublished([confirmed], [suspectedAgain], [], ASOF);
     expect(merged!.state).toBe("confirmed");
     expect(merged!.confirmedAt).toBe("2026-09-17T04:00:00.000Z");
     expect(merged!.id).toBe(confirmed.id);
@@ -125,19 +129,19 @@ describe("a run merged into what is already published", () => {
 
   test("does not repeat a verdict both lists carry", () => {
     const fresh = { ...meteor, verdicts: [...meteor.verdicts, { ...meteor.verdicts[0]!, raisedAt: "2026-10-07T04:00:00.000Z" }] };
-    expect(mergePublished([meteor], [fresh], []).map((b) => b.verdicts.length)).toEqual([2]);
+    expect(mergePublished([meteor], [fresh], [], ASOF).map((b) => b.verdicts.length)).toEqual([2]);
   });
 
   test("matches a breakup by the row it landed on where the steps do not overlap", () => {
     const fromPieces = published(68196, "confirmed", "2026-05-01T04:00:00.000Z", null, { row: "68196:2026-04-20" });
     const onStep = published(68196, "confirmed", "2026-05-03T04:00:00.000Z", step("2026-04-19T00:00:00.000Z", "2026-04-21T00:00:00.000Z"), { row: "68196:2026-04-20" });
-    expect(mergePublished([fromPieces], [onStep], []).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2]]);
+    expect(mergePublished([fromPieces], [onStep], [], ASOF).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2]]);
   });
 
   test("keeps apart two breakups on one row whose steps do not overlap", () => {
     const first = published(41000, "suspected", "2026-05-04T12:00:00.000Z", step("2026-05-03T00:00:00.000Z", "2026-05-04T00:00:00.000Z"), { row: "41000:2026-05-01" });
     const second = published(41000, "suspected", "2026-05-13T12:00:00.000Z", step("2026-05-12T00:00:00.000Z", "2026-05-13T00:00:00.000Z"), { row: "41000:2026-05-01" });
-    expect(mergePublished([first], [second], []).map((b) => [b.id, b.verdicts.length])).toEqual([
+    expect(mergePublished([first], [second], [], ASOF).map((b) => [b.id, b.verdicts.length])).toEqual([
       [first.id, 1],
       [second.id, 1],
     ]);
@@ -147,7 +151,7 @@ describe("a run merged into what is already published", () => {
     const first = published(41000, "suspected", "2026-05-04T12:00:00.000Z", step("2026-05-03T00:00:00.000Z", "2026-05-04T00:00:00.000Z"), { row: "41000:2026-05-01" });
     const second = published(41000, "suspected", "2026-05-13T12:00:00.000Z", step("2026-05-12T00:00:00.000Z", "2026-05-13T00:00:00.000Z"), { row: "41000:2026-05-01" });
     const fromPieces = published(41000, "confirmed", "2026-05-25T00:00:00.000Z", null, { row: "41000:2026-05-01" });
-    expect(mergePublished([first, second], [fromPieces], []).map((b) => [b.id, b.state, b.verdicts.length])).toEqual([
+    expect(mergePublished([first, second], [fromPieces], [], ASOF).map((b) => [b.id, b.state, b.verdicts.length])).toEqual([
       [first.id, "suspected", 1],
       [second.id, "confirmed", 2],
     ]);
@@ -155,13 +159,43 @@ describe("a run merged into what is already published", () => {
 
   test("adds a breakup published for the first time, and keeps two on one object apart, earliest raised first", () => {
     const another = published(12456, "suspected", "2026-08-01T04:00:00.000Z", step("2026-07-30T00:00:00.000Z", "2026-07-31T00:00:00.000Z"), { row: "12456:2026-07-30" });
-    expect(mergePublished([meteor], [another, luch], []).map((b) => b.id)).toEqual([luch.id, another.id, meteor.id]);
+    expect(mergePublished([meteor], [another, luch], [], ASOF).map((b) => b.id)).toEqual([luch.id, another.id, meteor.id]);
   });
 
   test("matches a breakup with no step and no row by a verdict both carry", () => {
     const fromPieces = published(25371, "confirmed", "2026-05-01T04:00:00.000Z", null, { row: null });
     const again = { ...fromPieces, verdicts: [...fromPieces.verdicts, { ...fromPieces.verdicts[0]!, raisedAt: "2026-05-02T04:00:00.000Z" }] };
     const other = published(25371, "confirmed", "2026-08-01T04:00:00.000Z", null, { row: null });
-    expect(mergePublished([fromPieces], [again, other], []).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2], [other.id, 1]]);
+    expect(mergePublished([fromPieces], [again, other], [], ASOF).map((b) => [b.id, b.verdicts.length])).toEqual([[fromPieces.id, 2], [other.id, 1]]);
+  });
+});
+
+describe("a confirmation on no row of the truth, read at the truth's date", () => {
+  // A confirmation by the detector alone, landed on no row and named by no report, as Intelsat 805's was before a row named its launch.
+  const onNoRow = published(25371, "confirmed", "2026-08-20T04:00:00.000Z", null, { row: null });
+  const unreported: PublishedBreakup = { ...onNoRow, state: "unreported", unreportedAt: "2026-11-18T04:00:00.000Z" };
+
+  test("stays confirmed while it was raised under 90 days before the truth's date: pending, as the scorecard reads it", () => {
+    const [merged] = mergePublished([], [onNoRow], [], at("2026-11-18T03:59:59.999Z"));
+    expect(merged!.state).toBe("confirmed");
+    expect(merged!.unreportedAt).toBeNull();
+  });
+
+  test("turns unreported once 90 days have passed by the truth's date, dated when the 90 days ran out, and keeps its confirmation", () => {
+    expect(mergePublished([], [onNoRow], [], at("2026-11-18T04:00:00.000Z"))).toEqual([unreported]);
+  });
+
+  test("turns unreported when the run no longer finds it, and stays listed for good", () => {
+    expect(mergePublished([onNoRow], [], [], at("2027-02-01T00:00:00.000Z"))).toEqual([unreported]);
+    const expired = [verdict(25371, "expired", "2026-12-01T00:00:00.000Z", step("2026-08-01T00:00:00.000Z", "2026-08-02T00:00:00.000Z"))];
+    expect(mergePublished([unreported], [], expired, at("2027-03-01T00:00:00.000Z"))).toEqual([unreported]);
+  });
+
+  test("is confirmed again, with no unreported day, once a run lands it on a row that reports it", () => {
+    const rowEvent: PublishedRowEvent = { at: null, from: "2026-08-15T00:00:00.000Z", to: "2026-08-19T00:00:00.000Z", precision: "none", source: "news", row: "25371:2026-08-15" };
+    const reported = published(25371, "confirmed", "2026-08-20T04:00:00.000Z", null, { row: "25371:2026-08-15", rowEvent, reports: [{ source: "news", date: "2026-12-02", precision: "day", url: null }] });
+    const [merged, ...rest] = mergePublished([unreported], [reported], [], at("2026-12-02T00:00:00.000Z"));
+    expect(rest).toEqual([]);
+    expect(merged).toEqual({ ...reported, id: unreported.id, state: "confirmed", unreportedAt: null });
   });
 });

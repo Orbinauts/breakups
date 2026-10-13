@@ -4,7 +4,7 @@ name: Pages
 # two parts and deploys both at once, so neither wipes out the other
 # (scripts/pages/site.ts):
 # - the reference TypeDoc generates from main's docblocks, at the root;
-# - `v1/`, the published breakups, from the orphan branch `published`.
+# - `v2/` (and the frozen `v1/`), the published breakups, from the orphan branch `published`.
 #   Before that branch exists the reference deploys alone.
 #
 # It runs on every push to main, by hand, and when the daily prospective
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # A branch that is not there yet gives an empty answer and the reference deploys alone; a failed lookup fails the run rather than deploying a site with no `v1/`.
+      # A branch that is not there yet gives an empty answer and the reference deploys alone; a failed lookup fails the run rather than deploying a site with no published files.
       # The answer is taken into a variable first: a failing command inside `[ ]` would not stop the script.
       - id: published
         name: Check whether the published branch exists
@@ -40,7 +40,7 @@ jobs:
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No branch 'published' yet: the reference deploys without v1/."
+            echo "::notice::No branch 'published' yet: the reference deploys without the published files."
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.published.outputs.exists == 'true'
