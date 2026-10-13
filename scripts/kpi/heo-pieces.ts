@@ -30,11 +30,10 @@ import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
  * committed snapshot under `data/truth/sources/`). It then counts what
  * each bound keeps, by regime (the parent's, from its last set before the
  * event) and by split, with the fresh pieces of every other launch in the
- * same window that each bound would admit by chance. For issue #42 it
- * also reads each piece with the nodes carried to the event's instant at
- * each body's own rate, and with drag's effect on the piece's rate
- * bounded, and looks for the twin event whose plane keeps a piece its own
- * event's drops.
+ * same window that each bound would admit by chance. It also reads each
+ * piece with the nodes carried to the event's instant at each body's own
+ * rate, and with drag's effect on the piece's rate bounded, and looks for
+ * the twin event whose plane keeps a piece its own event's drops.
  *
  *   BREAKUPS_ARCHIVE=<archive> node --experimental-strip-types scripts/kpi/heo-pieces.ts [--json <path>] > report.md
  *
@@ -74,16 +73,26 @@ const nodeRateOf = (orbit: PlaneOrbit): number => nodePrecessionDegPerDay(orbit.
 const parentNodeAtEventDeg = (parent: PlaneOrbit, eventMs: number): number => parent.raanDeg + (nodeRateOf(parent) * (eventMs - parent.epochMs)) / DAY_MS;
 
 /**
- * The node difference at the event's instant, the carry issue #42 asked
- * to measure: the piece's node carried back from its first set to the
- * event at its own J2 rate (from that set's a, e and i), less the
- * parent's carried forward to the event at the parent's. Both bodies were
+ * The node difference at the event's instant: the piece's node carried
+ * back from its first set to the event at its own J2 rate (from that set's
+ * a, e and i), less the parent's carried forward to the event at the
+ * parent's. Both bodies were
  * on one plane at the event, so a piece of the event reads zero here
  * wherever J2 alone moved the nodes since.
  */
 export function nodeAtEventDifferenceDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
   const pieceNodeAtEvent = piece.raanDeg - (nodeRateOf(piece) * (piece.epochMs - eventMs)) / DAY_MS;
   return wrapDegrees(pieceNodeAtEvent - parentNodeAtEventDeg(parent, eventMs));
+}
+
+/** A piece's node difference at the event's instant with drag's effect on its rate bounded (`dragBandOf`), in degrees. */
+export interface DragBand {
+  /** Carried back at the piece's own rate: `nodeAtEventDifferenceDeg`. */
+  ownRateDeg: number;
+  /** Carried back at the parent's rate. */
+  parentRateDeg: number;
+  /** The smallest node difference any rate between the two gives: zero where the band straddles it. */
+  leastDeg: number;
 }
 
 /**
@@ -98,7 +107,7 @@ export function nodeAtEventDifferenceDeg(parent: PlaneOrbit, piece: PlaneOrbit, 
  * node difference any rate between them gives, zero where the band
  * straddles it.
  */
-export function dragBandOf(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): { ownRateDeg: number; parentRateDeg: number; leastDeg: number } {
+export function dragBandOf(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): DragBand {
   const ownRateDeg = nodeAtEventDifferenceDeg(parent, piece, eventMs);
   const parentRateDeg = ownRateDeg + ((nodeRateOf(piece) - nodeRateOf(parent)) * (piece.epochMs - eventMs)) / DAY_MS;
   const [low, high] = ownRateDeg <= parentRateDeg ? [ownRateDeg, parentRateDeg] : [parentRateDeg, ownRateDeg];
@@ -107,7 +116,7 @@ export function dragBandOf(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: numbe
 }
 
 /** Whether the scorecard's own plane test (`FRAGMENTS_PLANE`: the tolerances, or the normals within its angle) keeps a piece whose node lies `deltaNodeDeg` from the parent's at the event's instant: both planes are set at that instant, so nothing is carried. */
-export function scorecardKeepsAtNode(parent: PlaneOrbit, piece: PlaneOrbit, deltaNodeDeg: number): boolean {
+function scorecardKeepsAtNode(parent: PlaneOrbit, piece: PlaneOrbit, deltaNodeDeg: number): boolean {
   const atEvent = (orbit: PlaneOrbit, raanDeg: number): PlaneOrbit => ({ ...orbit, epochMs: 0, raanDeg });
   const [p, q] = [atEvent(parent, 0), atEvent(piece, deltaNodeDeg)];
   return planeDistance(p, q, 0, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(p, q, 0) <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg;
@@ -201,7 +210,7 @@ export interface PieceReading {
   inclinationDeltaVMps: number;
   attribution: Attribution;
   gcatParent: number | null;
-  /** The node difference at the event's instant, each node carried there at its own J2 rate (issue #42): the same as `deltaNodeDeg`, by algebra. */
+  /** The node difference at the event's instant, each node carried there at its own J2 rate: the same as `deltaNodeDeg`, by algebra. */
   deltaNodeAtEventDeg: number;
   /** Whether the scorecard's test (`FRAGMENTS_PLANE`) keeps it with the node difference at the event's instant. */
   passesAtEvent: boolean;
@@ -296,15 +305,18 @@ export function boundsOf(deltaVsMps: readonly number[]): Bound[] {
   ];
 }
 
+/** The scorecard's own plane test (`FRAGMENTS_PLANE`) as it keeps a piece today: the detector's test, or the normals within the scorecard's angle. */
+export const SCORECARD_TEST: Bound = { name: "the scorecard's test (today's, or the normals within its angle)", keeps: (p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg };
+
 /**
- * The carries issue #42 measured, each under the scorecard's own test
+ * The carries of the node measured, each under the scorecard's own test
  * (`FRAGMENTS_PLANE`): today's, the nodes at the event's instant (each at
  * its own J2 rate), and drag's band, read for every piece or only where
  * the piece's first set sits below the parent.
  */
 export function carryBoundsOf(): Bound[] {
   return [
-    { name: "the scorecard's test (#15's form)", keeps: (p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg },
+    SCORECARD_TEST,
     { name: "the scorecard's test, nodes at the event's instant", keeps: (p) => p.passesAtEvent },
     { name: "the scorecard's test, drag bounded", keeps: (p) => p.passesDragBand },
     { name: "the scorecard's test, drag bounded below the parent", keeps: (p) => p.passesDragBandBelow },
@@ -398,52 +410,58 @@ function driftTable(measured: readonly Measured[]): string[] {
   return lines;
 }
 
+/** The regimes the report reads, in its order. */
+const REGIMES_READ = ["HEO", "LEO", "GEO", "MEO"] as const;
+
+/** The training and held-out splits, with the names the report gives them. */
+const SPLITS_READ = [
+  { split: "train", name: "training" },
+  { split: "validation", name: "held-out" },
+] as const;
+
+/** The events of each regime and split, in the report's order, the split by its name. */
+const cellsOf = (measured: readonly Measured[]): { regime: Regime; split: string; events: Measured[] }[] =>
+  REGIMES_READ.flatMap((regime) => SPLITS_READ.map(({ split, name }) => ({ regime, split: name, events: measured.filter((m) => m.regime === regime && m.split === split) })));
+
 /**
- * Issue #42's measurement: the scorecard's test under each carry, by
- * regime and split; how far the carry at the event's instant is from
- * today's; and, of the event's pieces the scorecard's test drops, those a
- * twin event's plane keeps.
+ * The carries of the node measured: the scorecard's test under each
+ * carry, by regime and split; how far the carry at the event's instant is
+ * from today's; and, of the event's pieces the scorecard's test drops,
+ * those a twin event's plane keeps.
  */
 function carrySection(measured: readonly Measured[], catalogue: Catalogue): string[] {
-  const lines = ["## Issue #42: the nodes carried to the event's instant, and drag bounded", ""];
+  const lines = ["## The nodes carried to the event's instant, and drag bounded", ""];
   const all = measured.flatMap((m) => [...m.pieces, ...m.strangers]);
   const largest = all.reduce((most, p) => Math.max(most, Math.abs(wrapDegrees(p.deltaNodeAtEventDeg - p.deltaNodeDeg))), 0);
-  const scorecard = carryBoundsOf()[0]!;
-  const differ = all.filter((p) => p.passesAtEvent !== scorecard.keeps(p)).length;
+  const differ = all.filter((p) => p.passesAtEvent !== SCORECARD_TEST.keeps(p)).length;
   lines.push(`Over ${all.length} pieces and strangers, the node difference at the event's instant is today's within ${largest.toExponential(1)}°, and the scorecard's test keeps a different piece under it ${differ} times.`, "");
   lines.push("| Regime | Split | Carry | Pieces kept | The event's | Parent, other separation | Another body's | Strangers admitted |", "| --- | --- | --- | --- | --- | --- | --- | --- |");
-  for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
-    for (const split of ["train", "validation"] as const) {
-      const rows = measured.filter((m) => m.regime === regime && m.split === split);
-      const whole = tally(rows, { name: "all", keeps: () => true });
-      for (const bound of carryBoundsOf()) {
-        const t = tally(rows, bound);
-        lines.push(`| ${regime} | ${split === "train" ? "training" : "held-out"} | ${bound.name} | ${t.all} of ${whole.all} | ${t.event} of ${whole.event} | ${t["parent, other separation"]} | ${t["other body"]} | ${t.strangers} of ${whole.strangers} |`);
-      }
+  const dropRows: string[] = [];
+  const twinRows: string[] = [];
+  for (const { regime, split, events } of cellsOf(measured)) {
+    const whole = tally(events, { name: "all", keeps: () => true });
+    for (const bound of carryBoundsOf()) {
+      const t = tally(events, bound);
+      lines.push(`| ${regime} | ${split} | ${bound.name} | ${t.all} of ${whole.all} | ${t.event} of ${whole.event} | ${t["parent, other separation"]} | ${t["other body"]} | ${t.strangers} of ${whole.strangers} |`);
     }
-  }
-  lines.push("", "### The event's pieces the scorecard's test drops, and a twin's plane", "", "| Regime | Split | Dropped | A twin event's plane keeps |", "| --- | --- | --- | --- |");
-  const twins: string[] = [];
-  for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
-    for (const split of ["train", "validation"] as const) {
-      let dropped = 0;
-      let kept = 0;
-      for (const m of measured.filter((e) => e.regime === regime && e.split === split)) {
-        const byTwin = new Map<string, number>();
-        for (const p of m.pieces) {
-          if (p.attribution !== "event" || scorecard.keeps(p)) continue;
-          dropped++;
-          const twin = twinEventOf(catalogue.bodies.get(p.number)!.orbit, m, measured);
-          if (twin === null) continue;
-          kept++;
-          byTwin.set(twin, (byTwin.get(twin) ?? 0) + 1);
-        }
-        for (const [twin, n] of byTwin) twins.push(`| ${m.id} ${m.name} | ${regime} | ${n} | ${twin} |`);
+    let dropped = 0;
+    let kept = 0;
+    for (const m of events) {
+      const byTwin = new Map<string, number>();
+      for (const p of m.pieces) {
+        if (p.attribution !== "event" || SCORECARD_TEST.keeps(p)) continue;
+        dropped++;
+        const twin = twinEventOf(catalogue.bodies.get(p.number)!.orbit, m, measured);
+        if (twin === null) continue;
+        kept++;
+        byTwin.set(twin, (byTwin.get(twin) ?? 0) + 1);
       }
-      lines.push(`| ${regime} | ${split === "train" ? "training" : "held-out"} | ${dropped} | ${kept} |`);
+      for (const [twin, n] of byTwin) twinRows.push(`| ${m.id} ${m.name} | ${regime} | ${n} | ${twin} |`);
     }
+    dropRows.push(`| ${regime} | ${split} | ${dropped} | ${kept} |`);
   }
-  lines.push("", "| Event | Regime | Its pieces (by GCAT) a twin's plane keeps | The twin's event |", "| --- | --- | --- | --- |", ...twins, "");
+  lines.push("", "### The event's pieces the scorecard's test drops, and a twin's plane", "", "| Regime | Split | Dropped | A twin event's plane keeps |", "| --- | --- | --- | --- |", ...dropRows);
+  lines.push("", "| Event | Regime | Its pieces (by GCAT) a twin's plane keeps | The twin's event |", "| --- | --- | --- | --- |", ...twinRows, "");
   return lines;
 }
 
@@ -495,7 +513,7 @@ function main(): void {
     `Read ${measured.length} scoreable events from 2006 with a catalogued parent from the catalogue index built ${index.builtAt}${stale.length > 0 ? ` (stale against the Archive: ${stale.join("; ")})` : ""}; skipped ${skipped.noLaunch} with no launch, ${skipped.notInIndex} the index holds no parent instant for${notInIndex.length > 0 ? ` (${notInIndex.join(", ")}: rebuild the index for this truth)` : ""}, ${skipped.noParentOrbit} with no parent set before the event. GCAT's satellite catalogue: ${gcat.size} pieces.`,
     "",
   ];
-  for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
+  for (const regime of REGIMES_READ) {
     for (const split of ["train", "validation", "both"] as const) {
       const rows = measured.filter((m) => m.regime === regime && (split === "both" || m.split === split));
       out.push(`## ${regime}, ${split === "both" ? "every year from 2006" : split === "train" ? "training years (even)" : "held-out years (odd)"}`, "", ...regimeTable(rows, bounds), "");

@@ -142,7 +142,7 @@ Adopting the bound on top of #15's form would change three things:
 
 Issue #42 put forward a hypothesis: the plane test carries the parent's node to the piece's first set at the **parent's** J2 rate, so a piece on another orbit, first seen weeks late, misses the plane in node. The owner decided on 2026-10-13 to fix the carry before widening any bound, and to measure first. The measurement compares each piece with the parent **at the event's instant**. The piece's node is carried back from its first set at its own J2 rate (from that set's a, e and i), and the parent's is carried forward from its last set before the event at the parent's rate. The measurement also bounds drag's effect on the piece's rate over the gap.
 
-The run used the release's catalogue index (built 2026-10-13T07:19Z) and the truth of the integration branch `spec-41-42` (commit 289426e). It read 296 events and skipped 48 with no parent set before the event. The index held every parent instant this truth asks for. The script's report section "Issue #42" holds the tables below in full.
+The run used the release's catalogue index (built 2026-10-13T07:19Z) and the truth of the integration branch `spec-41-42` (commit 289426e). It read 296 events and skipped 48 with no parent set before the event. The index held every parent instant this truth asks for. The script's report section "The nodes carried to the event's instant, and drag bounded" holds the tables below in full.
 
 ### The carry asked for is the carry already made
 

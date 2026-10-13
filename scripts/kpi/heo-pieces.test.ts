@@ -42,7 +42,7 @@ describe("the angle between two orbits' normals", () => {
   });
 });
 
-describe("the node difference at the event's instant (issue #42)", () => {
+describe("the node difference at the event's instant, each node carried at its own rate", () => {
   const leo = { aKm: 7200, eccentricity: 0.001, meanMotion: 14.2 };
   const lower = { aKm: 6950, eccentricity: 0.004, meanMotion: 14.97 };
   const parentRate = nodePrecessionDegPerDay(7200, 0.001, 98, 14.2);
@@ -65,7 +65,7 @@ describe("the node difference at the event's instant (issue #42)", () => {
   });
 });
 
-describe("the node difference with drag bounded (issue #42)", () => {
+describe("the node difference with drag bounded", () => {
   const leo = { aKm: 7200, eccentricity: 0.001, meanMotion: 14.2 };
   const decayed = { aKm: 6950, eccentricity: 0.004, meanMotion: 14.97 };
   const parentRate = nodePrecessionDegPerDay(7200, 0.001, 98, 14.2);
@@ -184,7 +184,7 @@ describe("an event's fresh pieces", () => {
   });
 });
 
-describe("an event's pieces read by the carries of issue #42", () => {
+describe("an event's pieces read by the carries of the node", () => {
   const leo = { aKm: 7200, eccentricity: 0.001, meanMotion: 14.2 };
   const decayed = { aKm: 6950, eccentricity: 0.004, meanMotion: 14.97 };
   const raised = { aKm: 7450, eccentricity: 0.004, meanMotion: 13.49 };
@@ -263,11 +263,11 @@ describe("a bound's count over events", () => {
     expect(byName.get("inclination alone, impulse 50 m/s")).toEqual({ ...none, all: 3, event: 3, strangers: 1, eventsWithAny: 2 });
   });
 
-  test("by the carries of issue #42: the scorecard's test, at the event's instant, and with drag's band", () => {
+  test("by the carries of the node: the scorecard's test, at the event's instant, and with drag's band", () => {
     const carried = (passesAtEvent: boolean, passesDragBand: boolean, passesDragBandBelow: boolean, attribution: Attribution): PieceReading => ({ ...piece(passesAtEvent, 3, 82, attribution), passesAtEvent, passesDragBand, passesDragBandBelow });
     const events = [reading([carried(true, true, true, "event"), carried(false, true, true, "event"), carried(false, true, false, "event")], [carried(false, true, false, "unattributed"), carried(false, false, false, "unattributed")])];
     const bounds = carryBoundsOf();
-    expect(bounds.map((b) => b.name)).toEqual(["the scorecard's test (#15's form)", "the scorecard's test, nodes at the event's instant", "the scorecard's test, drag bounded", "the scorecard's test, drag bounded below the parent"]);
+    expect(bounds.map((b) => b.name)).toEqual(["the scorecard's test (today's, or the normals within its angle)", "the scorecard's test, nodes at the event's instant", "the scorecard's test, drag bounded", "the scorecard's test, drag bounded below the parent"]);
     expect(bounds.map((b) => tally(events, b))).toEqual([
       { ...none, all: 1, event: 1, eventsWithAny: 1 },
       { ...none, all: 1, event: 1, eventsWithAny: 1 },
