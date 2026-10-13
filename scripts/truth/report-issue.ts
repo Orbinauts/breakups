@@ -13,7 +13,7 @@ import { comment, ensureLabel, gh, setOutput } from "../maintenance/github.ts";
  * label alone proves nothing. An accepted report's body is written to the
  * file for `npm run truth:add -- --form`; a refused one has the label
  * taken off again and a comment saying why. `npm run truth:report --
- * refused <log file>` does the same for a report the hand file's checks
+ * refused <issue number> <log file>` does the same for a report the hand file's checks
  * refused, quoting their words, so the issue can be edited and labelled
  * again.
  */
