@@ -12,7 +12,7 @@ https://orbinauts.github.io/breakups/v2/status.json            the last run
 
 The library's reference sits at the root of the same site, `https://orbinauts.github.io/breakups/`. The `v2` in the path is the version of the files' shape (`PUBLISHED_VERSION`), and every file also carries it as `version`, so a reader can refuse a shape it does not know.
 
-The package exports a type for each file, so a reader in TypeScript can check what it fetched:
+The library exports a type for each file (`src/published.ts`), so a reader in TypeScript that installs it from the repository ([the README](../README.md#install); it is not on npm) can check what it fetched:
 
 ```ts
 import { PUBLISHED_VERSION, type PublishedBreakupsFile } from "@orbinauts/breakups";
@@ -70,7 +70,7 @@ The files live on the orphan branch [`published`](https://github.com/Orbinauts/b
 
 Version 2 (issue #41) adds the state `unreported` and the field `unreportedAt` to every entry; nothing else changed, and every id carries over. A reader of version 1 that switches on `state` may not know the new value, so the files moved to `v2/` rather than changing under `v1/`. The first run of version 2 reads the list from `v1/` and writes `v2/`; from then on `v1/` is no longer written, but stays on the branch and on Pages as that run found it, its `status.json` showing the last run that wrote it. To move a reader over:
 
-- fetch `v2/` instead of `v1/`, and check `version` against 2 (`PUBLISHED_VERSION` in the package from this release on);
+- fetch `v2/` instead of `v1/`, and check `version` against 2 (`PUBLISHED_VERSION` in the library);
 - read `unreported` as a breakup the detector confirmed that no report has named 90 days on, which the project's score counts as a false confirmation: show it apart from, or below, the confirmed ones, or hide it, but expect it to stay in the list and to come back as `confirmed` if a report lands;
 - read `unreportedAt` beside `confirmedAt`; it is `null` on every breakup that is not unreported.
 

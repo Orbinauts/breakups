@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its product importing the package from npm superseded on 2026-10-13 by 0012 (issue #55)
 date: 2026-10-09
 ---
 
@@ -45,3 +45,13 @@ of its design carries over.
 - Everything needed to reproduce the KPI is public or published: the
   truth is in the repository, the Archive is a release asset, the
   scorecard is a script.
+
+## Amended on 2026-10-13: the product reads the published files, not the package
+
+The product does not import the package (issue #55). Since
+[0010](0010-the-breakups-fit-to-show-are-published-as-static-json.md) it
+reads the breakups this repository publishes as static JSON on Pages, and
+never runs the detector, so the package is not published to npm
+([0012](0012-the-package-is-not-published-to-npm.md)). The rest stands: the
+library, its truth, its backtest and its score live here, and a reader
+installs the library from the repository.

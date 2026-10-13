@@ -33,7 +33,7 @@ describe("the scheduled workflows", () => {
   const read = (file: string): Read => parse(readFileSync(resolve(ROOT, ".github/workflows", file), "utf8")) as Read;
 
   test("are the three that run on a schedule", () => {
-    const all = ["ci.yml", "docs.yml", "kpi.yml", "maintenance.yml", "prospective.yml", "publish.yml"];
+    const all = ["ci.yml", "docs.yml", "kpi.yml", "maintenance.yml", "prospective.yml", "release.yml"];
     expect(all.filter((file) => read(file).on["schedule"] !== undefined).sort()).toEqual([...scheduled].sort());
   });
 

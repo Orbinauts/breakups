@@ -1,15 +1,14 @@
-name: Publish
+name: Release
 
 # A release is the commit on main whose package.json carries a version the
-# commit before it did not: that version is tagged `v<version>`, released on
-# GitHub with its CHANGELOG entry, published to npm and then installed from
-# the registry into an empty directory to read the ground truth. Any other push
-# to main stops at the first job.
+# commit before it did not: that version is tagged `v<version>` and released
+# on GitHub with its CHANGELOG entry, then installed from the tag into an
+# empty directory to read the ground truth. Any other push to main stops at
+# the first job.
 #
-# npm is reached through trusted publishing: the registry trusts this
-# workflow file of this repository and takes the job's OIDC token in place
-# of a secret, and attaches the provenance statement to the version. No
-# token exists anywhere.
+# The package is not published to npm (docs/decisions/0012): the breakups
+# are read from the published JSON on Pages, and the library is installed
+# from the repository's tag, which `prepare` builds on install.
 
 on:
   push:
@@ -17,7 +16,7 @@ on:
 
 # Never two releases at once, and never one cancelled half way.
 concurrency:
-  group: publish
+  group: release
   cancel-in-progress: false
 
 permissions:
@@ -47,21 +46,19 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if [ "$version" = "$previous" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "version $version unchanged; nothing to publish"
+            echo "version $version unchanged; nothing to release"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "version ${previous:-(none)} -> $version"
           fi
 
-  publish:
+  release:
     needs: version
     if: needs.version.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       # The tag and the release.
       contents: write
-      # The OIDC token npm's trusted publishing exchanges for a one-time publish credential.
-      id-token: write
     env:
       VERSION: ${{ needs.version.outputs.version }}
     # Each step checks whether its work is already done, so a failed run can be rerun from the start.
@@ -72,9 +69,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
-      # Trusted publishing needs npm 11.5.1 or later.
-      - run: npm install --global npm@11
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm test
@@ -103,19 +97,9 @@ jobs:
           else
             gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           fi
-      - name: Publish to npm
-        run: |
-          set -euo pipefail
-          name=$(node -p 'require("./package.json").name')
-          if [ "$(npm view "$name@$VERSION" version 2>/dev/null)" = "$VERSION" ]; then
-            echo "$name@$VERSION is on the registry"
-          else
-            # `prepack` builds dist first.
-            npm publish --provenance --access public
-          fi
 
   smoke:
-    needs: [version, publish]
+    needs: [version, release]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -123,33 +107,20 @@ jobs:
         node: [22, 24]
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      REPOSITORY: ${{ github.repository }}
     steps:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
-      - name: Install the published version into an empty directory
+      - name: Install the tagged version into an empty directory
         working-directory: ${{ runner.temp }}
         run: |
           set -euo pipefail
           mkdir smoke
           cd smoke
           echo '{ "name": "smoke", "private": true, "type": "module" }' > package.json
-          # The registry can take minutes to serve a version it has just accepted
-          # (more than five for 0.1.0), so this waits up to twenty.
-          for attempt in $(seq 1 40); do
-            if npm install --no-audit --no-fund "@orbinauts/breakups@$VERSION"; then exit 0; fi
-            echo "attempt $attempt failed; waiting"
-            sleep 30
-          done
-          exit 1
-      - name: Check the version's provenance and signatures
-        working-directory: ${{ runner.temp }}/smoke
-        run: |
-          set -euo pipefail
-          predicate=$(npm view "@orbinauts/breakups@$VERSION" dist.attestations.provenance.predicateType)
-          echo "provenance: $predicate"
-          case "$predicate" in https://slsa.dev/provenance/*) ;; *) echo "::error::no provenance on $VERSION"; exit 1 ;; esac
-          npm audit signatures
+          # `prepare` builds the library from the tag's sources as npm installs it.
+          npm install --no-audit --no-fund "github:$REPOSITORY#v$VERSION"
       - name: Read the ground truth
         working-directory: ${{ runner.temp }}/smoke
         run: |

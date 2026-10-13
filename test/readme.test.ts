@@ -78,7 +78,7 @@ describe("the README's shape", () => {
 describe("the README's links", () => {
   const links = [...README.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1]!);
 
-  test("are all absolute, since npm shows the README without the repository's files", () => {
+  test("are all absolute, since an install from GitHub and the reference site show the README without the repository's files", () => {
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) expect(link, link).toMatch(/^https:\/\//);
   });

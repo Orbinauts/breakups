@@ -38,5 +38,5 @@ jobs:
       - run: npm test
       # The truth rebuilt from the committed snapshots must be the committed file; the tests check it, this shows the diff if not.
       - run: npm run truth && git diff --exit-code -- data/breakups.json docs/truth.md
-      # The build and the tarball it makes, without publishing: `prepack` builds, `--dry-run` lists what would ship.
+      # The build and the tarball an install from GitHub makes: `prepare` builds, `--dry-run` lists what it holds.
       - run: npm pack --dry-run
