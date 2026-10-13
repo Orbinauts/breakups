@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its reports accepted through issues and its daily watcher (issue #9), its failures made loud and the KPI workflow's group (issue #24), and its check before the replay and its following of a moved main (issue #14) amended on 2026-10-12, and its accepted reports read from their issues and started by the watcher on 2026-10-13 (issue #9)
 date: 2026-10-11
 ---
 

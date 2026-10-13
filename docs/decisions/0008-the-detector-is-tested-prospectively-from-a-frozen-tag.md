@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its daily inputs corrected, its early warning scored from the commit and its lasting record stated on 2026-10-12 (issue #25), its failures made loud (issue #24) and its day slices marked with their pull time (issue #31) amended on 2026-10-12
 date: 2026-10-11
 ---
 

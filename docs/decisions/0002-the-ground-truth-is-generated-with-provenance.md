@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its ESA tables and quarterly-news coverage (issue #20), its same-event rule (issue #18), its confidence (issue #19) and the shape of a window (issue #21) amended on 2026-10-12, and its confidence's authorities on 2026-10-13 (issues #19 and #20)
 date: 2026-10-09
 ---
 
@@ -83,7 +83,7 @@ the headline's, are unchanged; the hand row the eleventh phase had typed
 from the same catalogue (Yaogan-6, 2014) is now the parser's and was
 removed.
 
-## Amendment, 2026-10-12: ESA's tables by a rule, and the quarterly news checked whole
+## Amended on 2026-10-12: ESA's tables by a rule, and the quarterly news checked whole
 
 Issue #20 found the truth thin in its recent years: only the 2025 edition
 of ESA's Space Environment Report was read, as five unnamed hand rows,

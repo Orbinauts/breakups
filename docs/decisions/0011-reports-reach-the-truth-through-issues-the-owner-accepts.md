@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its owner's acceptance by login, its reports read from their issues with no branch, and its maintenance run started by the watcher amended on 2026-10-13 (issue #9)
 date: 2026-10-12
 ---
 

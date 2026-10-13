@@ -1,5 +1,5 @@
 ---
-status: accepted; its target test amended on 2026-10-12 (issue #15), and the detector's plane test noted (issue #37)
+status: accepted; its target test amended on 2026-10-12 (issue #15), and the detector's plane test noted (issue #37); its rows kept out by the shape of their data (issue #21) and its readings of the unnamed exemption, the unreported confirmation, the nearest event and the two leads (issues #17 and #16) amended on 2026-10-12, the last read alike by the live test's score and the published files on 2026-10-13 (issue #17)
 date: 2026-10-10
 ---
 

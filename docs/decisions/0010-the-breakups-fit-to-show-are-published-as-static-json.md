@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its row naming a launch alone (issue #21) and its unreported confirmation and nearest row (issue #17) amended on 2026-10-12, and its object's regime read by its last set (issue #17) and its ESA rows the truth's build placed (issues #19 and #20) on 2026-10-13
 date: 2026-10-11
 ---
 
