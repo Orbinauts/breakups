@@ -76,6 +76,7 @@ describe("a detector confirmation landing on a reported breakup", () => {
         state: "confirmed",
         raisedAt: "2026-02-27T04:00:00.000Z",
         confirmedAt: "2026-02-27T04:00:00.000Z",
+        unreportedAt: null,
         parent: { catalogueNumber: 40258, designator: "2014-058A", name: "Luch (Olymp-K 1)", launchedOn: "2014-09-27" },
         event: { at: "2026-01-31T08:15:00.000Z", from: "2026-01-31T00:00:00.000Z", to: "2026-01-31T16:00:00.000Z" },
         rowEvent: { at: "2026-01-30T06:09:00.000Z", from: "2026-01-30T06:09:00.000Z", to: "2026-01-30T06:10:00.000Z", precision: "minute", source: "news", row: "40258:2026-01-30" },
@@ -237,6 +238,32 @@ describe("a confirmation from the pieces alone, with no step", () => {
   test("that lands on no row is a breakup of its own, the breakups listed in the order first raised", () => {
     const elsewhere = verdict(70001, "confirmed", "2026-03-01T08:00Z");
     expect(selectPublished([suspected, pieces, elsewhere], [yaoganRow], noBodies).map((b) => b.id)).toEqual(["70001-2026-03-01", "68196-2026-07-24"]);
+  });
+});
+
+describe("a confirmation on no row, read at the truth's date as the scorecard reads it", () => {
+  // A confirmation by the detector alone that names no reported event: the scorecard's false alarm, pending for 90 days.
+  const alone = verdict(70001, "confirmed", "2026-03-01T08:00Z", { launch: "2025-101", evidence: { bodyClass: 0, regime: 0 } });
+  /** A row of another object, whose event's start is the truth's date (`truthAsOf`). */
+  const truthOf = (day: string): Breakup => row(40000, `${day}T00:00Z`, `${day}T01:00Z`, { regime: "LEO" });
+
+  test("is confirmed while the truth's date is under 90 days after it: pending", () => {
+    expect(selectPublished([alone], [truthOf("2026-05-29")], noBodies)).toMatchObject([{ id: "70001-2026-03-01", state: "confirmed", confirmedAt: "2026-03-01T08:00:00.000Z", unreportedAt: null, row: null }]);
+  });
+
+  test("is unreported once the truth's date is 90 days after it or later, dated the instant the 90 days ran out, its confirmation kept", () => {
+    expect(selectPublished([alone], [truthOf("2026-05-31")], noBodies)).toMatchObject([{ id: "70001-2026-03-01", state: "unreported", confirmedAt: "2026-03-01T08:00:00.000Z", unreportedAt: "2026-05-30T08:00:00.000Z", row: null, reports: [] }]);
+  });
+
+  test("stays confirmed inside a report naming no object, no launch and no regime, which the scorecard counts apart", () => {
+    const unnamed = row(0, "2026-02-25T00:00Z", "2026-02-28T00:00Z", { kind: "unnamed", catalogueNumber: null, designator: null, regime: "unknown", id: "U:2026-02-25", statements: [["news", "2026-03-02"]] });
+    expect(selectPublished([alone], [unnamed, truthOf("2026-09-01")], noBodies)).toMatchObject([{ state: "confirmed", unreportedAt: null, row: null }]);
+  });
+
+  test("stays confirmed inside a report naming no object but the regime its object is in, which the scorecard exempts", () => {
+    const inLeo = row(0, "2026-02-25T00:00Z", "2026-02-28T00:00Z", { kind: "unnamed", catalogueNumber: null, designator: null, regime: "LEO", id: "U:2026-02-25", statements: [["news", "2026-03-02"]] });
+    expect(selectPublished([alone], [inLeo, truthOf("2026-09-01")], noBodies)).toMatchObject([{ state: "confirmed", unreportedAt: null, row: null }]);
+    expect(selectPublished([alone], [inLeo, truthOf("2026-09-01")], noBodies, () => "GEO")).toMatchObject([{ state: "unreported", unreportedAt: "2026-05-30T08:00:00.000Z" }]);
   });
 });
 

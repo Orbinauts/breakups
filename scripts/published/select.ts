@@ -1,6 +1,6 @@
-import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
-import { isAgencyWord } from "../../src/truth.ts";
-import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
+import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedStep, type PublishedVerdict, type PublishedVerdictState, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { isAgencyWord, launchOf } from "../../src/truth.ts";
+import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, overlaps, truthAsOf, unreportedFrom, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
 import { isoInstant } from "../time.ts";
 
@@ -24,11 +24,17 @@ type ObjectVerdict = Verdict & { number: number };
 interface Landed {
   verdict: ObjectVerdict;
   row: Breakup | null;
+  /** Whether the scorecard reads it as a confirmation matching no reported event (`landConfirmed`'s false alarm): unreported, pending for `UNREPORTED_PENDING_DAYS`, then false. Never a suspected verdict. */
+  onNoEvent: boolean;
 }
 
 /** The detector's step, estimate and verdict in their published shape: instants in milliseconds become ISO strings. */
 const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: isoInstant(step.beforeEpoch), afterEpoch: isoInstant(step.afterEpoch) });
 const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: isoInstant(event.at), from: isoInstant(event.from), to: isoInstant(event.to) });
+
+/** A published step and estimate back in milliseconds, as the detector's verdicts carry them. */
+export const stepIn = (step: PublishedStep | null): Step | null => (step === null ? null : { ...step, beforeEpoch: Date.parse(step.beforeEpoch), afterEpoch: Date.parse(step.afterEpoch) });
+const eventIn = (event: PublishedEvent | null): EventEstimate | null => (event === null ? null : { at: Date.parse(event.at), from: Date.parse(event.from), to: Date.parse(event.to) });
 const canLand = (row: Breakup): boolean => row.kind === "breakup" || row.kind === "anomalous";
 
 /** The precisions fine enough to name the day of a row's event. */
@@ -74,7 +80,7 @@ function reportsOf(row: Breakup | null): PublishedReport[] {
 }
 
 function publishedVerdictOf(verdict: Verdict): PublishedVerdict {
-  return { state: verdict.state as PublishedState, raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
+  return { state: verdict.state as PublishedVerdictState, raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
 }
 
 /** The row a suspected verdict lands on by its step: a breakup or anomalous row of its object whose window, widened by the regime's margin, the step brackets; the latest such. */
@@ -102,7 +108,7 @@ function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Ro
   const landing = landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, regimeAt === undefined ? carriedRegime(verdict) : regimeAt(verdict.number, verdict.raisedAt));
   const on = landing.event === null ? null : (byId.get(landing.event) ?? null);
   const exempt = landing.outcome === "exempt" && (landing.note.startsWith("a crewed") || on?.kind === "release");
-  return exempt ? null : { verdict, row: landing.outcome === "detection" ? on : null };
+  return exempt ? null : { verdict, row: landing.outcome === "detection" ? on : null, onNoEvent: landing.outcome === "false-alarm" };
 }
 
 /** One breakup: the verdicts merged into it, in the order raised. */
@@ -159,27 +165,43 @@ export function isLetGo(number: number, step: Step | null, verdicts: readonly Ve
   return fate !== undefined && (fate.state === "expired" || fate.state === "dismissed");
 }
 
-function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: BodyOf): PublishedBreakup | null {
+/**
+ * How a breakup stands at the truth's date (`asOf`), and since when it is
+ * unreported: the one reading of a published breakup's state. Suspected
+ * while nothing confirmed it; else unreported where it is on no row and the
+ * scorecard reads its first confirmation as matching no reported event
+ * (`onNoEvent`), once `UNREPORTED_PENDING_DAYS` have passed since that
+ * confirmation by the truth's date (`isPendingUnreported`), `unreportedAt`
+ * the instant they ran out; else confirmed.
+ */
+function stateOf(confirmedAt: string | null, onNoEvent: boolean, asOf: number): Pick<PublishedBreakup, "state" | "unreportedAt"> {
+  if (confirmedAt === null) return { state: "suspected", unreportedAt: null };
+  const confirmed = Date.parse(confirmedAt);
+  return onNoEvent && !isPendingUnreported(confirmed, asOf) ? { state: "unreported", unreportedAt: isoInstant(unreportedFrom(confirmed)) } : { state: "confirmed", unreportedAt: null };
+}
+
+function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: BodyOf, asOf: number): PublishedBreakup | null {
   const latest = cluster[cluster.length - 1]!.verdict;
   const row = [...cluster].reverse().find((landed) => landed.row !== null)?.row ?? null;
-  const confirmedVerdict = cluster.find(({ verdict }) => verdict.state === "confirmed")?.verdict;
+  const confirmation = cluster.find(({ verdict }) => verdict.state === "confirmed");
   const reports = reportsOf(row);
   const firstNotice = firstNoticeOn(row);
-  const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
+  const confirmedOn = [confirmation?.verdict.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
   const confirmedAt = confirmedOn.length === 0 ? null : isoInstant(Math.min(...confirmedOn));
-  const state: PublishedState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
-  if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
+  if (confirmedAt === null && (reports.length === 0 || isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
   const raisedAt = isoInstant(cluster[0]!.verdict.raisedAt);
   const event = publishedEventOf(latest.event);
   const rowEvent = rowEventOf(row);
   const named = row !== null && row.parent.catalogueNumber === number ? row : null;
+  const reading = stateOf(confirmedAt, row === null && confirmation?.onNoEvent === true, asOf);
   return {
     id: publishedIdOf(number, rowEvent, event, raisedAt),
-    state,
+    state: reading.state,
     raisedAt,
     confirmedAt,
+    unreportedAt: reading.unreportedAt,
     // The parent as the row names it where the row names this body; a row naming the launch alone leaves the body's own identity.
     parent: { catalogueNumber: number, designator: named?.parent.designator ?? body?.designator ?? null, name: named?.parent.name ?? body?.name ?? null, launchedOn: named?.parent.launchedOn ?? body?.launch ?? null },
     event,
@@ -209,33 +231,61 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * steps overlap are one breakup; a verdict with no step joins the breakup
  * of the row it lands on (the latest raised where the row holds two), and
  * two whose steps do not overlap are two breakups, whatever row they land
- * on. It is published
- * confirmed when the detector confirmed it or an agency notice on its row's object (`isAgencyWord`),
- * dated no earlier than the event, did; suspected when a dated outside
- * report (news, an analyst) names its row and no later verdict on its step
- * expired or dismissed it. A confirmation exempt as a release on purpose
- * is left out on its own; the breakup's other verdicts are published if
- * they qualify without it. GCAT, the catalogue and undated statements never
- * count. The id is the object and the day of the row's event where the row
- * dates it to the day or finer, else of the latest verdict's estimate, else
- * of the first raising (`publishedIdOf`); merging with what is already
- * published, which may fix an earlier id, is the caller's.
+ * on. It is published confirmed when the detector confirmed it or an
+ * agency notice on its row's object (`isAgencyWord`), dated no earlier
+ * than the event, did; suspected when a dated outside report (news, an
+ * analyst) names its row and no later verdict on its step expired or
+ * dismissed it. A confirmation exempt as a release on purpose is left out
+ * on its own; the breakup's other verdicts are published if they qualify
+ * without it. GCAT, the catalogue and undated statements never count.
+ *
+ * Each breakup is read at the truth's date (`truthAsOf`), as the scorecard
+ * reads each confirmation: one on no row whose first confirmation the
+ * scorecard's matching lands on no reported event is unreported once
+ * `UNREPORTED_PENDING_DAYS` have passed since it, `unreportedAt` the
+ * instant they ran out. One on no row that the scorecard never counts
+ * false (inside a report naming no object, whether it names the launch,
+ * the regime or nothing; on a fragment of a reported event; inside an
+ * exempt row's window) stays confirmed.
+ *
+ * The id is the object and the day of the row's event where the row dates
+ * it to the day or finer, else of the latest verdict's estimate, else of
+ * the first raising (`publishedIdOf`); merging with what is already
+ * published, which may fix an earlier id, is the merge's
+ * (`mergePublished`).
  */
 export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf, regimeAt?: RegimeAt): PublishedBreakup[] {
   const rows = rowsOf(breakups);
   const byId = new Map(breakups.map((row) => [row.id, row]));
+  const asOf = truthAsOf(breakups);
   const landed: Landed[] = [];
   verdicts.forEach((verdict, i) => {
     if (verdict.kind !== "object" || verdict.number === null) return;
     const object = verdict as ObjectVerdict;
-    if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups) });
+    if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups), onNoEvent: false });
     if (verdict.state === "confirmed") {
       const confirmation = landedConfirmation(object, i, rows, byId, regimeAt);
       if (confirmation !== null) landed.push(confirmation);
     }
   });
   return clustersOf(landed)
-    .map((cluster) => publishedOf(cluster, verdicts, bodyOf))
+    .map((cluster) => publishedOf(cluster, verdicts, bodyOf, asOf))
     .filter((published) => published !== null)
     .sort(byFirstRaised);
+}
+
+/**
+ * A published breakup's verdicts landed again on the truth as it stands,
+ * as a run's are (`selectPublished`), and read at the truth's date: for a
+ * breakup no run finds any more, whose year the daily replay no longer
+ * covers. Each verdict is the detector's again, on the parent and the
+ * launch its designator names; the parent's regime is the one its verdicts
+ * carry (`carriedRegime`), as the live test's score reads it, since the
+ * sets of its year are not read.
+ */
+export function relandPublished(breakup: PublishedBreakup, breakups: readonly Breakup[]): PublishedBreakup[] {
+  const { catalogueNumber: number, designator, name, launchedOn } = breakup.parent;
+  const launch = launchOf(designator);
+  const verdicts: Verdict[] = breakup.verdicts.map((v) => ({ kind: "object", state: v.state, number, launch, raisedAt: Date.parse(v.raisedAt), step: stepIn(v.step), event: eventIn(v.event), evidence: v.evidence, reasons: v.reasons, bodies: v.bodies, candidates: v.candidates }));
+  return selectPublished(verdicts, breakups, () => ({ designator, name, launch: launchedOn }));
 }

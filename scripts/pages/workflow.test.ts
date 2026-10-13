@@ -103,7 +103,7 @@ describe("the Pages workflow", () => {
       expect(runCheck("", 0)).toEqual({ status: 0, output: "exists=false\n" });
     });
 
-    test("fails the run when the lookup itself fails, rather than deploying a site with no v1/", () => {
+    test("fails the run when the lookup itself fails, rather than deploying a site with no published files", () => {
       const failed = runCheck("", 128);
       expect(failed.status).not.toBe(0);
       expect(failed.output).toBe("");

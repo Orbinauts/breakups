@@ -91,4 +91,5 @@ export {
   type PublishedStatusFile,
   type PublishedStep,
   type PublishedVerdict,
+  type PublishedVerdictState,
 } from "./published.ts";

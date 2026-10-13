@@ -4,6 +4,10 @@ Every notable change to `@orbinauts/breakups`, newest first. The format follows 
 
 ## [Unreleased]
 
+### Changed
+
+- The published files are version 2 (`PUBLISHED_VERSION`), under `v2/`: a breakup the detector confirmed that is still on no row of the ground truth 90 days after its confirmation, at the truth's date, where the scorecard lands that confirmation on no reported event, is published with the new state `unreported` (`PUBLISHED_STATES`) and the new field `unreportedAt` (`PublishedBreakupEntry`), the instant the 90 days ran out, instead of staying `confirmed`; it stays listed, and is `confirmed` again if a report lands later. The 90 days are the scorecard's `UNREPORTED_PENDING_DAYS`, read by the same test (`isPendingUnreported`, and `unreportedFrom` in `scripts/kpi/match.ts`), so the list no longer calls confirmed what the score calls false. `selectPublished` reads each breakup's state at the truth's date (`truthAsOf`) with the scorecard's own landing of its confirmation, so one inside a report naming no object stays `confirmed`; `mergePublished` takes the run's reading and the run's truth, on which it lands again the verdicts of a breakup on no row that no run replays any more (`relandPublished`), so it too turns unreported, or confirmed again once a report gives it a row; `PublishedVerdict.state` stays `suspected` or `confirmed`, a type of its own, `PublishedVerdictState`. The first run of version 2 reads the list from `v1/`, keeping every id, and writes `v2/`; `v1/` is no longer written but stays on the `published` branch and on Pages, which now serves every version the branch holds. A reader moves by fetching `v2/` and handling the new state (`docs/published.md`, "From v1 to v2"; `docs/decisions/0010`, amended). Neither real replay publishes an unreported breakup with today's truth (issue #41).
+
 ### Removed
 
 - `rekeyedBeforeRowEvent` (`scripts/published/merge.ts`), the one-off re-keying of the published files written before `rowEvent`: it ran once, and every file on `published` has carried `rowEvent` since. `readPublished` now refuses a breakup that carries none, naming its file (issue #33).

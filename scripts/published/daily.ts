@@ -69,9 +69,9 @@ export function loggedRunOf(places: Pick<DailyPlaces, "home" | "branch">): { dat
 }
 
 /**
- * Writes the files, commits `v1/` with the message made from what the
- * writing said, then pushes; the worktree is put back at its last commit if
- * anything before the commit fails.
+ * Writes the files, commits `v2/` (`PUBLISHED_DIR`) with the message made
+ * from what the writing said, then pushes; the worktree is put back at its
+ * last commit if anything before the commit fails.
  */
 function commitPublished(checkout: string, write: () => string, message: (summary: string) => { title: string; body: string }): { summary: string; commit: string } {
   let summary: string;

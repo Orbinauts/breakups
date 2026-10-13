@@ -61,7 +61,7 @@ The spread is not where the issue expected it. The event's own pieces have small
 | 31 to 90 days | 110 | 0.67°, 6.12° | 0.33°, 1.07° | 31, 282 m/s | 15, 49 m/s |
 | Over 90 days | 122 | 1.00°, 5.45° | 0.34°, 0.97° | 47, 251 m/s | 15, 46 m/s |
 
-Cosmos 2447-2449's 33472 event (2016-03-26) shows the pattern. Eleven of its 14 pieces were first set on day 104. All 11 are 4° to 7° off in node (normal angle 3.8° to 6.2°) and under 0.5° off in inclination. One common offset across a whole batch is a node carried wrongly over 104 days, not eleven separate impulses. The carry uses each piece's first-set orbit for its whole J2 rate since the event. A piece of a low-perigee HEO orbit decays, and its rate changes over those months.
+Cosmos 2447-2449's 33472 event (2016-03-26) shows the pattern. Eleven of its 14 pieces were first set on day 104. All 11 are 4° to 7° off in node (normal angle 3.8° to 6.2°) and under 0.5° off in inclination. This note read that common offset as a node carried wrongly over 104 days. Issue #42 measured it, and it is not: all 11 lie in the plane of the twin 33473's event of 2016-06-01, first set 37 days after it (the section on issue #42 below).
 
 Cosmos 2139-41's ullage motor (21220, 2009-03-08), named in the issue, has 31 pieces, and GCAT dates all 31 to the parent on that day. Today's test keeps 3, the normal angle within 1° keeps 5, and the inclination alone within a 100 m/s tilt keeps 23. Seven pieces are more than 5° off in inclination, up to 19.3°. That would need over 230 m/s, and up to about 920 m/s, at an apogee speed of 2.63 km/s, which is not a plausible breakup impulse for most of them. Two more are 77° and 90° off in node. All nine were first set 40 to 101 days after the event. The index holds only each piece's earliest set, so this measurement cannot tell a poor first orbit from a real one.
 
@@ -124,7 +124,7 @@ For the plane test, keep a piece when **today's test passes, or its orbit normal
 Two things it does not fix:
 
 - **Twin ullage motors.** Their pieces share a plane. Telling them apart takes the event dates and the catalogue's attribution, which the detector already reads as twins at the launch.
-- **The node carried over months for decaying HEO pieces.** This is what leaves the rest outside. A follow-up could carry the node with the piece's rate averaged over the interval, or read it from the piece's set nearest the event rather than its earliest. That would need each piece's later sets, which the index does not hold. It is not measured here.
+- **The node carried over months for decaying HEO pieces.** This note took it for what leaves the rest outside. Issue #42 measured it (below): the carry was already each piece's own rate, and bounding drag's effect on that rate admits more strangers than pieces in HEO.
 
 ## What adopting it would change, and what did not change
 
@@ -137,3 +137,69 @@ Adopting the bound on top of #15's form would change three things:
   #15's form already adds Intelsat 33e (A, GEO, training), Ariane 5 L540 and L583 ESC-A (C, HEO, held-out) and Delta 229 (C, LEO, held-out) as targets over today's test. On the other HEO and GEO events the counts kept rise: 22 more of the event's HEO pieces on the training years and 9 more on the held-out, and 6 more GEO pieces on the training years (4 of Titan IIIC Transtage's, 2 of Intelsat 33e's). Each event's first fresh piece, and with it the lag to the catalogue, may move earlier.
 - **The detector**, if #37 adopts it. More HEO and GEO pieces would enter the cloud judgement, the parent-in-cloud refusal, the attribution and the nearest-cloud distance. Confirmations of HEO events could come earlier or more often, and a cloud could be refused differently. None of this was replayed. Measuring it needs a replay under the lock, on the training years first.
 - **Anything already published.** The frozen prospective test runs its tag's own code and is untouched, whatever is adopted.
+
+## Issue #42: the node carried at each body's own rate
+
+Issue #42 put forward a hypothesis: the plane test carries the parent's node to the piece's first set at the **parent's** J2 rate, so a piece on another orbit, first seen weeks late, misses the plane in node. The owner decided on 2026-10-13 to fix the carry before widening any bound, and to measure first. The measurement compares each piece with the parent **at the event's instant**. The piece's node is carried back from its first set at its own J2 rate (from that set's a, e and i), and the parent's is carried forward from its last set before the event at the parent's rate. The measurement also bounds drag's effect on the piece's rate over the gap.
+
+The run used the release's catalogue index (built 2026-10-13T07:19Z) and the truth of the integration branch `spec-41-42` (commit 289426e). It read 296 events and skipped 48 with no parent set before the event. The index held every parent instant this truth asks for. The script's report section "The nodes carried to the event's instant, and drag bounded" holds the tables below in full.
+
+### The carry asked for is the carry already made
+
+Today's carry (`carriedNodeDifferenceDeg` in `src/fragments.ts`) takes the parent's node to the piece's epoch at the parent's rate. It then takes off the difference of the two rates times the days since the event:
+
+    ΔΩ = Ω_piece − [Ω_parent + ρ_parent·(t_piece − t_parent)] − (ρ_piece − ρ_parent)·(t_piece − t_event)
+       = [Ω_piece − ρ_piece·(t_piece − t_event)] − [Ω_parent + ρ_parent·(t_event − t_parent)]
+
+The second line is the piece's node carried back to the event at its own rate, less the parent's node carried forward to the event. That is exactly the carry the issue asked for. The run confirms it. Over all 180,658 pieces and strangers, the two node differences agree within 2·10⁻¹²°. The scorecard's test keeps the same pieces under both, in every regime and on both splits. The detector's test (`planeTestDistance`) reads the same function.
+
+**Applying it would change nothing**, so it was not applied: not the scorecard's `FRAGMENTS_PLANE` test, not the detector's, not the score. No replay was needed, and the published lists do not move.
+
+### Cosmos 2447-2449's batch is its twin's
+
+The batch this note read as a wrong carry (11 pieces of 33472's event of 2016-03-26, first set on day 104, all 4° to 7° off in node) does not miss the plane by carry. The script tests each piece the scorecard's test drops against every other event of the same launch whose instant precedes the piece's first set (`twinEventOf`). All 11 lie in the plane of the twin 33473's event of 2016-06-01, within 1.1° in node and 0.41° in inclination, first set 37 days after that event. The three pieces first set on day 97 (41560 to 41562) lie in 33472's plane, within 1.6° in node; two of them are 5.3° and 5.7° off 33473's in node. So the plane separates the two batches. GCAT gives all 14 to 33472 on 2016-03-26.
+
+| Regime | The event's pieces the scorecard's test drops: training | A twin event's plane keeps | Held-out | A twin's plane keeps |
+| --- | --- | --- | --- | --- |
+| HEO | 43 | 11 (Cosmos 2447-2449's batch) | 32 | 0 |
+| LEO | 241 | 19 (18 of Soyuz-2-1b No. 013 Blok-I's, 39187 of 2024-06-25, in the plane of 39186's event a day later; 1 of Zenit-2M 1-2005's stage) | 524 | 0 |
+| GEO | 6 | 0 | 0 | 0 |
+| MEO | 91 | 0 | 0 | 0 |
+
+This is the catalogue's attribution against the planes. It is a question for the truth's review and is not changed here: the truth is never edited from the detector's or the scorecard's own readings.
+
+### Drag, bounded
+
+The carry uses the rate of the piece's first set for the whole gap. Drag lowers a piece's orbit after the event, and its J2 rate changes with it, so the first set's rate is the rate at the end of the gap and not its mean. The index holds each piece's earliest set only, with no drag term, so the drag cannot be stated per piece. It can be bounded. A piece thrown off at a modest speed started on about the parent's orbit, so its mean rate over the gap lies between the parent's rate and its own. `dragBandOf` gives the node difference at both ends of that band and the least any rate between them gives. Two forms were measured under the scorecard's test:
+
+- **drag bounded**: the band read for every piece;
+- **below the parent**: the band read only where the piece's first set sits below the parent's semi-major axis, as drag leaves a piece. Drag cannot have raised a piece, so a piece above the parent is read at its own rate.
+
+Both forms are the scorecard's test with its frozen tolerances, and no tolerance was fitted. But the held-out years were read in the same pass as the drag-band variants, and the second form, below the parent, was chosen with them in view. That breaks the owner's rule for this issue (the held-out years read once, after any choice is made on the training years). So the held-out figures below are not an unseen test of either form, least of all of below the parent: any later adoption of either must be judged on other evidence, such as years or events not read here, or a replay under the lock, and not on these held-out rows.
+
+| Regime, split | The event's pieces kept: today's / drag bounded / below the parent (of) | Strangers admitted: today's / drag bounded / below the parent (of) |
+| --- | --- | --- |
+| HEO, training | 245 / 257 / 251 (288) | 5 / 40 / 40 (9,315) |
+| HEO, held-out | 47 / 56 / 54 (79) | 2 / 19 / 18 (12,407) |
+| LEO, training | 1,585 / 1,744 / 1,723 (1,826) | 143 / 325 / 182 (64,140) |
+| LEO, held-out | 5,290 / 5,429 / 5,373 (5,814) | 168 / 393 / 229 (79,491) |
+| GEO, training | 38 / 38 / 38 (44) | 4 / 4 / 4 (1,740) |
+| GEO, held-out | 2 / 2 / 2 (2) | 0 / 1 / 1 (2,688) |
+| MEO, training | 222 / 302 / 272 (313) | 0 / 1 / 1 (657) |
+| MEO, held-out | 2 / 2 / 2 (2) | 0 / 1 / 0 (1,317) |
+
+Neither form keeps the event's pieces without admitting strangers:
+
+- **HEO.** Drag bounded keeps 12 more of the event's pieces on the training years and admits 35 more strangers. Below the parent keeps 6 more for the same 35. Strangers grow eight to nine times on both splits.
+- **LEO.** Drag bounded keeps 159 more and admits 182 more strangers on the training years. Below the parent keeps 138 more for 39 more strangers on the training years, and 83 more for 61 more strangers on the held-out years.
+- **GEO.** No drag, nothing to gain, and one more stranger on the held-out years.
+- **MEO.** Here drag does matter, on one event. The MEO gain is all SL-23 DEB's (37756, 2020-05-08, a Fregat tank on a low-perigee orbit of e 0.19). Drag bounded keeps 80 of its 92 dropped pieces for 1 stranger. It is one event, already a target.
+
+By the owner's criterion (rescue the event's pieces without admitting strangers), **neither form is adopted**, and nothing was applied to the scorecard or the detector. The score, the targets and the detector's confirmations are unchanged.
+
+### What is left
+
+- The HEO pieces the scorecard's test still drops are 43 of the event's on the training years and 32 on the held-out. The twin explains 11 of the training ones. The rest are neither a carry fault nor drag that the band can separate from strangers.
+- The owner set #38's impulse bound (today's test or the normal within max(1°, the tilt a 100 m/s normal impulse gives at the parent's apogee)) to be reconsidered only if pieces still fall outside after this fix. They do, and this fix changes nothing, so that decision is the owner's again. The measurement above (section 2) stands as it was.
+- Stating drag per piece, not bounding it, needs each piece's drag term or its later sets. The catalogue index holds neither. It would mean extending the index and uploading the side files again.
+- GCAT's attribution of Cosmos 2447-2449's day-104 batch, and of Soyuz-2-1b No. 013 Blok-I's 18 pieces, disagrees with the planes. That is for the truth's review.

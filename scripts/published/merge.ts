@@ -1,12 +1,9 @@
-import type { PublishedBreakup, PublishedStep, PublishedVerdict, Step, Verdict } from "../../src/index.ts";
+import type { Breakup, PublishedBreakup, PublishedVerdict, Step, Verdict } from "../../src/index.ts";
 import { overlaps } from "../kpi/match.ts";
-import { byFirstRaised, isLetGo } from "./select.ts";
+import { byFirstRaised, isLetGo, relandPublished, stepIn } from "./select.ts";
 
-/** A published step back in milliseconds, as the detector's verdicts carry it. */
-const stepIn = (step: PublishedStep | null): Step | null => (step === null ? null : { ...step, beforeEpoch: Date.parse(step.beforeEpoch), afterEpoch: Date.parse(step.afterEpoch) });
-
-/** Whether a published breakup stays: a confirmed one for good, a suspected one until the latest verdict on its step expired or dismissed it. */
-const stays = (breakup: PublishedBreakup, verdicts: readonly Verdict[]): boolean => breakup.state === "confirmed" || !isLetGo(breakup.parent.catalogueNumber, stepIn(breakup.step), verdicts);
+/** Whether a published breakup stays: a confirmed or unreported one for good, a suspected one until the latest verdict on its step expired or dismissed it. */
+const stays = (breakup: PublishedBreakup, verdicts: readonly Verdict[]): boolean => breakup.state !== "suspected" || !isLetGo(breakup.parent.catalogueNumber, stepIn(breakup.step), verdicts);
 
 /** What tells two verdicts apart: their state, raising and step. */
 const verdictKey = (v: PublishedVerdict): string => `${v.state}|${v.raisedAt}|${v.step === null ? "-" : `${v.step.beforeEpoch}/${v.step.afterEpoch}`}`;
@@ -45,10 +42,12 @@ const lastRaisedOf = (breakup: PublishedBreakup): number => Math.max(Date.parse(
 
 /**
  * One breakup from a published one and a later run's: the published id,
- * the earlier raising and confirmation, confirmed if either was, the
- * verdicts of both, the latest verdict's step, estimate, reasons and
- * evidence, and the later run's parent, row, row's event and reports (the
- * truth as it stands now).
+ * the earlier raising and confirmation, the verdicts of both, the latest
+ * verdict's step, estimate, reasons and evidence, and the later run's
+ * state, unreported day, parent, row, row's event and reports (the truth as
+ * it stands now, read at its date by the selection); confirmed where the
+ * later run reads suspected what was confirmed before, on the row its
+ * report names.
  */
 function mergeOne(published: PublishedBreakup, later: PublishedBreakup): PublishedBreakup {
   const latest = lastRaisedOf(later) >= lastRaisedOf(published) ? later : published;
@@ -57,9 +56,10 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
   const confirmedAt = published.confirmedAt === null ? later.confirmedAt : later.confirmedAt === null ? published.confirmedAt : earlier(published.confirmedAt, later.confirmedAt);
   return {
     id: published.id,
-    state: published.state === "confirmed" || later.state === "confirmed" ? "confirmed" : "suspected",
+    state: confirmedAt !== null && later.state === "suspected" ? "confirmed" : later.state,
     raisedAt: earlier(published.raisedAt, later.raisedAt),
     confirmedAt,
+    unreportedAt: later.unreportedAt,
     parent: later.parent,
     event: latest.event,
     rowEvent: later.rowEvent,
@@ -93,12 +93,21 @@ function mergeOne(published: PublishedBreakup, later: PublishedBreakup): Publish
  * Two breakups whose steps do not overlap stay two, whatever row they land
  * on. The merged breakup keeps the id fixed when it was first published,
  * the earlier raising and confirmation, and every verdict of both, and
- * takes the latest verdict's fields. A confirmed breakup stays
- * for good, whether or not the run finds it again; a suspected one the run
- * does not find stays until the latest verdict on its step expired or
- * dismissed it. A run's breakup with no published match is added.
+ * takes the latest verdict's fields. A confirmed or unreported breakup
+ * stays for good, whether or not the run finds it again; a suspected one
+ * the run does not find stays until the latest verdict on its step expired
+ * or dismissed it. A run's breakup with no published match is added.
+ *
+ * A breakup's state is the run's reading of it at the truth's date
+ * (`selectPublished`), so a confirmed breakup on no row turns unreported
+ * there, and confirmed again once a run lands it on a row. A confirmed or
+ * unreported breakup on no row that the run does not find, one of a year
+ * the daily replay no longer covers, has its verdicts landed again on the
+ * truth the run landed on (`breakups`), by the same matching
+ * (`relandPublished`): it turns unreported as a run's would, and confirmed,
+ * on its row, once the truth holds a row for it.
  */
-export function mergePublished(previous: readonly PublishedBreakup[], selected: readonly PublishedBreakup[], verdicts: readonly Verdict[]): PublishedBreakup[] {
+export function mergePublished(previous: readonly PublishedBreakup[], selected: readonly PublishedBreakup[], verdicts: readonly Verdict[], breakups: readonly Breakup[]): PublishedBreakup[] {
   let unmatched = [...previous];
   const merged: PublishedBreakup[] = [];
   for (const breakup of selected) {
@@ -106,5 +115,11 @@ export function mergePublished(previous: readonly PublishedBreakup[], selected: 
     unmatched = unmatched.filter((published) => !matches.includes(published));
     merged.push([...matches, breakup].reduce(mergeOne));
   }
-  return [...merged, ...unmatched.filter((breakup) => stays(breakup, verdicts))].sort(byFirstRaised);
+  const kept = unmatched.filter((breakup) => stays(breakup, verdicts)).map((breakup) => (breakup.confirmedAt !== null && breakup.row === null ? landedAgain(breakup, breakups) : breakup));
+  return [...merged, ...kept].sort(byFirstRaised);
+}
+
+/** A confirmed breakup on no row that no run finds, merged with what its verdicts land as on the truth as it stands; as it was where they land on nothing it shares a step or verdict with (an exemption the truth now makes). */
+function landedAgain(breakup: PublishedBreakup, breakups: readonly Breakup[]): PublishedBreakup {
+  return [breakup, ...relandPublished(breakup, breakups).filter((again) => sharesStepOrVerdict(breakup, again))].reduce(mergeOne);
 }

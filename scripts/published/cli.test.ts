@@ -41,23 +41,24 @@ describe("a publishing run", () => {
   const luch = confirmed(40258, "2026-02-27T04:00:00.000Z");
   const testsat = confirmed(99001, "2026-06-01T04:00:00.000Z");
 
-  test("lands the year's verdicts on the truth, writes the three files and says what it did", () => {
+  test("lands the year's verdicts on the truth, reads them at the truth's date, writes the three files and says what it did", () => {
     const summary = publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
     const breakups = readPublished(out);
-    expect(breakups.map((b) => [b.id, b.state, b.row, b.parent.name])).toEqual([
-      ["40258-2026-01-30", "confirmed", "40258:2026-01-30", "Luch (Olymp-K 1)"],
-      ["99001-2026-06-01", "confirmed", null, "TESTSAT 1"],
+    // TESTSAT's confirmation lands on no row and the truth's date (2026-10-07 or later) is more than 90 days after it: unreported.
+    expect(breakups.map((b) => [b.id, b.state, b.unreportedAt, b.row, b.parent.name])).toEqual([
+      ["40258-2026-01-30", "confirmed", null, "40258:2026-01-30", "Luch (Olymp-K 1)"],
+      ["99001-2026-06-01", "unreported", "2026-08-30T04:00:00.000Z", null, "TESTSAT 1"],
     ]);
     const sha256 = createHash("sha256").update(readFileSync(TRUTH)).digest("hex");
-    expect(JSON.parse(readFileSync(join(out, "v1/status.json"), "utf8"))).toEqual({ version: 1, ranAt: "2026-10-11T03:12:45.000Z", setsThrough: "2026-10-10", detector: "confirmed-v10", truthSha256: sha256 });
-    expect(summary).toBe(`published 2 breakups (2 confirmed, 0 suspected): 2 new, 0 left; sets through 2026-10-10, detector confirmed-v10, truth ${sha256.slice(0, 12)}`);
+    expect(JSON.parse(readFileSync(join(out, "v2/status.json"), "utf8"))).toEqual({ version: 2, ranAt: "2026-10-11T03:12:45.000Z", setsThrough: "2026-10-10", detector: "confirmed-v10", truthSha256: sha256 });
+    expect(summary).toBe(`published 2 breakups (1 confirmed, 1 unreported, 0 suspected): 2 new, 0 left; sets through 2026-10-10, detector confirmed-v10, truth ${sha256.slice(0, 12)}`);
   });
 
   test("merges into what is already published: a confirmed breakup the run no longer finds stays", () => {
     publishedRun({ yearFiles: [yearFile(2026, [luch, testsat])], truth: TRUTH, out, archive, now: at("2026-10-11T03:12:45Z") });
     const summary = publishedRun({ yearFiles: [yearFile(2026, [testsat])], truth: TRUTH, out, archive, now: at("2026-10-12T03:12:45Z") });
     expect(readPublished(out).map((b) => b.id)).toEqual(["40258-2026-01-30", "99001-2026-06-01"]);
-    expect(summary).toMatch(/^published 2 breakups \(2 confirmed, 0 suspected\): 0 new, 0 left;/);
+    expect(summary).toMatch(/^published 2 breakups \(1 confirmed, 1 unreported, 0 suspected\): 0 new, 0 left;/);
   });
 
   test("refuses year files from two detectors, or a replay that did not carry the states from the year before", () => {

@@ -28,9 +28,9 @@ name: Prospective
 #
 # Last, the breakups fit to show are published (scripts/published/daily.ts):
 # the same replay's verdicts, landed on main's ground truth, are merged into
-# `v1/` on the orphan branch `published`, committed and pushed by the bot;
+# `v2/` on the orphan branch `published`, committed and pushed by the bot;
 # then the job `pages` calls the Pages workflow (docs.yml), which deploys the
-# reference with that `v1/`. Publishing reads only what the replay left and
+# reference with that `v2/`. Publishing reads only what the replay left and
 # runs whenever the replay succeeded, so the test's log, score, checks,
 # data and issues are what they were without it, and a publishing failure
 # fails the run without touching the alerts commit. Until the 2025 seed has

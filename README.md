@@ -138,7 +138,7 @@ Each row also carries the parent's orbit, every source's statement and the date 
 
 Since 11 October 2026, a frozen copy of the detector runs once a day on GitHub Actions, on that day's public data. Every alert it raises is logged with a timestamp on the [`prospective` branch](https://github.com/Orbinauts/breakups/tree/prospective), and each confirmed breakup opens an [issue labelled `prospective-alert`](https://github.com/Orbinauts/breakups/issues?q=label%3Aprospective-alert). Each week the log is scored against the official reports, and the score is on the [results page](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-live-test).
 
-The same run publishes the breakups fit to show, those the detector confirmed or a report names, as JSON on this project's GitHub Pages, at [orbinauts.github.io/breakups/v1/breakups.json](https://orbinauts.github.io/breakups/v1/breakups.json): the [published breakups page](https://github.com/Orbinauts/breakups/blob/main/docs/published.md) gives the files, their fields and the rules.
+The same run publishes the breakups fit to show, those the detector confirmed or a report names, as JSON on this project's GitHub Pages, at [orbinauts.github.io/breakups/v2/breakups.json](https://orbinauts.github.io/breakups/v2/breakups.json): the [published breakups page](https://github.com/Orbinauts/breakups/blob/main/docs/published.md) gives the files, their fields and the rules.
 
 ## Learn more
 

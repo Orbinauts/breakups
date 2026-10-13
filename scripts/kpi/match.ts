@@ -306,7 +306,8 @@ export function noticesOf(breakups: Breakup[]): Notice[] {
  * confirmation is unreported: neither true nor false while younger than
  * this, measured to the truth's date (`truthAsOf`), and a false
  * confirmation after it. The scorecard, the live test's score and the
- * published files read it alike (decision records 0007 and 0010).
+ * published files read it alike (decision records 0007 and 0010): the
+ * files relabel such a confirmation unreported once it has passed.
  */
 export const UNREPORTED_PENDING_DAYS = 90;
 
@@ -326,8 +327,11 @@ export function truthAsOf(breakups: readonly Pick<Breakup, "event" | "statements
   return latest;
 }
 
+/** When a confirmation landing on no row stops being pending: `UNREPORTED_PENDING_DAYS` after it was raised, in milliseconds since 1970. */
+export const unreportedFrom = (raisedAt: number): number => raisedAt + UNREPORTED_PENDING_DAYS * DAY_MS;
+
 /** Whether a confirmation landing on no row is still pending at the truth's date: raised less than `UNREPORTED_PENDING_DAYS` before it, or after it. */
-export const isPendingUnreported = (raisedAt: number, asOf: number): boolean => asOf - raisedAt < UNREPORTED_PENDING_DAYS * DAY_MS;
+export const isPendingUnreported = (raisedAt: number, asOf: number): boolean => asOf < unreportedFrom(raisedAt);
 
 /** Where a row's window starts: the event's earliest instant, or its only one. */
 export const lowerOf = (breakup: Breakup): number => Date.parse(breakup.event.from ?? breakup.event.to);

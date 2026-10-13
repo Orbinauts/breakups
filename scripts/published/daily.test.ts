@@ -76,16 +76,16 @@ function runLine(date: string, years: number[]): object {
 const remoteLog = (): string[] => git(remote, "log", "--format=%s", "published").split("\n");
 
 describe("the daily publishing", () => {
-  test("publishes the replay of the run just logged, commits v1/ to the published branch and pushes it", () => {
+  test("publishes the replay of the run just logged, commits v2/ to the published branch and pushes it", () => {
     const { summary, commit } = publishDaily(places, at("2026-10-11T03:12:45Z"), { runUrl: "https://github.com/Orbinauts/breakups/actions/runs/7" });
     expect(readPublished(places.published).map((b) => b.id)).toEqual(["40258-2026-01-30"]);
-    expect(summary).toMatch(/^published 1 breakup \(1 confirmed, 0 suspected\): 1 new, 0 left; sets through 2026-10-10/);
+    expect(summary).toMatch(/^published 1 breakup \(1 confirmed, 0 unreported, 0 suspected\): 1 new, 0 left; sets through 2026-10-10/);
     expect(git(remote, "rev-parse", "published")).toBe(commit);
     expect(remoteLog()).toEqual(["Published breakups of 2026-10-11", "The seed"]);
     const body = git(remote, "log", "-1", "--format=%b", "published");
     expect(body).toContain(summary);
     expect(body).toContain("https://github.com/Orbinauts/breakups/actions/runs/7");
-    expect(git(places.published, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["v1/breakups.json", "v1/breakups/40258-2026-01-30.json", "v1/status.json"]);
+    expect(git(places.published, "show", "--name-only", "--format=", "HEAD").split("\n").sort()).toEqual(["v2/breakups.json", "v2/breakups/40258-2026-01-30.json", "v2/status.json"]);
     expect(git(places.published, "status", "--porcelain")).toBe("");
   });
 
@@ -93,7 +93,7 @@ describe("the daily publishing", () => {
     writeFileSync(join(hooks, "pre-commit"), "#!/bin/sh\necho refused >&2\nexit 1\n");
     chmodSync(join(hooks, "pre-commit"), 0o755);
     expect(() => publishDaily(places, at("2026-10-11T03:12:45Z"), { runUrl: null })).toThrow(/refused/);
-    expect(existsSync(join(places.published, "v1"))).toBe(false);
+    expect(existsSync(join(places.published, "v2"))).toBe(false);
     expect(git(places.published, "status", "--porcelain")).toBe("");
     expect(remoteLog()).toEqual(["The seed"]);
   });
@@ -129,7 +129,7 @@ describe("the daily publishing", () => {
     git(places.published, "switch", "-q", "published");
     rmSync(join(places.home, "2026-10-11"), { recursive: true });
     expect(run).toThrow(/no year file of the run of 2026-10-11/);
-    expect(existsSync(join(places.published, "v1"))).toBe(false);
+    expect(existsSync(join(places.published, "v2"))).toBe(false);
     expect(remoteLog()).toEqual(["The seed"]);
   });
 });
