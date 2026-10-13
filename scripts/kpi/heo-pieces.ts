@@ -345,7 +345,7 @@ function main(): void {
       continue;
     }
     // The pieces are the scorecard's: today's test or the normals within the scorecard's bound keep exactly what its count keeps.
-    const today = reading.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.normalAngleMaxDeg).length;
+    const today = reading.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg).length;
     const scorecard = fragmentsOf(catalogue, parent, launch, from, to, eventMs, marginMs).inPlane;
     if (today !== scorecard) throw new Error(`${breakup.id}: the scorecard's test keeps ${today} pieces here and ${scorecard} in the scorecard's count`);
     measured.push({ ...reading, split, truthRegime: breakup.orbit.regime, confidence: breakup.confidence, kind: breakup.kind });

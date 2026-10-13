@@ -126,7 +126,7 @@ describe("an event's fresh pieces", () => {
 
   test("pass the scorecard's test exactly where the scorecard's count does", () => {
     const reading = readEvent(catalogue, event, gcat);
-    expect(reading?.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.normalAngleMaxDeg).length).toBe(fragmentsOf(catalogue, 21220, "1991-025", T0, T0, T0, 5 * DAY).inPlane);
+    expect(reading?.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg).length).toBe(fragmentsOf(catalogue, 21220, "1991-025", T0, T0, T0, 5 * DAY).inPlane);
   });
 
   test("are not read where the parent had no set before the event", () => {
