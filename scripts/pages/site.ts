@@ -1,6 +1,7 @@
 import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
+import { isVersionDir } from "../published/files.ts";
 
 /**
  * The tree GitHub Pages serves, put together by the Pages workflow
@@ -23,8 +24,8 @@ export interface SiteDirs {
   out: string;
 }
 
-/** The directories of the published files' versions in a checkout of the `published` branch: `v1`, `v2`, ... */
-const versionsIn = (published: string): string[] => (existsSync(published) ? readdirSync(published, { withFileTypes: true }).filter((entry) => entry.isDirectory() && /^v\d+$/.test(entry.name)).map((entry) => entry.name) : []);
+/** The directories of the published files' versions in a checkout of the `published` branch: `v1`, `v2`, ... (`isVersionDir`). */
+const versionsIn = (published: string): string[] => (existsSync(published) ? readdirSync(published, { withFileTypes: true }).filter((entry) => entry.isDirectory() && isVersionDir(entry.name)).map((entry) => entry.name) : []);
 
 /** Writes the Pages tree and returns its files, relative to its root and sorted. */
 export function assembleSite(dirs: SiteDirs): string[] {
@@ -46,10 +47,10 @@ function main(): void {
   if (reference === undefined || published === undefined || out === undefined) {
     throw new Error("usage: npm run pages:site -- --reference <dir> --published <dir> --out <dir>");
   }
-  const versions = versionsIn(published);
   const files = assembleSite({ reference, published, out });
-  const served = files.filter((file) => versions.some((version) => file.startsWith(`${version}/`))).length;
-  console.log(`${out}: ${files.length - served} reference files and ${served} published files${versions.length === 0 ? ` (no version under ${published})` : ` (${versions.sort().join(", ")})`}`);
+  const served = files.filter((file) => isVersionDir(file.split("/")[0]!));
+  const versions = [...new Set(served.map((file) => file.split("/")[0]!))];
+  console.log(`${out}: ${files.length - served.length} reference files and ${served.length} published files${versions.length === 0 ? ` (no version under ${published})` : ` (${versions.join(", ")})`}`);
 }
 
 if (process.argv[1] !== undefined && process.argv[1].endsWith("site.ts")) main();
