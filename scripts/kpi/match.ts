@@ -1,4 +1,4 @@
-import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, firstAgencyStatement, firstStatementOf, isAgencySource, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, REGIMES, firstAgencyStatement, firstStatementOf, isAgencySource, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
 import { dayOf, endedByOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf } from "../../src/elements.ts";
 import { inScope, type ScopeSubject } from "../../src/scope.ts";
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
@@ -464,6 +464,28 @@ export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "rais
   return { ...landing, candidates: [...candidates], twin };
 }
 
+/**
+ * The regime a confirmed verdict's object is in, as the Confirmed line
+ * bounds a report naming no object but a regime: by the object's last set
+ * before the raising; unknown where the sets give none.
+ */
+export function regimeBefore(index: Pick<SetIndex, "orbitBefore">, number: number, at: number): Regime {
+  const orbit = index.orbitBefore(number, at);
+  return orbit === null ? "unknown" : regimeOf(orbit);
+}
+
+/**
+ * The regime a verdict carries in its evidence, for a reader with no sets
+ * (the prospective score reads no Archive): a verdict on a step carries
+ * its object's (`regime`, an index into `REGIMES`), the detector's class
+ * of its sets when the step was raised; a confirmation from the pieces
+ * alone carries none, and is unknown.
+ */
+export function carriedRegime(verdict: Pick<Verdict, "evidence">): Regime {
+  const index = verdict.evidence.regime;
+  return index === undefined ? "unknown" : (REGIMES[index] ?? "unknown");
+}
+
 /** The row whose window is nearest an instant (no distance inside it), the later on a tie; undefined for none. */
 export function nearestRow(rows: readonly Row[], at: number): Row | undefined {
   const distance = (row: Row): number => (at < row.from ? row.from - at : at > row.to ? at - row.to : 0);
@@ -589,8 +611,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     // The Confirmed line: every confirmed verdict by pieces, with or without a step seen on the parent.
     if (verdict.state === "confirmed" && verdict.evidence.noticed !== 1) {
       // The object's regime by its last set before the raising: what a report naming no object but a regime is bounded by.
-      const orbit = index.orbitBefore(verdict.number, verdict.raisedAt);
-      confirmations.push(landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, orbit === null ? "unknown" : regimeOf(orbit)));
+      confirmations.push(landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, regimeBefore(index, verdict.number, verdict.raisedAt)));
     }
     // A confirmed verdict with no step was attributed from the pieces alone: the Confirmed line's, never an alert on the parent's step.
     if (verdict.state === "confirmed" && verdict.step === null) continue;

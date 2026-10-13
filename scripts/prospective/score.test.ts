@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Breakup, Verdict } from "../../src/index.ts";
+import { REGIMES, type Breakup, type Verdict } from "../../src/index.ts";
 import { FREEZE_MS, alertKey, jsonl, parseJsonl, type LoggedAlert } from "./alerts.ts";
 import { committedAtOf, renderScore, resultsSummary, scoreProspective } from "./score.ts";
 
@@ -127,6 +127,20 @@ describe("a confirmation on no reported event, as the scorecard reads it", () =>
     const text = renderScore(score, "2027-02-01T10:00:00+01:00", T + 210 * DAY);
     expect(text).toContain("1 false confirmation of 2 confirmed alerts; 1 unreported and pending.");
     expect(resultsSummary(score, "2027-02-01")).toContain("1 false confirmation of 2 confirmed alerts, and 1 unreported confirmation pending");
+  });
+});
+
+describe("a confirmation inside the window of a report naming no object but a regime, as the scorecard reads it", () => {
+  // A report naming no object, no launch, but the geosynchronous ring, a fortnight after the freeze.
+  const ring = { ...breakup(0, "-", T + 14 * DAY, null, null, false), id: "U:1:ring", kind: "unnamed", parent: { catalogueNumber: null, designator: null, name: "unnamed" }, orbit: { regime: "GEO" }, exemptReason: "the report names no object" } as unknown as Breakup;
+  const inRing = alert(41010, "2015-099", T + 20 * DAY, "confirmed", { regime: REGIMES.indexOf("GEO") });
+  const inLow = alert(41011, "2015-098", T + 20 * DAY, "confirmed", { regime: REGIMES.indexOf("LEO") });
+  const all = [inRing, inLow];
+  const score = scoreProspective(parseJsonl<LoggedAlert>(jsonl(all)), committedAtOf(gitLog([{ at: T + 21 * DAY, alerts: all }])), [...truth, ring]);
+
+  test("is exempt where the object is in the report's regime, by the regime its verdict carries, and false where it is not", () => {
+    expect(score.notCounted.map((n) => [n.alert.number, n.outcome, n.event])).toEqual([[41010, "exempt", "U:1:ring"]]);
+    expect(score.falseConfirmations.map((f) => f.alert.number)).toEqual([41011]);
   });
 });
 

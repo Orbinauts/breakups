@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import type { Breakup, Regime } from "../src/index.ts";
+import { REGIMES, type Breakup, type Regime } from "../src/index.ts";
 import { confirmedCellsOf } from "../scripts/kpi/kpi.ts";
-import { firstAgencyNotice, firstQuarterlyNews, landConfirmed, truthAsOf, type ConfirmedLanding, type Row, type ScoredEvent } from "../scripts/kpi/match.ts";
+import { carriedRegime, firstAgencyNotice, firstQuarterlyNews, landConfirmed, regimeBefore, truthAsOf, type ConfirmedLanding, type Row, type ScoredEvent } from "../scripts/kpi/match.ts";
 
 /**
  * The scorecard's readings amended in the seventh decision record: the
@@ -44,6 +44,16 @@ describe("a report naming no object exempts only what it names", () => {
     expect(landConfirmed(confirmed(40003, T + 5 * DAY), 0, [unnamed], undefined, undefined, "LEO")).toMatchObject({ outcome: "false-alarm", event: null });
     // The verdict's regime unknown (no set of its object to read it from): the bound cannot be met.
     expect(landConfirmed(confirmed(40003, T + 5 * DAY), 0, [unnamed]).outcome).toBe("false-alarm");
+  });
+
+  test("the object's regime is read by its last set before the raising where the reader has the sets, else as its verdict carries it", () => {
+    const geo = { epochMs: T, meanMotion: 1.0027, eccentricity: 0.0002, bstar: 0 };
+    const index = { orbitBefore: (number: number, at: number) => (number === 40002 && at > T ? geo : null) };
+    expect(regimeBefore(index, 40002, T + DAY)).toBe("GEO");
+    expect(regimeBefore(index, 40002, T)).toBe("unknown");
+    expect(carriedRegime({ evidence: { regime: REGIMES.indexOf("HEO") } })).toBe("HEO");
+    // A confirmation from the pieces alone carries none.
+    expect(carriedRegime({ evidence: { attributed: 1 } })).toBe("unknown");
   });
 
   test("a row naming the launch alone exempts that launch only", () => {

@@ -1,5 +1,5 @@
-import { isAgencySource, type Breakup, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
-import { brackets, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
+import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
 
 /** What the satellite catalogue says of a body: the fields of the Archive's body table (`ArchivedBody`) the parent is filled from. */
@@ -12,6 +12,9 @@ export interface BodyIdentity {
 
 /** The catalogue's identity of a body by its number; undefined where it has none. */
 export type BodyOf = (number: number) => BodyIdentity | undefined;
+
+/** The regime of a body by its last set before an instant, as the Archive's sets give it (`regimeBefore`); unknown where they give none. */
+export type RegimeAt = (number: number, at: number) => Regime;
 
 type ObjectVerdict = Verdict & { number: number };
 
@@ -85,10 +88,14 @@ function landSuspected(verdict: ObjectVerdict, breakups: readonly Breakup[]): Br
  * detection lands on its row, a row naming the launch alone among them
  * (the Confirmed line scores those by their launch). Any other landing (a
  * row naming no object, an aerodynamic row, no row at all) is a breakup on
- * no row.
+ * no row. A report naming no object but a regime is read with the
+ * object's regime by its last set before the raising (`regimeAt`), as the
+ * scorecard reads it; a caller with no sets passes none, and the regime
+ * the verdict carries is read instead (`carriedRegime`). Exempt by a
+ * regime or not, such a confirmation is a breakup on no row.
  */
-function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>): Landed | null {
-  const landing = landConfirmed(verdict, i, rows);
+function landedConfirmation(verdict: ObjectVerdict, i: number, rows: readonly Row[], byId: ReadonlyMap<string, Breakup>, regimeAt: RegimeAt | undefined): Landed | null {
+  const landing = landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, regimeAt === undefined ? carriedRegime(verdict) : regimeAt(verdict.number, verdict.raisedAt));
   const on = landing.event === null ? null : (byId.get(landing.event) ?? null);
   const exempt = landing.outcome === "exempt" && (landing.note.startsWith("a crewed") || on?.kind === "release");
   return exempt ? null : { verdict, row: landing.outcome === "detection" ? on : null };
@@ -188,7 +195,9 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * The breakups fit to show from one replay: the frozen detector's verdicts
  * (the year file's, every state, in the order raised) landed on the ground
  * truth as it stands on main, earliest raised first. Pure: the catalogue's
- * identity of a parent comes in through `bodyOf`.
+ * identity of a parent comes in through `bodyOf`, and a confirmed object's
+ * regime by its last set through `regimeAt` (the verdict's own where none
+ * is given).
  *
  * A suspected verdict lands by its step on a `breakup` or `anomalous` row
  * of its object, the window widened by the regime's margin; a confirmed one
@@ -208,7 +217,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * of the first raising (`publishedIdOf`); merging with what is already
  * published, which may fix an earlier id, is the caller's.
  */
-export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf): PublishedBreakup[] {
+export function selectPublished(verdicts: readonly Verdict[], breakups: readonly Breakup[], bodyOf: BodyOf, regimeAt?: RegimeAt): PublishedBreakup[] {
   const rows = rowsOf(breakups);
   const byId = new Map(breakups.map((row) => [row.id, row]));
   const landed: Landed[] = [];
@@ -217,7 +226,7 @@ export function selectPublished(verdicts: readonly Verdict[], breakups: readonly
     const object = verdict as ObjectVerdict;
     if (verdict.state === "suspected") landed.push({ verdict: object, row: landSuspected(object, breakups) });
     if (verdict.state === "confirmed") {
-      const confirmation = landedConfirmation(object, i, rows, byId);
+      const confirmation = landedConfirmation(object, i, rows, byId, regimeAt);
       if (confirmation !== null) landed.push(confirmation);
     }
   });
