@@ -20,13 +20,13 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 
 | Headline: breakups reported to the day | Held-out years (odd, 2007 to 2025) | Training years (even, 2006 to 2026) | Target |
 | --- | --- | --- | --- |
-| Confirmed, of the targets | 17 of 23 | 22 of 36 |  |
-| Recall (95% interval) | 74% (54% to 87%) | 61% (45% to 75%) | 90% or more |
-| False confirmations, of all events confirmed | 6 of 29 | 2 of 36 |  |
-| False-alarm rate (95% interval) | 21% (10% to 38%) | 6% (2% to 18%) | under 10% |
-| Median lead over the first agency notice dated to the day | – | – |  |
-| Median lead over NASA's quarterly news, dated to its month | – | – |  |
-| First agency statements dated to the day / to the month | 0 / 17 | 0 / 21 |  |
+| Confirmed, of the targets | 19 of 26 | 24 of 38 |  |
+| Recall (95% interval) | 73% (54% to 86%) | 63% (47% to 77%) | 90% or more |
+| False confirmations, of all events confirmed | 5 of 30 | 1 of 37 |  |
+| False-alarm rate (95% interval) | 17% (7% to 34%) | 3% (0% to 14%) | under 10% |
+| Median lead over the first agency notice dated to the day | -16 days, 0 of 9 before it | -23 days, 0 of 11 before it |  |
+| Median lead over NASA's quarterly news, dated to its month | 42 days, 19 of 19 before it | 37 days, 16 of 23 before it |  |
+| First agency statements dated to the day / to the month | 9 / 10 | 11 / 13 |  |
 | Median timing error | 41 minutes | 19 hours |  |
 
 <!-- kpi:current:end -->
@@ -35,13 +35,13 @@ The detector is `confirmed-v10`, the twelfth phase of its build. It raises two k
 
 | Early warning (suspected): breakups reported to the day | Held-out years (odd, 2007 to 2025) | Training years (even, 2006 to 2026) |
 | --- | --- | --- |
-| Flagged before the first fragment, of the targets | 10 of 28 | 18 of 43 |
-| Detection rate (95% interval) | 36% (21% to 54%) | 42% (28% to 57%) |
-| Flagged only after the first fragment (late) | 2 of 28 | 5 of 43 |
-| False alarms, of all early warnings | 2448 of 2464 | 2906 of 2930 |
-| False-alarm rate (95% interval) | 99% (99% to 100%) | 99% (99% to 99%) |
-| False alarms a year | 245 | 264 |
-| Median lead over the first catalogued fragment | 20 days | 12 days |
+| Flagged before the first fragment, of the targets | 7 of 30 | 11 of 47 |
+| Detection rate (95% interval) | 23% (12% to 41%) | 23% (14% to 37%) |
+| Flagged only after the first fragment (late) | 6 of 30 | 14 of 47 |
+| False alarms, of all early warnings | 2448 of 2460 | 2823 of 2839 |
+| False-alarm rate (95% interval) | 100% (99% to 100%) | 99% (99% to 100%) |
+| False alarms a year | 245 | 257 |
+| Median lead over the first catalogued fragment | 24 days | 12 days |
 | Median timing error | 35 minutes | 9 hours |
 
 <!-- kpi:current-early-warning:end -->
@@ -65,52 +65,52 @@ The scorecard replays the detector over the [Archive](archive.md). It feeds the 
 
 ## The Confirmed line, the target
 
-The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. <!-- kpi:medians:begin -->No held-out confirmation has an agency notice dated to the day yet, so the lead over the first public notice is not measured on them. The median confirmation came three hours after the catalogue published the first fresh piece.<!-- kpi:medians:end --> What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](detector/README.md) what each phase changed.
+The held-out years were read while earlier phases were fitted, so their numbers are a measurement, not a blind validation. Three of the previous phase's nine held-out false confirmations are now confirmations of separations that GCAT's satellite catalogue dates. <!-- kpi:medians:begin -->0 of the 9 held-out confirmations with an agency notice dated to the day came before that notice, and the median one two weeks after it. Every held-out confirmation with an issue of NASA's quarterly news came before that issue's month, and the median one by six weeks. The median confirmation came three hours after the catalogue published the first fresh piece.<!-- kpi:medians:end --> What is left on both splits is single pieces, small and large batches under old launches, and twins the pieces cannot tell apart. [docs/detector/events.md](detector/events.md) lists every reported event with its outcome and cause, and [docs/detector/README.md](detector/README.md) what each phase changed.
 
 <!-- kpi:confirmed:begin -->
 
 | Confirmed: the target, breakups A and B | Targets (fragments catalogued) | No fragments catalogued | Confirmed | Missed | Recall (95% interval) | False confirmations | False-alarm rate (95% interval) | Lead over the first agency notice dated to the day, days: median (10th percentile) | Confirmed before it | Lead over NASA's quarterly news, days: median (10th percentile) | Confirmed before it | Lag after the first fragment, days: median (90th percentile) | Timing error, minutes: median (90th percentile) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Validation: the odd years (2007 to 2025, 10 years) | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | – | – | – | – | 0.1 (4.0) | 40.6 (21342.4) |
-| Validation: the odd years, twins matched at the launch | 23 | 11 | 17 | 6 | 74% (54% to 87%) | 6 | 21% (10% to 38%) | – | – | – | – | 0.1 (4.0) | 40.6 (21342.4) |
-| Training: the even years (2006 to 2026, 11 years) | 36 | 14 | 22 | 14 | 61% (45% to 75%) | 2 | 6% (2% to 18%) | – | – | – | – | 0.1 (5.9) | 1125.9 (173291.7) |
-| Training: the even years, twins matched at the launch | 36 | 14 | 22 | 14 | 61% (45% to 75%) | 2 | 6% (2% to 18%) | – | – | – | – | 0.1 (5.9) | 1125.9 (173291.7) |
-| Fitted on the years to 2017 (2006 to 2017, 12 years) | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | – | – | – | – | 0.1 (0.1) | 583.0 (118847.1) |
-| Fitted on the years to 2017, twins matched at the launch | 29 | 18 | 23 | 6 | 79% (62% to 90%) | 6 | 16% (7% to 30%) | – | – | – | – | 0.1 (0.1) | 583.0 (89663.5) |
-| Validated on the years from 2018 (2018 to 2026, 9 years) | 30 | 7 | 16 | 14 | 53% (36% to 70%) | 2 | 7% (2% to 23%) | – | – | – | – | 0.1 (17.2) | 72.8 (40265.4) |
-| Validated on the years from 2018, twins matched at the launch | 30 | 7 | 16 | 14 | 53% (36% to 70%) | 2 | 7% (2% to 23%) | – | – | – | – | 0.1 (17.2) | 72.8 (40265.4) |
+| Validation: the odd years (2007 to 2025, 10 years) | 26 | 12 | 19 | 7 | 73% (54% to 86%) | 5 | 17% (7% to 34%) | -16.0 (-33.8) | 0 of 9 | 41.7 (9.8) | 19 of 19 | 0.1 (4.5) | 40.6 (21342.4) |
+| Validation: the odd years, twins matched at the launch | 26 | 12 | 19 | 7 | 73% (54% to 86%) | 5 | 17% (7% to 34%) | -16.0 (-33.8) | 0 of 9 | 41.7 (9.8) | 19 of 19 | 0.1 (4.5) | 40.6 (21342.4) |
+| Training: the even years (2006 to 2026, 11 years) | 38 | 18 | 24 | 14 | 63% (47% to 77%) | 1 | 3% (0% to 14%) | -23.5 (-79.2) | 0 of 11 | 37.2 (-32.2) | 16 of 23 | 0.1 (4.1) | 1125.9 (173291.7) |
+| Training: the even years, twins matched at the launch | 38 | 18 | 24 | 14 | 63% (47% to 77%) | 1 | 3% (0% to 14%) | -23.5 (-48.5) | 0 of 11 | 37.2 (-24.5) | 16 of 23 | 0.1 (4.1) | 1125.9 (173291.7) |
+| Fitted on the years to 2017 (2006 to 2017, 12 years) | 31 | 20 | 23 | 8 | 74% (57% to 86%) | 6 | 16% (7% to 30%) | -14.0 (-106.8) | 0 of 7 | 37.2 (-15.2) | 17 of 22 | 0.1 (0.1) | 583.0 (118847.1) |
+| Fitted on the years to 2017, twins matched at the launch | 31 | 20 | 23 | 8 | 74% (57% to 86%) | 6 | 16% (7% to 30%) | -14.0 (-79.2) | 0 of 7 | 37.2 (-12.3) | 17 of 22 | 0.1 (0.1) | 583.0 (89663.5) |
+| Validated on the years from 2018 (2018 to 2026, 9 years) | 33 | 10 | 20 | 13 | 61% (44% to 75%) | 0 | 0% (0% to 12%) | -22.7 (-33.8) | 0 of 13 | 53.5 (-24.5) | 18 of 20 | 0.1 (4.5) | 182.6 (56411.9) |
+| Validated on the years from 2018, twins matched at the launch | 33 | 10 | 20 | 13 | 61% (44% to 75%) | 0 | 0% (0% to 12%) | -22.7 (-33.8) | 0 of 13 | 53.5 (-24.5) | 18 of 20 | 0.1 (4.5) | 182.6 (56411.9) |
 
 | Confirmed, every line, validation: the odd years (2007 to 2025, 10 years) | Targets (fragments catalogued) | No fragments catalogued | No parent orbit before the event | Confirmed | Missed | Recall (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the target is 90%) | 23 | 7 | 4 | 17 | 6 | 74% (54% to 87%) |
-| Breakups, confidence C | 20 | 16 | 12 | 3 | 17 | 15% (5% to 36%) |
-| Breakups, confidence D | 6 | 6 | 0 | 0 | 6 | 0% (0% to 39%) |
-| Anomalous events, confidence A and B | 5 | 4 | 0 | 0 | 5 | 0% (0% to 43%) |
-| Anomalous events, confidence C and D | 47 | 21 | 2 | 3 | 44 | 6% (2% to 17%) |
+| Breakups, confidence A and B (the target is 90%) | 26 | 7 | 5 | 19 | 7 | 73% (54% to 86%) |
+| Breakups, confidence C | 19 | 17 | 11 | 3 | 16 | 16% (6% to 38%) |
+| Breakups, confidence D | 18 | 2 | 0 | 0 | 18 | 0% (0% to 18%) |
+| Anomalous events, confidence A and B | 7 | 6 | 0 | 1 | 6 | 14% (3% to 51%) |
+| Anomalous events, confidence C and D | 44 | 19 | 1 | 2 | 42 | 5% (1% to 15%) |
 
 | Confirmed verdicts, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
-| Confirmed verdicts by pieces | 31 |
-| Of which attributed from the pieces with no step seen on the parent | 18 |
-| Detections (the first confirmation of a reported event) | 22 |
-| Duplicates (a later confirmation of an event, or one on its fragment) | 2 |
+| Confirmed verdicts by pieces | 36 |
+| Of which attributed from the pieces with no step seen on the parent | 19 |
+| Detections (the first confirmation of a reported event) | 24 |
+| Duplicates (a later confirmation of an event, or one on its fragment) | 4 |
 | Exempt (inside an exempt window) | 1 |
-| False confirmations (matching no reported event) | 6 |
+| False confirmations (matching no reported event) | 5 |
 | Unreported and pending (no reported event yet, raised under 90 days before the truth's date; in neither count) | 0 |
-| Inside a report naming no object, no launch and no regime (in neither count) | 0 |
+| Inside a report naming no object, no launch and no regime (in neither count) | 2 |
 | Of those, attributed with no step | 4 |
 | Verdicts naming the launch and its candidate bodies (twins), matched on the body named first | 1 |
-| Of those, on a payload / a rocket body / debris / an unknown body | 3 / 3 / 0 / 0 |
-| Events confirmed on every line (the precision's numerator) | 23 |
+| Of those, on a payload / a rocket body / debris / an unknown body | 2 / 2 / 1 / 0 |
+| Events confirmed on every line (the precision's numerator) | 25 |
 | Of which with no fragment the scorecard reads in the plane | 0 |
-| False-alarm rate (the target is under 10%) | 21% (10% to 38%) |
-| Headline confirmations with an agency's statement dated | 17 |
-| Of which the statement dated to the day / to the month | 0 / 17 |
-| Of which confirmed before the statement | 17 |
-| Lead over the first agency statement, days: median (10th percentile) | 41.7 (9.8) |
-| Lead over the first agency notice dated to the day, days: median (10th percentile); confirmed before it | –; – |
-| Lead over NASA's quarterly news, days: median (10th percentile); confirmed before it | –; – |
-| Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.0) |
+| False-alarm rate (the target is under 10%) | 17% (7% to 34%) |
+| Headline confirmations with an agency's statement dated | 19 |
+| Of which the statement dated to the day / to the month | 9 / 10 |
+| Of which confirmed before the statement | 10 |
+| Lead over the first agency statement, days: median (10th percentile) | 9.2 (-30.8) |
+| Lead over the first agency notice dated to the day, days: median (10th percentile); confirmed before it | -16.0 (-33.8); 0 of 9 |
+| Lead over NASA's quarterly news, days: median (10th percentile); confirmed before it | 41.7 (9.8); 19 of 19 |
+| Lag after the first fragment's publication, days: median (90th percentile) | 0.1 (4.5) |
 | Timing error against the truth's instant, minutes: median (90th percentile) | 40.6 (21342.4) |
 
 <!-- kpi:confirmed:end -->
@@ -129,67 +129,67 @@ The early warning is the detector's second layer: an alert on the parent's own o
 
 | Early warning (suspected): breakups A and B | Targets | Undetectable | Flagged before the first fragment | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | False alarms a year | False alarms per 10,000 object-years | Lead over the first catalogued fragment, days: median (10th percentile) | Timing error, minutes, median |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Validation: the odd years (2007 to 2025, 10 years) | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2448 | 99% (99% to 100%) | 244.8 | 138.3 | 20.0 (3.9) | 34.6 |
-| Training: the even years (2006 to 2026, 11 years) | 43 | 7 | 18 | 5 | 20 | 42% (28% to 57%) | 2906 | 99% (99% to 99%) | 264.2 | 152.2 | 12.4 (3.4) | 511.1 |
-| Every year (2006 to 2026, 21 years) | 71 | 13 | 28 | 7 | 36 | 39% (29% to 51%) | 5354 | 99% (99% to 99%) | 255.0 | 145.5 | 20.0 (3.4) | 114.4 |
-| The last 3 years (2024 to 2026, 3 years) | 4 | 2 | 3 | 0 | 1 | 75% (30% to 95%) | 927 | 99% (99% to 100%) | 309.0 | 119.5 | 4.3 (4.3) | 59.0 |
-| Fitted on the years to 2017 (2006 to 2017, 12 years) | 40 | 7 | 15 | 4 | 21 | 38% (24% to 53%) | 2463 | 99% (99% to 99%) | 205.3 | 148.8 | 10.3 (2.2) | 583.0 |
-| Validated on the years from 2018 (2018 to 2026, 9 years) | 31 | 6 | 13 | 3 | 15 | 42% (26% to 59%) | 2891 | 99% (99% to 100%) | 321.2 | 142.9 | 29.9 (4.3) | 72.8 |
+| Validation: the odd years (2007 to 2025, 10 years) | 30 | 8 | 7 | 6 | 17 | 23% (12% to 41%) | 2448 | 100% (99% to 100%) | 244.8 | 138.3 | 24.0 (1.0) | 34.6 |
+| Training: the even years (2006 to 2026, 11 years) | 47 | 9 | 11 | 14 | 22 | 23% (14% to 37%) | 2823 | 99% (99% to 100%) | 256.6 | 147.9 | 12.4 (2.2) | 511.1 |
+| Every year (2006 to 2026, 21 years) | 77 | 17 | 18 | 20 | 39 | 23% (15% to 34%) | 5271 | 99% (99% to 100%) | 251.0 | 143.3 | 24.0 (2.2) | 103.3 |
+| The last 3 years (2024 to 2026, 3 years) | 6 | 3 | 1 | 3 | 2 | 17% (3% to 56%) | 953 | 100% (99% to 100%) | 317.7 | 122.9 | – | 1.2 |
+| Fitted on the years to 2017 (2006 to 2017, 12 years) | 41 | 10 | 9 | 10 | 22 | 22% (12% to 37%) | 2486 | 99% (99% to 100%) | 207.2 | 150.2 | 12.4 (2.2) | 583.0 |
+| Validated on the years from 2018 (2018 to 2026, 9 years) | 36 | 7 | 9 | 10 | 17 | 25% (14% to 41%) | 2785 | 99% (99% to 100%) | 309.4 | 137.6 | 29.9 (3.4) | 44.2 |
 
 | Early warning, every line, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Breakups, confidence A and B (the headline line) | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) |
-| Breakups, confidence C | 33 | 15 | 3 | 0 | 30 | 9% (3% to 24%) |
-| Breakups, confidence D | 12 | 0 | 0 | 0 | 12 | 0% (0% to 24%) |
-| Anomalous events, confidence A and B | 8 | 1 | 0 | 1 | 7 | 0% (0% to 32%) |
-| Anomalous events, confidence C and D | 68 | 2 | 3 | 0 | 65 | 4% (2% to 12%) |
+| Breakups, confidence A and B (the headline line) | 30 | 8 | 7 | 6 | 17 | 23% (12% to 41%) |
+| Breakups, confidence C | 31 | 13 | 2 | 0 | 29 | 6% (2% to 21%) |
+| Breakups, confidence D | 7 | 0 | 0 | 0 | 7 | 0% (0% to 35%) |
+| Anomalous events, confidence A and B | 12 | 1 | 1 | 2 | 9 | 8% (1% to 35%) |
+| Anomalous events, confidence C and D | 62 | 1 | 2 | 0 | 60 | 3% (1% to 11%) |
 
 | Early warning on breakups A and B, scoped, validation: the odd years (2007 to 2025, 10 years) | Targets | Undetectable | Detected | Late | Missed | Detection rate (95% interval) | False alarms | False-alarm rate (95% interval) | Headline events left out |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| The whole catalogue | 28 | 6 | 10 | 2 | 16 | 36% (21% to 54%) | 2448 | 99% (99% to 100%) | 0 |
-| Scoped | 21 | 0 | 3 | 0 | 18 | 14% (5% to 35%) | 52 | 95% (85% to 98%) | 13 of 34 |
+| The whole catalogue | 30 | 8 | 7 | 6 | 17 | 23% (12% to 41%) | 2448 | 100% (99% to 100%) | 0 |
+| Scoped | 23 | 0 | 3 | 0 | 20 | 13% (5% to 32%) | 47 | 94% (84% to 98%) | 15 of 38 |
 
 | Early warnings, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
-| Alerts (object verdicts, suspected or confirmed) | 2638 |
-| Duplicates | 121 |
-| Exempt | 50 |
+| Alerts (object verdicts, suspected or confirmed) | 2667 |
+| Duplicates | 127 |
+| Exempt | 72 |
 | False alarms | 2448 |
-| False-alarm rate | 99% |
+| False-alarm rate | 100% |
 | False alarms per 10,000 object-years | 138.3 |
-| Lead over the catalogue, hours: median (10th percentile) | 479.0 (94.0) |
-| Latency from the event, hours: median (90th percentile) | 140.1 (1384.0) |
-| Confirmed share of the detections | 38% |
-| Days to confirmation, median | 4.0 |
+| Lead over the catalogue, hours: median (10th percentile) | 576.1 (23.2) |
+| Latency from the event, hours: median (90th percentile) | 140.1 (1153.4) |
+| Confirmed share of the detections | 33% |
+| Days to confirmation, median | 10.5 |
 | Timing error, minutes, median | 34.6 |
 | Cloud verdicts, for review (a burst with no parent step) | 73 |
 
 | Precision per persistence tier, validation: the odd years (2007 to 2025, 10 years) | Raised | Detections still before the catalogue | False alarms | Precision | Share of the detections kept | Lead over the catalogue, hours: median (10th percentile) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 post sets over 18 h, or 3 (as raised) | 2467 | 16 | 2448 | 1% | 100% | 479.0 (94.0) |
-| 3 post sets | 2417 | 16 | 2398 | 1% | 100% | 479.0 (94.0) |
-| 5 post sets | 1822 | 14 | 1805 | 1% | 88% | 576.1 (94.0) |
-| 1 day of post sets | 2079 | 14 | 2062 | 1% | 88% | 576.1 (94.0) |
-| 3 days of post sets | 1648 | 12 | 1633 | 1% | 75% | 564.1 (54.0) |
-| 5 days of post sets | 1432 | 10 | 1417 | 1% | 63% | 575.4 (156.0) |
-| 7 days of post sets | 1291 | 7 | 1281 | 1% | 44% | 404.1 (88.0) |
+| 2 post sets over 18 h, or 3 (as raised) | 2468 | 12 | 2448 | 0% | 100% | 576.1 (23.2) |
+| 3 post sets | 2424 | 12 | 2404 | 0% | 100% | 576.1 (23.2) |
+| 5 post sets | 1936 | 11 | 1917 | 1% | 92% | 576.1 (240.0) |
+| 1 day of post sets | 2146 | 11 | 2127 | 1% | 92% | 576.1 (248.0) |
+| 3 days of post sets | 1755 | 10 | 1737 | 1% | 83% | 564.1 (156.0) |
+| 5 days of post sets | 1536 | 9 | 1519 | 1% | 75% | 512.1 (156.0) |
+| 7 days of post sets | 1373 | 7 | 1361 | 1% | 58% | 503.4 (88.0) |
 
 | The early warnings confirmed, validation: the odd years (2007 to 2025, 10 years) | Count |
 | --- | --- |
 | Events the catalogue reported (new bodies under the launch within 90 days) | 87 |
-| Of which alerted on the parent (detected or late) | 14 |
-| Of which confirmed | 7 |
-| Confirmed share of the reported events | 8% |
+| Of which alerted on the parent (detected or late) | 15 |
+| Of which confirmed | 9 |
+| Confirmed share of the reported events | 10% |
 | Days from the event to the confirmation, median (90th percentile) | 25.6 (54.0) |
 | Days from the alert to the confirmation, median (90th percentile) | 8.7 (27.2) |
-| Confirmed alerts (by the fragments or a notice) | 13 |
-| Of which on a reported event's step (a detection or a late alert) | 6 |
+| Confirmed alerts (by the fragments or a notice) | 18 |
+| Of which on a reported event's step (a detection or a late alert) | 9 |
 | Of which inside an exempt window or a duplicate | 1 |
-| Of which matching no reported event's step | 6 |
+| Of which matching no reported event's step | 8 |
 | Of those, on the parent of a reported event within the month before (the right object, the step late) | 4 |
-| Precision of the confirmed alerts, on the step | 46% |
-| Precision of the confirmed alerts, on the object | 77% |
-| Targets with an agency's statement dated in the truth (the notices) | 0 |
+| Precision of the confirmed alerts, on the step | 50% |
+| Precision of the confirmed alerts, on the object | 72% |
+| Targets with an agency's statement dated in the truth (the notices) | 14 |
 | Of which confirmed before that statement | 0 |
 
 <!-- kpi:early-warning-tables:end -->
@@ -204,32 +204,32 @@ Every step that holds in an object's orbit is judged once: raised as an early wa
 
 | The life of an alert | Validation: the odd years (2007 to 2025, 10 years) | Training: the even years (2006 to 2026, 11 years) |
 | --- | --- | --- |
-| Steps that held, cleared as manoeuvres | 69179 | 95629 |
-| Of those, on a reported breakup's step (95% interval) | 0.04% (0.03% to 0.06%), 28 of 69179 | 0.02% (0.02% to 0.04%), 23 of 95629 |
-| Of those, confirmed later by fragments (of which on a reported breakup) | 5 (1) | 11 (6) |
-| Steps that held, raised as early warnings (suspected alerts) | 2633 | 3146 |
-| Of those, on a reported breakup's step (95% interval) | 0.77% (0.49% to 1.2%), 19 of 2463 | 0.96% (0.66% to 1.4%), 28 of 2929 |
-| Of those, duplicates or inside an exempt window (in neither count) | 170 | 217 |
-| Ended confirmed (fragments in the parent's plane, or a notice), share of the early warnings (95% interval) | 0.30% (0.15% to 0.60%), 8 of 2633 | 0.32% (0.17% to 0.58%), 10 of 3146 |
-| Ended confirmed: on a reported breakup's step (95% interval) | 75% (41% to 93%), 6 of 8 | 100% (68% to 100%), 8 of 8 |
-| Ended confirmed: days after the early warning, median (90th percentile) | 4.0 (24.2) | 2.3 (19.3) |
-| Ended dismissed (the new bodies under its launch were all old pieces), share of the early warnings (95% interval) | 4.2% (3.5% to 5.0%), 110 of 2633 | 4.8% (4.1% to 5.6%), 152 of 3146 |
-| Ended dismissed: on a reported breakup's step (95% interval) | 1.0% (0.18% to 5.7%), 1 of 96 | 0.75% (0.13% to 4.1%), 1 of 134 |
+| Steps that held, cleared as manoeuvres | 67166 | 94441 |
+| Of those, on a reported breakup's step (95% interval) | 0.03% (0.02% to 0.05%), 21 of 67166 | 0.03% (0.02% to 0.04%), 24 of 94441 |
+| Of those, confirmed later by fragments (of which on a reported breakup) | 7 (1) | 15 (9) |
+| Steps that held, raised as early warnings (suspected alerts) | 2660 | 3072 |
+| Of those, on a reported breakup's step (95% interval) | 0.77% (0.49% to 1.2%), 19 of 2461 | 0.98% (0.68% to 1.4%), 28 of 2845 |
+| Of those, duplicates or inside an exempt window (in neither count) | 199 | 227 |
+| Ended confirmed (fragments in the parent's plane, or a notice), share of the early warnings (95% interval) | 0.41% (0.23% to 0.74%), 11 of 2660 | 0.39% (0.22% to 0.68%), 12 of 3072 |
+| Ended confirmed: on a reported breakup's step (95% interval) | 80% (49% to 94%), 8 of 10 | 90% (60% to 98%), 9 of 10 |
+| Ended confirmed: days after the early warning, median (90th percentile) | 8.7 (24.2) | 4.3 (19.3) |
+| Ended dismissed (the new bodies under its launch were all old pieces), share of the early warnings (95% interval) | 4.5% (3.8% to 5.4%), 121 of 2660 | 5.2% (4.4% to 6.0%), 159 of 3072 |
+| Ended dismissed: on a reported breakup's step (95% interval) | 0.93% (0.16% to 5.1%), 1 of 108 | 0.73% (0.13% to 4.0%), 1 of 137 |
 | Ended dismissed: days after the early warning, median (90th percentile) | 30.0 (30.0) | 30.0 (30.0) |
-| Ended expired (nothing confirmed it in 30 days), share of the early warnings (95% interval) | 94% (94% to 95%), 2488 of 2633 | 92% (91% to 93%), 2905 of 3146 |
-| Ended expired: on a reported breakup's step (95% interval) | 0.47% (0.26% to 0.84%), 11 of 2335 | 0.66% (0.42% to 1.0%), 18 of 2719 |
+| Ended expired (nothing confirmed it in 30 days), share of the early warnings (95% interval) | 94% (93% to 95%), 2509 of 2660 | 92% (91% to 93%), 2837 of 3072 |
+| Ended expired: on a reported breakup's step (95% interval) | 0.39% (0.20% to 0.73%), 9 of 2325 | 0.64% (0.40% to 1.0%), 17 of 2637 |
 | Ended expired: days after the early warning, median (90th percentile) | 30.0 (30.0) | 30.0 (30.0) |
-| Still open where the Archive ends, share of the early warnings (95% interval) | 1.0% (0.71% to 1.5%), 27 of 2633 | 2.5% (2.0% to 3.1%), 79 of 3146 |
-| Still open: on a reported breakup's step (95% interval) | 4.2% (0.74% to 20%), 1 of 24 | 1.5% (0.26% to 7.9%), 1 of 68 |
+| Still open where the Archive ends, share of the early warnings (95% interval) | 0.71% (0.46% to 1.1%), 19 of 2660 | 2.1% (1.6% to 2.7%), 64 of 3072 |
+| Still open: on a reported breakup's step (95% interval) | 5.6% (0.99% to 26%), 1 of 18 | 1.6% (0.29% to 8.7%), 1 of 61 |
 
 | The reported breakups' paths | Validation: the odd years (2007 to 2025, 10 years) | Training: the even years (2006 to 2026, 11 years) |
 | --- | --- | --- |
-| Reported breakups A and B with fragments catalogued (the Confirmed line's targets) | 23 | 36 |
-| Of those, flagged by an early warning before the first fragment | 8 of 23 | 15 of 36 |
-| An early warning, then confirmed (95% interval) | 39% (22% to 59%), 9 of 23 | 42% (27% to 58%), 15 of 36 |
-| An early warning, never confirmed (95% interval) | 4.3% (0.77% to 21%), 1 of 23 | 14% (6.1% to 29%), 5 of 36 |
-| Confirmed with no early warning first (from the fragments, or a cleared step the fragments confirmed) (95% interval) | 35% (19% to 55%), 8 of 23 | 19% (9.8% to 35%), 7 of 36 |
-| Never flagged (95% interval) | 22% (9.7% to 42%), 5 of 23 | 25% (14% to 41%), 9 of 36 |
+| Reported breakups A and B with fragments catalogued (the Confirmed line's targets) | 26 | 38 |
+| Of those, flagged by an early warning before the first fragment | 6 of 26 | 8 of 38 |
+| An early warning, then confirmed (95% interval) | 38% (22% to 57%), 10 of 26 | 45% (30% to 60%), 17 of 38 |
+| An early warning, never confirmed (95% interval) | 3.8% (0.68% to 19%), 1 of 26 | 11% (4.2% to 24%), 4 of 38 |
+| Confirmed with no early warning first (from the fragments, or a cleared step the fragments confirmed) (95% interval) | 35% (19% to 54%), 9 of 26 | 18% (9.2% to 33%), 7 of 38 |
+| Never flagged (95% interval) | 23% (11% to 42%), 6 of 26 | 26% (15% to 42%), 10 of 38 |
 
 <!-- kpi:lifecycle-full:end -->
 

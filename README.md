@@ -16,11 +16,11 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 | Held-out years (the odd years, 2007 to 2025) | Result | Target |
 | --- | --- | --- |
-| Reported breakups confirmed | 74% (17 of 23) | 90% or more |
-| Confirmations that were false | 21% (6 of 29) | under 10% |
-| Median lead over the first agency notice dated to the day | – |  |
-| Median lead over NASA's quarterly news, dated to its month | – |  |
-| First agency statements dated to the day, to the month | 0 to the day, 17 to the month |  |
+| Reported breakups confirmed | 73% (19 of 26) | 90% or more |
+| Confirmations that were false | 17% (5 of 30) | under 10% |
+| Median lead over the first agency notice dated to the day | -16 days (0 of 9 confirmed before it) |  |
+| Median lead over NASA's quarterly news, dated to its month | 42 days (19 of 19 confirmed before it) |  |
+| First agency statements dated to the day, to the month | 9 to the day, 10 to the month |  |
 | Median error in the time of the breakup | 41 minutes |  |
 
 <!-- kpi:summary:end -->
@@ -29,10 +29,10 @@ The detector's settings were tuned on the even years from 2006 to 2026. They wer
 
 | Early warning (suspected), the same years | Result |
 | --- | --- |
-| Reported breakups flagged before the first fragment was catalogued | 36% (10 of 28) |
-| Flagged only after the first fragment (late) | 2 of 28 |
-| False alarms | 245 a year, 99% of all early warnings (2448 of 2464) |
-| Median lead over the first catalogued fragment | 20 days |
+| Reported breakups flagged before the first fragment was catalogued | 23% (7 of 30) |
+| Flagged only after the first fragment (late) | 6 of 30 |
+| False alarms | 245 a year, 100% of all early warnings (2448 of 2460) |
+| Median lead over the first catalogued fragment | 24 days |
 | Median error in the time of the breakup | 35 minutes |
 
 <!-- kpi:early-warning:end -->
@@ -72,23 +72,23 @@ On the held-out years, this is how often each stage came, and how likely each wa
 
 | What became of each orbit jump that held, on the held-out years | How many | Chance it was a reported breakup |
 | --- | --- | --- |
-| Cleared as a manoeuvre | 69179 | 0.04% (28 of 69179) |
-| Raised as an early warning, a median of six days after the breakup and three weeks before the first fragment | 2633 | 0.77% (19 of 2463) |
-| ... then confirmed by fragments or a notice, a median of four days later | 8 (0.30%) | 75% (6 of 8) |
-| ... then dismissed: the new pieces under its launch were all old | 110 (4.2%) | 1.0% (1 of 96) |
-| ... then expired: nothing confirmed it within 30 days | 2488 (94%) | 0.47% (11 of 2335) |
-| ... still open where the data ends | 27 (1.0%) | 4.2% (1 of 24) |
+| Cleared as a manoeuvre | 67166 | 0.03% (21 of 67166) |
+| Raised as an early warning, a median of six days after the breakup and three weeks before the first fragment | 2660 | 0.77% (19 of 2461) |
+| ... then confirmed by fragments or a notice, a median of nine days later | 11 (0.41%) | 80% (8 of 10) |
+| ... then dismissed: the new pieces under its launch were all old | 121 (4.5%) | 0.93% (1 of 108) |
+| ... then expired: nothing confirmed it within 30 days | 2509 (94%) | 0.39% (9 of 2325) |
+| ... still open where the data ends | 19 (0.71%) | 5.6% (1 of 18) |
 
-| What happened to the 23 reported breakups whose fragments were catalogued, on the held-out years | Share |
+| What happened to the 26 reported breakups whose fragments were catalogued, on the held-out years | Share |
 | --- | --- |
-| An early warning first, then confirmed | 39% (9 of 23) |
-| An early warning, never confirmed | 4% (1 of 23) |
-| Confirmed from the fragments, with no early warning first | 35% (8 of 23) |
-| Never flagged | 22% (5 of 23) |
+| An early warning first, then confirmed | 38% (10 of 26) |
+| An early warning, never confirmed | 4% (1 of 26) |
+| Confirmed from the fragments, with no early warning first | 35% (9 of 26) |
+| Never flagged | 23% (6 of 26) |
 
 <!-- kpi:lifecycle:end -->
 
-<!-- kpi:lifecycle-caveat:begin -->A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, 0.47% of the expired early warnings (11) and 0.04% of the jumps cleared as manoeuvres (28) were on a reported breakup.<!-- kpi:lifecycle-caveat:end --> The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-life-of-an-alert) give the same on the training years, with the uncertainty of each number.
+<!-- kpi:lifecycle-caveat:begin -->A cleared or an expired alert is no guarantee that nothing happened: on the held-out years, 0.39% of the expired early warnings (9) and 0.03% of the jumps cleared as manoeuvres (21) were on a reported breakup.<!-- kpi:lifecycle-caveat:end --> The [full results](https://github.com/Orbinauts/breakups/blob/main/docs/results.md#the-life-of-an-alert) give the same on the training years, with the uncertainty of each number.
 
 ## Install
 

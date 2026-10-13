@@ -246,7 +246,7 @@ describe("the results page's early warning", () => {
       expect(row[8]).toBe(withInterval(cells.falseAlarmRate!, cells.falseAlarmInterval!));
       expect(row[9]).toBe((cells.falseAlarms / cells.years.length).toFixed(1));
       expect(row[10]).toBe(cells.falseAlarmsPer10kBodyYears!.toFixed(1));
-      expect(row[11]).toBe(`${(cells.leadHours!.median / 24).toFixed(1)} (${(cells.leadHours!.tail / 24).toFixed(1)})`);
+      expect(row[11]).toBe(cells.leadHours === null ? "–" : `${(cells.leadHours.median / 24).toFixed(1)} (${(cells.leadHours.tail / 24).toFixed(1)})`);
       expect(row[12]).toBe(cells.timingErrorMinutes!.toFixed(1));
     }
     expect(text).toContain("(../test/early-warning.test.ts)");

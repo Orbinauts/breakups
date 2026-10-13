@@ -178,7 +178,8 @@ export function wilson(k: number, n: number, z = 1.96): [number, number] | null 
   const denominator = 1 + (z * z) / n;
   const centre = (p + (z * z) / (2 * n)) / denominator;
   const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denominator;
-  return [Math.max(0, centre - half), Math.min(1, centre + half)];
+  // At none and at all the bound is exact: the subtraction leaves a rounding error of the order of 1e-17.
+  return [k === 0 ? 0 : Math.max(0, centre - half), k === n ? 1 : Math.min(1, centre + half)];
 }
 
 /** One line of the Confirmed table: the events whose launch gained fresh pieces in the parent's plane (the targets), those listed apart (no such piece, or no orbit of the parent before the event to test a plane against), and the targets confirmed and missed, with the recall and its Wilson 95% interval. */
