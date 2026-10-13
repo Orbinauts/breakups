@@ -154,11 +154,11 @@ export const FRAGMENTS_DAYS = 180;
  * the parent's within a degree, which holds at near-zero inclination where
  * the node is undefined (issue #15).
  */
-export const FRAGMENTS_PLANE = { planeInclinationToleranceDeg: 0.2, planeNodeToleranceDeg: 1.5, planeMaxDays: Number.POSITIVE_INFINITY, planeDistanceMax: 3, normalAngleMaxDeg: 1 } as const;
+export const FRAGMENTS_PLANE = { planeInclinationToleranceDeg: 0.2, planeNodeToleranceDeg: 1.5, planeMaxDays: Number.POSITIVE_INFINITY, planeDistanceMax: 3, planeNormalAngleMaxDeg: 1 } as const;
 
 /** Whether a piece lies in the parent's plane by the scorecard's own test, `FRAGMENTS_PLANE`, with no limit on the days since the event. */
 const inParentPlane = (parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): boolean =>
-  planeDistance(parent, piece, eventMs, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(parent, piece, eventMs) <= FRAGMENTS_PLANE.normalAngleMaxDeg;
+  planeDistance(parent, piece, eventMs, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(parent, piece, eventMs) <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg;
 
 /** What the catalogue published of an event's fragments: the fresh pieces in the parent's plane within the window, the first of them to be published and when, and whether the parent's orbit before the event was known at all. */
 export interface EventFragments {

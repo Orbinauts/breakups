@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { regimeOf } from "../../src/elements.ts";
-import { isFragmentClass, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
+import { isFragmentClass, normalAngleDeg, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { speedAt } from "../../src/impulse.ts";
 import { DETECTOR_PARAMETERS, launchOf, readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import type { StatedTime } from "../../src/truth.ts";
@@ -40,21 +40,6 @@ import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DEG = Math.PI / 180;
-
-/**
- * The angle between a parent's orbit normal and a piece's, in degrees:
- * the parent's node carried to the piece's epoch as the plane test carries
- * it (at the parent's own J2 rate, the rates' difference since the event
- * taken off), so it holds at near-zero inclination, where the node means
- * nothing, as well as at high inclination.
- */
-export function normalAngleDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
-  const { deltaNodeDeg } = planeDistance(parent, piece, eventMs, DETECTOR_PARAMETERS, Number.POSITIVE_INFINITY);
-  const i1 = parent.inclinationDeg * DEG;
-  const i2 = piece.inclinationDeg * DEG;
-  const cos = Math.cos(i1) * Math.cos(i2) + Math.sin(i1) * Math.sin(i2) * Math.cos(deltaNodeDeg * DEG);
-  return Math.acos(Math.min(1, Math.max(-1, cos))) / DEG;
-}
 
 /** The parent's speed at apogee, its slowest point, in kilometres a second. */
 const apogeeSpeedKmps = (orbit: PlaneOrbit): number => speedAt(orbit.aKm, orbit.aKm * (1 + orbit.eccentricity));
@@ -345,7 +330,7 @@ function main(): void {
       continue;
     }
     // The pieces are the scorecard's: today's test or the normals within the scorecard's bound keep exactly what its count keeps.
-    const today = reading.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.normalAngleMaxDeg).length;
+    const today = reading.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg).length;
     const scorecard = fragmentsOf(catalogue, parent, launch, from, to, eventMs, marginMs).inPlane;
     if (today !== scorecard) throw new Error(`${breakup.id}: the scorecard's test keeps ${today} pieces here and ${scorecard} in the scorecard's count`);
     measured.push({ ...reading, split, truthRegime: breakup.orbit.regime, confidence: breakup.confidence, kind: breakup.kind });

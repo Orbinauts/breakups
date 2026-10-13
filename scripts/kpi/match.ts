@@ -1,6 +1,7 @@
-import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, firstAgencyStatement, firstStatementOf, isAgencySource, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, REGIMES, firstAgencyStatement, firstStatementOf, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
 import { dayOf, endedByOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf } from "../../src/elements.ts";
 import { inScope, type ScopeSubject } from "../../src/scope.ts";
+import { isAgencyWord } from "../../src/truth.ts";
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { FRAGMENTS_DAYS, fragmentsOf, launchFragmentsOf, type Catalogue, type EventFragments } from "./catalogue.ts";
 import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.ts";
@@ -176,8 +177,8 @@ export interface StatementAt {
 /** NASA's sources: its quarterly news, and the reference documents of its history that date the news' issues. */
 export const QUARTERLY_NEWS_SOURCES: readonly SourceId[] = ["hoosf-16e", "odqn"];
 
-/** The first public agency notice of an event: the earliest statement by an agency (`AGENCY_SOURCES`) dated to the day, a U.S. Space Forces-Space notice, ESA's report or any other; null where none is. */
-export const firstAgencyNotice = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => isAgencySource(s.source) && s.statedOn?.precision === "day"));
+/** The first public agency notice of an event: the earliest statement by an agency on the event's object (`isAgencyWord`) dated to the day, a U.S. Space Forces-Space notice, ESA's report or any other; null where none is. */
+export const firstAgencyNotice = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => isAgencyWord(s) && s.statedOn?.precision === "day"));
 
 /** The first issue of NASA's quarterly news on an event, dated to the first day of its month; null where none is dated. */
 export const firstQuarterlyNews = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => QUARTERLY_NEWS_SOURCES.includes(s.source)));
@@ -449,19 +450,41 @@ export function subjectAt(parent: number, at: number, regime: Regime, index: Set
  * launch is exempt, whatever it names. A verdict naming candidates (twins)
  * is landed on the body it names first, and carries beside it the landing
  * at the launch's level (`twin`): a detection of the reported event on any
- * candidate within the window, the one nearest the verdict's instant.
+ * candidate within the window, the one nearest the verdict's instant of
+ * the event, else its raising (`nearestRow`, as on the body).
  */
 export function landConfirmed(verdict: Pick<Verdict, "number" | "launch" | "raisedAt" | "step" | "event" | "evidence" | "candidates">, i: number, rows: readonly Row[], stations: readonly string[] = STATION_LAUNCHES, visiting: readonly string[] = VISITING_LAUNCHES, regime: Regime = "unknown"): ConfirmedLanding {
   const landing = landOnBody(verdict, i, rows, stations, visiting, regime);
   const candidates = verdict.candidates;
   if (candidates === undefined || candidates.length < 2 || (landing.outcome === "exempt" && landing.note.startsWith("a crewed"))) return landing;
-  // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant where it gave one (twins may each break up within the half year), else the latest.
+  // At the launch's level: the reported events on any candidate within the window, the one nearest the verdict's instant of the event, else its raising, as on the body (twins may each break up within the half year).
   const after = FRAGMENTS_DAYS * DAY_MS;
   const onCandidates = rows.filter((row) => row.breakup.scoreable && row.breakup.parent.catalogueNumber !== null && candidates.includes(row.breakup.parent.catalogueNumber) && verdict.raisedAt >= row.from - row.margin && verdict.raisedAt <= row.to + after);
-  const at = verdict.event?.at;
-  const nearest = onCandidates.sort((a, b) => (at === undefined ? b.from - a.from : Math.abs(a.from - at) - Math.abs(b.from - at) || b.from - a.from))[0];
+  const nearest = nearestRow(onCandidates, verdict.event?.at ?? verdict.raisedAt);
   const twin = nearest === undefined ? { outcome: landing.outcome, event: landing.event, note: landing.note } : { outcome: "detection" as const, event: nearest.breakup.id, note: `a confirmed verdict naming the launch with ${nearest.breakup.parent.catalogueNumber}, a reported event's parent, among its candidates` };
   return { ...landing, candidates: [...candidates], twin };
+}
+
+/**
+ * The regime a confirmed verdict's object is in, as the Confirmed line
+ * bounds a report naming no object but a regime: by the object's last set
+ * before the raising; unknown where the sets give none.
+ */
+export function regimeBefore(index: Pick<SetIndex, "orbitBefore">, number: number, at: number): Regime {
+  const orbit = index.orbitBefore(number, at);
+  return orbit === null ? "unknown" : regimeOf(orbit);
+}
+
+/**
+ * The regime a verdict carries in its evidence, for a reader with no sets
+ * (the prospective score reads no Archive): a verdict on a step carries
+ * its object's (`regime`, an index into `REGIMES`), the detector's class
+ * of its sets when the step was raised; a confirmation from the pieces
+ * alone carries none, and is unknown.
+ */
+export function carriedRegime(verdict: Pick<Verdict, "evidence">): Regime {
+  const index = verdict.evidence.regime;
+  return index === undefined ? "unknown" : (REGIMES[index] ?? "unknown");
 }
 
 /** The row whose window is nearest an instant (no distance inside it), the later on a tie; undefined for none. */
@@ -589,8 +612,7 @@ export function matchYear(year: number, breakups: Breakup[], verdicts: Verdict[]
     // The Confirmed line: every confirmed verdict by pieces, with or without a step seen on the parent.
     if (verdict.state === "confirmed" && verdict.evidence.noticed !== 1) {
       // The object's regime by its last set before the raising: what a report naming no object but a regime is bounded by.
-      const orbit = index.orbitBefore(verdict.number, verdict.raisedAt);
-      confirmations.push(landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, orbit === null ? "unknown" : regimeOf(orbit)));
+      confirmations.push(landConfirmed(verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, regimeBefore(index, verdict.number, verdict.raisedAt)));
     }
     // A confirmed verdict with no step was attributed from the pieces alone: the Confirmed line's, never an alert on the parent's step.
     if (verdict.state === "confirmed" && verdict.step === null) continue;

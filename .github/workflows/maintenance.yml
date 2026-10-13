@@ -9,10 +9,11 @@ name: Maintenance
 #    debris clouds and satellite catalogue, NASA's history, whose PDF is
 #    turned into text only when its hash changed) and the truth is rebuilt.
 #    A source with no new edition keeps its snapshot and record, so a quiet
-#    week makes no diff. Before that, the statements of every report the
-#    owner accepted (each on a branch `report/issue-<number>`, made by
-#    breakup-report.yml) are appended to the hand file where main lacks
-#    them.
+#    week makes no diff. Before that, the statement of every report the
+#    owner accepted (an issue labelled `breakup-report-accepted`, the
+#    owner's label read from its events, its body unedited since) is read
+#    again from the issue and appended to the hand file where main lacks
+#    it.
 # 2. The plan (scripts/maintenance/plan.ts) says what else is due: the
 #    scorecard is replayed where the committed aggregate no longer
 #    describes the truth, the Archive's release or the scoring pins
@@ -49,13 +50,17 @@ name: Maintenance
 #    their runs are linked on the pull request. Nothing changed: no pull
 #    request.
 #
+# The daily watcher (watch.yml) also starts it where a report the owner
+# accepted waits and no run of the `prospective` group is queued or in
+# progress; the acceptance workflow starts nothing, so no start displaces a
+# run of the prospective test waiting in the group.
+#
 # By hand: `gh workflow run maintenance.yml` runs it at once;
 # `-f rescore=true` replays the scorecard whatever the plan says;
 # `-f merge=false` leaves the pull request open for review (and uploads
 # nothing to the Archive's release); `-f from=<branch>` folds a branch in
-# first, such as one adding a row to the hand file of the truth (an
-# accepted report's branch, `report/...`, is folded in by its statements
-# instead, as every waiting report's is). To pause
+# first, such as one adding a row to the hand file of the truth (never a
+# `report/...` branch: an accepted report is read from its issue). To pause
 # it: gh workflow disable maintenance.yml.
 
 on:
@@ -139,8 +144,8 @@ jobs:
           set -euo pipefail
           exec > >(tee -a "$LOG") 2>&1
           case "$FROM" in -* | *[!A-Za-z0-9._/-]*) echo "::error::not a branch name: $FROM"; exit 1 ;; esac
-          # An accepted report's branch is folded in by its statements, as every report's is below: two reports' branches cut from one main both append to the hand file's end, and would not merge.
-          case "$FROM" in report/*) echo "$FROM is an accepted report: its statements are added with every waiting report's"; exit 0 ;; esac
+          # An accepted report is read from its issue, never from a branch, so a branch cannot carry a statement the owner did not accept.
+          case "$FROM" in report/*) echo "$FROM is not read: an accepted report is read from its issue below"; exit 0 ;; esac
           git fetch --quiet origin "+refs/heads/$FROM:refs/remotes/origin/$FROM"
           git merge --no-ff -m "Fold in $FROM" "origin/$FROM"
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -150,27 +155,23 @@ jobs:
       - name: Install the dependencies on the scoring pins
         working-directory: main
         run: npm run -s pins -- install scoring
-      # Each report the owner accepted waits on a branch `report/issue-<number>` (breakup-report.yml). Its statements
-      # that main's hand file lacks are appended to it, whichever run comes first: one started for the report, one
-      # started for a later report in its place (GitHub keeps one waiting run per concurrency group), or the weekly one.
-      # A branch whose every statement main holds already is deleted; the others once their pull request is merged.
+      # Each report the owner accepted is an issue labelled breakup-report-accepted (breakup-report.yml). Its statement is read again from
+      # the issue itself, whatever started the run: where the owner applied the label last (the issue's events) and the body was not edited
+      # since, with the form reader (scripts/truth/report-issue.ts); and appended to the hand file where main lacks it. Nothing is read from a
+      # branch. The `report/` branches an earlier version of the workflow wrote are deleted unread.
       - name: Add the statements of the accepted reports
         working-directory: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
           exec > >(tee -a "$LOG") 2>&1
-          git fetch --quiet --prune origin "+refs/heads/report/*:refs/remotes/origin/report/*"
-          : > "$RUNNER_TEMP/report-branches.txt"
-          for ref in $(git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin/report/); do
-            git show "origin/$ref:data/truth/hand.json" > "$RUNNER_TEMP/report-hand.json"
-            npm run -s truth:add -- --missing-from "$RUNNER_TEMP/report-hand.json" --status "$RUNNER_TEMP/report-status.txt"
-            if [ "$(cat "$RUNNER_TEMP/report-status.txt")" = held ]; then
-              git push -q origin --delete "$ref" && echo "deleted $ref: main holds its statements"
-            else
-              echo "$ref" >> "$RUNNER_TEMP/report-branches.txt"
-            fi
+          npm run -s truth:report -- accepted "$RUNNER_TEMP/accepted.json"
+          npm run -s truth:add -- --missing-from "$RUNNER_TEMP/accepted.json"
+          for ref in $(git ls-remote --heads origin 'report/*' | cut -f2 | sed 's#^refs/heads/##'); do
+            git push -q origin --delete "$ref" && echo "deleted $ref: a report is read from its issue"
           done
-          echo "$(wc -l < "$RUNNER_TEMP/report-branches.txt") accepted reports folded in"
       # NASA's history is read from its PDF's text; pdftotext runs only when the PDF's hash changed.
       - name: Install poppler
         run: |
@@ -427,10 +428,6 @@ jobs:
           fi
           gh pr merge "$url" --squash --delete-branch --subject "$title" --body-file "$out/message.txt"
           echo "merged=true" >> "$GITHUB_OUTPUT"
-          # The accepted reports folded in are on main now: their branches go.
-          while read -r ref; do
-            git push -q origin --delete "$ref" || echo "::notice::the branch $ref could not be deleted"
-          done < "$RUNNER_TEMP/report-branches.txt"
       - name: Run CI, the KPI workflow and the docs on main
         if: steps.pr.outputs.merged == 'true'
         env:

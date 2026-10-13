@@ -3,8 +3,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { SourceId } from "../../src/truth.ts";
 import { formBody } from "../truth/report-form.ts";
-import { ACCEPT_LABEL, REPORT_LABEL } from "../truth/report-issue.ts";
-import { createIssue, ensureLabel, issuesLabelled } from "./github.ts";
+import { addMissing } from "../truth/add.ts";
+import { ACCEPT_LABEL, acceptedHandFile, readAcceptedIssues, REPORT_LABEL } from "../truth/report-issue.ts";
+import { createIssue, ensureLabel, gh, issuesLabelled } from "./github.ts";
 import { MAINTENANCE_COLOR, MAINTENANCE_DESCRIPTION, MAINTENANCE_LABEL } from "./reminder.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -40,6 +41,17 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
  * however many runs see it. A page that cannot be read, or whose shape
  * changed, fails the run after the other pages are read and their issues
  * opened.
+ *
+ * `-- --fold` starts the maintenance run for the reports the owner
+ * accepted: where at least one accepted report's statement is missing from
+ * the checkout's hand file (`npm run truth:report -- accepted`'s reading)
+ * and no run of the prospective test's concurrency group is queued,
+ * waiting or going (`foldDecision`), it runs `maintenance.yml`; otherwise
+ * the next day's watch, or Monday's maintenance run, folds them in. The
+ * acceptance workflow starts nothing itself: GitHub keeps one pending run
+ * per concurrency group, so a second start could displace a run of the
+ * prospective test waiting there. At 07:41 UTC, a maintenance run of at
+ * most 330 minutes ends before the test's next daily run at 02:37.
  */
 
 /** A notice read from a watched page. */
@@ -336,6 +348,56 @@ async function readAll(now: Date): Promise<{ notices: Notice[]; errors: string[]
   return { notices, errors };
 }
 
+/** A run of a workflow as the Actions API lists it (`GET /repos/{repo}/actions/workflows/{file}/runs`), the fields read here. */
+export interface WorkflowRun {
+  status: string;
+  event: string;
+}
+
+/** The workflows whose runs share the concurrency group `prospective`: the prospective test, the maintenance run, and the KPI workflow on its schedule alone (its other runs have a group of their own). */
+export const PROSPECTIVE_GROUP: readonly { workflow: string; events: readonly string[] | null }[] = [
+  { workflow: "prospective.yml", events: null },
+  { workflow: "maintenance.yml", events: null },
+  { workflow: "kpi.yml", events: ["schedule"] },
+];
+
+/**
+ * Whether the watcher starts the maintenance run for the accepted reports
+ * waiting (`waiting`, those whose statement main's hand file lacks), from
+ * the recent runs of each workflow of the group: only where one waits and
+ * no run of the group is anything but completed (queued, waiting, pending,
+ * requested or in progress), so the start never displaces a pending run.
+ */
+export function foldDecision(waiting: number, runs: Readonly<Record<string, readonly WorkflowRun[]>>): { dispatch: boolean; reason: string } {
+  const reports = `${waiting} accepted report${waiting === 1 ? " waits" : "s wait"}`;
+  if (waiting === 0) return { dispatch: false, reason: "no accepted report waits" };
+  for (const { workflow, events } of PROSPECTIVE_GROUP) {
+    const busy = (runs[workflow] ?? []).find((run) => run.status !== "completed" && (events === null || events.includes(run.event)));
+    if (busy !== undefined) return { dispatch: false, reason: `${reports}, but ${workflow} has a run ${busy.status}: the next day's watch or Monday's maintenance run folds ${waiting === 1 ? "it" : "them"} in` };
+  }
+  return { dispatch: true, reason: `${reports} and no run of the prospective group is queued or in progress: the maintenance run folds ${waiting === 1 ? "it" : "them"} in` };
+}
+
+/** Starts the maintenance run where an accepted report waits and the prospective group is free (`foldDecision`). */
+function fold(): void {
+  const repository = process.env.GH_REPO ?? process.env.GITHUB_REPOSITORY;
+  const owner = process.env.OWNER;
+  if (repository === undefined || owner === undefined || owner === "") throw new Error("GH_REPO and OWNER name the repository and its owner: the workflow passes them");
+  const { file, passed } = acceptedHandFile(readAcceptedIssues(repository), owner);
+  for (const { number, reason } of passed) console.log(`issue ${number} passed over: ${reason}`);
+  const waiting = addMissing(readFileSync(resolve(ROOT, "data/truth/hand.json"), "utf8"), JSON.stringify(file)).added.length;
+  const runs: Record<string, WorkflowRun[]> = {};
+  if (waiting > 0) {
+    for (const { workflow } of PROSPECTIVE_GROUP) {
+      const answer = gh(["api", `repos/${repository}/actions/workflows/${workflow}/runs?per_page=30`, "--jq", ".workflow_runs[] | {status, event}"]);
+      runs[workflow] = answer.split("\n").filter((line) => line.trim() !== "").map((line) => JSON.parse(line) as WorkflowRun);
+    }
+  }
+  const decision = foldDecision(waiting, runs);
+  console.log(decision.reason);
+  if (decision.dispatch) gh(["workflow", "run", "maintenance.yml", "--ref", "main"]);
+}
+
 /** `--dry-run` reads the pages and prints the issues it would open, asking GitHub nothing. */
 async function main(dryRun: boolean): Promise<void> {
   const now = new Date();
@@ -355,4 +417,7 @@ async function main(dryRun: boolean): Promise<void> {
   }
 }
 
-if (process.argv[1] !== undefined && process.argv[1].endsWith("watch.ts")) await main(process.argv.includes("--dry-run"));
+if (process.argv[1] !== undefined && process.argv[1].endsWith("watch.ts")) {
+  if (process.argv.includes("--fold")) fold();
+  else await main(process.argv.includes("--dry-run"));
+}

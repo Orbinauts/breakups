@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { readBreakups } from "../../src/index.ts";
-import { readBodies, readManifest, type ArchivedBody } from "../archive/archive.ts";
+import { builtYears, readBodies, readManifest, type ArchivedBody } from "../archive/archive.ts";
+import { regimeBefore } from "../kpi/match.ts";
+import { indexOf, loadSlice } from "../kpi/replay.ts";
 import { readYearFile, throughOf } from "../prospective/run.ts";
 import { readPublished, writePublished } from "./files.ts";
 import { mergePublished } from "./merge.ts";
@@ -18,7 +20,9 @@ import { selectPublished } from "./select.ts";
  * Each year file is one the frozen detector's replay wrote (`<out>/years/<Y>.json.gz`),
  * carried from the states at the end of the year before; in early January a
  * run passes both years. The Archive gives the catalogue's identity of the
- * parents the truth does not name, from each year's body table, and the last
+ * parents the truth does not name, from each year's body table, a confirmed
+ * object's regime by its last set before the raising, from the sets of the
+ * latest year and the one before (as the scorecard reads it), and the last
  * day of sets the replay read, from the latest year's manifest. It commits
  * nothing.
  */
@@ -55,8 +59,11 @@ export function publishedRun(options: PublishedRunOptions): string {
   const latestYear = files[files.length - 1]!.file.year;
   const setsThrough = throughOf(readManifest(options.archive, latestYear).source, latestYear);
 
+  // The sets of the latest year and the one before, as the scorecard's matcher reads a confirmed object's last set.
+  const index = indexOf(loadSlice(options.archive, latestYear), builtYears(options.archive).includes(latestYear - 1) ? loadSlice(options.archive, latestYear - 1) : null);
+
   const previous = readPublished(options.out);
-  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number)), verdicts);
+  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number), (number, at) => regimeBefore(index, number, at)), verdicts);
   const detector = detectors[0]!;
   writePublished(options.out, merged, { ranAt: new Date(options.now).toISOString(), setsThrough, detector, truthSha256 });
 

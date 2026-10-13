@@ -1,0 +1,26 @@
+[
+  {
+    "id": 20031,
+    "node_id": "LE_lADO20031",
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/events/20031",
+    "actor": {
+      "login": "the-owner",
+      "id": 231907351,
+      "node_id": "U_kgDO231907351",
+      "avatar_url": "https://avatars.githubusercontent.com/u/231907351?v=4",
+      "url": "https://api.github.com/users/the-owner",
+      "html_url": "https://github.com/the-owner",
+      "type": "User",
+      "site_admin": false
+    },
+    "event": "labeled",
+    "commit_id": null,
+    "commit_url": null,
+    "created_at": "2026-10-08T09:01:05Z",
+    "performed_via_github_app": null,
+    "label": {
+      "name": "breakup-report-accepted",
+      "color": "0e8a16"
+    }
+  }
+]

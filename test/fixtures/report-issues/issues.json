@@ -1,0 +1,197 @@
+[
+  {
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/57",
+    "html_url": "https://github.com/the-owner/breakups/issues/57",
+    "id": 3500000057,
+    "node_id": "I_kwDOissue57",
+    "number": 57,
+    "title": "Breakup report: Meteor 2-7 (second event)",
+    "user": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 9000001,
+        "node_id": "LA_kwDOreport",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report",
+        "name": "breakup-report",
+        "color": "1d76db",
+        "default": false,
+        "description": "A published report of a breakup, for the owner to accept into the ground truth"
+      },
+      {
+        "id": 9000002,
+        "node_id": "LA_kwDOaccept",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report-accepted",
+        "name": "breakup-report-accepted",
+        "color": "0e8a16",
+        "default": false,
+        "description": "The owner accepts the report: a workflow adds it to the ground truth (only the owner's label counts)"
+      }
+    ],
+    "state": "closed",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "milestone": null,
+    "comments": 1,
+    "created_at": "2026-10-08T07:41:12Z",
+    "updated_at": "2026-10-08T09:02:40Z",
+    "closed_at": "2026-10-08T09:02:40Z",
+    "author_association": "COLLABORATOR",
+    "active_lock_reason": null,
+    "body": "### Source\n\nanalyst\n\n### Published on\n\n2026-10-07\n\n### Reference\n\nJim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/)\n\n### Link\n\nhttps://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/\n\n### Kind\n\nbreakup\n\n### Catalogue number\n\n12456\n\n### International designator\n\n1981-043A\n\n### Name of the object\n\nMeteor 2-7 (second event)\n\n### Time as stated\n\n5 October 2026, about 09:45 UTC, plus or minus 10 minutes\n\n### Precision of the time\n\nminute\n\n### Instant\n\n2026-10-05T09:45Z\n\n### Window start\n\n2026-10-05T09:35Z\n\n### Window end\n\n2026-10-05T09:55Z\n\n### Altitude (km)\n\n855\n\n### Apogee (km)\n\n_No response_\n\n### Perigee (km)\n\n_No response_\n\n### Inclination (degrees)\n\n_No response_\n\n### Cause\n\nunknown\n\n### Cause as stated\n\nunconfirmed; an internal pressure or battery failure, or an unrecorded collision\n\n### Pieces catalogued\n\n_No response_\n\n### Pieces counted on\n\n_No response_\n\n### Note\n\nLeoLabs reported a debris-generating event with an estimated tens of fragments.",
+    "state_reason": "completed"
+  },
+  {
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/58",
+    "html_url": "https://github.com/the-owner/breakups/issues/58",
+    "id": 3500000058,
+    "node_id": "I_kwDOissue58",
+    "number": 58,
+    "title": "Breakup report: Meteor 2-7 (second event)",
+    "user": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 9000001,
+        "node_id": "LA_kwDOreport",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report",
+        "name": "breakup-report",
+        "color": "1d76db",
+        "default": false,
+        "description": "A published report of a breakup, for the owner to accept into the ground truth"
+      },
+      {
+        "id": 9000002,
+        "node_id": "LA_kwDOaccept",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report-accepted",
+        "name": "breakup-report-accepted",
+        "color": "0e8a16",
+        "default": false,
+        "description": "The owner accepts the report: a workflow adds it to the ground truth (only the owner's label counts)"
+      }
+    ],
+    "state": "closed",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "milestone": null,
+    "comments": 1,
+    "created_at": "2026-10-08T07:41:12Z",
+    "updated_at": "2026-10-08T09:02:40Z",
+    "closed_at": "2026-10-08T09:02:40Z",
+    "author_association": "COLLABORATOR",
+    "active_lock_reason": null,
+    "body": "### Source\n\nanalyst\n\n### Published on\n\n2026-10-07\n\n### Reference\n\nJim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/)\n\n### Link\n\nhttps://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/\n\n### Kind\n\nbreakup\n\n### Catalogue number\n\n12456\n\n### International designator\n\n1981-043A\n\n### Name of the object\n\nMeteor 2-7 (second event)\n\n### Time as stated\n\n5 October 2026, about 09:45 UTC, plus or minus 10 minutes\n\n### Precision of the time\n\nminute\n\n### Instant\n\n2026-10-05T09:45Z\n\n### Window start\n\n2026-10-05T09:35Z\n\n### Window end\n\n2026-10-05T09:55Z\n\n### Altitude (km)\n\n855\n\n### Apogee (km)\n\n_No response_\n\n### Perigee (km)\n\n_No response_\n\n### Inclination (degrees)\n\n_No response_\n\n### Cause\n\nunknown\n\n### Cause as stated\n\nunconfirmed; an internal pressure or battery failure, or an unrecorded collision\n\n### Pieces catalogued\n\n_No response_\n\n### Pieces counted on\n\n_No response_\n\n### Note\n\nLeoLabs reported a debris-generating event with an estimated tens of fragments.",
+    "state_reason": "completed"
+  },
+  {
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/59",
+    "html_url": "https://github.com/the-owner/breakups/issues/59",
+    "id": 3500000059,
+    "node_id": "I_kwDOissue59",
+    "number": 59,
+    "title": "Breakup report: Meteor 2-7 (second event)",
+    "user": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 9000001,
+        "node_id": "LA_kwDOreport",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report",
+        "name": "breakup-report",
+        "color": "1d76db",
+        "default": false,
+        "description": "A published report of a breakup, for the owner to accept into the ground truth"
+      },
+      {
+        "id": 9000002,
+        "node_id": "LA_kwDOaccept",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report-accepted",
+        "name": "breakup-report-accepted",
+        "color": "0e8a16",
+        "default": false,
+        "description": "The owner accepts the report: a workflow adds it to the ground truth (only the owner's label counts)"
+      }
+    ],
+    "state": "closed",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "milestone": null,
+    "comments": 1,
+    "created_at": "2026-10-08T07:41:12Z",
+    "updated_at": "2026-10-08T09:02:40Z",
+    "closed_at": "2026-10-08T09:02:40Z",
+    "author_association": "COLLABORATOR",
+    "active_lock_reason": null,
+    "body": "### Source\n\nanalyst\n\n### Published on\n\n2026-10-07\n\n### Reference\n\nJim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/)\n\n### Link\n\nhttps://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/\n\n### Kind\n\nbreakup\n\n### Catalogue number\n\n12456\n\n### International designator\n\n1981-043A\n\n### Name of the object\n\nMeteor 2-7 (second event)\n\n### Time as stated\n\n5 October 2026, about 09:45 UTC, plus or minus 10 minutes\n\n### Precision of the time\n\nminute\n\n### Instant\n\n2026-10-05T09:45Z\n\n### Window start\n\n2026-10-05T09:35Z\n\n### Window end\n\n2026-10-05T09:55Z\n\n### Altitude (km)\n\n855\n\n### Apogee (km)\n\n_No response_\n\n### Perigee (km)\n\n_No response_\n\n### Inclination (degrees)\n\n_No response_\n\n### Cause\n\nunknown\n\n### Cause as stated\n\nunconfirmed; an internal pressure or battery failure, or an unrecorded collision\n\n### Pieces catalogued\n\n_No response_\n\n### Pieces counted on\n\n_No response_\n\n### Note\n\nLeoLabs reported a debris-generating event with an estimated tens of fragments.",
+    "state_reason": "completed"
+  },
+  {
+    "url": "https://api.github.com/repos/the-owner/breakups/issues/60",
+    "html_url": "https://github.com/the-owner/breakups/issues/60",
+    "id": 3500000060,
+    "node_id": "I_kwDOissue60",
+    "number": 60,
+    "title": "Breakup report: Meteor 2-7 (second event)",
+    "user": {
+      "login": "a-collaborator",
+      "id": 5550001,
+      "node_id": "U_kgDO5550001",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5550001?v=4",
+      "url": "https://api.github.com/users/a-collaborator",
+      "html_url": "https://github.com/a-collaborator",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 9000002,
+        "node_id": "LA_kwDOaccept",
+        "url": "https://api.github.com/repos/the-owner/breakups/labels/breakup-report-accepted",
+        "name": "breakup-report-accepted",
+        "color": "0e8a16",
+        "default": false,
+        "description": "The owner accepts the report: a workflow adds it to the ground truth (only the owner's label counts)"
+      }
+    ],
+    "state": "open",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "milestone": null,
+    "comments": 1,
+    "created_at": "2026-10-08T07:41:12Z",
+    "updated_at": "2026-10-08T09:02:40Z",
+    "closed_at": null,
+    "author_association": "COLLABORATOR",
+    "active_lock_reason": null,
+    "body": "### Source\n\nanalyst\n\n### Published on\n\n2026-10-07\n\n### Reference\n\nJim Shell's dating from public elements, as reported by EarthSky on 2026-10-07 (https://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/)\n\n### Link\n\nhttps://earthsky.org/space/another-satellite-breakup-meteor-2-7-oct-5-2026/\n\n### Kind\n\nbreakup\n\n### Catalogue number\n\n12456\n\n### International designator\n\n1981-043A\n\n### Name of the object\n\nMeteor 2-7 (second event)\n\n### Time as stated\n\n5 October 2026, about 09:45 UTC, plus or minus 10 minutes\n\n### Precision of the time\n\nminute\n\n### Instant\n\n2026-10-05T09:45Z\n\n### Window start\n\n2026-10-05T09:35Z\n\n### Window end\n\n2026-10-05T09:55Z\n\n### Altitude (km)\n\n855\n\n### Apogee (km)\n\n_No response_\n\n### Perigee (km)\n\n_No response_\n\n### Inclination (degrees)\n\n_No response_\n\n### Cause\n\nunknown\n\n### Cause as stated\n\nunconfirmed; an internal pressure or battery failure, or an unrecorded collision\n\n### Pieces catalogued\n\n_No response_\n\n### Pieces counted on\n\n_No response_\n\n### Note\n\nLeoLabs reported a debris-generating event with an estimated tens of fragments.",
+    "state_reason": null
+  }
+]
