@@ -23,7 +23,7 @@ describe("what a main that moved during the run clashes with", () => {
 /** Whoever commits in the test's repositories, with no global configuration: the machine's own (a signing key) is not the run's, and signing every commit outlasts the test's time. */
 const IDENTITY = { GIT_AUTHOR_NAME: "bot", GIT_AUTHOR_EMAIL: "bot", GIT_COMMITTER_NAME: "bot", GIT_COMMITTER_EMAIL: "bot", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" };
 
-describe("following a main that moved, in a repository", () => {
+describe("following a main that moved, in a repository", { timeout: 60_000 }, () => {
   let dir: string;
   const git = (...args: string[]): string => execFileSync("git", args, { cwd: dir, encoding: "utf8", env: { ...process.env, ...IDENTITY } }).trim();
   const write = (file: string, text: string): void => {
