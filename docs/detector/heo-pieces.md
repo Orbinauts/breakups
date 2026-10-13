@@ -175,7 +175,7 @@ The carry uses the rate of the piece's first set for the whole gap. Drag lowers 
 - **drag bounded**: the band read for every piece;
 - **below the parent**: the band read only where the piece's first set sits below the parent's semi-major axis, as drag leaves a piece. Drag cannot have raised a piece, so a piece above the parent is read at its own rate.
 
-No tolerance was chosen: both forms are the scorecard's test with its frozen tolerances. So the held-out years were read in the same run, with no choice to keep them blind for.
+Both forms are the scorecard's test with its frozen tolerances, and no tolerance was fitted. But the held-out years were read in the same pass as the drag-band variants, and the second form, below the parent, was chosen with them in view. That breaks the owner's rule for this issue (the held-out years read once, after any choice is made on the training years). So the held-out figures below are not an unseen test of either form, least of all of below the parent: any later adoption of either must be judged on other evidence, such as years or events not read here, or a replay under the lock, and not on these held-out rows.
 
 | Regime, split | The event's pieces kept: today's / drag bounded / below the parent (of) | Strangers admitted: today's / drag bounded / below the parent (of) |
 | --- | --- | --- |
