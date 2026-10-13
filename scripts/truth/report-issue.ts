@@ -5,12 +5,13 @@ import { comment, ensureLabel, gh, setOutput } from "../maintenance/github.ts";
  * The owner's acceptance of a breakup report, read by the workflow
  * `.github/workflows/breakup-report.yml` when an issue is labelled.
  * `npm run truth:report -- check <body file>` reads the event GitHub
- * wrote (`GITHUB_EVENT_PATH`), asks GitHub for the permission of whoever
- * applied the label, and accepts the report only where the label is
- * `breakup-report-accepted`, the issue is a `breakup-report` and the
- * person who applied it is the repository's owner, with admin
- * permission: anyone with triage permission can apply a label, so the
- * label alone proves nothing. An accepted report's body is written to the
+ * wrote (`GITHUB_EVENT_PATH`) and accepts the report only where the label
+ * is `breakup-report-accepted`, the issue is a `breakup-report` and the
+ * person who applied it is the repository's owner (`OWNER`, the workflow's
+ * `github.repository_owner`: the repository belongs to a user account, so
+ * the owner is one login). Anyone with triage permission can apply a
+ * label, and an admin is not the owner, so neither the label alone nor a
+ * permission proves the owner's acceptance. An accepted report's body is written to the
  * file for `npm run truth:add -- --form`; a refused one has the label
  * taken off again and a comment saying why. `npm run truth:report --
  * refused <issue number> <log file>` does the same for a report the hand file's checks
@@ -35,13 +36,13 @@ export interface LabelledEvent {
 
 export type Acceptance = { accepted: true; number: number; body: string; by: string } | { accepted: false; number: number; reason: string };
 
-/** Whether a labelling accepts a report: the accepting label, on a breakup report, applied by someone with admin permission. */
-export function acceptance(event: LabelledEvent, permission: string): Acceptance {
+/** Whether a labelling accepts a report: the accepting label, on a breakup report, applied by the repository's owner (`owner`, a login). */
+export function acceptance(event: LabelledEvent, owner: string): Acceptance {
   const number = event.issue.number;
   const label = event.label?.name ?? "none";
   if (label !== ACCEPT_LABEL) return { accepted: false, number, reason: `the label applied is ${label}, not ${ACCEPT_LABEL}` };
   if (!event.issue.labels.some((l) => l.name === REPORT_LABEL)) return { accepted: false, number, reason: `the issue is not labelled ${REPORT_LABEL}` };
-  if (permission !== "admin") return { accepted: false, number, reason: `${event.sender.login} applied ${ACCEPT_LABEL} with ${permission} permission; only the repository's owner, with admin permission, accepts a report` };
+  if (event.sender.login !== owner) return { accepted: false, number, reason: `${event.sender.login} applied ${ACCEPT_LABEL}; only the repository's owner, ${owner}, accepts a report` };
   if (event.issue.body === null || event.issue.body.trim() === "") return { accepted: false, number, reason: "the issue has no body to read the report from" };
   return { accepted: true, number, body: event.issue.body, by: event.sender.login };
 }
@@ -49,11 +50,11 @@ export function acceptance(event: LabelledEvent, permission: string): Acceptance
 /** The branch an accepted report's statement is committed to: named by the issue's number alone, never by its text. */
 export const reportBranch = (number: number): string => `report/issue-${number}`;
 
-/** The permission a person holds on the repository, as GitHub states it. */
-function permissionOf(login: string): string {
-  const repository = process.env.GH_REPO ?? process.env.GITHUB_REPOSITORY;
-  if (repository === undefined) throw new Error("GH_REPO names no repository");
-  return gh(["api", `repos/${repository}/collaborators/${encodeURIComponent(login)}/permission`, "--jq", ".permission"]).trim();
+/** The repository's owner, a login: `OWNER` as the workflow passes it (`github.repository_owner`). */
+function ownerOf(): string {
+  const owner = process.env.OWNER;
+  if (owner === undefined || owner === "") throw new Error("OWNER names no repository owner: the workflow passes github.repository_owner");
+  return owner;
 }
 
 function unlabel(number: number): void {
@@ -66,7 +67,7 @@ function check(bodyFile: string): void {
   const event = JSON.parse(readFileSync(path, "utf8")) as LabelledEvent;
   ensureLabel(REPORT_LABEL, REPORT_COLOR, REPORT_DESCRIPTION);
   ensureLabel(ACCEPT_LABEL, ACCEPT_COLOR, ACCEPT_DESCRIPTION);
-  const result = acceptance(event, event.label?.name === ACCEPT_LABEL ? permissionOf(event.sender.login) : "none");
+  const result = acceptance(event, ownerOf());
   setOutput("number", String(result.number));
   if (!result.accepted) {
     console.log(`not accepted: ${result.reason}`);

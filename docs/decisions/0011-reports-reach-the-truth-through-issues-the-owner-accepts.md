@@ -159,3 +159,16 @@ Both a quick hand path and a watcher, and the watcher only opens issues.
 - A notice the watcher reads wrong opens one issue a person closes; a
   page that changed its shape opens a maintenance issue until the reader
   is fixed.
+
+## Amended on 2026-10-13: the owner's login, not an admin's permission
+
+The review of issue #9 found the owner check wider than its words: any
+person with admin permission passed it, and the repository belongs to the
+user account `Orbinauts`, so its owner is one login. A report is now
+accepted only where the person who applied `breakup-report-accepted` is
+the repository's owner, `github.repository_owner`, compared by login
+(`acceptance` in `scripts/truth/report-issue.ts`); an admin who is not the
+owner is refused as anyone else is. The workflow checks main out without
+leaving the token in the checkout (`persist-credentials: false`), since the
+dependencies' install scripts run in it, and names the token in the one
+command that needs it.

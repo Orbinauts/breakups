@@ -58,6 +58,18 @@ describe("the breakup-report workflow", () => {
     expect(accept.steps[add]!.run).toContain("npm run -s truth:add -- --form");
   });
 
+  test("checks out main without leaving the token in the checkout before it installs anything, and pushes with the token named", () => {
+    const checkout = accept.steps[indexOf(accept.steps, "Check out main")]! as Step & { with?: Record<string, unknown> };
+    expect(checkout.with?.["persist-credentials"]).toBe(false);
+    expect(indexOf(accept.steps, "Check out main")).toBeLessThan(indexOf(accept.steps, "Install the dependencies"));
+    for (const step of accept.steps) expect(step.run ?? "").not.toMatch(/git push(?![^\n]*x-access-token)/);
+  });
+
+  test("passes the repository's owner to the check, which accepts the owner's label alone", () => {
+    const check = accept.steps[indexOf(accept.steps, "Check who accepted it")]!;
+    expect(check.env?.["OWNER"]).toBe("${{ github.repository_owner }}");
+  });
+
   test("never puts the issue's text into a shell command", () => {
     for (const step of accept.steps) {
       expect(step.run ?? "").not.toMatch(/\$\{\{\s*github\.event\./);

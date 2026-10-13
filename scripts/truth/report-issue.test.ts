@@ -9,20 +9,20 @@ const event = (over: { label?: string; labels?: string[]; sender?: string; body?
 });
 
 describe("accepting a breakup report", () => {
-  test("is the owner's alone: the label applied by anyone without admin permission is refused", () => {
-    expect(acceptance(event(), "admin")).toEqual({ accepted: true, number: 41, body: "### Source\n\nnews", by: "the-owner" });
-    for (const permission of ["maintain", "write", "triage", "read", "none"]) {
-      expect(acceptance(event({ sender: "someone" }), permission)).toEqual({ accepted: false, number: 41, reason: `someone applied ${ACCEPT_LABEL} with ${permission} permission; only the repository's owner, with admin permission, accepts a report` });
+  test("is the owner's alone: the label applied by anyone but the repository's owner is refused, an admin too", () => {
+    expect(acceptance(event(), "the-owner")).toEqual({ accepted: true, number: 41, body: "### Source\n\nnews", by: "the-owner" });
+    for (const sender of ["an-admin", "a-maintainer", "someone", "The-Owner-Not"]) {
+      expect(acceptance(event({ sender }), "the-owner")).toEqual({ accepted: false, number: 41, reason: `${sender} applied ${ACCEPT_LABEL}; only the repository's owner, the-owner, accepts a report` });
     }
   });
 
   test("reads only the accepting label, on an issue that is a breakup report", () => {
-    expect(acceptance(event({ label: "bug" }), "admin")).toMatchObject({ accepted: false, reason: `the label applied is bug, not ${ACCEPT_LABEL}` });
-    expect(acceptance(event({ labels: [ACCEPT_LABEL] }), "admin")).toMatchObject({ accepted: false, reason: `the issue is not labelled ${REPORT_LABEL}` });
+    expect(acceptance(event({ label: "bug" }), "the-owner")).toMatchObject({ accepted: false, reason: `the label applied is bug, not ${ACCEPT_LABEL}` });
+    expect(acceptance(event({ labels: [ACCEPT_LABEL] }), "the-owner")).toMatchObject({ accepted: false, reason: `the issue is not labelled ${REPORT_LABEL}` });
   });
 
   test("refuses an issue with no body", () => {
-    expect(acceptance(event({ body: null }), "admin")).toMatchObject({ accepted: false, reason: "the issue has no body to read the report from" });
+    expect(acceptance(event({ body: null }), "the-owner")).toMatchObject({ accepted: false, reason: "the issue has no body to read the report from" });
   });
 
   test("builds the statement on a branch named by the issue's number alone", () => {
