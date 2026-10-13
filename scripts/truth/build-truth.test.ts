@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Statement } from "../../src/truth.ts";
-import { groupStatements } from "./build-truth.ts";
+import { gradeOf, groupStatements } from "./build-truth.ts";
 import { SATCAT_REF_PREFIX } from "./parse-gcat-satcat.ts";
 
 /** Statements grouped into events, by the build's rules, on statements made up to show each rule. */
@@ -65,5 +65,13 @@ describe("the same-event rule", () => {
 
   test("a news outlet and another a week apart are not one source's two instants", () => {
     expect(refsOf([day("news", "LeoLabs", "2026-03-29"), day("news", "a newspaper", "2026-04-05")])).toHaveLength(1);
+  });
+});
+
+describe("the grade one statement alone gives the event's time", () => {
+  test("an agency's day is B, but an ESA row naming no object, placed on the event by the build's rule, is no authority: it dates the event and grades as an unnamed source's would", () => {
+    expect(gradeOf(day("esa-ser", "ESA, named", "2019-03-25"))).toBe("B");
+    expect(gradeOf(day("esa-ser", "ESA, placed by the rule", "2019-03-25", { parent: { catalogueNumber: null, designator: null, name: null } }))).toBe("D");
+    expect(gradeOf(statement("odqn", "ODQN", "2019-03-25T10:00Z"))).toBe("A");
   });
 });

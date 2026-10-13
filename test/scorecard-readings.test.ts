@@ -130,13 +130,21 @@ describe("the lead is read two ways: over the first agency notice dated to the d
 });
 
 describe("the first statements the two leads are read against", () => {
-  const statement = (source: string, on: string, precision: "day" | "month") => ({ source, statedOn: { on, precision, ref: "" } });
+  const named = { catalogueNumber: 40001, designator: "2014-001A", name: "SAT" };
+  const statement = (source: string, on: string, precision: "day" | "month", parent: object = named) => ({ source, parent, statedOn: { on, precision, ref: "" } });
   const breakup = { statements: [statement("news", "2015-05-01", "day"), statement("odqn", "2015-07-01", "month"), statement("hoosf-16e", "2015-06-01", "month"), statement("esa-ser", "2016-04-20", "day"), statement("s4s-notice", "2015-05-12", "day")] } as unknown as Breakup;
 
   test("the notice is an agency's statement dated to the day; the quarterly news is NASA's, dated to its month", () => {
     expect(firstAgencyNotice(breakup)).toMatchObject({ source: "s4s-notice", on: "2015-05-12" });
     expect(firstQuarterlyNews(breakup)).toMatchObject({ source: "hoosf-16e", on: "2015-06-01" });
     expect(firstAgencyNotice({ statements: [statement("odqn", "2015-07-01", "month")] } as unknown as Breakup)).toBeNull();
+  });
+
+  test("an ESA row naming no object, placed on the event by the truth build's rule, is no agency's notice of it", () => {
+    const placed = statement("esa-ser", "2015-05-02", "day", { catalogueNumber: null, designator: null, name: null });
+    expect(firstAgencyNotice({ statements: [placed, statement("s4s-notice", "2015-05-12", "day")] } as unknown as Breakup)).toMatchObject({ source: "s4s-notice", on: "2015-05-12" });
+    expect(firstAgencyNotice({ statements: [placed] } as unknown as Breakup)).toBeNull();
+    expect(firstAgencyNotice({ statements: [statement("esa-ser", "2015-05-02", "day")] } as unknown as Breakup)).toMatchObject({ source: "esa-ser" });
   });
 });
 

@@ -1,4 +1,5 @@
 import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedState, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { isAgencyWord } from "../../src/truth.ts";
 import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
 
@@ -58,6 +59,9 @@ const eventDayOf = (row: Breakup): string => (row.event.from ?? row.event.to).sl
 type Dated = Statement & { statedOn: NonNullable<Statement["statedOn"]> };
 const isOutside = (s: Statement): s is Dated => s.statedOn !== null && (s.source === "news" || s.source === "analyst");
 const isAgencyNotice = (row: Breakup) => (s: Statement): s is Dated => s.statedOn !== null && isAgencySource(s.source) && s.statedOn.on >= eventDayOf(row);
+
+/** The day of the row's first agency notice on its object (`isAgencyWord`), which confirms a breakup: an ESA row the truth's build placed by its own rule is listed among the reports, but confirms nothing. */
+const firstNoticeOn = (row: Breakup | null): string | undefined => (row === null ? undefined : row.statements.filter(isAgencyNotice(row)).filter(isAgencyWord).map((s) => s.statedOn.on).sort()[0]);
 
 /** The statements of a row that count as reports, earliest first: dated outside reports, and dated agency notices no earlier than the event's day. */
 function reportsOf(row: Breakup | null): PublishedReport[] {
@@ -160,8 +164,8 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const row = [...cluster].reverse().find((landed) => landed.row !== null)?.row ?? null;
   const confirmedVerdict = cluster.find(({ verdict }) => verdict.state === "confirmed")?.verdict;
   const reports = reportsOf(row);
-  const firstNotice = reports.find((report) => isAgencySource(report.source));
-  const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice.date}T00:00:00.000Z`)].filter((t) => t !== undefined);
+  const firstNotice = firstNoticeOn(row);
+  const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
   const confirmedAt = confirmedOn.length === 0 ? null : iso(Math.min(...confirmedOn));
   const state: PublishedState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
   if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
@@ -206,7 +210,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
  * of the row it lands on (the latest raised where the row holds two), and
  * two whose steps do not overlap are two breakups, whatever row they land
  * on. It is published
- * confirmed when the detector confirmed it or an agency notice on its row,
+ * confirmed when the detector confirmed it or an agency notice on its row's object (`isAgencyWord`),
  * dated no earlier than the event, did; suspected when a dated outside
  * report (news, an analyst) names its row and no later verdict on its step
  * expired or dismissed it. A confirmation exempt as a release on purpose

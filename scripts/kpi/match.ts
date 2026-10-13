@@ -1,6 +1,7 @@
-import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, REGIMES, firstAgencyStatement, firstStatementOf, isAgencySource, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
+import { ALERT_STATES, BODY_CLASSES, DETECTOR_PARAMETERS, REGIMES, firstAgencyStatement, firstStatementOf, launchOf, yearOf, type BodyClass, type Breakup, type BreakupKind, type Confidence, type DetectorParameters, type FirstStatement, type Notice, type Regime, type SourceId, type StatedPrecision, type Step, type Verdict } from "../../src/index.ts";
 import { dayOf, endedByOf, operationalAt, opsStatusOf, regimeOf, semiMajorAxisOf } from "../../src/elements.ts";
 import { inScope, type ScopeSubject } from "../../src/scope.ts";
+import { isAgencyWord } from "../../src/truth.ts";
 import { WGS84_EQUATORIAL_KM } from "@orbinauts/engine";
 import { FRAGMENTS_DAYS, fragmentsOf, launchFragmentsOf, type Catalogue, type EventFragments } from "./catalogue.ts";
 import { ANALYST_FLOOR, DAY_MS, type SetIndex, type TimeBasis } from "./replay.ts";
@@ -176,8 +177,8 @@ export interface StatementAt {
 /** NASA's sources: its quarterly news, and the reference documents of its history that date the news' issues. */
 export const QUARTERLY_NEWS_SOURCES: readonly SourceId[] = ["hoosf-16e", "odqn"];
 
-/** The first public agency notice of an event: the earliest statement by an agency (`AGENCY_SOURCES`) dated to the day, a U.S. Space Forces-Space notice, ESA's report or any other; null where none is. */
-export const firstAgencyNotice = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => isAgencySource(s.source) && s.statedOn?.precision === "day"));
+/** The first public agency notice of an event: the earliest statement by an agency on the event's object (`isAgencyWord`) dated to the day, a U.S. Space Forces-Space notice, ESA's report or any other; null where none is. */
+export const firstAgencyNotice = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => isAgencyWord(s) && s.statedOn?.precision === "day"));
 
 /** The first issue of NASA's quarterly news on an event, dated to the first day of its month; null where none is dated. */
 export const firstQuarterlyNews = (breakup: Pick<Breakup, "statements">): FirstStatement | null => firstStatementOf(breakup.statements.filter((s) => QUARTERLY_NEWS_SOURCES.includes(s.source)));

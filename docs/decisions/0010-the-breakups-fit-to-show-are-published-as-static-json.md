@@ -177,3 +177,16 @@ The seventh decision record's amendment of 2026-10-12 (issue #17) changed two re
 
 - **An unreported confirmation.** A detector confirmation that lands on no row is the detector's own news, as before, and is shown with no report. It now has one name everywhere: unreported. The scorecard and the live test's score count it pending, neither true nor false, while it was raised less than 90 days before the truth's date (the latest day the ground truth knows of), and false once 90 days pass with no report. The published list keeps it after that, since a confirmed breakup stays for good and the site may already show it; its `reports` stay empty and its `row` null, so a reader can apply the same reading from `raisedAt`. The files' shape is unchanged. Dropping a confirmation from the list once it turns false is left to the owner: it would change "a confirmed breakup stays for good".
 - **The nearest row.** A confirmation lands as `landConfirmed` lands it, now on the row of its object nearest the detector's instant of the event, else its raising, rather than the latest scoreable row in the window; and a confirmation inside a report naming no object, no launch and no regime lands as `unnamed`, which, like every landing other than a detection or a release on purpose, the selection publishes as a breakup on no row. Inside a report naming a regime, the confirmed object's regime is read by its last set before the raising, from the sets of the Archive the publishing run reads, as the scorecard reads it; exempt by the regime or not, such a confirmation is a breakup on no row.
+
+## Amended on 2026-10-13: an ESA row the truth's build placed confirms nothing
+
+The second decision record's amendment of this day (issues #19 and #20)
+reads an ESA row that names no object, placed on an event by the truth
+build's own rule, as no agency's word on the object. The published files
+follow it: such a row is still listed among a breakup's `reports`, dated as
+ESA's edition, but it no longer makes a breakup confirmed by an agency
+notice (`isAgencyWord` in `src/truth.ts`, `firstNoticeOn` in
+`scripts/published/select.ts`). A breakup with no other notice and no
+confirmation by the detector is published suspected on it, as on a dated
+outside report. The 2025 seed's list is unchanged: DMSP F-14 is confirmed by
+the Space Forces' notice of the event's day.

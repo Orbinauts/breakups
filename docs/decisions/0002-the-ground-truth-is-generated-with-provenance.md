@@ -105,7 +105,11 @@ another source's day differ by one in several rows the sources agree on
 otherwise. A row whose object a cited report names carries that parent
 (two of 2024, named by s2a systems' observations as SpaceNews quoted
 them). An unknown cause in ESA's table states none, so it never outranks
-a cause another source names. The truth went from 2,433 events to 2,444
+a cause another source names. A row the rule places names no object, so
+it is ESA's word on a day and an orbit class, not on the event's object:
+it dates and corroborates the event it joins, but it is no authority for
+the event's confidence and no first agency notice for the lead (see the
+amendment on the confidence below). The truth went from 2,433 events to 2,444
 (from 2005, 623 to 634, of them 365 scoreable); 48 rows joined an
 event, 14 are unnamed events and 11 are placed nowhere.
 
@@ -173,6 +177,20 @@ anything else D. A company's instant ranks below an agency's because it
 is not an agency's word (the seventh decision record's lead is read
 against agencies only), and with an analyst's because both are a
 measurement from outside the agencies, cited.
+
+An authority counts as one only where its statement names the event's
+object (`isAgencyWord` in `src/truth.ts`): an ESA row naming no object,
+which the build placed on the event by its own rule (above), is the
+build's inference, not ESA's word on the object. It still dates the event
+and stands beside the other statements, but it grades as an unnamed
+statement does (D), the lead readers (`firstAgencyStatement`,
+`firstAgencyNotice`) leave it out, and the published files list it among
+a breakup's reports but are never confirmed by it.
+A row a cited report names, and a row ESA left unnamed (an event of its
+own), are ESA's word. From 2005 this moves 2 scoreable breakups from B to
+C, each then graded by GCAT's day: the Centaur AV-018 of 25 March 2019
+(`35816:2019-03-25`) and Intelsat IS-29e of 7 April 2019
+(`41308:2019-04-07`).
 
 From 2005 it moves 14 scoreable events from C to B, the 7 breakups the
 review named (DMSP 5D-3 F17's stage, Beidou 1D's, USA 197's, SL-23

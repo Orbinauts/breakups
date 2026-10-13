@@ -105,7 +105,8 @@ describe("the committed truth", () => {
   test("takes the confidence from the best authority statement, whichever source states the instant most finely", () => {
     const authorities = new Set(["hoosf-16e", "odqn", "s4s-notice", "esa-ser"]);
     for (const b of scoring) {
-      const stated = b.statements.filter((s) => authorities.has(s.source));
+      // An ESA row naming no object, placed by the build's rule, is no authority (its parent all null).
+      const stated = b.statements.filter((s) => authorities.has(s.source) && !(s.source === "esa-ser" && s.parent.catalogueNumber === null && s.parent.designator === null && s.parent.name === null));
       if (stated.some((s) => s.event.precision === "minute" || s.event.precision === "second")) expect(b.confidence, b.id).toBe("A");
       else if (stated.some((s) => s.event.from !== null && Date.parse(s.event.to) - Date.parse(s.event.from) <= 3 * 86_400_000)) expect(b.confidence, b.id).toBe("B");
     }
@@ -113,6 +114,11 @@ describe("the committed truth", () => {
     for (const id of ["29523:2006-11-04", "30324:2007-02-02", "32288:2007-11-11", "37756:2020-05-08", "25117:2021-11-18", "43227:2024-09-06"]) {
       const b = breakups.find((x) => x.id === id)!;
       expect([b.confidence, b.resolvedFrom.event, b.event.precision], id).toEqual(["B", "gcat", "minute"]);
+    }
+    // An ESA row the rule placed dates these to the day, but only GCAT's day grades them.
+    for (const id of ["35816:2019-03-25", "41308:2019-04-07"]) {
+      const b = breakups.find((x) => x.id === id)!;
+      expect([b.confidence, b.statements.map((s) => s.source).sort()], id).toEqual(["C", ["esa-ser", "gcat"]]);
     }
     // Where the Space Forces' notice states the minute itself, the authority's minute stands.
     const orbcomm = breakups.find((x) => x.id === "25984:2023-03-11")!;

@@ -44,7 +44,7 @@ Columns: every event, the scoreable ones, then by kind, then by the source whose
 | 2025 | 13 | 5 | 4 | 1 | 0 | 6 | 2 | 0 | 0 | 9 | 2 | 1 | 0 | 0 | 1 |
 | 2026 | 17 | 12 | 11 | 1 | 0 | 5 | 0 | 0 | 1 | 8 | 0 | 2 | 1 | 2 | 3 |
 
-Scoreable events from 2005: 396. By confidence: A 80, B 47, C 217, D 52. By regime: unknown 64, LEO 261, MEO 9, HEO 50, GEO 12 (180 of them read from the parent's last set before the window in the Archive, `data/truth/regimes.json`, where no statement gives the orbit). By class: payload 253, rocket body 110, debris 33.
+Scoreable events from 2005: 396. By confidence: A 80, B 45, C 219, D 52. By regime: unknown 64, LEO 261, MEO 9, HEO 50, GEO 12 (180 of them read from the parent's last set before the window in the Archive, `data/truth/regimes.json`, where no statement gives the orbit). By class: payload 253, rocket body 110, debris 33.
 
 ## Conflicts between sources
 
@@ -209,13 +209,13 @@ When each event was first stated in public, as far as the sources date it: NASA'
 | --- | --- | --- | --- | --- | --- |
 | hoosf-16e | yes | 63 | 51 | 0 | 63 |
 | odqn | yes | 2 | 2 | 0 | 2 |
-| esa-ser | yes | 3 | 3 | 3 | 0 |
+| esa-ser | yes | 3 | 1 | 3 | 0 |
 | s4s-notice | yes | 40 | 37 | 40 | 0 |
 | analyst | no | 1 | 0 | 1 | 0 |
 | news | no | 6 | 2 | 6 | 0 |
 | none dated |  | 281 | 5 |  |  |
 
-Of the 396 scoreable events from 2005, 115 have a dated first statement and 112 a dated statement by an agency; of the 100 breakups of confidence A and B, 95 have an agency's.
+Of the 396 scoreable events from 2005, 115 have a dated first statement and 110 a dated statement by an agency; of the 98 breakups of confidence A and B, 93 have an agency's.
 
 ## GCAT's satellite catalogue
 
@@ -1119,11 +1119,11 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 20344:2018-12-11 USA 40 R/B | breakup | 2018-12-11T21:44Z to 2019-02-09T21:44Z | none | D | unknown | rocket body | unknown | 27 | catalogue |  |  |
 | 25417:2018-12-22 ORBCOMM FM16 | breakup | 2018-12-22T07:12Z | minute | A | LEO | payload | unknown | 15 | hoosf-16e, s4s-notice, esa-ser, gcat, gcat, catalogue | 2019-01-01 (s4s-notice, day) | 2019-01-01 (s4s-notice, day) |
 | 43675:2019-02-06 GOSAT 2 R/B DEBRIS | anomalous | 2019-02-06T06:00Z | minute | B | LEO | debris | propulsion | 5 | hoosf-16e, hoosf-16e, gcat, gcat | 2019-05-01 (hoosf-16e, month) | 2019-05-01 (hoosf-16e, month) |
-| 35816:2019-03-25 Centaur AV-018 | breakup | 2019-03-25T00:00Z to 2019-03-26T00:00Z | day | B | HEO | rocket body | propulsion | 1 | esa-ser, gcat | 2020-09-11 (esa-ser, day) | 2020-09-11 (esa-ser, day) |
+| 35816:2019-03-25 Centaur AV-018 | breakup | 2019-03-25T00:00Z to 2019-03-26T00:00Z | day | C | HEO | rocket body | propulsion | 1 | esa-ser, gcat | 2020-09-11 (esa-ser, day) |  |
 | 43947:2019-03-27 MICROSAT-R | breakup | 2019-03-27T05:40Z | minute | A | LEO | payload | collision-deliberate | 130 | hoosf-16e, s4s-notice, esa-ser, gcat, gcat, catalogue | 2019-03-27 (s4s-notice, day) | 2019-03-27 (s4s-notice, day) |
 | 13589:2019-04-06 Kosmos-1410 | breakup | 2019-04-06T00:00Z to 2019-04-07T00:00Z | day | C | LEO | payload | battery | 1 | gcat |  |  |
 | 43652:2019-04-06 USA 288 R/B | breakup | 2019-04-06T18:59Z | minute | A | HEO | rocket body | unknown | 183 | hoosf-16e, s4s-notice, esa-ser, gcat, gcat, catalogue, catalogue, catalogue | 2019-04-24 (s4s-notice, day) | 2019-04-24 (s4s-notice, day) |
-| 41308:2019-04-07 Intelsat IS-29e | breakup | 2019-04-07T00:00Z to 2019-04-08T00:00Z | day | B | GEO | payload | propulsion | 2 | esa-ser, gcat | 2020-09-11 (esa-ser, day) | 2020-09-11 (esa-ser, day) |
+| 41308:2019-04-07 Intelsat IS-29e | breakup | 2019-04-07T00:00Z to 2019-04-08T00:00Z | day | C | GEO | payload | propulsion | 2 | esa-ser, gcat | 2020-09-11 (esa-ser, day) |  |
 | A:1988-077:2019-04-08 TITAN 34D TRANSTAGE | breakup | 2019-04-08T22:42Z to 2019-06-07T22:42Z | none | D | unknown | rocket body | unknown | 8 | catalogue |  |  |
 | 27424:2019-04-29 AQUA | anomalous | 2019-04-29T00:00Z to 2019-04-30T00:00Z | day | B | LEO | payload | unknown | 4 | hoosf-16e, gcat |  |  |
 | 23560:2019-05-01 ERS-2 | anomalous | 2019-05-01T00:00Z to 2019-08-01T00:00Z | month | C | LEO | payload | unknown | 1 | gcat |  |  |
@@ -1178,7 +1178,7 @@ Bursts of new debris under a launch that no agency wrote up and no earlier repor
 | 39765:2021-10-23 COSMOS 2499 | breakup | 2021-10-23T18:14Z | minute | A | LEO | payload | unknown | 22 | hoosf-16e, esa-ser, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
 | 13552:2021-11-15 COSMOS 1408 | breakup | 2021-11-15T02:48Z | minute | A | LEO | payload | collision-deliberate | 1790 | hoosf-16e, s4s-notice, esa-ser, gcat, gcat, catalogue | 2021-11-15 (s4s-notice, day) | 2021-11-15 (s4s-notice, day) |
 | 25117:2021-11-18 ORBCOMM FM5 | breakup | 2021-11-18T06:30Z | minute | B | LEO | payload | unknown | 15 | hoosf-16e, esa-ser, gcat, gcat, catalogue | 2022-03-01 (hoosf-16e, month) | 2022-03-01 (hoosf-16e, month) |
-| 45877:2021-11-26 USA 305-308 R/B | breakup | 2021-11-26T22:45Z | minute | A | LEO | rocket body | unknown | 29 | hoosf-16e, esa-ser, gcat, gcat, catalogue | 2022-04-22 (esa-ser, day) | 2022-04-22 (esa-ser, day) |
+| 45877:2021-11-26 USA 305-308 R/B | breakup | 2021-11-26T22:45Z | minute | A | LEO | rocket body | unknown | 29 | hoosf-16e, esa-ser, gcat, gcat, catalogue | 2022-04-22 (esa-ser, day) | 2022-06-01 (hoosf-16e, month) |
 | 50505:2021-12-28 IPM 3/PERSEY R/B | anomalous | 2021-12-28T18:36Z | minute | A | LEO | payload | propulsion | 4 | hoosf-16e, gcat, gcat |  |  |
 | 52152:2022-03-29 CZ-6A R/B | anomalous | 2022-03-29T09:50Z | minute | A | LEO | rocket body | unknown | 0 | hoosf-16e |  |  |
 | 52260:2022-04-15 SZ-13 MODULE | anomalous | 2022-04-15T00:00Z to 2022-04-16T00:00Z | day | B | LEO | debris | unknown | 4 | hoosf-16e, gcat |  |  |

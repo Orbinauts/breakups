@@ -101,6 +101,14 @@ describe("a statement's publication day", () => {
     expect(firstAgencyStatement({ statements: [at("news", "2023-07-02"), at("analyst", "2023-07-01"), at("odqn", "2023-10-01", "month")] })).toMatchObject({ source: "odqn", on: "2023-10-01" });
     expect(firstAgencyStatement({ statements: [at("news", "2023-07-02")] })).toBeNull();
   });
+
+  test("the first agency statement leaves out an ESA row naming no object, which the truth's build placed on the event by its own rule", () => {
+    const placed = { ...at("esa-ser", "2023-07-01"), parent: { catalogueNumber: null, designator: null, name: null } };
+    expect(firstAgencyStatement({ statements: [placed, at("odqn", "2023-10-01", "month")] })).toMatchObject({ source: "odqn", on: "2023-10-01" });
+    expect(firstAgencyStatement({ statements: [placed] })).toBeNull();
+    // A row that names its object is ESA's word on it.
+    expect(firstAgencyStatement({ statements: [at("esa-ser", "2023-07-01")] })).toMatchObject({ source: "esa-ser" });
+  });
 });
 
 describe("the breakups file", () => {

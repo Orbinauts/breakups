@@ -275,6 +275,12 @@ describe("a suspected verdict", () => {
     expect(selectPublished([suspected], [noticed], noBodies)).toMatchObject([{ state: "confirmed", raisedAt: "2026-10-06T12:00:00.000Z", confirmedAt: "2026-10-05T00:00:00.000Z", reports: [{ source: "odqn", date: "2026-10-05" }, { source: "hoosf-16e", date: "2026-10-09" }] }]);
   });
 
+  test("on a row whose ESA row names no object, placed by the truth build's rule, is reported by it but not confirmed by it", () => {
+    const placed = row(12456, "2026-10-05T00:00Z", "2026-10-06T00:00Z", { regime: "LEO", statements: [["esa-ser", "2026-10-07"], ["news", "2026-10-08"]] });
+    placed.statements[0] = { ...placed.statements[0]!, parent: { catalogueNumber: null, designator: null, name: null } };
+    expect(selectPublished([suspected], [placed], noBodies)).toMatchObject([{ state: "suspected", confirmedAt: null, reports: [{ source: "esa-ser", date: "2026-10-07" }, { source: "news", date: "2026-10-08" }] }]);
+  });
+
   test("on a row whose only agency notice predates the event is not published", () => {
     const stale = row(12456, "2026-10-05T00:00Z", "2026-10-06T00:00Z", { regime: "LEO", statements: [["s4s-notice", "2026-10-04"]] });
     expect(selectPublished([suspected], [stale], noBodies)).toEqual([]);
