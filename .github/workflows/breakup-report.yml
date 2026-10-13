@@ -15,14 +15,19 @@ name: Breakup report
 #    the truth with it, on this runner only. A statement it refuses: the
 #    label is taken off and a comment quotes the refusal, so the issue can
 #    be edited and labelled again.
-# 3. An accepted statement is committed nowhere here. The issue is closed
-#    with a comment, and the maintenance workflow is run, which reads the
-#    statement again from the issue itself (the owner's label in the
-#    issue's events, the body unedited since; `npm run truth:report --
-#    accepted`), with every other accepted report's, appends those main
-#    lacks, replays the scorecard, runs every check and merges the result
-#    into main. No branch carries a statement, so none can carry one the
-#    owner did not accept.
+# 3. An accepted statement is committed nowhere here, and no workflow is
+#    started: GitHub keeps one pending run per concurrency group, so a
+#    maintenance run started here could displace a run of the prospective
+#    test waiting in the group. The issue is closed with a comment. The
+#    daily watcher (watch.yml, 07:41 UTC) starts the maintenance run where
+#    an accepted report waits and the group is free, else the next day's
+#    watch or Monday's run folds it in. That run reads the statement again
+#    from the issue itself (the owner's label in the issue's events, the
+#    body unedited since; `npm run truth:report -- accepted`), with every
+#    other accepted report's, appends those main lacks, replays the
+#    scorecard, runs every check and merges the result into main. No
+#    branch carries a statement, so none can carry one the owner did not
+#    accept.
 #
 # The issue's text is read only by the scripts, from the event's file,
 # never pasted into a shell command.
@@ -41,8 +46,6 @@ permissions:
   contents: read
   # The labels, the comments and the closing.
   issues: write
-  # The maintenance workflow, run on the branch.
-  actions: write
 
 env:
   GH_REPO: ${{ github.repository }}
@@ -93,7 +96,6 @@ jobs:
           NUMBER: ${{ steps.check.outputs.number }}
         run: |
           set -euo pipefail
-          gh workflow run maintenance.yml --ref main
           runs="https://github.com/$GH_REPO/actions/workflows/maintenance.yml"
-          gh issue comment "$NUMBER" --body "Accepted: the statement passes the hand file's checks and the truth builds with it ($RUN_URL). The maintenance workflow reads it again from this issue and folds it into main: $runs. Editing the issue now withdraws the acceptance until it is labelled again. A failure there opens its own issue."
+          gh issue comment "$NUMBER" --body "Accepted: the statement passes the hand file's checks and the truth builds with it ($RUN_URL). The next maintenance run, started by tomorrow morning's watch where the prospective test's runs leave room, or Monday's, reads it again from this issue and folds it into main: $runs. Editing the issue now withdraws the acceptance until it is labelled again. A failure there opens its own issue."
           gh issue close "$NUMBER" --reason completed

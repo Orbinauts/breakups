@@ -196,3 +196,25 @@ run wrote are deleted unread, and `-f from=report/...` folds nothing in.
 The decision's bullet on folding reports in by their statements stands for
 the reason it gave: two reports accepted on one day both append to the
 hand file, and a run started for one also folds in the other.
+
+## Amended on 2026-10-13: the watcher starts the maintenance run, the acceptance none
+
+The review of issue #9 found that the acceptance workflow's start of the
+maintenance run could cost a day of the prospective test: GitHub keeps one
+pending run per concurrency group, and the maintenance run shares the
+group `prospective` with the test (and with the KPI workflow's scheduled
+run), so a start made while a test run waited replaced it. The acceptance
+workflow now starts no workflow and needs no `actions` permission. The
+daily watcher, at 07:41 UTC, starts `maintenance.yml`
+(`npm run maintenance:watch -- --fold`, `foldDecision` in
+`scripts/maintenance/watch.ts`) where at least one accepted report's
+statement is missing from main's hand file and no run of the group is
+queued, waiting or in progress, read from the Actions API; otherwise the
+next day's watch, or Monday's maintenance run, folds it in. A maintenance
+run started at 07:41 ends within its 330 minutes, by 13:11, before the
+test's next daily run at 02:37.
+
+The first consequence above changes with it: a report reaches main the
+morning after the owner accepts it where the group is free then (the
+maintenance run, about an hour, then the next daily publishing), and on
+Monday's run at the latest.

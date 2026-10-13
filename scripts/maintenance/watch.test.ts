@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { readForm } from "../truth/report-form.ts";
-import { esaNotice, esaLatest, feedNotices, isBreakupTitle, issuesFor, jsrLatest, jsrNotices, odqnNotices, odqnRead, toOpen, watchedKeys, type Notice } from "./watch.ts";
+import { PROSPECTIVE_GROUP, esaNotice, esaLatest, feedNotices, foldDecision, isBreakupTitle, issuesFor, jsrLatest, jsrNotices, odqnNotices, odqnRead, toOpen, watchedKeys, type Notice, type WorkflowRun } from "./watch.ts";
 
 /**
  * The watcher of public notices, on the pages as they were served on
@@ -167,8 +167,34 @@ describe("the issues opened", () => {
   });
 });
 
+describe("the maintenance run the watcher starts for the accepted reports", () => {
+  const run = (status: string, event = "schedule"): WorkflowRun => ({ status, event });
+  const quiet = { "prospective.yml": [run("completed")], "maintenance.yml": [run("completed", "workflow_dispatch")], "kpi.yml": [run("completed")] };
+
+  test("is started where a report waits and no run of the prospective test's concurrency group is queued, waiting or going", () => {
+    expect(foldDecision(1, quiet)).toEqual({ dispatch: true, reason: "1 accepted report waits and no run of the prospective group is queued or in progress: the maintenance run folds it in" });
+    expect(foldDecision(0, quiet).dispatch).toBe(false);
+  });
+
+  test("is not started where a run of the group is queued or going, since GitHub keeps one pending run per group and a second could displace the prospective test's", () => {
+    for (const status of ["queued", "in_progress", "waiting", "pending", "requested"]) {
+      expect(foldDecision(2, { ...quiet, "prospective.yml": [run(status), run("completed")] })).toEqual({ dispatch: false, reason: `2 accepted reports wait, but prospective.yml has a run ${status}: the next day's watch or Monday's maintenance run folds them in` });
+      expect(foldDecision(2, { ...quiet, "maintenance.yml": [run(status, "workflow_dispatch")] }).dispatch).toBe(false);
+    }
+  });
+
+  test("counts the KPI workflow's runs only on its schedule, the one that shares the group", () => {
+    expect(foldDecision(1, { ...quiet, "kpi.yml": [run("in_progress", "push"), run("queued", "pull_request")] }).dispatch).toBe(true);
+    expect(foldDecision(1, { ...quiet, "kpi.yml": [run("queued", "schedule")] }).dispatch).toBe(false);
+  });
+
+  test("names the group's three workflows", () => {
+    expect(PROSPECTIVE_GROUP.map((w) => w.workflow)).toEqual(["prospective.yml", "maintenance.yml", "kpi.yml"]);
+  });
+});
+
 describe("the watch workflow", () => {
-  const workflow = parse(readFileSync(resolve(ROOT, ".github/workflows/watch.yml"), "utf8")) as { on: Record<string, unknown>; permissions: Record<string, string>; jobs: Record<string, { steps: { run?: string; with?: Record<string, unknown> }[] }> };
+  const workflow = parse(readFileSync(resolve(ROOT, ".github/workflows/watch.yml"), "utf8")) as { on: Record<string, unknown>; permissions: Record<string, string>; jobs: Record<string, { steps: { name?: string; if?: string; run?: string; env?: Record<string, string>; with?: Record<string, unknown> }[] }> };
   const steps = workflow.jobs["watch"]!.steps;
 
   test("runs once a day and by hand", () => {
@@ -179,5 +205,11 @@ describe("the watch workflow", () => {
     expect(workflow.permissions).toEqual({ contents: "read", issues: "write", actions: "write" });
     expect(steps[0]!.with).toEqual({ "persist-credentials": false });
     expect(steps.some((step) => step.run?.includes("npm run -s maintenance:watch"))).toBe(true);
+  });
+
+  test("starts the maintenance run for the waiting accepted reports whether or not every page was read, with the owner's login", () => {
+    const fold = steps.find((step) => step.run?.includes("npm run -s maintenance:watch -- --fold"))!;
+    expect(fold.if).toBe("${{ !cancelled() }}");
+    expect(fold.env).toMatchObject({ GH_TOKEN: "${{ github.token }}", OWNER: "${{ github.repository_owner }}" });
   });
 });

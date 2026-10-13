@@ -50,6 +50,11 @@ name: Maintenance
 #    their runs are linked on the pull request. Nothing changed: no pull
 #    request.
 #
+# The daily watcher (watch.yml) also starts it where a report the owner
+# accepted waits and no run of the `prospective` group is queued or in
+# progress; the acceptance workflow starts nothing, so no start displaces a
+# run of the prospective test waiting in the group.
+#
 # By hand: `gh workflow run maintenance.yml` runs it at once;
 # `-f rescore=true` replays the scorecard whatever the plan says;
 # `-f merge=false` leaves the pull request open for review (and uploads

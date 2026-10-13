@@ -133,9 +133,10 @@ is new. Issue #8 is the specification.
 - A suspected breakup is rare until the outside reports in the truth are
   kept current (issue #9). Since 2026-10-12 a daily watcher opens an issue
   for each new report it can read and a report the owner accepts reaches
-  the truth the same day
+  the truth the next morning, where the live test's runs leave room for
+  the maintenance run the watcher starts, else on Monday's run
   ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)),
-  so it is published the next morning at the latest.
+  and it is published by the next daily run after that.
 - A change to the files' shape that breaks a reader is a new version, and
   the package's types say which. Adding `rowEvent` broke none, and the
   ids were re-keyed once under the new rule, by the first run that read

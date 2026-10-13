@@ -43,8 +43,9 @@ describe("the breakup-report workflow", () => {
     expect(accept.if).toBe("github.event.label.name == 'breakup-report-accepted'");
   });
 
-  test("may write the issue and a run of another workflow, and nothing else", () => {
-    expect(report.permissions).toEqual({ contents: "read", issues: "write", actions: "write" });
+  test("may write the issue, and nothing else: it starts no workflow, so it never displaces a run waiting in the prospective group", () => {
+    expect(report.permissions).toEqual({ contents: "read", issues: "write" });
+    for (const step of accept.steps) expect(step.run ?? "").not.toContain("gh workflow run");
   });
 
   test("checks who applied the label before it adds anything, and adds only what it accepted", () => {
