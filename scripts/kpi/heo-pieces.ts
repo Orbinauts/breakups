@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { regimeOf } from "../../src/elements.ts";
 import { isFragmentClass, normalAngleDeg, planeDistance, type PlaneOrbit } from "../../src/fragments.ts";
 import { speedAt } from "../../src/impulse.ts";
+import { nodePrecessionDegPerDay } from "../../src/series.ts";
+import { wrapDegrees } from "../../src/units.ts";
 import { DETECTOR_PARAMETERS, launchOf, readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import type { StatedTime } from "../../src/truth.ts";
 import { archiveHome, catalogueIndexPath } from "../archive/archive.ts";
@@ -28,7 +30,11 @@ import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
  * committed snapshot under `data/truth/sources/`). It then counts what
  * each bound keeps, by regime (the parent's, from its last set before the
  * event) and by split, with the fresh pieces of every other launch in the
- * same window that each bound would admit by chance.
+ * same window that each bound would admit by chance. For issue #42 it
+ * also reads each piece with the nodes carried to the event's instant at
+ * each body's own rate, and with drag's effect on the piece's rate
+ * bounded, and looks for the twin event whose plane keeps a piece its own
+ * event's drops.
  *
  *   BREAKUPS_ARCHIVE=<archive> node --experimental-strip-types scripts/kpi/heo-pieces.ts [--json <path>] > report.md
  *
@@ -59,6 +65,76 @@ export function impulseTiltDeg(parent: PlaneOrbit, deltaVMps: number): number {
 export function normalDeltaVMps(parent: PlaneOrbit, angleDeg: number): number {
   if (Math.abs(angleDeg) >= 90) return Number.POSITIVE_INFINITY;
   return apogeeSpeedKmps(parent) * Math.tan(Math.abs(angleDeg) * DEG) * 1000;
+}
+
+/** An orbit's node rate under J2, in degrees a day, from its own a, e, i and mean motion. */
+const nodeRateOf = (orbit: PlaneOrbit): number => nodePrecessionDegPerDay(orbit.aKm, orbit.eccentricity, orbit.inclinationDeg, orbit.meanMotion);
+
+/** The parent's node at the event's instant: its last set's node carried there at its own J2 rate. */
+const parentNodeAtEventDeg = (parent: PlaneOrbit, eventMs: number): number => parent.raanDeg + (nodeRateOf(parent) * (eventMs - parent.epochMs)) / DAY_MS;
+
+/**
+ * The node difference at the event's instant, the carry issue #42 asked
+ * to measure: the piece's node carried back from its first set to the
+ * event at its own J2 rate (from that set's a, e and i), less the
+ * parent's carried forward to the event at the parent's. Both bodies were
+ * on one plane at the event, so a piece of the event reads zero here
+ * wherever J2 alone moved the nodes since.
+ */
+export function nodeAtEventDifferenceDeg(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): number {
+  const pieceNodeAtEvent = piece.raanDeg - (nodeRateOf(piece) * (piece.epochMs - eventMs)) / DAY_MS;
+  return wrapDegrees(pieceNodeAtEvent - parentNodeAtEventDeg(parent, eventMs));
+}
+
+/**
+ * The node difference at the event's instant with drag's effect on the
+ * piece's rate bounded. Drag lowers a piece's orbit after the event, and
+ * its J2 rate changes with it, so the rate its first set gives is the
+ * rate at the end of the interval, not over it. A piece thrown off at a
+ * modest speed started on about the parent's orbit, so its mean rate over
+ * the interval lies between the parent's rate and its own: carried back at
+ * its own (`ownRateDeg`, `nodeAtEventDifferenceDeg`) and at the parent's
+ * (`parentRateDeg`) are the band's ends, and `leastDeg` is the smallest
+ * node difference any rate between them gives, zero where the band
+ * straddles it.
+ */
+export function dragBandOf(parent: PlaneOrbit, piece: PlaneOrbit, eventMs: number): { ownRateDeg: number; parentRateDeg: number; leastDeg: number } {
+  const ownRateDeg = nodeAtEventDifferenceDeg(parent, piece, eventMs);
+  const parentRateDeg = ownRateDeg + ((nodeRateOf(piece) - nodeRateOf(parent)) * (piece.epochMs - eventMs)) / DAY_MS;
+  const [low, high] = ownRateDeg <= parentRateDeg ? [ownRateDeg, parentRateDeg] : [parentRateDeg, ownRateDeg];
+  const leastDeg = low <= 0 && high >= 0 ? 0 : Math.abs(low) < Math.abs(high) ? low : high;
+  return { ownRateDeg, parentRateDeg, leastDeg };
+}
+
+/** Whether the scorecard's own plane test (`FRAGMENTS_PLANE`: the tolerances, or the normals within its angle) keeps a piece whose node lies `deltaNodeDeg` from the parent's at the event's instant: both planes are set at that instant, so nothing is carried. */
+export function scorecardKeepsAtNode(parent: PlaneOrbit, piece: PlaneOrbit, deltaNodeDeg: number): boolean {
+  const atEvent = (orbit: PlaneOrbit, raanDeg: number): PlaneOrbit => ({ ...orbit, epochMs: 0, raanDeg });
+  const [p, q] = [atEvent(parent, 0), atEvent(piece, deltaNodeDeg)];
+  return planeDistance(p, q, 0, FRAGMENTS_PLANE).distance <= FRAGMENTS_PLANE.planeDistanceMax || normalAngleDeg(p, q, 0) <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg;
+}
+
+/** An event as a twin is looked for among: its id, launch, parent's last set before it and instant. */
+export interface TwinCandidate {
+  id: string;
+  launch: string;
+  parentOrbit: PlaneOrbit;
+  eventMs: number;
+}
+
+/**
+ * The other event of the same launch whose parent's plane the scorecard's
+ * test keeps a piece in, the node at that event's instant, where the
+ * piece's first set came no earlier than a day before that event; null
+ * where none does. A piece its own event's plane drops but a twin's keeps
+ * is the twin's, whatever the catalogue's attribution says, unless the
+ * twins still share a plane.
+ */
+export function twinEventOf(piece: PlaneOrbit, own: TwinCandidate, events: readonly TwinCandidate[]): string | null {
+  for (const other of events) {
+    if (other.id === own.id || other.launch !== own.launch || piece.epochMs < other.eventMs - DAY_MS) continue;
+    if (scorecardKeepsAtNode(other.parentOrbit, piece, nodeAtEventDifferenceDeg(other.parentOrbit, piece, other.eventMs))) return other.id;
+  }
+  return null;
 }
 
 /** What GCAT's satellite catalogue says a piece came from: its parent's catalogue number and the window of its separation date, null where it states neither. */
@@ -125,6 +201,14 @@ export interface PieceReading {
   inclinationDeltaVMps: number;
   attribution: Attribution;
   gcatParent: number | null;
+  /** The node difference at the event's instant, each node carried there at its own J2 rate (issue #42): the same as `deltaNodeDeg`, by algebra. */
+  deltaNodeAtEventDeg: number;
+  /** Whether the scorecard's test (`FRAGMENTS_PLANE`) keeps it with the node difference at the event's instant. */
+  passesAtEvent: boolean;
+  /** Whether the scorecard's test keeps it with the least node difference drag's band allows (`dragBandOf`). */
+  passesDragBand: boolean;
+  /** The same, the band read only where the piece's first set sits below the parent's semi-major axis, as drag leaves it; else at its own rate. */
+  passesDragBandBelow: boolean;
 }
 
 /** An event's fresh pieces under its launch, and the fresh pieces of every other launch in the same window (the strangers a bound might admit by chance). */
@@ -159,6 +243,9 @@ export function readEvent(catalogue: Catalogue, event: EventInput, gcat: Readonl
     const plane = planeDistance(parentOrbit, body.orbit, event.eventMs, DETECTOR_PARAMETERS, Number.POSITIVE_INFINITY);
     const angle = normalAngleDeg(parentOrbit, body.orbit, event.eventMs);
     const said = gcat.get(body.number);
+    const band = dragBandOf(parentOrbit, body.orbit, event.eventMs);
+    const passesDragBand = scorecardKeepsAtNode(parentOrbit, body.orbit, band.leastDeg);
+    const passesAtEvent = scorecardKeepsAtNode(parentOrbit, body.orbit, band.ownRateDeg);
     const reading: PieceReading = {
       number: body.number,
       daysAfterEvent: (body.firstEpoch - event.eventMs) / DAY_MS,
@@ -170,6 +257,10 @@ export function readEvent(catalogue: Catalogue, event: EventInput, gcat: Readonl
       inclinationDeltaVMps: normalDeltaVMps(parentOrbit, plane.deltaInclinationDeg),
       attribution: attributionOf(said, event),
       gcatParent: said?.parent ?? null,
+      deltaNodeAtEventDeg: band.ownRateDeg,
+      passesAtEvent,
+      passesDragBand,
+      passesDragBandBelow: body.orbit.aKm < parentOrbit.aKm ? passesDragBand : passesAtEvent,
     };
     (body.launch === event.launch ? pieces : strangers).push(reading);
   }
@@ -202,6 +293,21 @@ export function boundsOf(deltaVsMps: readonly number[]): Bound[] {
     ...deltaVsMps.map((v) => ({ name: `today's or impulse ${v} m/s`, keeps: (p: PieceReading) => p.passesToday || p.neededDeltaVMps <= v })),
     ...deltaVsMps.map((v) => ({ name: `today's or normal within 1° or impulse ${v} m/s`, keeps: (p: PieceReading) => p.passesToday || p.normalAngleDeg <= 1 || p.neededDeltaVMps <= v })),
     ...deltaVsMps.map((v) => ({ name: `inclination alone, impulse ${v} m/s`, keeps: (p: PieceReading) => p.inclinationDeltaVMps <= v })),
+  ];
+}
+
+/**
+ * The carries issue #42 measured, each under the scorecard's own test
+ * (`FRAGMENTS_PLANE`): today's, the nodes at the event's instant (each at
+ * its own J2 rate), and drag's band, read for every piece or only where
+ * the piece's first set sits below the parent.
+ */
+export function carryBoundsOf(): Bound[] {
+  return [
+    { name: "the scorecard's test (#15's form)", keeps: (p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg },
+    { name: "the scorecard's test, nodes at the event's instant", keeps: (p) => p.passesAtEvent },
+    { name: "the scorecard's test, drag bounded", keeps: (p) => p.passesDragBand },
+    { name: "the scorecard's test, drag bounded below the parent", keeps: (p) => p.passesDragBandBelow },
   ];
 }
 
@@ -292,6 +398,55 @@ function driftTable(measured: readonly Measured[]): string[] {
   return lines;
 }
 
+/**
+ * Issue #42's measurement: the scorecard's test under each carry, by
+ * regime and split; how far the carry at the event's instant is from
+ * today's; and, of the event's pieces the scorecard's test drops, those a
+ * twin event's plane keeps.
+ */
+function carrySection(measured: readonly Measured[], catalogue: Catalogue): string[] {
+  const lines = ["## Issue #42: the nodes carried to the event's instant, and drag bounded", ""];
+  const all = measured.flatMap((m) => [...m.pieces, ...m.strangers]);
+  const largest = all.reduce((most, p) => Math.max(most, Math.abs(wrapDegrees(p.deltaNodeAtEventDeg - p.deltaNodeDeg))), 0);
+  const scorecard = carryBoundsOf()[0]!;
+  const differ = all.filter((p) => p.passesAtEvent !== scorecard.keeps(p)).length;
+  lines.push(`Over ${all.length} pieces and strangers, the node difference at the event's instant is today's within ${largest.toExponential(1)}°, and the scorecard's test keeps a different piece under it ${differ} times.`, "");
+  lines.push("| Regime | Split | Carry | Pieces kept | The event's | Parent, other separation | Another body's | Strangers admitted |", "| --- | --- | --- | --- | --- | --- | --- | --- |");
+  for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
+    for (const split of ["train", "validation"] as const) {
+      const rows = measured.filter((m) => m.regime === regime && m.split === split);
+      const whole = tally(rows, { name: "all", keeps: () => true });
+      for (const bound of carryBoundsOf()) {
+        const t = tally(rows, bound);
+        lines.push(`| ${regime} | ${split === "train" ? "training" : "held-out"} | ${bound.name} | ${t.all} of ${whole.all} | ${t.event} of ${whole.event} | ${t["parent, other separation"]} | ${t["other body"]} | ${t.strangers} of ${whole.strangers} |`);
+      }
+    }
+  }
+  lines.push("", "### The event's pieces the scorecard's test drops, and a twin's plane", "", "| Regime | Split | Dropped | A twin event's plane keeps |", "| --- | --- | --- | --- |");
+  const twins: string[] = [];
+  for (const regime of ["HEO", "LEO", "GEO", "MEO"] as const) {
+    for (const split of ["train", "validation"] as const) {
+      let dropped = 0;
+      let kept = 0;
+      for (const m of measured.filter((e) => e.regime === regime && e.split === split)) {
+        const byTwin = new Map<string, number>();
+        for (const p of m.pieces) {
+          if (p.attribution !== "event" || scorecard.keeps(p)) continue;
+          dropped++;
+          const twin = twinEventOf(catalogue.bodies.get(p.number)!.orbit, m, measured);
+          if (twin === null) continue;
+          kept++;
+          byTwin.set(twin, (byTwin.get(twin) ?? 0) + 1);
+        }
+        for (const [twin, n] of byTwin) twins.push(`| ${m.id} ${m.name} | ${regime} | ${n} | ${twin} |`);
+      }
+      lines.push(`| ${regime} | ${split === "train" ? "training" : "held-out"} | ${dropped} | ${kept} |`);
+    }
+  }
+  lines.push("", "| Event | Regime | Its pieces (by GCAT) a twin's plane keeps | The twin's event |", "| --- | --- | --- | --- |", ...twins, "");
+  return lines;
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const jsonAt = args.indexOf("--json");
@@ -346,6 +501,7 @@ function main(): void {
       out.push(`## ${regime}, ${split === "both" ? "every year from 2006" : split === "train" ? "training years (even)" : "held-out years (odd)"}`, "", ...regimeTable(rows, bounds), "");
     }
   }
+  out.push(...carrySection(measured, catalogue));
   const heo = measured.filter((m) => m.regime === "HEO");
   out.push("## HEO events", "", ...eventTable(heo), "", "## HEO: the event's own pieces by the days to their first set", "", ...driftTable(heo), "");
   out.push("## GEO events", "", ...eventTable(measured.filter((m) => m.regime === "GEO")), "");

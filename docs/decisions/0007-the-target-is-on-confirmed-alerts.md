@@ -1,5 +1,5 @@
 ---
-status: accepted; its target test amended on 2026-10-12 (issue #15), and the detector's plane test noted (issue #37); its rows kept out by the shape of their data (issue #21) and its readings of the unnamed exemption, the unreported confirmation, the nearest event and the two leads (issues #17 and #16) amended on 2026-10-12, the last read alike by the live test's score and the published files on 2026-10-13 (issue #17)
+status: accepted; its target test amended on 2026-10-12 (issue #15), the detector's plane test noted (issue #37), and the carry of both measured and kept on 2026-10-13 (issue #42); its rows kept out by the shape of their data (issue #21) and its readings of the unnamed exemption, the unreported confirmation, the nearest event and the two leads (issues #17 and #16) amended on 2026-10-12, the last read alike by the live test's score and the published files on 2026-10-13 (issue #17)
 date: 2026-10-10
 ---
 
@@ -36,6 +36,18 @@ tolerances or by its orbit normal within `planeNormalAngleMaxDeg` of the
 parent's, one degree, chosen on the training years
 (`docs/detector/d12-fitting.md`). The scorecard's target test above stays
 its own and does not read this parameter.
+
+Status note, 2026-10-13, the carry of the plane (issue #42): "the
+parent's node carried to the piece's epoch for J2" above takes off the
+difference of the two rates since the event. So it is, by algebra, each
+node carried to the event's instant at its own J2 rate: the piece's back
+from its first set, the parent's forward from its last set before the
+event. The issue asked for that carry as a fix. Measured over every piece
+and stranger of the truth from 2006, it keeps the same pieces as today's
+test, so neither the target test nor the detector's test changed, and
+the score did not move. Bounding drag's effect on a piece's rate kept
+more of the event's pieces but admitted more strangers in HEO and LEO,
+and was not adopted (`docs/detector/heo-pieces.md`).
 
 The owner's targets were set on the parent's own orbit: nine reported
 breakups in ten raised as an alert on the parent's step before the first
