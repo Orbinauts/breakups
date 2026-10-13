@@ -241,6 +241,32 @@ describe("a confirmation from the pieces alone, with no step", () => {
   });
 });
 
+describe("a confirmation on no row, read at the truth's date as the scorecard reads it", () => {
+  // A confirmation by the detector alone that names no reported event: the scorecard's false alarm, pending for 90 days.
+  const alone = verdict(70001, "confirmed", "2026-03-01T08:00Z", { launch: "2025-101", evidence: { bodyClass: 0, regime: 0 } });
+  /** A row of another object, whose event's start is the truth's date (`truthAsOf`). */
+  const truthOf = (day: string): Breakup => row(40000, `${day}T00:00Z`, `${day}T01:00Z`, { regime: "LEO" });
+
+  test("is confirmed while the truth's date is under 90 days after it: pending", () => {
+    expect(selectPublished([alone], [truthOf("2026-05-29")], noBodies)).toMatchObject([{ id: "70001-2026-03-01", state: "confirmed", confirmedAt: "2026-03-01T08:00:00.000Z", unreportedAt: null, row: null }]);
+  });
+
+  test("is unreported once the truth's date is 90 days after it or later, dated the instant the 90 days ran out, its confirmation kept", () => {
+    expect(selectPublished([alone], [truthOf("2026-05-31")], noBodies)).toMatchObject([{ id: "70001-2026-03-01", state: "unreported", confirmedAt: "2026-03-01T08:00:00.000Z", unreportedAt: "2026-05-30T08:00:00.000Z", row: null, reports: [] }]);
+  });
+
+  test("stays confirmed inside a report naming no object, no launch and no regime, which the scorecard counts apart", () => {
+    const unnamed = row(0, "2026-02-25T00:00Z", "2026-02-28T00:00Z", { kind: "unnamed", catalogueNumber: null, designator: null, regime: "unknown", id: "U:2026-02-25", statements: [["news", "2026-03-02"]] });
+    expect(selectPublished([alone], [unnamed, truthOf("2026-09-01")], noBodies)).toMatchObject([{ state: "confirmed", unreportedAt: null, row: null }]);
+  });
+
+  test("stays confirmed inside a report naming no object but the regime its object is in, which the scorecard exempts", () => {
+    const inLeo = row(0, "2026-02-25T00:00Z", "2026-02-28T00:00Z", { kind: "unnamed", catalogueNumber: null, designator: null, regime: "LEO", id: "U:2026-02-25", statements: [["news", "2026-03-02"]] });
+    expect(selectPublished([alone], [inLeo, truthOf("2026-09-01")], noBodies)).toMatchObject([{ state: "confirmed", unreportedAt: null, row: null }]);
+    expect(selectPublished([alone], [inLeo, truthOf("2026-09-01")], noBodies, () => "GEO")).toMatchObject([{ state: "unreported", unreportedAt: "2026-05-30T08:00:00.000Z" }]);
+  });
+});
+
 describe("verdicts never published", () => {
   test("are a cloud's, a watch, a manoeuvre, a scoped step, and a dismissal or expiry alone", () => {
     const onRow = row(12456, "2026-10-05T00:00Z", "2026-10-06T00:00Z", { regime: "LEO", statements: [["news", "2026-10-06"], ["odqn", "2026-10-10"]] });

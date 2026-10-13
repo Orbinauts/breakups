@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { readBreakups, type PublishedState } from "../../src/index.ts";
 import { builtYears, readBodies, readManifest, type ArchivedBody } from "../archive/archive.ts";
-import { regimeBefore, truthAsOf } from "../kpi/match.ts";
+import { regimeBefore } from "../kpi/match.ts";
 import { indexOf, loadSlice } from "../kpi/replay.ts";
 import { readYearFile, throughOf } from "../prospective/run.ts";
 import { readPublished, writePublished } from "./files.ts";
@@ -63,8 +63,7 @@ export function publishedRun(options: PublishedRunOptions): string {
   const index = indexOf(loadSlice(options.archive, latestYear), builtYears(options.archive).includes(latestYear - 1) ? loadSlice(options.archive, latestYear - 1) : null);
 
   const previous = readPublished(options.out);
-  // Every breakup read at the truth's date, as the scorecard reads a confirmation on no row.
-  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number), (number, at) => regimeBefore(index, number, at)), verdicts, truthAsOf(breakups));
+  const merged = mergePublished(previous, selectPublished(verdicts, breakups, (number) => bodies.get(number), (number, at) => regimeBefore(index, number, at)), verdicts, breakups);
   const detector = detectors[0]!;
   writePublished(options.out, merged, { ranAt: new Date(options.now).toISOString(), setsThrough, detector, truthSha256 });
 

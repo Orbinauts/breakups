@@ -5,7 +5,6 @@ import { gunzipSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { readBreakups, type PublishedBreakup } from "../../src/index.ts";
 import type { PublishedFixture } from "./real-fixtures.ts";
-import { truthAsOf } from "../kpi/match.ts";
 import { mergePublished } from "./merge.ts";
 import { selectPublished } from "./select.ts";
 
@@ -29,10 +28,10 @@ function fixture(year: number): PublishedFixture {
   return JSON.parse(gunzipSync(readFileSync(resolve(ROOT, `test/fixtures/published/${year}.json.gz`))).toString("utf8")) as PublishedFixture;
 }
 
-/** The list a run publishes from a year's replay onto an empty list: the selection, merged and read at the truth's date. */
+/** The list a run publishes from a year's replay onto an empty list: the selection, read at the truth's date, merged. */
 function published(year: number): PublishedBreakup[] {
   const { verdicts, bodies } = fixture(year);
-  return mergePublished([], selectPublished(verdicts, breakups, (number) => bodies[String(number)]), verdicts, truthAsOf(breakups));
+  return mergePublished([], selectPublished(verdicts, breakups, (number) => bodies[String(number)]), verdicts, breakups);
 }
 
 /** What a reader of the list sees of a breakup (the detector's estimate by its instant), with the row it landed on and the verdicts merged into it. */
