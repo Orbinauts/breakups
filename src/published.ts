@@ -29,10 +29,10 @@ export const PUBLISHED_VERSION = 2;
  * How a published breakup stands: suspected (reported by news or an
  * analyst; it leaves when its step expires or is dismissed), confirmed (by
  * the detector or an agency notice) or unreported (confirmed by the
- * detector alone and still on no row of the ground truth once 90 days have
- * passed, which the scorecard reads as a false confirmation; confirmed
- * again if a report lands later). A confirmed or unreported breakup stays
- * for good.
+ * detector alone, on no row of the ground truth and on no reported event
+ * as the scorecard lands it, once 90 days have passed, when the scorecard
+ * reads it as a false confirmation; confirmed again if a report lands
+ * later). A confirmed or unreported breakup stays for good.
  */
 export const PUBLISHED_STATES = ["suspected", "confirmed", "unreported"] as const;
 export type PublishedState = (typeof PUBLISHED_STATES)[number];
@@ -115,7 +115,7 @@ export interface PublishedBreakupEntry {
   raisedAt: string;
   /** The earlier of the first confirmed verdict and the first agency notice's day (at midnight UTC); null while suspected. */
   confirmedAt: string | null;
-  /** When it turned unreported: 90 days after {@link PublishedBreakupEntry.confirmedAt}, when the scorecard's reading of a confirmation on no row turns false; null unless unreported. */
+  /** The instant it turned unreported: when the 90 days after {@link PublishedBreakupEntry.confirmedAt} ran out and the scorecard's reading of its confirmation turned false, not the day of the run that relabelled it; null unless unreported, and null again once a report lands and it is confirmed again. */
   unreportedAt: string | null;
   parent: PublishedParent;
   /** The latest verdict's estimate of the event; null where it made none. */

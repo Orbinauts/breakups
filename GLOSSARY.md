@@ -12,5 +12,5 @@ A reported breakup that counts in the Confirmed line's recall: the parent's orbi
 _Avoid_: scoreable event (the truth's wider set), denominator event
 
 **Unreported**:
-A confirmation by the detector that lands on no row of the truth. It is pending, neither true nor false, while it was raised under 90 days before the truth's date, and a false confirmation after that. The published list shows it as confirmed while it is pending, and with the state `unreported` once the 90 days have passed; it is confirmed again if a report lands later.
+A confirmation by the detector that the scorecard lands on no reported event, and neither counts apart nor exempts (as it does one inside a report naming no object). It is pending, neither true nor false, while it was raised under 90 days before the truth's date, and a false confirmation after that. The published list shows it as confirmed while it is pending, and with the state `unreported` from the instant the 90 days ran out; it is confirmed again if a report lands later.
 _Avoid_: unconfirmed, orphan confirmation, false positive (for one still pending)
