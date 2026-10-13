@@ -37,6 +37,9 @@ export const PUBLISHED_VERSION = 2;
 export const PUBLISHED_STATES = ["suspected", "confirmed", "unreported"] as const;
 export type PublishedState = (typeof PUBLISHED_STATES)[number];
 
+/** The states a verdict merged into a published breakup can carry: the detector's own, suspected or confirmed; `unreported` is a reading of the breakup, never a verdict's. */
+export type PublishedVerdictState = Exclude<PublishedState, "unreported">;
+
 /** The parent of a published breakup: from the ground-truth row it landed on, what the row leaves out filled from the satellite catalogue; null where neither names it. */
 export interface PublishedParent {
   catalogueNumber: number;
@@ -129,7 +132,7 @@ export interface PublishedBreakupEntry {
 
 /** A verdict merged into a published breakup, as the detector raised it ({@link Verdict}), its instants as ISO strings. */
 export interface PublishedVerdict {
-  state: Exclude<PublishedState, "unreported">;
+  state: PublishedVerdictState;
   raisedAt: string;
   step: PublishedStep | null;
   event: PublishedEvent | null;

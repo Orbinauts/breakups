@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Breakup, Precision, PublishedBreakup, PublishedRowEvent, PublishedStep, PublishedVerdict, SourceId, Verdict } from "../../src/index.ts";
+import type { Breakup, Precision, PublishedBreakup, PublishedRowEvent, PublishedStep, PublishedVerdict, PublishedVerdictState, SourceId, Verdict } from "../../src/index.ts";
 import { mergePublished } from "./merge.ts";
 
 const at = (iso: string): number => Date.parse(iso);
@@ -11,7 +11,7 @@ function step(before: string, after: string): PublishedStep {
   return { beforeEpoch: before, afterEpoch: after, deltaKm: -1.5, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: 4, z: 12 };
 }
 
-function published(number: number, state: PublishedVerdict["state"], raisedAt: string, s: PublishedStep | null, overrides: Partial<PublishedBreakup> = {}): PublishedBreakup {
+function published(number: number, state: PublishedVerdictState, raisedAt: string, s: PublishedStep | null, overrides: Partial<PublishedBreakup> = {}): PublishedBreakup {
   const verdict: PublishedVerdict = { state, raisedAt, step: s, event: null, evidence: { bodyClass: 0 }, reasons: [`${state} at ${raisedAt}`], bodies: [], candidates: [] };
   const row = overrides.row === undefined ? `${number}:${raisedAt.slice(0, 10)}` : overrides.row;
   return {

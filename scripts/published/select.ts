@@ -1,4 +1,4 @@
-import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedStep, type PublishedVerdict, type Statement, type Step, type Verdict } from "../../src/index.ts";
+import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Precision, type PublishedBreakup, type PublishedEvent, type PublishedReport, type PublishedRowEvent, type PublishedStep, type PublishedVerdict, type PublishedVerdictState, type Statement, type Step, type Verdict } from "../../src/index.ts";
 import { isAgencyWord } from "../../src/truth.ts";
 import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
@@ -74,7 +74,7 @@ function reportsOf(row: Breakup | null): PublishedReport[] {
 }
 
 function publishedVerdictOf(verdict: Verdict): PublishedVerdict {
-  return { state: verdict.state as PublishedVerdict["state"], raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
+  return { state: verdict.state as PublishedVerdictState, raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
 }
 
 /** The row a suspected verdict lands on by its step: a breakup or anomalous row of its object whose window, widened by the regime's margin, the step brackets; the latest such. */
@@ -167,7 +167,7 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const firstNotice = firstNoticeOn(row);
   const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
   const confirmedAt = confirmedOn.length === 0 ? null : isoInstant(Math.min(...confirmedOn));
-  const state: PublishedVerdict["state"] | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
+  const state: PublishedVerdictState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
   if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
