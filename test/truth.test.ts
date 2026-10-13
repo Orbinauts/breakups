@@ -44,7 +44,13 @@ describe("the committed truth", () => {
   test("splits ALOS-1's stage into NASA's two events and Cosmos 2392's ullage motor into GCAT's two separations", () => {
     expect(breakups.find((b) => b.id === "28932:2006-08-27")).toMatchObject({ event: { at: "2006-08-27T16:18Z" }, confidence: "A", scoreable: true });
     expect(breakups.find((b) => b.id === "28932:2006-08-08")!.conflicts.filter((c) => c.field === "event")).toEqual([]);
-    expect(breakups.find((b) => b.id === "27474:2005-06-30")).toMatchObject({ piecesCatalogued: 55, scoreable: true });
+    // The count is the satellite catalogue's separation's, which the weekly refresh of GCAT may change: read from the row's own statements, not one edition's number.
+    const ullage = breakups.find((b) => b.id === "27474:2005-06-30")!;
+    expect(ullage).toMatchObject({ scoreable: true, resolvedFrom: { pieces: "gcat" } });
+    const separated = ullage.statements.filter((s) => s.ref.includes("satcat.tsv"));
+    expect(separated.length).toBeGreaterThan(0);
+    expect(ullage.piecesCatalogued).toBe(separated.reduce((sum, s) => sum + s.piecesCatalogued!, 0));
+    expect(ullage.piecesCatalogued).toBeGreaterThan(1);
   });
 
   test("is ordered by time, with no two events of one parent within a day", () => {

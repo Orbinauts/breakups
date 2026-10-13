@@ -10,6 +10,7 @@ import type { Candidate, SeriesState } from "./series.ts";
 import { isDeploying, type Mates, type Siblings } from "./siblings.ts";
 import { estimateStep, persistenceEstimate, type Environment, type StepEstimate } from "./step.ts";
 import type { BodyClass, Regime } from "./truth.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The fusion's states, and what an alert keeps while it is open. A
@@ -44,9 +45,6 @@ import type { BodyClass, Regime } from "./truth.ts";
  * explanations and the breakup signatures weighed as evidence, each a
  * named parameter, so the scorecard's sweep re-applies it from the log.
  */
-
-const DAY_MS = 86_400_000;
-const HOUR_MS = 3_600_000;
 
 /** The state an alert opened with: the detection, or a step the record explained. */
 export type AlertOrigin = Extract<VerdictState, "suspected" | "manoeuvre">;
@@ -430,6 +428,3 @@ export function alertSignals(alert: OpenAlert, now: number, params: DetectorPara
 
 /** The days from the step's first post set to an instant. */
 export const daysAfterStep = (alert: OpenAlert, at: number): number => (at - alert.candidate.afterEpoch) / DAY_MS;
-
-/** The hours a span covers, for the reasons. */
-export const hoursOf = (ms: number): number => ms / HOUR_MS;

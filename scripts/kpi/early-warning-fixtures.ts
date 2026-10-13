@@ -7,6 +7,7 @@ import { dayOf, endedByOf, opsStatusOf } from "../../src/elements.ts";
 import { archiveHome, readYear, setAt, type ArchivedBody } from "../archive/archive.ts";
 import { clockOf, orderOf, RUN_HOURS, spaceByDay, DAY_MS } from "./replay.ts";
 import { readYearFile, yearsDir } from "./run.ts";
+import { isoInstant } from "../time.ts";
 
 /**
  * The early warning's regression fixtures: small slices of the Archive,
@@ -20,16 +21,20 @@ import { readYearFile, yearsDir } from "./run.ts";
  * A positive case is a reported breakup the full replay flags with a
  * suspected verdict on the parent's own step before the first fragment:
  * the parent's element sets from a hundred days before the event to ten
- * days after it. A hundred, not sixty: the detector counts an object's age
- * from the first set it saw of it, and a payload it first saw under ninety
- * days before (`newObjectDays`) is young, whose first raise starts a
- * campaign, a manoeuvre; from sixty days, NOAA 17, DMSP 5D-2 F8 and
+ * days after it, or to a stated end where its step held only weeks later
+ * (the ullage motor of Cosmos 2417-2419, in a high eccentric orbit tracked
+ * every few days, held on its third post set, a fortnight on). A hundred,
+ * not sixty: the detector counts an object's age from the first set it
+ * saw of it, and a payload it first saw under ninety days before
+ * (`newObjectDays`) is young, whose first raise starts a campaign, a
+ * manoeuvre; from sixty days, NOAA 17, DMSP 5D-2 F8 and
  * Meteor 2-7, which the full replay has known since 2005, each raised
  * their step as a young payload's campaign rather than as the unique step
  * it was. A negative case is an object whose orbit changed, or did not,
  * where the full replay raised no suspected verdict: a station's reboost,
  * a constellation satellite raising its orbit, a geosynchronous
- * satellite's station-keeping burn, and a quiet rocket body over the same
+ * satellite's station-keeping burn, a navigation satellite's burn in
+ * medium Earth orbit (GPS IIF-7), and a quiet rocket body over the same
  * span as a breakup.
  *
  * Each fixture holds one object's sets alone, with no band-mate. What the
@@ -79,6 +84,8 @@ export interface EarlyWarningCase {
   at?: string;
   /** Where a young object has no sets a hundred days before, the window's start: its first. */
   from?: string;
+  /** Where the object's sets come so far apart that its step holds only weeks after the instant (an eccentric orbit tracked every few days), the window's end. */
+  to?: string;
   what: string;
 }
 
@@ -91,9 +98,11 @@ export const CASES: readonly EarlyWarningCase[] = [
   { name: "dmsp-5d-2-f8", kind: "breakup", number: 18123, truthId: "18123:2024-07-19", what: "DMSP 5D-2 F8, a defunct weather satellite, broke up on 19 July 2024 (confidence A)" },
   { name: "titan-iiic-transtage", kind: "breakup", number: 3692, truthId: "3692:2018-02-28", what: "a Titan IIIC Transtage near the geostationary ring broke up on 28 February 2018 (confidence A)" },
   { name: "les-8-9-rocket-body", kind: "breakup", number: 8751, truthId: "8751:2019-05-07", what: "the rocket body of LES 8 and 9 near the geostationary ring broke up on 7 May 2019 (confidence A)" },
+  { name: "cosmos-2417-2419-ullage-motor", kind: "breakup", number: 28920, truthId: "28920:2018-08-24", to: "2018-09-25T00:00:00Z", what: "a Proton Blok DM ullage motor (SOZ) of the Cosmos 2417-2419 launch, in a high eccentric orbit tracked every few days, broke up on 24 August 2018 (confidence A); its step held only on the third post set, mid-September" },
   { name: "iss-reboost", kind: "negative", number: 25544, at: "2026-06-10T07:00:00Z", what: "the International Space Station's reboost of 10 June 2026, a 1.6 km raise" },
   { name: "starlink-orbit-raise", kind: "negative", number: 67309, at: "2026-01-19T00:00:00Z", from: "2026-01-04T00:00:00Z", what: "a Starlink satellite launched on 4 January 2026 raising its orbit by a hundred kilometres" },
   { name: "geo-station-keeping", kind: "negative", number: 39522, at: "2026-02-10T04:00:00Z", what: "Turksat 4A's station-keeping burn of 10 February 2026, half a kilometre" },
+  { name: "gps-iif-7-station-keeping", kind: "negative", number: 40105, at: "2026-02-07T04:00:00Z", what: "GPS IIF-7's station-keeping burn of 7 February 2026 in medium Earth orbit, a 2.4 km raise" },
   { name: "quiet-rocket-body", kind: "negative", number: 47, at: "2026-09-13T21:13:00Z", what: "a Thor Ablestar rocket body of 1960 over the same days as the USA 32 breakup, its orbit decaying with nothing else" },
 ];
 
@@ -142,15 +151,14 @@ export interface EarlyWarningFixture {
   runs: [year: number, now: number, rows: FixtureRow[]][];
 }
 
-const iso = (ms: number): string => new Date(ms).toISOString();
 
 function bodyOf(body: ArchivedBody): FixtureBody {
   return { designator: body.designator, bodyClass: body.bodyClass, opsStatus: opsStatusOf(body.opsStatus), endedByMs: endedByOf(body.endedOn), endedFromMs: dayOf(body.endedFrom), launchedMs: dayOf(body.launch) };
 }
 
-/** The window of a case: a hundred days before its instant to ten after, or from its stated start. */
+/** The window of a case: a hundred days before its instant to ten after, or from its stated start to its stated end. */
 function windowOf(c: EarlyWarningCase, at: number): { from: number; to: number } {
-  return { from: c.from === undefined ? at - DAYS_BEFORE * DAY_MS : Date.parse(c.from), to: at + DAYS_AFTER * DAY_MS };
+  return { from: c.from === undefined ? at - DAYS_BEFORE * DAY_MS : Date.parse(c.from), to: c.to === undefined ? at + DAYS_AFTER * DAY_MS : Date.parse(c.to) };
 }
 
 const yearsOver = (from: number, to: number): number[] => {
@@ -171,7 +179,7 @@ function main(): void {
     const window = windowOf(c, at);
     return { c, breakup, at, window, years: yearsOver(window.from, window.to).filter((y) => existsSync(join(archive, String(y), "manifest.json"))) };
   });
-  const fixtures = new Map(planned.map((p) => [p.c.name, { format: 1, case: p.c, provenance: { source: "the Archive (docs/archive.md)", years: [], numbers: [p.c.number], window: { from: iso(p.window.from), to: iso(p.window.to) }, runHours: RUN_HOURS, extractedBy: "scripts/kpi/early-warning-fixtures.ts" }, event: null, replay: [], space: [], bodies: {}, runs: [] } as EarlyWarningFixture]));
+  const fixtures = new Map(planned.map((p) => [p.c.name, { format: 1, case: p.c, provenance: { source: "the Archive (docs/archive.md)", years: [], numbers: [p.c.number], window: { from: isoInstant(p.window.from), to: isoInstant(p.window.to) }, runHours: RUN_HOURS, extractedBy: "scripts/kpi/early-warning-fixtures.ts" }, event: null, replay: [], space: [], bodies: {}, runs: [] } as EarlyWarningFixture]));
   const runMs = RUN_HOURS * 3_600_000;
   // The run a set is handed over in: the end of the four-hour bin its clock falls in, as `runsOf` bins it.
   const binEnd = (clock: number): number => Math.floor(clock / runMs) * runMs + runMs;
@@ -231,7 +239,7 @@ function main(): void {
     const bytes = gzipSync(`${JSON.stringify(fixture)}\n`, { level: 9 });
     writeFileSync(join(FIXTURES_DIR, `${fixture.case.name}.json.gz`), bytes);
     const suspected = fixture.replay.filter((v) => v.state === "suspected");
-    console.log(`${fixture.case.name}: ${sets} sets in ${fixture.runs.length} runs, ${fixture.provenance.window.from} to ${fixture.provenance.window.to}, ${bytes.length} bytes; the full replay raised ${fixture.replay.map((v) => v.state).join(", ") || "nothing"}${suspected.length > 0 ? ` (suspected at ${iso(suspected[0]!.raisedAt)})` : ""}`);
+    console.log(`${fixture.case.name}: ${sets} sets in ${fixture.runs.length} runs, ${fixture.provenance.window.from} to ${fixture.provenance.window.to}, ${bytes.length} bytes; the full replay raised ${fixture.replay.map((v) => v.state).join(", ") || "nothing"}${suspected.length > 0 ? ` (suspected at ${isoInstant(suspected[0]!.raisedAt)})` : ""}`);
   }
 }
 

@@ -2,6 +2,7 @@ import { isAgencySource, type Breakup, type Regime, type EventEstimate, type Pre
 import { isAgencyWord } from "../../src/truth.ts";
 import { STATION_LAUNCHES, VISITING_LAUNCHES, brackets, carriedRegime, landConfirmed, lowerOf, marginDaysOf, overlaps, type Row } from "../kpi/match.ts";
 import { rowsOf } from "../prospective/score.ts";
+import { isoInstant } from "../time.ts";
 
 /** What the satellite catalogue says of a body: the fields of the Archive's body table (`ArchivedBody`) the parent is filled from. */
 export interface BodyIdentity {
@@ -25,10 +26,9 @@ interface Landed {
   row: Breakup | null;
 }
 
-const iso = (ms: number): string => new Date(ms).toISOString();
 /** The detector's step, estimate and verdict in their published shape: instants in milliseconds become ISO strings. */
-const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: iso(step.beforeEpoch), afterEpoch: iso(step.afterEpoch) });
-const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: iso(event.at), from: iso(event.from), to: iso(event.to) });
+const publishedStepOf = (step: Step | null): PublishedStep | null => (step === null ? null : { ...step, beforeEpoch: isoInstant(step.beforeEpoch), afterEpoch: isoInstant(step.afterEpoch) });
+const publishedEventOf = (event: EventEstimate | null): PublishedEvent | null => (event === null ? null : { at: isoInstant(event.at), from: isoInstant(event.from), to: isoInstant(event.to) });
 const canLand = (row: Breakup): boolean => row.kind === "breakup" || row.kind === "anomalous";
 
 /** The precisions fine enough to name the day of a row's event. */
@@ -74,7 +74,7 @@ function reportsOf(row: Breakup | null): PublishedReport[] {
 }
 
 function publishedVerdictOf(verdict: Verdict): PublishedVerdict {
-  return { state: verdict.state as PublishedState, raisedAt: iso(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
+  return { state: verdict.state as PublishedState, raisedAt: isoInstant(verdict.raisedAt), step: publishedStepOf(verdict.step), event: publishedEventOf(verdict.event), evidence: verdict.evidence, reasons: verdict.reasons, bodies: verdict.bodies ?? [], candidates: verdict.candidates ?? [] };
 }
 
 /** The row a suspected verdict lands on by its step: a breakup or anomalous row of its object whose window, widened by the regime's margin, the step brackets; the latest such. */
@@ -166,12 +166,12 @@ function publishedOf(cluster: Cluster, verdicts: readonly Verdict[], bodyOf: Bod
   const reports = reportsOf(row);
   const firstNotice = firstNoticeOn(row);
   const confirmedOn = [confirmedVerdict?.raisedAt, firstNotice === undefined ? undefined : Date.parse(`${firstNotice}T00:00:00.000Z`)].filter((t) => t !== undefined);
-  const confirmedAt = confirmedOn.length === 0 ? null : iso(Math.min(...confirmedOn));
+  const confirmedAt = confirmedOn.length === 0 ? null : isoInstant(Math.min(...confirmedOn));
   const state: PublishedState | null = confirmedAt !== null ? "confirmed" : reports.length > 0 ? "suspected" : null;
   if (state === null || (state === "suspected" && isLetGo(latest.number, latest.step, verdicts))) return null;
   const number = latest.number;
   const body = bodyOf(number);
-  const raisedAt = iso(cluster[0]!.verdict.raisedAt);
+  const raisedAt = isoInstant(cluster[0]!.verdict.raisedAt);
   const event = publishedEventOf(latest.event);
   const rowEvent = rowEventOf(row);
   const named = row !== null && row.parent.catalogueNumber === number ? row : null;

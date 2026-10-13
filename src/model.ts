@@ -1,4 +1,5 @@
 import type { DetectorParameters } from "./params.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The local model of one orbital quantity over an object's trailing sets:
@@ -18,8 +19,6 @@ import type { DetectorParameters } from "./params.ts";
  * rate from its first derivative of the mean motion is extrapolated, the
  * one case where the set's own prediction is trusted.
  */
-
-const DAY_MS = 86_400_000;
 
 /** The least scale a fit's residuals are given, in the quantity's units: a window of identical values is not a window of no noise. */
 const SCALE_FLOOR = 1e-6;

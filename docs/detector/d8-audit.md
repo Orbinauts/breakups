@@ -10,7 +10,7 @@ The answer, in short: almost none. Of the 82 false alarms of the scoped line, no
 - **A random sample of 300 of the whole catalogue's false alarms per split**, out of 2,965 on the training years and 3,155 on the held-out ones, drawn without replacement by a seeded shuffle (mulberry32, seed 8, the training split drawn first). The shares found in a sample are carried to the split's false alarms with their Wilson 95% intervals.
 - **Two control sets**, read by the same rules: the 47 alerts the scorecard landed on a reported event's step (detections and late alerts, 30 training, 17 held out), which say how often a real breakup looks like each class; and the 21 false alarms the detector's own confirmation rules confirmed from the pieces (12 training, 9 held out), which are the false alarms most likely to be real events, since pieces came.
 
-`node --experimental-strip-types scripts/kpi/audit.ts kpi [--seed 8] [--sample 300] [--out kpi/work/d8]` reads the year files and the Archive (about a minute), writes every audited alert with its pieces, statements and class to `kpi/work/d8/audit.json`, and prints the counts and the re-score below.
+`node --experimental-strip-types scripts/kpi/audit.ts kpi [--seed 8] [--sample 300] [--out kpi/work/d8]` read the year files and the Archive (about a minute), wrote every audited alert with its pieces, statements and class to `kpi/work/d8/audit.json`, and printed the counts and the re-score below. Nothing ran the script after this phase, and it was removed with issue #32; it is in main's history (`git show 4123a4d:scripts/kpi/audit.ts`), written for the year files of `scoped-v6`.
 
 ## How each false alarm was read
 
@@ -22,7 +22,7 @@ The answer, in short: almost none. Of the 82 false alarms of the scoped line, no
 
 ## The classes
 
-Each false alarm takes the first class that applies, in this order (`classOf` in `scripts/kpi/audit.ts`):
+Each false alarm takes the first class that applies, in this order (`classOf` in `scripts/kpi/audit.ts` at 4123a4d):
 
 - **(A) A real event the truth misses.** At least one fresh piece (debris or unclassed, above the mark, first published after the step, no set before it) in the parent's plane at a metre a second or more, which none of these explains: a reported event of the parent or its launch (from three years before to a year after the step), whose pieces they are; a launch under 90 days old at the step or at the piece (the truth's own rule: a launch's first months are its own cataloguing); or an old cloud's late cataloguing, where the launch gained more than two fragment-class bodies in the year before and the in-plane share after does not stand out of the share before (binomial tail over 0.01).
 - **(D) A data artefact**, first part: the later sets kept under half the jump at three days (the detector's own share for a bad set), or the parent re-entered within 60 days of the step.

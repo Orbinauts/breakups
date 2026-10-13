@@ -6,6 +6,7 @@ import type { StepRecord } from "./manoeuvre.ts";
 import { dragRateKmPerDay, fitWindow, median, robustScale, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import type { Regime } from "./truth.ts";
+import { DAY_MS, wrapDegrees } from "./units.ts";
 
 /**
  * What the detector keeps of one object between runs: a ring of its last
@@ -26,7 +27,6 @@ import type { Regime } from "./truth.ts";
  * a prediction's target when it arrived.
  */
 
-const DAY_MS = 86_400_000;
 /** Two epochs this close are the same set re-published, in milliseconds: the catalogue re-issues a set at its epoch, and no two fits of one object are made a second apart. */
 const SAME_EPOCH_MS = 1000;
 /** Earth's second zonal harmonic (EGM96), which precesses the node: the test for a foreign set compares the node against this precession. Physical. */
@@ -249,8 +249,6 @@ export function nodePrecessionDegPerDay(aKm: number, eccentricity: number, incli
   const ratio = WGS84_EQUATORIAL_KM / p;
   return -1.5 * J2 * ratio * ratio * meanMotion * 360 * Math.cos((inclinationDeg * Math.PI) / 180);
 }
-
-const wrapDegrees = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
 
 /** What a foreign-set test reads of a reference set. */
 interface Reference {
@@ -480,7 +478,7 @@ export function valuesOf(state: SeriesState, series: Series): number[] {
 }
 
 /** The regime the window parameters are read for: an object not yet filed is treated as low. */
-const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
+export const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
 
 /**
  * The trailing window as `[from, to)` over the ring: the sets with an

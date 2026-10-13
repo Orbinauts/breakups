@@ -1,4 +1,5 @@
 import type { BodyClass, BreakupKind, Cause, Regime, Statement } from "../../src/truth.ts";
+import { isoMinute } from "../time.ts";
 
 /**
  * ESA's Annual Space Environment Report: each edition's Table 3.7, the
@@ -98,7 +99,6 @@ const CLASSES: Record<string, readonly BodyClass[]> = {
 const DAY_MS = 86_400_000;
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const longDay = (day: string): string => `${Number(day.slice(8, 10))} ${MONTHS[Number(day.slice(5, 7)) - 1]} ${day.slice(0, 4)}`;
-const iso = (ms: number): string => new Date(ms).toISOString().slice(0, 16) + "Z";
 
 function fail(where: string, message: string): never {
   throw new Error(`esa-ser.json ${where}: ${message}`);
@@ -167,7 +167,7 @@ export function esaStatement(row: EsaRow, as: "named" | "attributed" | "unnamed"
     ref: `${row.edition.title}, issue ${row.edition.issue}, ${longDay(row.edition.dateOfIssue)} (${row.edition.reference}), ${row.edition.table}, p. ${row.edition.page}, row ${row.epoch}`,
     kind: as === "unnamed" ? "unnamed" : (KINDS[row.cause] ?? null),
     parent,
-    event: { stated: row.epoch, at: null, from: iso(day), to: iso(day + DAY_MS), precision: "day" },
+    event: { stated: row.epoch, at: null, from: isoMinute(day), to: isoMinute(day + DAY_MS), precision: "day" },
     orbit: { altitudeKm: null, apogeeKm: null, perigeeKm: null, inclinationDeg: null },
     cause: CAUSES[row.cause] ?? null,
     causeStated: row.cause,

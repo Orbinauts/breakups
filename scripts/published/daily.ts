@@ -1,8 +1,8 @@
-import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { archiveHome } from "../archive/archive.ts";
+import { git } from "../git.ts";
 import { readJsonl } from "../prospective/alerts.ts";
 import { placesOf, runUrlOf, type RunLine } from "../prospective/run.ts";
 import { publishedRun } from "./cli.ts";
@@ -56,8 +56,6 @@ export function dailyPlacesOf(archive = archiveHome(), env: NodeJS.ProcessEnv = 
   const { root, home, branch } = placesOf(archive, env);
   return { root, archive, home, branch, published: resolve(env.BREAKUPS_PUBLISHED ?? resolve(ROOT, "../breakups-published")) };
 }
-
-const git = (cwd: string, ...args: string[]): string => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
 /** The year files of the run the `prospective` branch logged last, from the day's scratch directory. */
 export function loggedRunOf(places: Pick<DailyPlaces, "home" | "branch">): { date: string; yearFiles: string[] } {

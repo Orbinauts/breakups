@@ -6,6 +6,7 @@ import type { LoggedAlert } from "../prospective/alerts.ts";
 import { parseJsonl, readJsonl } from "../prospective/alerts.ts";
 import { runUrlOf, type RunLine } from "../prospective/run.ts";
 import { BODY_LIMIT, createIssue, ensureLabel, issuesLabelled } from "./github.ts";
+import { isoMinute } from "../time.ts";
 
 /**
  * One GitHub issue per confirmed alert of the prospective test:
@@ -74,7 +75,6 @@ export function runThatLogged(runs: readonly Pick<RunLine, "date" | "newAlerts" 
   return (logging.at(-1) ?? ofDay.at(-1))?.runUrl ?? null;
 }
 
-const iso = (ms: number): string => new Date(ms).toISOString().replace(/:\d\d\.\d{3}Z$/, "Z");
 
 /** The issue's title: the parent's name and catalogue number (a cloud's launch where it names no parent) and the alert's state. */
 export function alertTitle(alert: LoggedAlert, name: string | null): string {
@@ -87,7 +87,7 @@ export function alertBody(entry: LoggedLine, context: { name: string | null; run
   const { alert, line } = entry;
   const verdict = alert.verdict;
   const parent = alert.number === null ? "no parent named" : `${context.name ?? "an unnamed body"} (${alert.number})`;
-  const step = verdict.step === null ? "none measured" : `between the sets of ${iso(verdict.step.beforeEpoch)} and ${iso(verdict.step.afterEpoch)}`;
+  const step = verdict.step === null ? "none measured" : `between the sets of ${isoMinute(verdict.step.beforeEpoch)} and ${isoMinute(verdict.step.afterEpoch)}`;
   const event = verdict.event === null ? "none estimated" : JSON.stringify(verdict.event);
   // The reasons and the evidence are bounded, so the line of the log always has room under the limit on a body.
   const evidence = Object.entries(verdict.evidence)

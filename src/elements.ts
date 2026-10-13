@@ -1,5 +1,6 @@
 import { GEOSTATIONARY_MEAN_MOTION, GEOSYNCHRONOUS_MEAN_MOTION_WINDOW, HIGHLY_ELLIPTICAL_MIN_ECCENTRICITY, LOW_EARTH_ORBIT_KM, WGS84_EQUATORIAL_KM, semiMajorAxisKm, type Elements } from "@orbinauts/engine";
 import type { BodyClass, Regime } from "./truth.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The element set as the detector reads it: one published set of one
@@ -109,8 +110,6 @@ export function opsStatusOf(code: string | null | undefined): OpsStatus {
 /** Whether the status says the object works today, in any of the catalogue's working grades. */
 export const isWorkingStatus = (status: OpsStatus | undefined): boolean => status === "operational" || status === "partially operational" || status === "backup" || status === "spare" || status === "extended mission";
 
-const DAY_MS = 86_400_000;
-
 /**
  * The object's operational status at an instant, as the detector reads it
  * for a step there. Read as of today (the parameter off), it is the
@@ -198,11 +197,6 @@ export function fromElements(elements: Elements, context: SetContext = {}): Elem
     endedFromMs: dayOf(context.endedFrom),
     launchedMs: dayOf(context.launchedOn),
   };
-}
-
-/** The earliest the set can have been published: its publication time where known, else its epoch. */
-export function publishedNoEarlierThan(set: Pick<ElementSet, "epochMs" | "createdMs">): number {
-  return set.createdMs ?? set.epochMs;
 }
 
 /** The semi-major axis of the set's orbit, in kilometres, by Kepler's third law from the mean motion alone. */

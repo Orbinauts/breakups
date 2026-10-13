@@ -1,5 +1,7 @@
+import { median } from "./model.ts";
 import type { DetectorParameters, LegacyParameters } from "./params.ts";
 import type { BodyClass, Regime } from "./truth.ts";
+import { DAY_MS } from "./units.ts";
 
 /**
  * The object's own step history, and what it says about the step being
@@ -22,8 +24,6 @@ import type { BodyClass, Regime } from "./truth.ts";
  * the step, which is what a live run has. End-of-life dates and other
  * hindsight are not read.
  */
-
-const DAY_MS = 86_400_000;
 
 /** One accepted step of the object's past, as the history keeps it: when, how far, and the impulse it implied. */
 export interface StepRecord {
@@ -105,12 +105,6 @@ export function recordStep(steps: StepRecord[], record: StepRecord, params: Dete
   steps.splice(i, 0, record);
   pruneHistory(steps, record.epochMs, params);
 }
-
-const median = (values: number[]): number => {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
-};
 
 /** Whether the step has the size and shape of an end-of-life move: in low orbit a perigee lowered by the parameter with the apogee kept, or a raise past the parameter; at geosynchronous altitude a raise past the graveyard parameter. */
 export function isDisposalLike(step: CurrentStep, params: DetectorParameters): boolean {

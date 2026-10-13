@@ -2,10 +2,11 @@ import type { LogRow } from "./detector.ts";
 import { overridesHistory, passesOrigin, originTested, type PiecesEventTime } from "./event-time.ts";
 import { cloudBodies, isFragmentClass, launchCodeOf, nearestCloudDistance, planeOrbitOf, type BodyRecord, type CloudVerdict, type LaunchRecord, type PieceReading, type PlaneOrbit } from "./fragments.ts";
 import type { ConfirmationReading, OpenAlert } from "./fusion.ts";
-import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, PHASES, REFUSALS, logRow, round5, type SignalName } from "./log.ts";
+import { ATTRIBUTION_PATHS, HISTORY_REFUSALS, PHASES, REFUSALS, logRow, round4, type SignalName } from "./log.ts";
 import { median } from "./model.ts";
 import { isOn, type DetectorParameters } from "./params.ts";
 import { BODY_CLASSES, type BodyClass } from "./truth.ts";
+import { DAY_MS, HOUR_MS } from "./units.ts";
 
 /**
  * The confirmation of an open alert by pieces, and the rules every
@@ -15,9 +16,6 @@ import { BODY_CLASSES, type BodyClass } from "./truth.ts";
  * instant and parameters, a launch's bodies by number, the reentries the
  * caller passed, the log, and the pieces timed back against a parent.
  */
-
-const DAY_MS = 86_400_000;
-const HOUR_MS = 3_600_000;
 
 /**
  * What the confirmation rules judge pieces against: the parent, its orbit
@@ -353,11 +351,11 @@ export function confirmByPieces(number: number, alert: OpenAlert, launch: Launch
   const stepSignals: Partial<Record<SignalName, number>> = timed === null || !Number.isFinite(timed.origin.medianAt) ? {} : { originStepHours: (timed.origin.medianAt - alert.candidate.tStep) / HOUR_MS };
   view.log.push(logRow(now, number, { ...attributionSignals(launch, verdict, path, alert.bodyClass, confirming, judged, shared, timed, Number.NaN, refused, refused === 0 && pieces.length > 0), ...(refused === 0 || timed !== null ? originSignals(timed, Math.min(pieces.length, params.attributionMaxPieces)) : {}), ...stepSignals }));
   if (refused !== 0 || pieces.length === 0) return null;
-  const evidence: Record<string, number> = { piecesInPlane: pieces.length, piecesJudged: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(judged.reading.deltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, parentAgeDays: round5(judged.reading.parentAgeDays), cloudPieces: judged.reading.cloudPieces, daysSinceCloud: round5(judged.reading.daysSinceCloud), parentCloudDistance: round5(judged.reading.parentCloudDistance) };
+  const evidence: Record<string, number> = { piecesInPlane: pieces.length, piecesJudged: confirming.length, piecesNew: verdict.pieces.length, windowBodies: verdict.windowBodies, backgroundBodies: verdict.backgroundBodies, lambda: round4(verdict.lambda), pBurst: round4(verdict.p), cloudDeltaVMps: round4(judged.reading.deltaVMps), gabbardSpreadKm: round4(verdict.gabbardSpreadKm), planeDistanceMax: params.planeDistanceMax, parentAgeDays: round4(judged.reading.parentAgeDays), cloudPieces: judged.reading.cloudPieces, daysSinceCloud: round4(judged.reading.daysSinceCloud), parentCloudDistance: round4(judged.reading.parentCloudDistance) };
   // An analyst range's confirmation is timed by its pieces; an alert's event stays its step's, the pieces' timing kept beside it.
-  if (timed !== null && analyst) [evidence.missKm, evidence.sigmaMinutes] = [round5(timed.missKm), round5(timed.sigmaMinutes)];
-  else if (timed !== null) [evidence.piecesMissKm, evidence.piecesSigmaMinutes] = [round5(timed.missKm), round5(timed.sigmaMinutes)];
-  if (timed !== null) for (const [name, value] of [["originTried", timed.origin.tried], ["originTimed", timed.origin.timed], ["originDev50Hours", timed.origin.dev50Hours], ["originDev75Hours", timed.origin.dev75Hours], ["originAgeDays", timed.origin.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round5(value);
+  if (timed !== null && analyst) [evidence.missKm, evidence.sigmaMinutes] = [round4(timed.missKm), round4(timed.sigmaMinutes)];
+  else if (timed !== null) [evidence.piecesMissKm, evidence.piecesSigmaMinutes] = [round4(timed.missKm), round4(timed.sigmaMinutes)];
+  if (timed !== null) for (const [name, value] of [["originTried", timed.origin.tried], ["originTimed", timed.origin.timed], ["originDev50Hours", timed.origin.dev50Hours], ["originDev75Hours", timed.origin.dev75Hours], ["originAgeDays", timed.origin.ageDays]] as const) if (Number.isFinite(value)) evidence[name] = round4(value);
   const reasons = [`${pieces.length} new bod${pieces.length === 1 ? "y" : "ies"} under ${analyst ? `the analyst range ${key}` : `launch ${key}`} (${pieces.map((p) => p.number).join(", ")}) numbered above the catalogue's mark at the step, first published after it, in the parent's plane (distance ${pieces.map((p) => p.distance.toFixed(1)).join(", ")}), moving ${judged.reading.deltaVMps.toFixed(1)} m/s from it`, ...extra, ...judged.reasons, ...verdict.reasons];
   return { reasons, evidence, bodies: pieces.map((p) => p.number) };
 }

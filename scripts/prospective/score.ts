@@ -1,7 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gitOutput } from "../git.ts";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
 import { STATION_LAUNCHES, UNREPORTED_PENDING_DAYS, VISITING_LAUNCHES, brackets, carriedRegime, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, truthAsOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
@@ -342,7 +342,7 @@ export function scoreMarkdown(printed: string, scoredOn: string, runUrl: string 
   return [`# The prospective test's score`, "", `Scored on ${scoredOn}${runUrl === null ? "" : ` by ${runUrl}`}, by \`npm run prospective:score\` over this branch's \`alerts.jsonl\` and the truth on main.`, "", "```text", printed.trimEnd(), "```", ""].join("\n");
 }
 
-const git = (...args: string[]): string => execFileSync("git", args, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 30 });
+const git = (...args: string[]): string => gitOutput(ROOT, ...args);
 
 /** When the truth last changed: now where the working tree's file differs from the base commit's (the last commit, or the commit a run started from), else when the last commit that changed it was made. */
 function truthChanged(base = "HEAD"): string {

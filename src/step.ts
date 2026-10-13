@@ -1,6 +1,7 @@
 import { median, predictAt, predictionSigma, type Fit } from "./model.ts";
 import type { DetectorParameters } from "./params.ts";
 import { SIGMA_FLOOR_DEG, SIGMA_FLOOR_KM, firstAfter, indexOfEpoch, type Candidate, type SeriesState } from "./series.ts";
+import { DAY_MS, HOUR_MS } from "./units.ts";
 
 /**
  * The two-segment step estimator: the pre-step model is frozen when the
@@ -30,9 +31,6 @@ import { SIGMA_FLOOR_DEG, SIGMA_FLOOR_KM, firstAfter, indexOfEpoch, type Candida
  * two fits' weighted squares is the evidence. And the level in units of
  * its uncertainty, the persistent step's size.
  */
-
-const DAY_MS = 86_400_000;
-const HOUR_MS = 3_600_000;
 
 export interface StepEstimate {
   /** How many post sets were read, and the hours from the first to the last. */

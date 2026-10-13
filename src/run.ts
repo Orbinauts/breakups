@@ -8,16 +8,17 @@ import { eventFromPieces, eventTimeOf, type PiecesEventTime } from "./event-time
 import { catalogueFor, isAnalystLaunch, isFragmentClass, judgeCloud, launchCodeOf, launchFor, launchKeyOf, ledgerOf, noteBody, noteCloud, piecesWithin, planeOrbitOf, type BodyRecord, type CatalogueRecord, type CloudVerdict, type LaunchRecord, type ParentCandidate, type PieceReading, type PlaneOrbit } from "./fragments.ts";
 import { alertSignals, cadenceAfter, closingOutcome, daysAfterStep, judgeStep, noteDamage, openAlert, persistent, trackAlert, type OpenAlert, type StepJudgement } from "./fusion.ts";
 import { impulseOf, type Impulse } from "./impulse.ts";
-import { ATTRIBUTION_PATHS, ORIGINS, OUTCOMES, PHASES, logRow, regimeIndex, round5, type SignalName } from "./log.ts";
+import { ATTRIBUTION_PATHS, ORIGINS, OUTCOMES, PHASES, logRow, regimeIndex, round4, type SignalName } from "./log.ts";
 import { heldLevel, noteLevel, returnMissKm, type HeldLevel } from "./maintenance.ts";
 import { MANOEUVRE_CLASSES, atypicalReasons, atypicalTests, classify, featuresOf, recordStep, type CurrentStep, type HistoryFeatures, type ManoeuvreClass } from "./manoeuvre.ts";
 import { predictAt, predictionSigma, type Fit, type Prediction } from "./model.ts";
 import { parametersWith, type DetectorParameters } from "./params.ts";
-import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsAcross, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, windowOf, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
+import { cadenceBefore, envelopeOf, fitOf, firstAfter, forgetResidualsAcross, frozenEnvelope, indexOfEpoch, newState, ownNoise, priorSigma, pushSet, refreshScatter, regimeKey, removeAt, rememberResidual, ringSetAt, screenSet, windowBstar, windowOf, type Candidate, type OwnNoise, type SeriesState } from "./series.ts";
 import { matesOf, noteLedgerStep, siblingsOf, towardsMates, type LedgerStep, type Mates, type Siblings } from "./siblings.ts";
 import { inScope, passesGates, type ScopeSubject, type ScopeTier } from "./scope.ts";
 import { advanceCusum, axisReading, estimateStep, persistenceEstimate, resetCusum, scaleInflation, type Environment, type StepEstimate } from "./step.ts";
 import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
+import { DAY_MS, HOUR_MS } from "./units.ts";
 
 /**
  * One run of the detector over the sets published since the last, in
@@ -68,9 +69,6 @@ import { BODY_CLASSES, launchOf, type Regime } from "./truth.ts";
  * is dismissed where bodies came under the launch and every one was old.
  */
 
-const DAY_MS = 86_400_000;
-const HOUR_MS = 3_600_000;
-
 /** What the scorecard names this detector. */
 export const DETECTOR_NAME = "confirmed-v10";
 
@@ -118,8 +116,6 @@ interface RunContext {
   /** The reentries the caller passed, by catalogue number (`DetectorInput.decays`). */
   decays: ReadonlyMap<number, number>;
 }
-
-const regimeKey = (regime: Regime): Exclude<Regime, "unknown"> => (regime === "unknown" ? "LEO" : regime);
 
 /** Whether a set has an instant and an orbit a body can be noted by: a finite epoch, node and inclination, and a bound orbit with a positive mean motion. */
 function hasInstantAndOrbit(set: ElementSet): boolean {
@@ -374,7 +370,7 @@ function evidenceOf(signals: Partial<Record<SignalName, number>>, params: Detect
   const evidence: Record<string, number> = {};
   for (const name of EVIDENCE) {
     const value = signals[name];
-    if (value !== undefined && Number.isFinite(value)) evidence[name] = round5(value);
+    if (value !== undefined && Number.isFinite(value)) evidence[name] = round4(value);
   }
   evidence.zPersist = params.zPersist;
   evidence.typicalityMax = params.typicalityMax;
@@ -649,7 +645,7 @@ function closeAlert(state: SeriesState, alert: OpenAlert, outcome: number, conte
       : alert.pieces.inPlane > 0
         ? [`${alert.pieces.inPlane} new bod${alert.pieces.inPlane === 1 ? "y" : "ies"} came under the launch in the parent's plane after the step and the confirmation rules refused ${alert.pieces.inPlane === 1 ? "it" : "them"} (${days.toFixed(0)} days after the step)`, ...(extra.reasons ?? [])]
         : [`no new body under the launch and no notice in the ${params.alertTtlDays} days after the step (${days.toFixed(0)} days)`, ...(extra.reasons ?? [])];
-    context.verdicts.push({ kind: "object", state: outcome === OUTCOMES.dismissed ? "dismissed" : "expired", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...(extra.evidence ?? {}), alertDays: round5(days), piecesNew: alert.pieces.new, piecesInPlane: alert.pieces.inPlane }, reasons, bodies: extra.bodies });
+    context.verdicts.push({ kind: "object", state: outcome === OUTCOMES.dismissed ? "dismissed" : "expired", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...(extra.evidence ?? {}), alertDays: round4(days), piecesNew: alert.pieces.new, piecesInPlane: alert.pieces.inPlane }, reasons, bodies: extra.bodies });
   }
   state.alert = null;
   const alerted = context.catalogue.alerted;
@@ -661,7 +657,7 @@ function closeAlert(state: SeriesState, alert: OpenAlert, outcome: number, conte
 function confirmAlert(state: SeriesState, alert: OpenAlert, context: RunContext, reasons: string[], evidence: Record<string, number>, bodies: number[]): void {
   const days = daysAfterStep(alert, context.now);
   const promoted = alert.origin === "manoeuvre" ? [`the step was read as a manoeuvre from the object's own record; the catalogue says otherwise`] : [];
-  context.verdicts.push({ kind: "object", state: "confirmed", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: context.now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...evidence, daysToConfirmation: round5(days) }, reasons: [...reasons, ...promoted, `confirmed ${days.toFixed(1)} days after the step`], bodies });
+  context.verdicts.push({ kind: "object", state: "confirmed", number: state.number, launch: alert.launch !== null && !isAnalystLaunch(alert.launch) ? alert.launch : null, raisedAt: context.now, step: alert.step, event: alert.event, evidence: { ...alert.evidence, ...evidence, daysToConfirmation: round4(days) }, reasons: [...reasons, ...promoted, `confirmed ${days.toFixed(1)} days after the step`], bodies });
   closeAlert(state, alert, OUTCOMES.confirmed, context, false);
 }
 
@@ -830,7 +826,7 @@ function lapse(states: Map<number, SeriesState>, context: RunContext): void {
     const days = context.params.lapseDays[regimeKey(state.regime)];
     context.log.push(logRow(context.now, state.number, { phase: PHASES.close, outcome: OUTCOMES.lapsed, origin: ORIGINS[candidate.origin], regime: regimeIndex(state.regime), beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, delta1: candidate.delta1, z1: candidate.z1, k: candidate.postSets, bstar: candidate.bstar, sigmaOwn: candidate.sigmaOwn, residuals: candidate.residuals, z2: candidate.z2, rho2: candidate.rho2, evidence2: candidate.evidence2, span2: candidate.span2, zMean2: candidate.zMean2 }));
     if (candidate.watched) {
-      context.verdicts.push({ kind: "object", state: "dismissed", number: state.number, launch: null, raisedAt: context.now, step: { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: candidate.delta1, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: candidate.postSets, z: candidate.z1 }, event: null, evidence: { delta1: round5(candidate.delta1), z1: round5(candidate.z1), k: candidate.postSets, lapseDays: days }, reasons: [`no further set followed within ${days} days; the step will be measured again when one comes`] });
+      context.verdicts.push({ kind: "object", state: "dismissed", number: state.number, launch: null, raisedAt: context.now, step: { beforeEpoch: candidate.beforeEpoch, afterEpoch: candidate.afterEpoch, deltaKm: candidate.delta1, deltaPerigeeKm: null, deltaApogeeKm: null, deltaInclinationDeg: null, postSets: candidate.postSets, z: candidate.z1 }, event: null, evidence: { delta1: round4(candidate.delta1), z1: round4(candidate.z1), k: candidate.postSets, lapseDays: days }, reasons: [`no further set followed within ${days} days; the step will be measured again when one comes`] });
     }
     closeCandidate(state, candidate, OUTCOMES.lapsed, null, null, context);
   }
@@ -913,7 +909,6 @@ function pieceStatesFor(context: RunContext, pieces: readonly PieceReading[]): S
   }
   return states;
 }
-
 
 /**
  * The pieces timed back against a parent (`eventFromPieces`), their first
@@ -1058,7 +1053,7 @@ function judgeLaunches(context: RunContext): void {
         const byParent = new Map<number | null, number>();
         for (const piece of consistent) byParent.set(piece.parent, (byParent.get(piece.parent) ?? 0) + 1);
         const parent = [...byParent.entries()].sort((a, b) => b[1] - a[1])[0]![0];
-        context.verdicts.push({ kind: "cloud", state: "cloud-only", number: parent, launch: analyst ? null : key, raisedAt: now, step: null, event: null, evidence: { windowBodies: verdict.windowBodies, piecesInPlane: consistent.length, lambda: round5(verdict.lambda), pBurst: round5(verdict.p), cloudDeltaVMps: round5(verdict.cloudDeltaVMps), gabbardSpreadKm: round5(verdict.gabbardSpreadKm), launchAgeDays: round5(verdict.launchAgeDays) }, reasons: [`a burst of new bodies under ${analyst ? `the analyst range ${key}` : `launch ${key}`} in the plane of ${parent ?? "no catalogued parent"} that no body could be named for: listed for review, not a detection`, ...verdict.reasons], bodies: consistent.map((p) => p.number) });
+        context.verdicts.push({ kind: "cloud", state: "cloud-only", number: parent, launch: analyst ? null : key, raisedAt: now, step: null, event: null, evidence: { windowBodies: verdict.windowBodies, piecesInPlane: consistent.length, lambda: round4(verdict.lambda), pBurst: round4(verdict.p), cloudDeltaVMps: round4(verdict.cloudDeltaVMps), gabbardSpreadKm: round4(verdict.gabbardSpreadKm), launchAgeDays: round4(verdict.launchAgeDays) }, reasons: [`a burst of new bodies under ${analyst ? `the analyst range ${key}` : `launch ${key}`} in the plane of ${parent ?? "no catalogued parent"} that no body could be named for: listed for review, not a detection`, ...verdict.reasons], bodies: consistent.map((p) => p.number) });
       } else if (verdict.burst && consistent.length === 0) decision = verdict.deployments > 0 || verdict.reasons.some((r) => r.includes("deployment")) ? CLOUD_DECISIONS.deployment : CLOUD_DECISIONS.burstNoPiece;
       else if (verdict.oldCloud) decision = CLOUD_DECISIONS.oldCloud;
     }
@@ -1090,7 +1085,7 @@ function expire(context: RunContext): void {
   for (const state of alertedStates(context)) {
     const alert = state.alert!;
     if (context.now - alert.raisedAt < context.params.alertTtlDays * DAY_MS) continue;
-    closeAlert(state, alert, closingOutcome(alert), context, true, { evidence: { cadenceAfter: round5(cadenceAfter(alert, context.now, context.params)) } });
+    closeAlert(state, alert, closingOutcome(alert), context, true, { evidence: { cadenceAfter: round4(cadenceAfter(alert, context.now, context.params)) } });
   }
 }
 

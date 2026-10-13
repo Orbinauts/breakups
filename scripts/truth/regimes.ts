@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { regimeOf as regimeOfSet } from "../../src/elements.ts";
 import { readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, readYear } from "../archive/archive.ts";
+import { isoMinute } from "../time.ts";
 
 /**
  * The regimes of the truth's parents, read from the Archive into a file
@@ -36,12 +37,11 @@ export interface RegimesFile {
   parents: Record<string, RegimeRun[]>;
 }
 
-const minute = (ms: number): string => `${new Date(ms).toISOString().slice(0, 16)}Z`;
 
 /** The runs of one regime over a parent's sets, in epoch order, each from its first set's epoch. */
 export function regimeRunsOf(sets: readonly [number, Known][]): RegimeRun[] {
   const runs: RegimeRun[] = [];
-  for (const [epoch, regime] of [...sets].sort((a, b) => a[0] - b[0])) if (runs.at(-1)?.[1] !== regime) runs.push([minute(epoch), regime]);
+  for (const [epoch, regime] of [...sets].sort((a, b) => a[0] - b[0])) if (runs.at(-1)?.[1] !== regime) runs.push([isoMinute(epoch), regime]);
   return runs;
 }
 
