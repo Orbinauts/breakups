@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import type { PlaneOrbit } from "../../src/fragments.ts";
+import { normalAngleDeg, type PlaneOrbit } from "../../src/fragments.ts";
 import { DETECTOR_PARAMETERS, type BodyClass } from "../../src/index.ts";
 import { nodePrecessionDegPerDay } from "../../src/series.ts";
 import type { SatcatRow } from "../truth/parse-gcat-satcat.ts";
 import { FRAGMENTS_PLANE, catalogueOver, fragmentsOf, type BodyFact } from "./catalogue.ts";
-import { attributionOf, boundsOf, gcatPiecesOf, impulseTiltDeg, normalAngleDeg, normalDeltaVMps, readEvent, tally, type Attribution, type EventReading, type PieceReading } from "./heo-pieces.ts";
+import { attributionOf, boundsOf, gcatPiecesOf, impulseTiltDeg, normalDeltaVMps, readEvent, tally, type Attribution, type EventReading, type PieceReading } from "./heo-pieces.ts";
 
 /**
  * The measurement of the plane test on the pieces of highly elliptical
@@ -126,7 +126,7 @@ describe("an event's fresh pieces", () => {
 
   test("pass the scorecard's test exactly where the scorecard's count does", () => {
     const reading = readEvent(catalogue, event, gcat);
-    expect(reading?.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.normalAngleMaxDeg).length).toBe(fragmentsOf(catalogue, 21220, "1991-025", T0, T0, T0, 5 * DAY).inPlane);
+    expect(reading?.pieces.filter((p) => p.passesToday || p.normalAngleDeg <= FRAGMENTS_PLANE.planeNormalAngleMaxDeg).length).toBe(fragmentsOf(catalogue, 21220, "1991-025", T0, T0, T0, 5 * DAY).inPlane);
   });
 
   test("are not read where the parent had no set before the event", () => {

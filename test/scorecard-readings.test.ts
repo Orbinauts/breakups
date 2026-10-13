@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import type { Breakup, Regime } from "../src/index.ts";
+import { REGIMES, type Breakup, type Regime } from "../src/index.ts";
 import { confirmedCellsOf } from "../scripts/kpi/kpi.ts";
-import { firstAgencyNotice, firstQuarterlyNews, landConfirmed, truthAsOf, type ConfirmedLanding, type Row, type ScoredEvent } from "../scripts/kpi/match.ts";
+import { carriedRegime, firstAgencyNotice, firstQuarterlyNews, landConfirmed, regimeBefore, truthAsOf, type ConfirmedLanding, type Row, type ScoredEvent } from "../scripts/kpi/match.ts";
 
 /**
  * The scorecard's readings amended in the seventh decision record: the
@@ -44,6 +44,16 @@ describe("a report naming no object exempts only what it names", () => {
     expect(landConfirmed(confirmed(40003, T + 5 * DAY), 0, [unnamed], undefined, undefined, "LEO")).toMatchObject({ outcome: "false-alarm", event: null });
     // The verdict's regime unknown (no set of its object to read it from): the bound cannot be met.
     expect(landConfirmed(confirmed(40003, T + 5 * DAY), 0, [unnamed]).outcome).toBe("false-alarm");
+  });
+
+  test("the object's regime is read by its last set before the raising where the reader has the sets, else as its verdict carries it", () => {
+    const geo = { epochMs: T, meanMotion: 1.0027, eccentricity: 0.0002, bstar: 0 };
+    const index = { orbitBefore: (number: number, at: number) => (number === 40002 && at > T ? geo : null) };
+    expect(regimeBefore(index, 40002, T + DAY)).toBe("GEO");
+    expect(regimeBefore(index, 40002, T)).toBe("unknown");
+    expect(carriedRegime({ evidence: { regime: REGIMES.indexOf("HEO") } })).toBe("HEO");
+    // A confirmation from the pieces alone carries none.
+    expect(carriedRegime({ evidence: { attributed: 1 } })).toBe("unknown");
   });
 
   test("a row naming the launch alone exempts that launch only", () => {
@@ -120,13 +130,21 @@ describe("the lead is read two ways: over the first agency notice dated to the d
 });
 
 describe("the first statements the two leads are read against", () => {
-  const statement = (source: string, on: string, precision: "day" | "month") => ({ source, statedOn: { on, precision, ref: "" } });
+  const named = { catalogueNumber: 40001, designator: "2014-001A", name: "SAT" };
+  const statement = (source: string, on: string, precision: "day" | "month", parent: object = named) => ({ source, parent, statedOn: { on, precision, ref: "" } });
   const breakup = { statements: [statement("news", "2015-05-01", "day"), statement("odqn", "2015-07-01", "month"), statement("hoosf-16e", "2015-06-01", "month"), statement("esa-ser", "2016-04-20", "day"), statement("s4s-notice", "2015-05-12", "day")] } as unknown as Breakup;
 
   test("the notice is an agency's statement dated to the day; the quarterly news is NASA's, dated to its month", () => {
     expect(firstAgencyNotice(breakup)).toMatchObject({ source: "s4s-notice", on: "2015-05-12" });
     expect(firstQuarterlyNews(breakup)).toMatchObject({ source: "hoosf-16e", on: "2015-06-01" });
     expect(firstAgencyNotice({ statements: [statement("odqn", "2015-07-01", "month")] } as unknown as Breakup)).toBeNull();
+  });
+
+  test("an ESA row naming no object, placed on the event by the truth build's rule, is no agency's notice of it", () => {
+    const placed = statement("esa-ser", "2015-05-02", "day", { catalogueNumber: null, designator: null, name: null });
+    expect(firstAgencyNotice({ statements: [placed, statement("s4s-notice", "2015-05-12", "day")] } as unknown as Breakup)).toMatchObject({ source: "s4s-notice", on: "2015-05-12" });
+    expect(firstAgencyNotice({ statements: [placed] } as unknown as Breakup)).toBeNull();
+    expect(firstAgencyNotice({ statements: [statement("esa-ser", "2015-05-02", "day")] } as unknown as Breakup)).toMatchObject({ source: "esa-ser" });
   });
 });
 

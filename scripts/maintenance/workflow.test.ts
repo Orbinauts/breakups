@@ -173,10 +173,10 @@ describe("the branch the maintenance run folds in", () => {
     expect(decide("fix/hand-row-2026.10").out).toContain("folded");
   });
 
-  test("an accepted report's branch is not merged here: its statements are added with every waiting report's", () => {
+  test("a branch named for an accepted report is not merged here: the report is read from its issue", () => {
     const { status, out } = decide("report/issue-41");
     expect(status).toBe(0);
-    expect(out).toContain("is an accepted report");
+    expect(out).toContain("is not read: an accepted report is read from its issue");
     expect(out).not.toContain("folded");
   });
 });

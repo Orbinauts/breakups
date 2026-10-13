@@ -197122,7 +197122,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 1,
-   "confidence": "B",
+   "confidence": "C",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {
@@ -197991,7 +197991,7 @@
    },
    "cause": "propulsion",
    "piecesCatalogued": 2,
-   "confidence": "B",
+   "confidence": "C",
    "scoreable": true,
    "exemptReason": null,
    "resolvedFrom": {

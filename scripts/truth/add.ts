@@ -17,11 +17,11 @@ import { statedOnFromRef } from "./stated.ts";
  * the hand file as it was. `--message <file>` writes the commit's message.
  *
  * `npm run truth:add -- --missing-from <hand.json> [--status <file>]`
- * appends every statement another copy of the hand file holds and this
- * one lacks, without rebuilding: the maintenance workflow folds each
- * accepted report's branch in so, since two branches cut from one main
- * both append at the file's end and would not merge. `--status` writes
- * `added` or `held` (nothing to add).
+ * appends every statement another file in the hand file's shape holds and
+ * this one lacks, without rebuilding: the maintenance workflow appends so
+ * the statements of the accepted reports, read again from their issues
+ * (`npm run truth:report -- accepted`). `--status` writes `added` or
+ * `held` (nothing to add).
  */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -105,10 +105,10 @@ export function addStatement(text: string, raw: unknown): { text: string; statem
 }
 
 /**
- * The hand file with every statement of another copy of it that it lacks,
- * appended in that copy's order: how an accepted report's branch is
- * folded into a main that moved since the branch was cut, another report
- * appended there in the meantime. A statement it holds word for word is
+ * The hand file with every statement of another file in its shape that it
+ * lacks, appended in that file's order: how the accepted reports, read
+ * again from their issues, are folded into main, whatever main took since
+ * they were accepted. A statement it holds word for word is
  * passed over; one it holds in other words (the refusal of a statement
  * already held) is passed over and named in `held`; any other refusal
  * throws.

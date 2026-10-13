@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { firstStatementOf, readStatements, type Breakup, type BreakupKind, type BreakupsFile, type Cause, type Confidence, type Conflict, type Parent, type Precision, type Regime, type ResolvedFrom, type SourceId, type SourceRecord, type StatedOrbit, type StatedTime, type Statement } from "../../src/truth.ts";
+import { firstStatementOf, isAgencyWord, readStatements, type Breakup, type BreakupKind, type BreakupsFile, type Cause, type Confidence, type Conflict, type Parent, type Precision, type Regime, type ResolvedFrom, type SourceId, type SourceRecord, type StatedOrbit, type StatedTime, type Statement } from "../../src/truth.ts";
 import { gcatStatements, parseGcat } from "./parse-gcat.ts";
 import { isSatcatStatement, parseSatcat, satcatStatements, separationsOf, type Skipped } from "./parse-gcat-satcat.ts";
 import { hoosfStatements, parseHoosf } from "./parse-hoosf.ts";
@@ -427,10 +427,14 @@ const MEASURED: ReadonlySet<Precision> = new Set<Precision>(["second", "minute"]
  * coarser time it states C; a named analyst's dating C, and so a company's
  * measured instant a report quotes to the minute (s2a systems' optical
  * timing of Luch); GCAT's date to the month or finer C; anything else D.
+ * An authority's statement counts as one only where it is its word on the
+ * object (`isAgencyWord`): an ESA row naming no object, placed on the
+ * event by the build's own rule, dates and corroborates the event but
+ * grades as any other unnamed statement does.
  */
-function gradeOf(statement: Statement): Confidence {
+export function gradeOf(statement: Statement): Confidence {
   const time = statement.event;
-  if (AUTHORITIES.has(statement.source)) {
+  if (AUTHORITIES.has(statement.source) && isAgencyWord(statement)) {
     if (MEASURED.has(time.precision)) return "A";
     if (time.from !== null && upper(time) - lower(time) <= 3 * DAY_MS) return "B";
     if (time.precision !== "none") return "C";

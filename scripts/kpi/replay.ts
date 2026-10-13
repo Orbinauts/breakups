@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
+import { runDetector, type DetectorInput, type DetectorOutput, type DetectorParameters, type ElementSet, type ParameterOverrides, type LaunchState, type LogRow, type Notice, type ObjectState, type OpsStatus, type SpaceWeatherDay, type Verdict } from "../../src/index.ts";
 import { dayOf, endedByOf, opsStatusOf } from "../../src/elements.ts";
+import { WEATHER_DAYS } from "../../src/environment.ts";
 import { readBodies, readColumn, readManifest, yearDir, type ArchivedBody, type ArchivedSet, type ColumnName, type Columns, type Manifest } from "../archive/archive.ts";
 import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
 
@@ -50,8 +51,8 @@ import { readSpaceYear, spaceDir } from "../archive/space-weather.ts";
 export const RUN_HOURS = 4;
 /** How much of the previous year warms the states up, in days: twice the longest window the detector's design keeps. */
 export const WARMUP_DAYS = 60;
-/** The days of space weather handed to a run: the run's day and the two before it, so a storm's onset is in view. */
-export const SPACE_DAYS = 3;
+/** The days of space weather handed to a run: the days the detector reads (`WEATHER_DAYS`), the run's day and the two before it. */
+export const SPACE_DAYS = WEATHER_DAYS;
 /**
  * The most the clock may leap forward on one set, in days. A set's epoch
  * is rarely more than hours ahead of its publication, but a bundle holds
@@ -257,7 +258,7 @@ export interface Carried {
 export interface ReplayOptions {
   /** The detector to run; the library's by default. */
   detector?: Detector;
-  parameters?: Partial<DetectorParameters>;
+  parameters?: ParameterOverrides;
   /** The notices the caller knows of, handed to each run as far as published by its instant. */
   notices?: Notice[];
   /** The reentries the catalogue published, each object's decay day by catalogue number, handed to every run whole: the detector reads one only from its day on. */

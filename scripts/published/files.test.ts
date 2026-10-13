@@ -75,4 +75,13 @@ describe("the published files", () => {
     writeFileSync(path, JSON.stringify({ version: 2, ...usa32 }));
     expect(() => readPublished(dir)).toThrow(/version 2/);
   });
+
+  test("are refused where a breakup carries no row's event: every file has carried one since the one re-keying run", () => {
+    writePublished(dir, [usa32], status);
+    const path = join(dir, "v1/breakups/19460-2026-09-13.json");
+    const { rowEvent, ...before } = JSON.parse(readFileSync(path, "utf8")) as PublishedBreakupFile;
+    void rowEvent;
+    writeFileSync(path, JSON.stringify(before));
+    expect(() => readPublished(dir)).toThrow(/19460-2026-09-13.*rowEvent/);
+  });
 });

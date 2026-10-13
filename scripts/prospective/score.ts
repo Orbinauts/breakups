@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gitOutput } from "../git.ts";
 import { firstAgencyStatement, launchOf, readBreakups, type Breakup, type FirstStatement } from "../../src/index.ts";
-import { UNREPORTED_PENDING_DAYS, brackets, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, truthAsOf, type Row } from "../kpi/match.ts";
+import { STATION_LAUNCHES, UNREPORTED_PENDING_DAYS, VISITING_LAUNCHES, brackets, carriedRegime, isPendingUnreported, landConfirmed, lowerOf, marginDaysOf, truthAsOf, type Row } from "../kpi/match.ts";
 import { DAY_MS } from "../kpi/replay.ts";
 import { replacePart, RESULTS } from "../kpi/pages.ts";
 import { FREEZE_AT, FREEZE_MS, parseJsonl, type LoggedAlert } from "./alerts.ts";
@@ -23,7 +23,13 @@ import { runUrlOf } from "./run.ts";
  * and the reported events with fragments that no alert confirmed. A
  * confirmation lands as the scorecard's Confirmed line lands it
  * (`landConfirmed`), on the parent within the window and the half year
- * after, a confirmation by a notice alone excluded.
+ * after, a confirmation by a notice alone excluded. The score has no orbit
+ * of the object (it reads no Archive): a report naming no object but a
+ * regime bounds a confirmation by the regime its verdict carries
+ * (`carriedRegime`), which a verdict on a step carries and one from the
+ * pieces alone does not; such a one is read with the regime unknown, so it
+ * is not exempt here where the scorecard, reading the object's last set,
+ * could exempt it.
  *
  * Beside it, the early warning: the suspected alerts logged since the
  * freeze, each landed as the scorecard's parent-step line lands it, on a
@@ -231,7 +237,8 @@ export function scoreProspective(alerts: readonly LoggedAlert[], committedAt: Co
   const caught = new Set<string>();
   confirmed.forEach((alert, i) => {
     // The headline's reading: a verdict naming twins lands on the body it names first.
-    const landing = landConfirmed(alert.verdict, i, rows);
+    // The score reads no Archive, so the object's regime is the one its verdict carries (unknown for one from the pieces alone).
+    const landing = landConfirmed(alert.verdict, i, rows, STATION_LAUNCHES, VISITING_LAUNCHES, carriedRegime(alert.verdict));
     const { outcome, event } = landing;
     const twin = landing.twin !== undefined && landing.twin.event !== event ? `; matched at the launch it would land on ${landing.twin.event ?? "nothing"}` : "";
     const landed: Landed = { alert, committedAt: committedAt.get(alert.key) ?? null, outcome, event, note: `${landing.note}${twin}` };

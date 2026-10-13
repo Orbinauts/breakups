@@ -60,6 +60,20 @@ export const AGENCY_SOURCES: readonly SourceId[] = ["hoosf-16e", "odqn", "s4s-no
 
 export const isAgencySource = (source: SourceId): boolean => AGENCY_SOURCES.includes(source);
 
+/**
+ * Whether a statement is an agency's word on the event's object: made by
+ * an agency (`AGENCY_SOURCES`) and naming what it is about. An ESA row
+ * that names no object, which the truth's build placed on an event by its
+ * own rule (its parent all null: the only event the other sources state
+ * within a day of it, in an orbit and of an object type it allows), may
+ * date and corroborate the event, but no agency said it of this object:
+ * it is no authority for the event's confidence and no first agency
+ * notice for the lead. A row ESA left unnamed stands as an event of its
+ * own, described, and is that event's word.
+ */
+export const isAgencyWord = (statement: Pick<Statement, "source" | "parent">): boolean =>
+  isAgencySource(statement.source) && !(statement.source === "esa-ser" && statement.parent.catalogueNumber === null && statement.parent.designator === null && statement.parent.name === null);
+
 export const BODY_CLASSES = ["payload", "rocket body", "debris", "unknown"] as const;
 export type BodyClass = (typeof BODY_CLASSES)[number];
 
@@ -461,14 +475,14 @@ export function launchOf(designator: string | null): string | null {
 }
 
 /**
- * The first statement of an event by an agency (`AGENCY_SOURCES`): the
+ * The first statement of an event by an agency (`isAgencyWord`): the
  * earliest of its agency statements' publication days, with the source;
  * null where no agency statement is dated. The scorecard reads the lead
  * of a confirmation against this, the owner's reading of "before the
  * agencies said it".
  */
 export function firstAgencyStatement(breakup: Pick<Breakup, "statements">): FirstStatement | null {
-  return firstStatementOf(breakup.statements.filter((s) => isAgencySource(s.source)));
+  return firstStatementOf(breakup.statements.filter(isAgencyWord));
 }
 
 /** The earliest dated statement among those given, a finer day before a month on the same day, then the source's order in `SOURCE_IDS`; null where none is dated. */

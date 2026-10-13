@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; its reports accepted through issues and its daily watcher (issue #9), its failures made loud and the KPI workflow's group (issue #24), and its check before the replay and its following of a moved main (issue #14) amended on 2026-10-12, and its accepted reports read from their issues and started by the watcher on 2026-10-13 (issue #9)
 date: 2026-10-11
 ---
 
@@ -124,7 +124,9 @@ merge is safe.
   ESA's yearly report, with the hand file's latest entries and how to add
   a row. It is opened once a quarter, by its title. Since 2026-10-12 a
   daily watcher also opens a prefilled issue for each new notice it can
-  read, and a report the owner accepts reaches main the same day
+  read, and a report the owner accepts reaches main the next morning, when
+  the watcher starts the maintenance run and the prospective test's runs
+  leave room, or on Monday's run
   ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md));
   the reminder remains for what the watcher does not read.
 
@@ -141,9 +143,9 @@ merge is safe.
   edition of ESA's report (to read and record), and a prefilled
   `breakup-report` issue for each section of Jonathan's Space Report and
   news article it reads; a person completes the parent and the time, and the owner labels it `breakup-report-accepted`, the one
-  action left, after which a workflow adds the statement
-  (`npm run truth:add`) on a branch and the maintenance run folds it in,
-  rescores and merges it. The Space Forces notices, LeoLabs' posts and
+  action left, after which a workflow checks the statement
+  (`npm run truth:add`) and the maintenance run reads it again from the
+  issue, folds it in, rescores and merges it. The Space Forces notices, LeoLabs' posts and
   any source the watcher does not read still wait for a person to notice
   them: the quarterly reminder lists them, and the same form or
   `npm run truth:add` on a branch (folded in by `gh workflow run
@@ -234,8 +236,8 @@ marked parts of the README and the documentation pages, and the score. It never 
 hand file; those reach main from a person, directly or in a branch the
 person asks it to fold in (`-f from=<branch>`), which meets the same checks.
 The one exception is a statement the owner accepted from a breakup-report
-issue, which the run appends to the hand file from its branch as the owner
-accepted it ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)).
+issue, which the run reads again from the issue and appends to the hand
+file as the owner accepted it ([0011](0011-reports-reach-the-truth-through-issues-the-owner-accepts.md)).
 
 ## Considered options
 

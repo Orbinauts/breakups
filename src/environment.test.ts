@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { apFactor, bandOf, environmentOf, fluxFactor, statsFor, weatherOf, type Measurement } from "./environment.ts";
-import { DETECTOR_PARAMETERS } from "./params.ts";
+import { WEATHER_DAYS, apFactor, bandOf, environmentOf, fluxFactor, statsFor, weatherOf, type Measurement } from "./environment.ts";
+import { DETECTOR_PARAMETERS, OFF } from "./params.ts";
 
 const params = DETECTOR_PARAMETERS;
 
@@ -56,19 +56,30 @@ describe("the common mode and the live scale", () => {
 });
 
 describe("the weather", () => {
-  const day = (kp: number[], Ap: number, f107: number | null) => ({ day: "2024-05-10", kp, ap: kp.map((k) => k * 10), Ap, f107, f107Adjusted: f107, dst: null });
+  const day = (kp: number[], Ap: number, f107: number | null, on = "2024-05-10") => ({ day: on, kp, ap: kp.map((k) => k * 10), Ap, f107, f107Adjusted: f107, dst: null });
+  const now = Date.UTC(2024, 4, 10, 12);
 
   test("no indices means no hold and a factor of one", () => {
-    expect(weatherOf(undefined, params)).toEqual({ kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 });
-    expect(weatherOf([], params).priorFactor).toBe(1);
+    expect(weatherOf(undefined, now, params)).toEqual({ kpMax: 0, apMax: 0, f107: Number.NaN, stormHold: false, priorFactor: 1, dragFactor: 1 });
+    expect(weatherOf([], now, params).priorFactor).toBe(1);
+  });
+
+  test("reads the run's day and the two before it, whatever other days the caller hands in", () => {
+    expect(WEATHER_DAYS).toBe(3);
+    const quietToday = [day([9, 9, 9, 9, 9, 9, 9, 9], 300, 200, "2024-05-07"), day([2, 2, 2, 2, 2, 2, 2, 2], 7, 110, "2024-05-08"), day([1, 1, 1, 1, 1, 1, 1, 1], 4, 70, "2024-05-10"), day([9, 9, 9, 9, 9, 9, 9, 9], 300, 250, "2024-05-11")];
+    const weather = weatherOf(quietToday, now, params);
+    expect(weather.kpMax).toBe(2);
+    expect(weather.apMax).toBe(7);
+    expect(weather.f107).toBe(70);
+    expect(weather.stormHold).toBe(false);
   });
 
   test("a storm day sets the hold and scales the prior up; a quiet one at low flux scales it down", () => {
-    const storm = weatherOf([day([2, 2, 2, 2, 2, 2, 2, 2], 7, 110), day([3, 5, 7, 8, 6, 4, 3, 3], 80, 150)], params);
+    const storm = weatherOf([day([2, 2, 2, 2, 2, 2, 2, 2], 7, 110), day([3, 5, 7, 8, 6, 4, 3, 3], 80, 150)], now, params);
     expect(storm.kpMax).toBe(8);
     expect(storm.stormHold).toBe(true);
     expect(storm.priorFactor).toBeGreaterThan(1.5);
-    const quiet = weatherOf([day([1, 1, 1, 1, 1, 1, 1, 1], 4, 70)], params);
+    const quiet = weatherOf([day([1, 1, 1, 1, 1, 1, 1, 1], 4, 70)], now, params);
     expect(quiet.stormHold).toBe(false);
     expect(quiet.priorFactor).toBeLessThan(0.5);
     expect(fluxFactor(Number.NaN)).toBe(1);
@@ -76,5 +87,14 @@ describe("the weather", () => {
     expect(apFactor(5)).toBeCloseTo(0.67, 6);
     expect(apFactor(100)).toBeCloseTo(1.79, 6);
     expect(apFactor(400)).toBeCloseTo(1.79, 6);
+  });
+
+  test("the scatter tables and the band's width are the parameters', so a replay can change them and the scorecard records them", () => {
+    const flat = { ...params, fluxScatter: [[OFF, 2]] as [number, number][], apScatter: { quiet: 1, storm: 3, quietAp: 10, stormAp: 1000 }, leoBandKm: 100 };
+    expect(fluxFactor(250, flat)).toBe(2);
+    expect(apFactor(10, flat)).toBeCloseTo(1, 6);
+    expect(apFactor(100, flat)).toBeCloseTo(2, 6);
+    expect(bandOf("LEO", 812, flat)).toBe("LEO:8");
+    expect(weatherOf([day([1, 1, 1, 1, 1, 1, 1, 1], 4, 70)], now, flat).priorFactor).toBeCloseTo(2, 6);
   });
 });

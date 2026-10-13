@@ -77,6 +77,20 @@ describe("the local polynomial", () => {
     expect(predictAt(fallback, epochs[1]! + 2 * DAY).leverage).toBe(5);
   });
 
+  test("the fallback is a line of the set's drag rate, its degree one as its two coefficients say", () => {
+    const fallback = fitWindow(epochs, [7000, 7001, 7002], 0, 2, params, -0.5);
+    expect(fallback.coef).toEqual([7001, -0.5]);
+    expect(fallback.degree).toBe(1);
+  });
+
+  test("gives the residuals' scale only where asked: not measured, NaN, on the hot path", () => {
+    const values = epochs.map((t) => 7000 - 0.01 * ((t - epochs[15]!) / DAY));
+    values[7]! += 5;
+    expect(fitWindow(epochs, values, 0, 16, params, 0).scale).toBeNaN();
+    expect(fitWindow(epochs, values, 0, 2, params, 0).scale).toBeNaN();
+    expect(fitWindow(epochs, values, 0, 16, params, 0, true).scale).toBeLessThan(0.1);
+  });
+
   test("the drag rate from a set's half-derivative lowers the axis", () => {
     expect(dragRateKmPerDay(7000, 14.5, 1e-5)).toBeCloseTo(-(2 / 3) * (7000 / 14.5) * 2e-5, 12);
   });

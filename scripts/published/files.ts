@@ -47,6 +47,8 @@ export function readPublished(dir: string): PublishedBreakup[] {
   return readVersioned<PublishedBreakupsFile>(listPath(dir)).breakups.map(({ id }) => {
     const { version, ...breakup } = readVersioned<PublishedBreakupFile>(breakupPath(dir, id));
     void version;
+    // Every file has carried the row's event since the one run that re-keyed the files written before it.
+    if (breakup.rowEvent === undefined) throw new Error(`${breakupPath(dir, id)}: ${id} carries no rowEvent; every published breakup has carried one since the run that re-keyed the files written before it`);
     return breakup;
   });
 }

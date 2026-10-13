@@ -226,7 +226,19 @@ export function noteMark(catalogue: CatalogueRecord, number: number, now: number
   }
 }
 
-/** The highest designated number first seen before the instant; zero where none was. */
+/**
+ * The highest designated number first seen before the instant; zero where
+ * none was. The mark is indexed by the instant a body was first published
+ * (the run that first saw it), and `judgeCloud` queries it with the
+ * event's instant, an epoch: both are instants on one clock, so the query
+ * reads the numbers the catalogue had handed out by the time the event
+ * happened, and a piece of the event, published after it whatever its
+ * lag, is above it. Queried at the window's start (`now - window`)
+ * instead, a body published between the event and the window with a
+ * number above some of the event's pieces (numbers are handed out when a
+ * body is catalogued, not when it is published) would lift the mark over
+ * them, and they would read as returning old bodies.
+ */
 export function markAt(catalogue: CatalogueRecord, at: number): number {
   let lo = 0;
   let hi = catalogue.markAt.length;
