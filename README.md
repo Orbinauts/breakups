@@ -92,11 +92,13 @@ On the held-out years, this is how often each stage came, and how likely each wa
 
 ## Install
 
+The package is not published to npm ([docs/decisions/0012](https://github.com/Orbinauts/breakups/blob/main/docs/decisions/0012-the-package-is-not-published-to-npm.md)): to show the breakups it finds, read the [published JSON](https://github.com/Orbinauts/breakups/blob/main/docs/published.md), which needs no install. To run the library, install it from the repository, which builds it as it installs:
+
 ```sh
-npm install @orbinauts/breakups
+npm install github:Orbinauts/breakups
 ```
 
-It needs Node 22 or later, and also runs in browsers through a bundler and in Cloudflare Workers. The package is ESM only, ships TypeScript types, and imports no Node built-in.
+That installs the default branch; `github:Orbinauts/breakups#v<version>` pins a release, by its `v<version>` tag. Where npm says the package's install script is not yet allowed, approve it with `npm install-scripts approve @orbinauts/breakups`. It needs Node 22 or later, and also runs in browsers through a bundler and in Cloudflare Workers. The package is ESM only, ships TypeScript types, and imports no Node built-in.
 
 A caller that runs the detector hands each run the states the last one returned. To keep them between runs in a key-value store or a file, write them with `serialiseStates` and read them back with `reviveStates`: plain `JSON.stringify` loses them, since they are kept in maps and hold the infinities and NaN, which JSON writes as `null`.
 

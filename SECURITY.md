@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Fixes are made on the latest release only. Until 1.0.0 that means the newest 0.x version on npm.
+Fixes are made on the latest release only. Until 1.0.0 that means the newest 0.x version tagged and released on GitHub; the package is not published to npm.
 
 ## Reporting a vulnerability
 

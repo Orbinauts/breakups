@@ -1,5 +1,6 @@
 {
   "name": "@orbinauts/breakups",
+  "private": true,
   "version": "0.1.0",
   "description": "On-orbit breakup detection from public orbital-element histories, in TypeScript, scored against every reported fragmentation since 2005",
   "keywords": [
@@ -36,12 +37,9 @@
   "engines": {
     "node": ">=22"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
-    "prepack": "npm run build",
+    "prepare": "npm run build",
     "test": "vitest run",
     "docs": "typedoc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json --noEmit",
