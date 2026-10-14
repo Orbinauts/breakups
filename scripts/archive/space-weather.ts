@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { archiveHome } from "./archive.ts";
+import { fetchText } from "./fetch.ts";
 
 /**
  * The space-weather indices the detector may be handed: GFZ Potsdam's Kp,
@@ -12,7 +13,6 @@ import { archiveHome } from "./archive.ts";
 
 export const GFZ_URL = "https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt";
 export const OMNI_URL = (year: number): string => `https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_${year}.dat`;
-const USER_AGENT = "breakups-archive (https://github.com/Orbinauts/breakups)";
 
 export const spaceDir = (archive: string): string => join(archive, "space");
 
@@ -68,12 +68,6 @@ export function parseOmniDst(text: string): Map<string, (number | null)[]> {
     days.set(day, hours);
   }
   return days;
-}
-
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-  if (!response.ok) throw new Error(`${url}: ${response.status}`);
-  return response.text();
 }
 
 /** The days of a year, from the Archive's `space/<year>.json`. */

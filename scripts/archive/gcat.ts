@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from "node:path";
 import { DateFormError, parseVagueDate } from "../truth/dates.ts";
 import { archiveHome } from "./archive.ts";
+import { fetchText } from "./fetch.ts";
 
 /**
  * GCAT's payload catalogue (Jonathan McDowell, planet4589.org, CC-BY-4.0):
@@ -47,7 +48,6 @@ import { archiveHome } from "./archive.ts";
  */
 
 export const GCAT_PSATCAT_URL = "https://planet4589.org/space/gcat/tsv/cat/psatcat.tsv";
-const USER_AGENT = "breakups-archive (https://github.com/Orbinauts/breakups)";
 
 export const gcatDir = (archive: string): string => join(archive, "gcat");
 
@@ -158,9 +158,7 @@ export function latestGcat(archive: string): { day: string; rows: Map<number, Gc
 
 async function main(): Promise<void> {
   const archive = archiveHome();
-  const response = await fetch(GCAT_PSATCAT_URL, { headers: { "User-Agent": USER_AGENT } });
-  if (!response.ok) throw new Error(`${GCAT_PSATCAT_URL}: ${response.status}`);
-  const tsv = await response.text();
+  const tsv = await fetchText(GCAT_PSATCAT_URL);
   const rows = parsePsatcat(tsv);
   const day = new Date().toISOString().slice(0, 10);
   mkdirSync(gcatDir(archive), { recursive: true });
