@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { archiveHome, satcatDir, type BodyClass } from "./archive.ts";
+import { fetchText } from "./fetch.ts";
 
 /**
  * The satellite catalogue, as CelesTrak serves it (`satcat.csv`, public):
@@ -19,7 +20,6 @@ import { archiveHome, satcatDir, type BodyClass } from "./archive.ts";
  */
 
 export const SATCAT_URL = "https://celestrak.org/pub/satcat.csv";
-const USER_AGENT = "breakups-archive (https://github.com/Orbinauts/breakups)";
 
 export interface SatcatRow {
   number: number;
@@ -67,9 +67,7 @@ export function latestSatcat(archive: string): { day: string; rows: Map<number, 
 
 async function main(): Promise<void> {
   const archive = archiveHome();
-  const response = await fetch(SATCAT_URL, { headers: { "User-Agent": USER_AGENT } });
-  if (!response.ok) throw new Error(`${SATCAT_URL}: ${response.status}`);
-  const csv = await response.text();
+  const csv = await fetchText(SATCAT_URL);
   const rows = parseSatcat(csv);
   const day = new Date().toISOString().slice(0, 10);
   writeFileSync(join(satcatDir(archive), `${day}.csv`), csv);

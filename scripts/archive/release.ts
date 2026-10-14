@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { assertFresh, readCatalogueIndex } from "../kpi/catalogue-index.ts";
 import { archiveHome, builtYears, catalogueIndexPath, readManifest, releaseManifestPath, sha256File, yearDir } from "./archive.ts";
+import { retried, USER_AGENT } from "./fetch.ts";
 import { spaceDir } from "./space-weather.ts";
 
 /**
@@ -133,29 +134,19 @@ export function upload(archive: string, years: number[], sideOnly = false): void
   for (const file of files) rmSync(file);
 }
 
-/** Times a fetch is tried before it fails: a connection the server closed while it idled, or a dropped transfer, is tried again. */
-export const FETCH_ATTEMPTS = 3;
-
-/** A URL fetched to a file, following redirects, with `ARCHIVE_AUTH_HEADER` where one is set, tried again on any failure up to `FETCH_ATTEMPTS` times. */
+/** A URL fetched to a file, following redirects, with `ARCHIVE_AUTH_HEADER` where one is set, tried again on any failure as `retried` does. */
 export async function fetchTo(url: string, path: string): Promise<void> {
-  const headers: Record<string, string> = { "User-Agent": "breakups-archive (https://github.com/Orbinauts/breakups)" };
+  const headers: Record<string, string> = { "User-Agent": USER_AGENT };
   const auth = process.env.ARCHIVE_AUTH_HEADER;
   if (auth !== undefined && auth !== "") {
     const [name, ...value] = auth.split(":");
     headers[name!.trim()] = value.join(":").trim();
   }
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const response = await fetch(url, { headers, redirect: "follow" });
-      if (!response.ok || response.body === null) throw new Error(`${url}: ${response.status}`);
-      await pipeline(response.body as unknown as NodeJS.ReadableStream, createWriteStream(path));
-      return;
-    } catch (error) {
-      if (attempt >= FETCH_ATTEMPTS) throw error;
-      console.log(`${url}: ${(error as Error).message}; trying again (${attempt + 1} of ${FETCH_ATTEMPTS})`);
-      await new Promise((resolveWait) => setTimeout(resolveWait, 5000 * attempt));
-    }
-  }
+  await retried(url, async () => {
+    const response = await fetch(url, { headers, redirect: "follow" });
+    if (!response.ok || response.body === null) throw new Error(`${url}: ${response.status}`);
+    await pipeline(response.body as unknown as NodeJS.ReadableStream, createWriteStream(path));
+  });
 }
 
 export async function download(archive: string, years: number[], warmup: boolean): Promise<void> {
