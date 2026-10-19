@@ -9,7 +9,7 @@
     "satellite.js": "7.1.0",
     "astronomy-engine": "2.1.19"
   },
-  "truthSha256": "143a5213888f7afae77eb5883bc8047cdad85385dd2a4cf8099d10bead9ccf03",
+  "truthSha256": "8d07fc2beed1a9814258f071804aaebcbd95df5389436bd16bfb559fc2c762bb",
   "truthAsOf": "2026-10-07",
   "detector": {
     "name": "confirmed-v10",
