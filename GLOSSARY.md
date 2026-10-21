@@ -11,6 +11,10 @@ _Avoid_: agency (the Space Force and NASA are agencies, but so is ESA's report's
 **Fresh piece**:
 A body catalogued under a breakup's launch after the event, numbered above the catalogue's mark at the event and classed as debris or not yet classed.
 
+**Fresh validation**:
+The years the detector reads exactly once per truth and that never enter a fit: 1995 to 2004, with 1994 as their warm-up year, scored apart from the training years (even) and the held-out years (odd). A later detector's number on them is marked as read after fitting; the first reading stays.
+_Avoid_: untouched years, pre-2005, third split (says where it sits, not what makes it fresh)
+
 **Target**:
 A reported breakup that counts in the Confirmed line's recall: the parent's orbit was known before it, and at least one fresh piece published within 180 days lies in the parent's plane by the scorecard's own bound, never the detector's.
 _Avoid_: scoreable event (the truth's wider set), denominator event
