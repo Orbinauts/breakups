@@ -4,6 +4,10 @@ The detection of satellite breakups from the public catalogue's element sets, sc
 
 ## Language
 
+**Authority**:
+A source whose statement alone puts a breakup on the headline line: NASA's history of fragmentations and its quarterly news, the U.S. Space Force's notices and ESA's annual report.
+_Avoid_: agency (the Space Force and NASA are agencies, but so is ESA's report's office; the word says nothing about the headline), official source
+
 **Fresh piece**:
 A body catalogued under a breakup's launch after the event, numbered above the catalogue's mark at the event and classed as debris or not yet classed.
 
