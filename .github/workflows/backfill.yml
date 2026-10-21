@@ -89,7 +89,8 @@ jobs:
             sudo chown "$(id -u):$(id -g)" /mnt/breakups-archive
             archive=/mnt/breakups-archive
           else
-            archive="$GITHUB_WORKSPACE/breakups-archive"
+            # Outside the checkout: the Archive refuses to live inside the repository.
+            archive="$RUNNER_TEMP/breakups-archive"
             mkdir -p "$archive"
           fi
           echo "BREAKUPS_ARCHIVE=$archive" >> "$GITHUB_ENV"
