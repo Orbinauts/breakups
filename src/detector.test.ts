@@ -1197,7 +1197,8 @@ describe("the eleventh phase's rules", () => {
   };
 
   test("the default list of the crewed and cargo craft's launches is the satellite catalogue's craft, by launch, none a station's", () => {
-    for (const launch of ["2005-026", "2015-024", "2012-054", "2022-060", "2025-241"]) expect(VISITING_LAUNCHES).toContain(launch);
+    // Soyuz TM 25, STS 81 and Progress-M 33 at Mir in 1997, and the craft of the ISS era.
+    for (const launch of ["1997-003", "1997-001", "1996-066", "2005-026", "2015-024", "2012-054", "2022-060", "2025-241"]) expect(VISITING_LAUNCHES).toContain(launch);
     expect([...VISITING_LAUNCHES].sort()).toEqual([...VISITING_LAUNCHES]);
     expect(new Set(VISITING_LAUNCHES).size).toBe(VISITING_LAUNCHES.length);
     expect(VISITING_LAUNCHES.filter((launch) => params.stationLaunches.includes(launch))).toEqual([]);

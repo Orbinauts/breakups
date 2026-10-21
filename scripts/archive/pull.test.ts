@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { afterAll, describe, expect, test } from "vitest";
-import { buildFromHistory, daysToPull, historyDir, keepDay, markKept } from "./pull.ts";
+import { buildFromHistory, daysToPull, historyDir, historyYear, keepDay, markKept } from "./pull.ts";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -45,6 +45,22 @@ function keepBare(archive: string, day: string, rows: unknown[]): string {
 }
 
 describe("a year built from its kept days", () => {
+  test("on the epoch clock, orders the sets by epoch, writes no creation column and says so in its source", () => {
+    const archive = freshArchive();
+    // Created out of epoch order, as the catalogue's loads of old sets are.
+    keepBare(archive, "2026-01-01", [omm(9002, 25544, "2026-01-01T12:00:00.000000", "2030-05-05T00:00:00"), omm(9001, 25544, "2026-01-01T06:00:00.000000", "2030-05-06T00:00:00")]);
+    const built = buildFromHistory(archive, 2026, "epoch");
+    expect(Array.from(built.columns.epoch as Float64Array)).toEqual([Date.parse("2026-01-01T06:00:00Z"), Date.parse("2026-01-01T12:00:00Z")]);
+    expect(Array.from(built.columns.rank as Uint32Array)).toEqual([1, 2]);
+    expect(built.columns.created).toBeUndefined();
+    mkdirSync(join(archive, "satcat"), { recursive: true });
+    const year = historyYear(archive, 2026, "epoch");
+    expect(year.manifest.columns).not.toContain("created");
+    expect(year.manifest.source).toMatchObject({ kind: "history", clock: "epoch" });
+    expect(historyYear(archive, 2026).manifest.source).not.toHaveProperty("clock");
+  });
+
+
   test("counts once a set whose epoch is exactly midnight, which both days' answers hold", () => {
     const archive = freshArchive();
     const boundary = omm(9003, 25544, "2026-01-02T00:00:00.000000", "2026-01-02T03:00:00");

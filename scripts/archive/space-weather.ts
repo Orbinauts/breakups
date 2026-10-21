@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { archiveHome } from "./archive.ts";
 import { fetchText } from "./fetch.ts";
+import { EARLIEST_YEAR } from "./years.ts";
 
 /**
  * The space-weather indices the detector may be handed: GFZ Potsdam's Kp,
@@ -79,7 +80,7 @@ async function main(): Promise<void> {
   const archive = archiveHome();
   const dir = spaceDir(archive);
   mkdirSync(dir, { recursive: true });
-  const [from, to] = [Number(process.argv[2] ?? "2005"), Number(process.argv[3] ?? new Date().getUTCFullYear())];
+  const [from, to] = [Number(process.argv[2] ?? String(EARLIEST_YEAR)), Number(process.argv[3] ?? new Date().getUTCFullYear())];
   const gfzPath = join(dir, "Kp_ap_Ap_SN_F107_since_1932.txt");
   writeFileSync(gfzPath, await fetchText(GFZ_URL));
   const gfz = parseGfz(readFileSync(gfzPath, "utf8"));

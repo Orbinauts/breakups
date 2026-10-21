@@ -1,5 +1,6 @@
 import { BODY_CLASSES, BREAKUP_KINDS, DETECTOR_PARAMETERS, REGIMES, type BodyClass, type BreakupKind, type DetectorParameters, type LogRow, type Regime, type ScopeParameters, type Verdict } from "../../src/index.ts";
 import type { Manifest } from "../archive/archive.ts";
+import { SCORED_FROM } from "../archive/years.ts";
 import { PINNED, type Versions } from "../pins/pins.ts";
 import { LINES, UNREPORTED_PENDING_DAYS, brackets, isPendingUnreported, marginDaysOf, type ConfirmedLanding, type Line, type ScoredEvent, type YearScore } from "./match.ts";
 import { DAY_MS, type TimeBasis } from "./replay.ts";
@@ -38,16 +39,8 @@ export type SplitName = (typeof SPLITS)[number];
 
 /** The last year of the chronological training split. */
 export const CHRONOLOGICAL_SPLIT_YEAR = 2017;
-/**
- * The first year any split scores. The Archive starts in 2005 and the
- * detector meets every object and launch new in its first year, with no
- * record of steps, no background of new bodies and no cloud remembered;
- * in use it would have that history, so 2005 is the warm-up year: the
- * replay runs it, and every line and split scores from 2006. The tenth
- * phase's methodology, from the ninth's held-out reading (twelve of its
- * thirty-one false confirmations in 2005).
- */
-export const SCORED_FROM_YEAR = 2006;
+/** The first year any split scores: the year after the Archive's first, its warm-up year (`scripts/archive/years.ts`). */
+export const SCORED_FROM_YEAR = SCORED_FROM;
 /** How many of the latest years the recent split holds. */
 export const RECENT_YEARS = 3;
 

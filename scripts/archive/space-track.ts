@@ -18,6 +18,19 @@ const USER_AGENT = "breakups-archive (https://github.com/Orbinauts/breakups)";
 export const SPACING_SECONDS = 6;
 /** Requests one run may make, so a bug cannot run away with the account. */
 export const MAX_REQUESTS = 400;
+/**
+ * Seconds between the requests of a backfill of closed years: a hundred an
+ * hour, a third of the three hundred the guidelines allow, since the
+ * account also serves the owner's other uses and the daily prospective run
+ * (the owner's budget, the thirteenth decision record). Never less.
+ */
+export const BACKFILL_SPACING_SECONDS = 36;
+
+/** How a client paces itself: the seconds between requests and the requests one run may make, the defaults the daily pull's. */
+export interface Pacing {
+  spacingSeconds?: number;
+  maxRequests?: number;
+}
 
 export interface Credentials {
   identity: string;
@@ -42,10 +55,24 @@ export class SpaceTrack {
 
   private readonly credentials: Credentials;
   private readonly archive: string;
+  private readonly spacingSeconds: number;
+  private readonly maxRequests: number;
 
-  constructor(credentials: Credentials, archive: string) {
+  constructor(credentials: Credentials, archive: string, pacing: Pacing = {}) {
     this.credentials = credentials;
     this.archive = archive;
+    this.spacingSeconds = pacing.spacingSeconds ?? SPACING_SECONDS;
+    this.maxRequests = pacing.maxRequests ?? MAX_REQUESTS;
+  }
+
+  /** The requests this run has made, the login among them. */
+  get made(): number {
+    return this.requests;
+  }
+
+  /** Whether the next request would pass the run's cap: a caller that pulls many slices stops here rather than on the error. */
+  get atCap(): boolean {
+    return this.requests >= this.maxRequests;
   }
 
   private ledger(line: string): void {
@@ -73,8 +100,8 @@ export class SpaceTrack {
   }
 
   private async space(): Promise<void> {
-    if (this.requests >= MAX_REQUESTS) throw new Error(`this run has made ${MAX_REQUESTS} requests; stop and run again later`);
-    const wait = this.lastRequest + SPACING_SECONDS * 1000 - Date.now();
+    if (this.requests >= this.maxRequests) throw new Error(`this run has made ${this.maxRequests} requests; stop and run again later`);
+    const wait = this.lastRequest + this.spacingSeconds * 1000 - Date.now();
     if (wait > 0) await sleep(wait);
     this.lastRequest = Date.now();
     this.requests++;

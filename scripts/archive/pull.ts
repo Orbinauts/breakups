@@ -29,9 +29,10 @@ export const historyDir = (archive: string, year: number): string => join(archiv
 
 const FIELDS = ["NORAD_CAT_ID", "OBJECT_ID", "EPOCH", "MEAN_MOTION", "ECCENTRICITY", "INCLINATION", "RA_OF_ASC_NODE", "ARG_OF_PERICENTER", "MEAN_ANOMALY", "BSTAR", "MEAN_MOTION_DOT", "MEAN_MOTION_DDOT", "ELEMENT_SET_NO", "REV_AT_EPOCH", "CREATION_DATE", "GP_ID"] as const;
 
-const dayQuery = (day: string, next: string): string => `/basicspacedata/query/class/gp_history/EPOCH/${day}--${next}/orderby/CREATION_DATE%20asc,GP_ID%20asc/predicates/${FIELDS.join(",")}/format/json`;
+/** The history class's query for the sets whose epoch falls on a day (both ends of the range held, so a midnight set is in two days' answers). */
+export const dayQuery = (day: string, next: string): string => `/basicspacedata/query/class/gp_history/EPOCH/${day}--${next}/orderby/CREATION_DATE%20asc,GP_ID%20asc/predicates/${FIELDS.join(",")}/format/json`;
 
-const dayAfter = (day: string): string => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+export const dayAfter = (day: string): string => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
 const utcMs = (text: string): number => Date.parse(text.endsWith("Z") ? text : `${text}Z`);
 
@@ -90,7 +91,7 @@ const BARE = /^\s*\[\s*(\])?/;
  * day: when it was pulled (its mark, or a bare slice's modification time)
  * and whether it is empty. A slice that cannot be read counts as empty.
  */
-function keptHead(path: string): { pulledAt: number; empty: boolean; bare: boolean } {
+export function keptHead(path: string): { pulledAt: number; empty: boolean; bare: boolean } {
   const unreadable = { pulledAt: Number.NEGATIVE_INFINITY, empty: true, bare: false };
   const fd = openSync(path, "r");
   const head = Buffer.alloc(4096);
@@ -110,7 +111,7 @@ function keptHead(path: string): { pulledAt: number; empty: boolean; bare: boole
 }
 
 /** A kept slice's rows, marked or bare. */
-function keptRows(path: string): KeptRow[] {
+export function keptRows(path: string): KeptRow[] {
   const kept = JSON.parse(gunzipSync(readFileSync(path)).toString("utf8")) as KeptRow[] | { pulledAt: string; rows: KeptRow[] };
   return Array.isArray(kept) ? kept : kept.rows;
 }
@@ -179,12 +180,18 @@ class Growing {
   }
 }
 
+/** The clock a year built from the history class runs on: the sets' creation time, the catalogue's publication, or their epoch where the creation times are not the publication's (the years backfilled from before the Archive's first, whose sets the catalogue loaded long after). */
+export type HistoryClock = "created" | "epoch";
+
 /**
  * The year's columns from every kept day, read one day at a time, ordered
  * by object then publication (the creation time, then the catalogue's id
- * where the day has it, else the order the day listed them in).
+ * where the day has it, else the order the day listed them in). On the
+ * epoch clock, publication is the epoch then the catalogue's id, and no
+ * creation column is written, so the replay runs the year on the epoch as
+ * it runs a bundle year.
  */
-export function buildFromHistory(archive: string, year: number): { columns: Columns; bodies: ArchivedBody[]; sets: number; withoutSatcat: number; from: string; through: string; missing: string[] } {
+export function buildFromHistory(archive: string, year: number, clock: HistoryClock = "created"): { columns: Columns; bodies: ArchivedBody[]; sets: number; withoutSatcat: number; from: string; through: string; missing: string[] } {
   const dir = historyDir(archive, year);
   const days = readdirSync(dir).filter((f) => DAY_FILE.test(f)).sort();
   if (days.length === 0) throw new Error(`no days kept under ${dir}`);
@@ -241,7 +248,7 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
       c.meanMotionDdot[i] = set.meanMotionDdot;
       c.elementSetNumber[i] = set.elementSetNumber;
       c.revAtEpoch[i] = set.revAtEpoch;
-      c.created![i] = utcMs(row.CREATION_DATE);
+      c.created![i] = clock === "epoch" ? c.epoch[i]! : utcMs(row.CREATION_DATE);
       gpIds.push(row.GP_ID !== undefined ? Number(row.GP_ID) : seq);
       seq++;
       if (!designators.has(set.number)) designators.set(set.number, set.designator);
@@ -268,7 +275,7 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
     const i = byPublication[r]!;
     order[counts[numbers[i]!]!++] = i;
   }
-  const names: ColumnName[] = [...REQUIRED_COLUMNS, "created"];
+  const names: ColumnName[] = clock === "epoch" ? [...REQUIRED_COLUMNS] : [...REQUIRED_COLUMNS, "created"];
   const columns = {} as Record<ColumnName, ColumnArray>;
   for (const name of names) {
     const to = new COLUMN_TYPES[name](n);
@@ -302,19 +309,20 @@ export function buildFromHistory(archive: string, year: number): { columns: Colu
  * the weekly maintenance promotes a closed year of the prospective test's
  * day slices with it (`scripts/maintenance/promote.ts`).
  */
-export function historyYear(archive: string, year: number): ArchiveYear {
+export function historyYear(archive: string, year: number, clock: HistoryClock = "created"): ArchiveYear {
   const started = Date.now();
-  const built = buildFromHistory(archive, year);
+  const built = buildFromHistory(archive, year, clock);
+  const names: ColumnName[] = clock === "epoch" ? [...REQUIRED_COLUMNS] : [...REQUIRED_COLUMNS, "created"];
   const columnSha256: Manifest["columnSha256"] = {};
-  for (const name of [...REQUIRED_COLUMNS, "created"] as const) {
+  for (const name of names) {
     const column = built.columns[name]!;
     columnSha256[name] = createHash("sha256").update(new Uint8Array(column.buffer, column.byteOffset, column.byteLength)).digest("hex");
   }
   const manifest: Manifest = {
     format: 1,
     year,
-    source: { kind: "history", from: built.from, through: built.through, missing: built.missing },
-    columns: [...REQUIRED_COLUMNS, "created"],
+    source: { kind: "history", from: built.from, through: built.through, missing: built.missing, ...(clock === "epoch" ? { clock } : {}) },
+    columns: names,
     sets: built.sets,
     bodies: built.bodies.length,
     withoutSatcat: built.withoutSatcat,

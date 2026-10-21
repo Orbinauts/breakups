@@ -213,6 +213,8 @@ export interface HistorySource {
   from: string;
   through: string;
   missing: string[];
+  /** `epoch` where the year was built with no creation column, its sets ordered and timed by their epoch as a bundle year's are: the years backfilled from before the Archive's first. Absent, the creation time. */
+  clock?: "epoch";
 }
 
 export interface Reject {

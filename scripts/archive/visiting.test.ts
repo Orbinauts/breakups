@@ -2,9 +2,14 @@ import { describe, expect, test } from "vitest";
 import { parseSatcat } from "./satcat.ts";
 import { renderVisiting, vehicleOf, visitingLaunches } from "./visiting.ts";
 
-/** Rows of the satellite catalogue as it prints them: craft of every vehicle, the names that only contain their words, and a craft that fell before 2005. */
+/** Rows of the satellite catalogue as it prints them: craft of every vehicle, the names that only contain their words, Mir's craft, a craft that fell before 1994 and a Shuttle that carried a station module up. */
 const CSV = [
   "OBJECT_NAME,OBJECT_ID,NORAD_CAT_ID,OBJECT_TYPE,OPS_STATUS_CODE,OWNER,LAUNCH_DATE,LAUNCH_SITE,DECAY_DATE,PERIOD,INCLINATION,APOGEE,PERIGEE,RCS,DATA_STATUS_CODE,ORBIT_CENTER,ORBIT_TYPE",
+  "STS 58,1993-065A,22869,PAY,D,US,1993-10-18,AFETR,1993-11-01,,,,,,,EA,LAN",
+  "PROGRESS-M 17,1993-019A,22589,PAY,D,CIS,1993-03-31,TYMSC,1994-03-03,,,,,,,EA,IMP",
+  "SOYUZ-TM 18,1994-001A,22952,PAY,D,CIS,1994-01-08,TYMSC,1994-07-09,,,,,,,EA,LAN",
+  "STS 88,1998-069A,25549,PAY,D,US,1998-12-04,AFETR,1998-12-16,,,,,,,EA,LAN",
+  "ISS (UNITY),1998-069F,25575,PAY,,US,1998-12-04,AFETR,,,,,,,,EA,ORB",
   "PROGRESS-M 50,2004-032A,28399,PAY,D,CIS,2004-08-11,TYMSC,2004-12-23,,,,,,,EA,IMP",
   "SOYUZ-TMA 5,2004-040A,28444,PAY,D,CIS,2004-10-14,TYMSC,2005-04-25,,,,,,,EA,LAN",
   "STS 114,2005-026A,28775,PAY,D,US,2005-07-26,AFETR,2005-08-09,,,,,,,EA,LAN",
@@ -35,9 +40,10 @@ describe("the crewed and cargo craft's launches", () => {
     for (const name of ["DRAGONSAT", "MICRODRAGON", "DRAGRACER 1 (ALCHEMY)", "STSAT-3", "STSS DEMO 1 (USA 208)", "PAYLOAD SIM (CYGNUS)", "ORION", "LEMUR-2-MIA-GRACE"]) expect(vehicleOf(name)).toBeNull();
   });
 
-  test("the launches are the craft's in orbit since 2005, by launch, the payload alone deciding", () => {
+  test("the launches are the craft's in orbit since 1994, by launch, the payload alone deciding, a station's launch left out", () => {
     const launches = visitingLaunches(parseSatcat(CSV).values());
-    expect(launches.map((l) => l.launch)).toEqual(["2004-040", "2005-026", "2008-008", "2012-054", "2022-015", "2022-037", "2022-050", "2022-055", "2022-060", "2022-124", "2025-241"]);
+    expect(launches.map((l) => l.launch)).toEqual(["1993-019", "1994-001", "2004-032", "2004-040", "2005-026", "2008-008", "2012-054", "2022-015", "2022-037", "2022-050", "2022-055", "2022-060", "2022-124", "2025-241"]);
+    expect(visitingLaunches(parseSatcat(CSV).values(), []).map((l) => l.launch)).toContain("1998-069");
     expect(launches.find((l) => l.launch === "2022-060")?.name).toBe("SHENZHOU-14 (SZ-14)");
   });
 

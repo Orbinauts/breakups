@@ -262,3 +262,18 @@ file as the owner accepted it ([0011](0011-reports-reach-the-truth-through-issue
   also stops it on pushes and pull requests.
 - A workflow disabled by hand stays disabled: the keep-alive enables again
   only a workflow GitHub disabled for the repository's inactivity.
+
+## Amended on 2026-10-21: a backfill workflow, for a while
+
+`backfill.yml` runs twice a day, at 09:07 and 15:07 UTC, in the daily
+run's concurrency group and away from its hours, until the years 1994 to
+2004 are in the Archive's release ([0013](0013-the-years-before-2005-are-the-fresh-validation-read-once.md),
+[0003](0003-the-archive-is-a-release-asset-never-in-git.md) as amended):
+each run pulls a slab of day slices from the catalogue's history class
+within the owner's budget, keeps them on the release `backfill-data`,
+builds a year once its days are all kept, and, once every year is built,
+finishes by uploading the years, the side files and the index to the
+Archive's release together. A failed run opens an issue labelled
+`maintenance` with the end of its log, and the next scheduled run goes on
+from the kept slices. The workflow and its release are removed with the
+pull request that scores the years.

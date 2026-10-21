@@ -174,6 +174,8 @@ describe("the launch's own rules", () => {
 
   test("a crewed station's launch is refused, and a crewed or cargo craft's for any body but its rocket body", () => {
     expect(launchRefusals({ ...subject, key: "1998-067" }, verdictOf(), params).refused).toBe(REFUSALS.station);
+    // Mir's own launch and a module's: a Soyuz TM docking in 1997 confirms nothing on the station.
+    for (const key of ["1986-017", "1987-030", "1995-024"]) expect(launchRefusals({ ...subject, key }, verdictOf(), params).refused).toBe(REFUSALS.station);
     const craft = { ...params, visitingLaunches: [LAUNCH] };
     expect(launchRefusals(subject, verdictOf(), craft).refused).toBe(REFUSALS.visiting);
     expect(launchRefusals({ ...subject, bodyClass: "rocket body" }, verdictOf(), craft).refused).toBe(0);

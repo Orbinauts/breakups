@@ -25,6 +25,10 @@ describe("whether the committed scorecard is stale", () => {
     expect(scorecardStale(latest, "2".repeat(64), same, pinned)).toEqual(["the truth's sha256 is 222222222222…, the aggregate was scored against 111111111111…"]);
   });
 
+  test("not where the release holds a year below the scorecard's first: the fresh validation's, read by its own rule", () => {
+    expect(scorecardStale(latest, "1".repeat(64), released({ "1994": "2026-11-01T00:00:00Z", "2004": "2026-11-01T00:00:00Z", "2025": "2026-10-09T19:00:00Z", "2026": "2026-10-11T08:50:20Z" }), pinned)).toEqual([]);
+  });
+
   test("where the release holds a year more, a year fewer, or a year built again", () => {
     expect(scorecardStale(latest, "1".repeat(64), released({ "2025": "2026-10-09T19:00:00Z", "2026": "2026-10-11T08:50:20Z", "2027": "2028-01-10T05:00:00Z" }), pinned)).toEqual(["the Archive's release holds 2027, which the aggregate does not score"]);
     expect(scorecardStale(latest, "1".repeat(64), released({ "2025": "2026-10-09T19:00:00Z" }), pinned)).toEqual(["the aggregate scores 2026, which the Archive's release no longer holds"]);

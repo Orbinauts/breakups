@@ -16,11 +16,12 @@ import { catalogueFromIndex, readCatalogueIndex, stalenessOf } from "./catalogue
 import { lowerOf, marginDaysOf } from "./match.ts";
 import { splitOf } from "./rank.ts";
 import { ANALYST_FLOOR, DAY_MS } from "./replay.ts";
+import { SCORED_FROM } from "../archive/years.ts";
 
 /**
  * A measurement of the plane test on the pieces of highly elliptical
  * orbits, and nothing else: it changes no score and no detector. For
- * every scoreable event of the truth from 2006 with a
+ * every scoreable event of the truth from the first scored year with a
  * catalogued parent, it reads the fresh pieces under the parent's launch
  * as the scorecard counts them (`fragmentsOf`, the plane test aside) from
  * the Archive's catalogue index, read-only, and asks of each: does
@@ -510,13 +511,13 @@ function main(): void {
   }
   const bounds = boundsOf(DELTA_VS_MPS);
   const out: string[] = [
-    `Read ${measured.length} scoreable events from 2006 with a catalogued parent from the catalogue index built ${index.builtAt}${stale.length > 0 ? ` (stale against the Archive: ${stale.join("; ")})` : ""}; skipped ${skipped.noLaunch} with no launch, ${skipped.notInIndex} the index holds no parent instant for${notInIndex.length > 0 ? ` (${notInIndex.join(", ")}: rebuild the index for this truth)` : ""}, ${skipped.noParentOrbit} with no parent set before the event. GCAT's satellite catalogue: ${gcat.size} pieces.`,
+    `Read ${measured.length} scoreable events from ${SCORED_FROM} with a catalogued parent from the catalogue index built ${index.builtAt}${stale.length > 0 ? ` (stale against the Archive: ${stale.join("; ")})` : ""}; skipped ${skipped.noLaunch} with no launch, ${skipped.notInIndex} the index holds no parent instant for${notInIndex.length > 0 ? ` (${notInIndex.join(", ")}: rebuild the index for this truth)` : ""}, ${skipped.noParentOrbit} with no parent set before the event. GCAT's satellite catalogue: ${gcat.size} pieces.`,
     "",
   ];
   for (const regime of REGIMES_READ) {
     for (const split of ["train", "validation", "both"] as const) {
       const rows = measured.filter((m) => m.regime === regime && (split === "both" || m.split === split));
-      out.push(`## ${regime}, ${split === "both" ? "every year from 2006" : split === "train" ? "training years (even)" : "held-out years (odd)"}`, "", ...regimeTable(rows, bounds), "");
+      out.push(`## ${regime}, ${split === "both" ? `every year from ${SCORED_FROM}` : split === "train" ? "training years (even)" : "held-out years (odd)"}`, "", ...regimeTable(rows, bounds), "");
     }
   }
   out.push(...carrySection(measured, catalogue));

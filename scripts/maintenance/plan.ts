@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ASSET_LIMIT_BYTES, type ReleaseManifest } from "../archive/release.ts";
+import { scoredYears } from "../archive/years.ts";
 import type { Latest } from "../kpi/kpi.ts";
 import { PINNED, readPins, type Versions } from "../pins/pins.ts";
 import { assetName, DATA_TAG, type DataManifest } from "../prospective/data.ts";
@@ -37,7 +38,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export function scorecardStale(latest: Pick<Latest, "truthSha256" | "years" | "archive"> & Partial<Pick<Latest, "versions">>, truthSha256: string, released: Pick<ReleaseManifest, "years">, pinned: Versions): string[] {
   const reasons: string[] = [];
   if (latest.truthSha256 !== truthSha256) reasons.push(`the truth's sha256 is ${truthSha256.slice(0, 12)}…, the aggregate was scored against ${latest.truthSha256.slice(0, 12)}…`);
-  const releasedYears = Object.keys(released.years).map(Number).sort((a, b) => a - b);
+  // A year the release holds below the Archive's first (the fresh validation's, uploaded before the rule that scores them) is not the scorecard's.
+  const releasedYears = scoredYears(Object.keys(released.years).map(Number));
   const added = releasedYears.filter((year) => !latest.years.includes(year));
   const gone = latest.years.filter((year) => !releasedYears.includes(year));
   if (added.length > 0) reasons.push(`the Archive's release holds ${added.join(", ")}, which the aggregate does not score`);
@@ -102,7 +104,7 @@ function main(): void {
   setOutput("rescore", String(reasons.length > 0));
   setOutput("reasons", reasons.join("; "));
   setOutput("promote", promotion.year === null ? "" : String(promotion.year));
-  setOutput("years", Object.keys(released.years).filter((year) => Number(year) !== promotion.year).sort().join(" "));
+  setOutput("years", scoredYears(Object.keys(released.years).map(Number)).filter((year) => year !== promotion.year).join(" "));
   setOutput("reminder", reminderDue(today)?.label ?? "");
   warnOfHistory(data, Number(today.slice(0, 4)));
 }
