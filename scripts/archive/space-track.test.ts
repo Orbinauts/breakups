@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { BASE, credentialsFromEnv, MAX_REQUESTS, SPACING_SECONDS, SpaceTrack } from "./space-track.ts";
+import { BACKFILL_SPACING_SECONDS, BASE, credentialsFromEnv, MAX_REQUESTS, SPACING_SECONDS, SpaceTrack } from "./space-track.ts";
 
 /**
  * The catalogue's client over a stand-in `fetch` that answers as the
@@ -101,6 +101,32 @@ describe("the catalogue's client", () => {
     const gaps = calls.slice(1).map((call, i) => call.at - calls[i]!.at);
     expect(gaps).toHaveLength(3);
     for (const gap of gaps) expect(gap).toBeGreaterThanOrEqual(SPACING_SECONDS * 1000);
+  });
+
+  test("paced for the backfill, spaces its requests thirty-six seconds apart, a hundred an hour, counts them, and says when the next would pass its cap", async () => {
+    expect(BACKFILL_SPACING_SECONDS).toBe(36);
+    expect(3600 / BACKFILL_SPACING_SECONDS).toBe(100);
+    const client = new SpaceTrack(CREDENTIALS, dir, { spacingSeconds: BACKFILL_SPACING_SECONDS, maxRequests: 3 });
+    expect(client.made).toBe(0);
+    expect(client.atCap).toBe(false);
+    const paced = async <T>(promise: Promise<T>): Promise<T> => {
+      const outcome = promise.then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      );
+      await vi.advanceTimersByTimeAsync(2 * BACKFILL_SPACING_SECONDS * 1000);
+      const result = await outcome;
+      if ("error" in result) throw result.error;
+      return result.value;
+    };
+    await paced(client.rows(join(dir, "a.json.gz"), "/a"));
+    await paced(client.rows(join(dir, "b.json.gz"), "/b"));
+    const gaps = calls.slice(1).map((call, i) => call.at - calls[i]!.at);
+    for (const gap of gaps) expect(gap).toBeGreaterThanOrEqual(BACKFILL_SPACING_SECONDS * 1000);
+    // The login and two queries: the cap of three is reached, and the next request is refused.
+    expect(client.made).toBe(3);
+    expect(client.atCap).toBe(true);
+    await expect(paced(client.rows(join(dir, "c.json.gz"), "/c"))).rejects.toThrow(/made 3 requests/);
   });
 
   test("answers from the cache with no request at all, not even a login", async () => {

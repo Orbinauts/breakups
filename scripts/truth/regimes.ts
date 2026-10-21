@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { regimeOf as regimeOfSet } from "../../src/elements.ts";
 import { readBreakups, yearOf, type Regime } from "../../src/index.ts";
 import { archiveHome, builtYears, readManifest, readYear } from "../archive/archive.ts";
+import { SCORECARD_FROM } from "../archive/years.ts";
 import { isoMinute } from "../time.ts";
 
 /**
@@ -15,7 +16,7 @@ import { isoMinute } from "../time.ts";
  * regime of the parent's last set before the window opens, by the
  * detector's own filing of a set (`regimeOf` in `src/elements.ts`).
  *
- * The file holds, for each parent of a row from 2005 whose statements give
+ * The file holds, for each parent of a row from the scorecard's first year whose statements give
  * no regime, the runs of one regime over every set the Archive holds of it,
  * each from its first set's epoch, so a window moved by a rebuild is read
  * without regenerating the file; a parent the truth gains is not in it
@@ -61,11 +62,11 @@ export function readRegimes(root = ROOT): RegimesFile | null {
   return existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as RegimesFile) : null;
 }
 
-/** The parents whose rows from 2005 give no regime of their own: no statement gives both ends of the orbit (`regimeOf` in the build reads them so). */
+/** The parents whose rows from the scorecard's first year give no regime of their own: no statement gives both ends of the orbit (`regimeOf` in the build reads them so). */
 function parentsWanted(): Set<number> {
   const breakups = readBreakups(JSON.parse(readFileSync(resolve(ROOT, "data/breakups.json"), "utf8")));
   const stated = (b: (typeof breakups)[number]): boolean => (b.orbit.apogeeKm ?? b.orbit.altitudeKm) !== null && (b.orbit.perigeeKm ?? b.orbit.altitudeKm) !== null;
-  return new Set(breakups.filter((b) => b.parent.catalogueNumber !== null && yearOf(b) >= 2005 && !stated(b)).map((b) => b.parent.catalogueNumber!));
+  return new Set(breakups.filter((b) => b.parent.catalogueNumber !== null && yearOf(b) >= SCORECARD_FROM && !stated(b)).map((b) => b.parent.catalogueNumber!));
 }
 
 function main(): void {
@@ -88,7 +89,7 @@ function main(): void {
   }
   const parents = Object.fromEntries([...sets].sort((a, b) => a[0] - b[0]).map(([number, list]) => [String(number), regimeRunsOf(list)]));
   const file: RegimesFile = {
-    about: "Derived from the Archive by `npm run truth:regimes` (scripts/truth/regimes.ts): for each parent of a truth row from 2005 whose statements give no orbit, the runs of one regime over every set the Archive holds of it, each from its first set's epoch, by the detector's filing of a set. The truth's build reads a row's regime from its parent's last set before the window opens. Never edited by hand.",
+    about: "Derived from the Archive by `npm run truth:regimes` (scripts/truth/regimes.ts): for each parent of a truth row from ${SCORECARD_FROM} whose statements give no orbit, the runs of one regime over every set the Archive holds of it, each from its first set's epoch, by the detector's filing of a set. The truth's build reads a row's regime from its parent's last set before the window opens. Never edited by hand.",
     years,
     parents,
   };

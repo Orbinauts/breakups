@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import * as library from "../../src/index.ts";
 import { DETECTOR_PARAMETERS, readBreakups, yearOf, type Breakup } from "../../src/index.ts";
 import { parseGcat } from "../truth/parse-gcat.ts";
+import { SCORECARD_FROM } from "../archive/years.ts";
 import { ALERT_ENDS, BREAKUP_PATHS, CONFIRMED_TABLES, chance, detectedAllLines, falseAlarmsPerYear, lifecycleTables, resultsTables, type AlertEnd, type BreakupPath, type Latest } from "./kpi.ts";
 
 /**
@@ -46,7 +47,7 @@ import { ALERT_ENDS, BREAKUP_PATHS, CONFIRMED_TABLES, chance, detectedAllLines, 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /** The year the scorecard's truth counts start from. */
-export const SCORING_FROM = 2005;
+export const SCORING_FROM = SCORECARD_FROM;
 
 /** The README, the page npm and GitHub show first. */
 export const README = "README.md";
@@ -303,7 +304,7 @@ export function splitsSentence(latest: Latest): string {
   return "The target is not reached on either split.";
 }
 
-/** The ground-truth table's rows: a label and the events from 2005 it counts. */
+/** The ground-truth table's rows: a label and the events from the scorecard's first year it counts. */
 export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[] = [
   ["All", () => true],
   ["Scoreable (breakups and anomalous events of a catalogued object or of a launch)", (b) => b.scoreable],
@@ -318,7 +319,7 @@ export const TRUTH_ROWS: readonly (readonly [string, (b: Breakup) => boolean])[]
   ["Confidence D (pieces in the catalogue, or news to the day at best)", (b) => b.scoreable && b.confidence === "D"],
 ];
 
-/** The ground truth's counts from 2005, as the ground-truth page's table. */
+/** The ground truth's counts from the scorecard's first year, as the ground-truth page's table. */
 export function truthTable(breakups: readonly Breakup[]): string {
   const since = breakups.filter((b) => yearOf(b) >= SCORING_FROM);
   return [row([`Events from ${SCORING_FROM}`, "Count"]), row(["---", "---"]), ...TRUTH_ROWS.map(([label, counts]) => row([label, String(since.filter(counts).length)]))].join("\n");
@@ -327,7 +328,7 @@ export function truthTable(breakups: readonly Breakup[]): string {
 /** The reasons a breakup or anomalous event of a catalogued parent is kept out by the shape of its window (`windowReasonOf` in the truth's build). */
 const WINDOW_REASONS: ReadonlySet<string> = new Set(["the window has no lower edge", "the window is wider than 93 days"]);
 
-/** The rows from 2005 kept out of every line by the shape of their window, as the results page lists them. */
+/** The rows from the scorecard's first year kept out of every line by the shape of their window, as the results page lists them. */
 export function keptOutByWindowTable(breakups: readonly Breakup[]): string {
   const kept = breakups.filter((b) => yearOf(b) >= SCORING_FROM && b.exemptReason !== null && WINDOW_REASONS.has(b.exemptReason));
   const window = (b: Breakup): string => `${b.event.from === null ? "…" : b.event.from.slice(0, 10)} to ${b.event.to.slice(0, 10)}`;

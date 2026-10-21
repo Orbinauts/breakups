@@ -2,6 +2,7 @@ import type { Breakup, BreakupsFile, FirstStatement, SourceId, Statement } from 
 import { AGENCY_SOURCES, firstAgencyStatement, yearOf } from "../../src/truth.ts";
 import { AT_LAUNCH_DAYS, SAME_SEPARATION_DAYS, isSatcatStatement, type Skipped } from "./parse-gcat-satcat.ts";
 import type { EsaRow } from "./parse-esa-ser.ts";
+import { SCORECARD_FROM } from "../archive/years.ts";
 
 /**
  * The report a reviewer reads beside the generated truth: what was built
@@ -10,7 +11,7 @@ import type { EsaRow } from "./parse-esa-ser.ts";
  * every override applied. Generated with the file; never edited by hand.
  */
 
-const SCORING_FROM = 2005;
+const SCORING_FROM = SCORECARD_FROM;
 
 function table(headers: string[], rows: (string | number)[][]): string {
   return [`| ${headers.join(" | ")} |`, `| ${headers.map(() => "---").join(" | ")} |`, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
@@ -55,7 +56,7 @@ function firstStatements(scoreable: Breakup[]): string[] {
     "",
     "When each event was first stated in public, as far as the sources date it: NASA's history by the quarterly news issues its reference documents cite (an issue is dated to its month, and the first day of the month, or the event's own day where the issue is of the event's month, is the earliest it can have been public; an issue dated before the event is not its statement), the quarterly news typed by hand by the issue its reference names, a U.S. Space Forces-Space notice by the day it was seen, ESA's report by its date, an analyst's dating or a company's or a newspaper's post by its day. GCAT's table and the catalogue carry no publication date. The first statement is the earliest of an event's dated statements, whoever made it; the scorecard reads the lead of a confirmation against the first statement by an agency (NASA, U.S. Space Forces-Space, ESA), which the source column marks.",
     "",
-    table(["Source of the first statement", "An agency", "Scoreable events from 2005", "Of which breakups, confidence A and B", "Dated to the day", "Dated to the month"], rows),
+    table(["Source of the first statement", "An agency", `Scoreable events from ${SCORING_FROM}`, "Of which breakups, confidence A and B", "Dated to the day", "Dated to the month"], rows),
     "",
     `Of the ${scoreable.length} scoreable events from ${SCORING_FROM}, ${scoreable.length - none.length} have a dated first statement and ${agency.length} a dated statement by an agency; of the ${scoreable.filter(headline).length} breakups of confidence A and B, ${scoreable.filter(headline).filter((b) => firstAgencyStatement(b) !== null).length} have an agency's.`,
     "",

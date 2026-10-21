@@ -16,6 +16,7 @@ import { matchYear, noticesOf, truthAsOf } from "./match.ts";
 import { approximation, chunksOf, runChunks, type Chunk } from "./parallel.ts";
 import { indexOf, loadSlice, replayYear, type Carried, type Detector, type ReplayOptions, type ReplayResult } from "./replay.ts";
 import { hasStates, readStates, writeStates } from "./states.ts";
+import { scoredYears } from "../archive/years.ts";
 
 /**
  * The scorecard's command: `npm run kpi -- --all` replays every built
@@ -287,7 +288,8 @@ async function main(): Promise<void> {
   if ((parallel !== null || fromStates !== null) && dir === KPI_DIR) throw new Error("--parallel and --from-states must also give --out: the committed results and CI are the sequential replay's, and an exploration's are approximate");
   const archive = archiveHome();
   const truth = readTruth();
-  if (all) years.push(...builtYears(archive));
+  // The years below the Archive's first, where the Archive holds any, are never scored: they are the fresh validation's, read by their own rule.
+  if (all) years.push(...scoredYears(builtYears(archive)));
   if (years.length === 0 && !doAggregate) throw new Error("nothing to do: give --year, --all, --aggregate or --rematch");
   if (doRematch) {
     for (const file of readYearFiles(dir)) {

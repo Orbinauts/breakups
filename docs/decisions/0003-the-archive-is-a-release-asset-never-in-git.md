@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; the years before 2005 pulled from the history class by a scheduled workflow, within a budget, amended on 2026-10-21 (issue #44)
 date: 2026-10-09
 ---
 
@@ -55,3 +55,22 @@ switch is the way back.
   throttled, and a day once pulled is never pulled again.
 - A year built from a bundle has publication order but no publication
   time; the scorecard says so where it reports latency.
+
+## Amended on 2026-10-21: the years before 2005 come from the history class, pulled by a workflow
+
+The fresh validation ([0013](0013-the-years-before-2005-are-the-fresh-validation-read-once.md))
+wants the years 1994 to 2004, and the catalogue's public folder of yearly
+bundles starts at 2005. Those years are pulled from the history class a
+day of epochs at a time, as the current year is, by the scheduled workflow
+`backfill.yml` (`scripts/archive/backfill.ts`), never on the owner's
+machine: a run keeps its day slices on the release `backfill-data` and
+goes on from them, so no day is asked for twice; it pulls at one request
+every thirty-six seconds, a hundred an hour, a third of what the catalogue
+allows, since the account also serves the site's Worker and the daily
+run, and at most four hundred a run. A year is built once every day of it
+is kept, on the epoch clock, since the creation times of 1990s sets are the
+catalogue's loads; and the built years, the side files rebuilt from 1994
+and the catalogue index are uploaded to the Archive's release together,
+once every year is built, because the daily run refuses a gap between the
+released years. The bundles stay the source for 2005 on, downloaded by
+hand as above.

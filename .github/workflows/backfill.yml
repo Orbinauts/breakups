@@ -1,0 +1,147 @@
+name: Backfill
+
+# The backfill of the years before the Archive's first, 1994 to 2004, the
+# fresh validation's (docs/decisions/0013), from the catalogue's history
+# class, a slab a run: the catalogue's public folder of yearly bundles
+# starts at 2005, so these years can only be pulled a day of epochs at a
+# time, as the daily run pulls the current year. Each run goes on from the
+# day slices the last run kept on the release `backfill-data`, pulls at
+# one request every thirty-six seconds, a hundred an hour and a third of
+# what the catalogue allows, since the account also serves the owner's
+# other uses and the daily run (the owner's budget), stops at the client's cap of four
+# hundred requests or after four and a half hours, keeps the slices and
+# the ledger back to the release, and builds a year once every day of it
+# is kept (scripts/archive/backfill.ts). Once every year is built, a run
+# finishes instead: the whole Archive downloaded, the built years put in,
+# the space weather fetched from 1994, the catalogue index rebuilt, and
+# the years, the side files and the manifest uploaded to the Archive's
+# release together, since the daily run refuses a gap between the released
+# years and the index must describe every one. The scorecard leaves the
+# years below its first unscored until the rule that reads them lands.
+#
+# It shares the daily run's concurrency group, so the two never run at
+# once, and runs at hours away from the daily run (02:37), the weekly
+# maintenance (Mondays 04:17) and the watcher (07:41). A failed run opens
+# an issue labelled `maintenance` with the end of its log; the next
+# scheduled run carries on from the kept slices. Once the backfill has
+# finished, this workflow and its release are removed with the pull
+# request that scores the years.
+
+on:
+  schedule:
+    # Twice a day, at 09:07 and 15:07 UTC, off the hour when scheduled runs queue.
+    - cron: "7 9 * * *"
+    - cron: "7 15 * * *"
+  workflow_dispatch:
+    inputs:
+      max_minutes:
+        description: "Minutes the run pulls for before it stops to keep what it has"
+        required: false
+        default: "270"
+
+# Never beside the daily run, the weekly maintenance or the KPI replay: one run of the group at a time, and a run started while another is going waits for it.
+concurrency:
+  group: prospective
+  cancel-in-progress: false
+
+permissions:
+  # The uploads to the releases `backfill-data` and `archive-v1`.
+  contents: write
+  # An issue for a failed run, and its label where missing.
+  issues: write
+  # The scheduled workflows GitHub disabled for the repository's inactivity, enabled again.
+  actions: write
+
+env:
+  # The decoded-column cache would keep every year unpacked beside the Archive; a run reads each year at most once.
+  BREAKUPS_DECODED: "off"
+
+jobs:
+  slab:
+    name: pull a slab of the years before 2005, or finish
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - name: Start the log
+        run: |
+          echo "LOG=$RUNNER_TEMP/backfill-run.log" >> "$GITHUB_ENV"
+          : > "$RUNNER_TEMP/backfill-run.log"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the dependencies
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm install --no-audit --no-fund
+      # The Archive on the runner's larger disk: a pull holds one year's slices, the finish the whole Archive.
+      - name: Place the Archive
+        run: |
+          set -euo pipefail
+          df -h
+          avail() { df --output=avail -B1 "$1" | tail -1; }
+          if [ -d /mnt ] && sudo -n true 2>/dev/null && [ "$(avail /mnt)" -gt "$(avail "$GITHUB_WORKSPACE")" ]; then
+            sudo mkdir -p /mnt/breakups-archive
+            sudo chown "$(id -u):$(id -g)" /mnt/breakups-archive
+            archive=/mnt/breakups-archive
+          else
+            archive="$GITHUB_WORKSPACE/breakups-archive"
+            mkdir -p "$archive"
+          fi
+          echo "BREAKUPS_ARCHIVE=$archive" >> "$GITHUB_ENV"
+          echo "the Archive is at $archive"
+      # The side files: the satellite and payload catalogues a built year's body table is annotated from, and the space weather and index the finish rebuilds over.
+      - name: Download the side files
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s archive:download
+      - name: Pull the slab, keep it on the release, and build or finish
+        env:
+          SPACETRACK_IDENTITY: ${{ secrets.SPACETRACK_IDENTITY }}
+          SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MAX_MINUTES: ${{ inputs.max_minutes || '270' }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s archive:backfill -- --max-minutes "$MAX_MINUTES"
+      # GitHub disables a scheduled workflow after sixty days with no activity in the repository; never one a person disabled (scripts/maintenance/keep-alive.ts).
+      - name: Keep the scheduled workflows enabled
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          exec > >(tee -a "$LOG") 2>&1
+          npm run -s maintenance:keep-alive
+      - name: The request ledger
+        if: always()
+        run: |
+          echo "requests to the catalogue this run:"
+          cat "$BREAKUPS_ARCHIVE/requests.log" 2>/dev/null || echo "(none)"
+          df -h
+      - name: Open an issue with the log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          npm run -s maintenance:failure -- --title "The backfill of the years before 2005 failed on $(date -u +%F)" \
+            --intro "The backfill's run $RUN_URL failed. The day slices it kept to the release before failing are kept; the next scheduled run goes on from them. The end of its log:" \
+            --log "$LOG"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ledger
+          path: ${{ env.BREAKUPS_ARCHIVE }}/requests.log
+          if-no-files-found: warn
+          retention-days: 90

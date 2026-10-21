@@ -1,5 +1,6 @@
 import { OPEN_GATES, WHOLE_CATALOGUE, type ScopeParameters } from "./scope.ts";
 import type { Regime } from "./truth.ts";
+import { STATION_LAUNCHES } from "./stations.ts";
 import { VISITING_LAUNCHES } from "./visiting.ts";
 
 /**
@@ -259,9 +260,9 @@ export interface DetectorParameters {
   originLaunchMarginDays: number;
   /** Whether the pieces' median crossing is the confirmed event's instant where its sigma is under the convergence's: the pieces' own closest approaches agree more finely than their common miss does when a cloud's first sets are weeks old. Policy. */
   originEventTime: boolean;
-  /** The launches of the crewed stations, by designator: what a station sheds (tools, covers, tanks, bags) is released on purpose and catalogued as debris under its launch, so its pieces confirm nothing and attribute nothing. Policy, from the satellite catalogue's names: the stations in orbit since the Archive's first year, the bodies it names ISS, TIANGONG and CSS, each by the launch of its own designator (the International Space Station's Zarya, Unity, Zvezda, Destiny, Poisk and Nauka; Tiangong-1 and -2; the Chinese station's Tianhe, Wentian and Mengtian). */
+  /** The launches of the crewed stations, by designator (`src/stations.ts`): what a station sheds (tools, covers, tanks, bags) is released on purpose and catalogued as debris under its launch, so its pieces confirm nothing and attribute nothing. Policy, from the satellite catalogue's names: the stations in orbit since the earliest replayed year, Mir and its modules, the International Space Station's modules, Tiangong-1 and -2 and the Chinese station's modules. */
   stationLaunches: string[];
-  /** The launches of the crewed spacecraft and of the stations' cargo craft in orbit since 2005, by designator (`src/visiting.ts`, generated from the satellite catalogue's names by `npm run archive:visiting`): Soyuz, Shenzhou, the Space Shuttle, the crewed Dragons, Starliner, Progress, Tianzhou, the cargo Dragons, Cygnus, HTV and the ATV. What such a craft leaves in orbit (an orbital module and covers at the end of a mission, a trunk, lost tools, jettisoned items) is released on purpose and catalogued as debris under its launch, so its pieces confirm and attribute nothing, as a station's; the launch's rocket body is an ordinary stage, and its pieces are judged as any stage's. Policy: the owner's decision for the eleventh phase. */
+  /** The launches of the crewed spacecraft and of the stations' cargo craft in orbit since 1994, the earliest replayed year, by designator (`src/visiting.ts`, generated from the satellite catalogue's names by `npm run archive:visiting`): Soyuz, Shenzhou, the Space Shuttle, the crewed Dragons, Starliner, Progress, Tianzhou, the cargo Dragons, Cygnus, HTV and the ATV. What such a craft leaves in orbit (an orbital module and covers at the end of a mission, a trunk, lost tools, jettisoned items) is released on purpose and catalogued as debris under its launch, so its pieces confirm and attribute nothing, as a station's; the launch's rocket body is an ordinary stage, and its pieces are judged as any stage's. Policy: the owner's decision for the eleventh phase. */
   visitingLaunches: string[];
   /** Whether pieces first seen after their parent reentered (its decay day, as the catalogue publishes it, on or before the pieces' earliest first set plus `reentryAfterPiecesDays`, and already published by the run) confirm and attribute nothing: they are the reentry's debris, a capsule or an aerodynamic breakup's, not a breakup in orbit. The decay is read only once its day has come, so the rule needs nothing a live run would not have. Physical; the days are fitted on the training split (`d11-confirmed.md`). */
   reentryRefuses: boolean;
@@ -523,7 +524,7 @@ export const DETECTOR_PARAMETERS: DetectorParameters = {
   originOverrideMinPieces: 3,
   originLaunchMarginDays: 0,
   originEventTime: true,
-  stationLaunches: ["1998-067", "1998-069", "2000-037", "2001-006", "2009-060", "2021-066", "2011-053", "2016-057", "2021-035", "2022-085", "2022-143"],
+  stationLaunches: [...STATION_LAUNCHES],
   visitingLaunches: [...VISITING_LAUNCHES],
   reentryRefuses: true,
   reentryAfterPiecesDays: 0,
@@ -730,7 +731,7 @@ export const PARAMETER_PROVENANCE: ParameterProvenance = {
   originOverrideMinPieces: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
   originLaunchMarginDays: { kind: "fitted", source: "d10-confirmed.md, the common-origin sweep on the training split" },
   originEventTime: { kind: "policy", source: "the median crossing times the event where it is the finer estimate" },
-  stationLaunches: { kind: "policy", source: "the tenth phase's methodology: a crewed station's releases are on purpose, as the truth exempts its bursts; the stations the satellite catalogue names" },
+  stationLaunches: { kind: "policy", source: "the tenth phase's methodology: a crewed station's releases are on purpose, as the truth exempts its bursts; the stations the satellite catalogue names, Mir's launches added for the fresh validation (decision record 0013)" },
   visitingLaunches: { kind: "policy", source: "the owner's decision for the eleventh phase: a crewed spacecraft's and a station's cargo craft's releases are on purpose, as a station's; the craft the satellite catalogue names, generated by npm run archive:visiting" },
   reentryRefuses: { kind: "physical", source: "d11-confirmed.md: pieces first seen after their parent reentered are the reentry's, not a breakup's in orbit" },
   reentryAfterPiecesDays: { kind: "fitted", source: "d11-confirmed.md, the reentry rule on the training split" },
